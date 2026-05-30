@@ -38,6 +38,25 @@ Avoid pure "number goes up forever" design.
 
 Phase 3 keeps gear intentionally blunt: items are one-slot Resources with flat stat modifiers. Even this small version should show pressure, so some demo items pair an upside with a drawback, such as more armor with slower action timing or faster action timing with less armor.
 
+Phase 4 adds triggered item effects, but keeps them deliberately narrow. An item can define one trigger, one effect type, and one amount. This is enough to make gear feel like an identity hook, while avoiding a full ability engine before tactics and jobs exist.
+
+Current triggered item design rules:
+
+- triggered effects must be deterministic
+- triggered effects must write clear combat log lines
+- triggered effects may change runtime combat state, not source definitions
+- demo effects should create visible combat patterns with small numbers
+- unsupported trigger/effect pairings should stay obvious rather than silently doing something surprising
+
+Combat log structure now matters because triggers make one action contain several explainable sub-events. A parent entry should name the main combat moment, such as a unit attacking at a time. Child entries should explain what happened inside that moment, such as item triggers, final damage, armor changes, defeat, or follow-up effects.
+
+Current combat log design rules:
+
+- only parent action entries need visible timestamps
+- child entries inherit the parent moment in the player's reading of the log
+- indentation should clarify causality, not hide important outcomes
+- the UI can still display plain text until a richer combat log viewer is worth building
+
 ### Jobs as identity
 
 Jobs should provide:

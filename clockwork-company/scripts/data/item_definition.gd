@@ -8,3 +8,6 @@ class_name ItemDefinition
 @export var damage_modifier := 0
 @export var armor_modifier := 0
 @export var action_interval_modifier := 0
+@export_enum("None", "Battle Start", "Attack", "Hit", "Kill", "Death") var trigger := "None"
+@export_enum("None", "Gain Armor", "Bonus Damage", "Reduce Target Armor", "Heal Self", "Damage Killer") var effect := "None"
+@export var effect_amount := 0

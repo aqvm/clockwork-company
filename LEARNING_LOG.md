@@ -13,6 +13,95 @@ Each entry should include:
 - Manual exercise
 - Open questions
 
+## 2026-05-30 - Structured combat log entries
+
+Feature worked on:
+
+- Reworked combat logging from a flat string list into small parent/child log entries that render back to readable text.
+
+Godot concepts introduced:
+
+- Inner helper classes can model plain data structures without becoming scene nodes.
+- A function can keep returning `Array[String]` to the UI while using a richer internal representation.
+- Integer IDs are enough for temporary runtime relationships when the data only lives for one battle log.
+
+Game architecture concepts introduced:
+
+- `CombatLogEntry` stores one log entry's invisible ID, optional parent ID, optional time, text, and children.
+- `CombatLog` owns ID assignment, parent/child relationships, and rendering to plain text lines.
+- Parent log entries describe major combat moments, while child entries explain triggered effects and outcomes inside that moment.
+- The UI remains decoupled from combat-log structure because it still receives plain strings.
+
+Files touched:
+
+- `clockwork-company/scripts/combat/combat_simulator.gd`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why triggered effects made a flat log harder to read.
+- How an invisible log entry ID lets one line become the parent of later explanation lines.
+- Why child entries do not need their own visible timestamp.
+- Why the simulator can use structured log data internally while the UI still displays simple text.
+
+Manual exercise:
+
+- In `combat_simulator.gd`, find where `attack_entry_id` is created, then point to the child log lines that attach damage and triggered effects to that same parent attack.
+
+Open questions:
+
+- Should battle-start item effects eventually become children of a single timed `t=000` battle-start parent?
+- Should a later UI display structured log entries as collapsible groups instead of plain indented text?
+
+## 2026-05-30 - Phase 4 triggered item effects
+
+Feature worked on:
+
+- Added simple item trigger/effect data and combat resolution hooks for triggered item effects.
+
+Godot concepts introduced:
+
+- `@export_enum` can constrain designer-facing Resource fields to a small set of readable string choices.
+- Existing `.tres` item Resources can gain new exported fields while keeping their previous stat modifier data.
+- A Resource can describe what an item is allowed to do, while a plain script object applies that data during runtime.
+
+Game architecture concepts introduced:
+
+- `ItemDefinition` now owns source data for one optional triggered effect: trigger, effect type, and amount.
+- `CombatSimulator` owns when triggers fire and how each narrow effect resolves.
+- `UnitState` owns mutable combat stats such as HP and armor, so triggered effects never rewrite source `.tres` definitions.
+- Trigger hooks are intentionally small so Phase 4 creates build identity without becoming a full ability system.
+
+Files touched:
+
+- `clockwork-company/scripts/data/item_definition.gd`
+- `clockwork-company/scripts/combat/combat_simulator.gd`
+- `clockwork-company/resources/items/reinforced_buckler.tres`
+- `clockwork-company/resources/items/glass_focus.tres`
+- `clockwork-company/resources/items/shortblade.tres`
+- `clockwork-company/scenes/combat_test_scene.tscn`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why trigger and effect choices live on `ItemDefinition`.
+- Why battle-start armor and hit-based armor reduction change `UnitState` instead of `.tres` files.
+- Where the simulator checks each trigger moment: battle start, attack, hit, kill, and death.
+- How a triggered item effect changes the combat log and the later combat result.
+
+Manual exercise:
+
+- Open `clockwork-company/resources/items/glass_focus.tres`, change `effect_amount` from `2` to `0`, run the combat scene, and predict how Sol Apprentice's attack log lines and damage totals change.
+
+Open questions:
+
+- Should future effects be represented as separate effect Resources once one effect per item becomes too limiting?
+- Should hit effects trigger only when damage is greater than 0 if future armor rules ever allow fully blocked attacks?
+
 ## 2026-05-30 - Phase 3 basic gear
 
 Feature worked on:

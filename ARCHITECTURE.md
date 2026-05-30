@@ -103,15 +103,16 @@ Initial damage formula:
 
 This is intentionally crude and replaceable.
 
-## Current Phase 3 implementation
+## Current Phase 4 implementation
 
 The first playable test is a text-only combat scene:
 
 - `clockwork-company/scenes/combat_test_scene.tscn` owns the visible test scene.
 - `clockwork-company/scripts/ui/combat_test_scene.gd` owns the button and combat log display.
 - `clockwork-company/scripts/combat/combat_simulator.gd` owns the combat rules.
+- `CombatLog` and `CombatLogEntry` are small helper classes inside `combat_simulator.gd` that build the readable text log.
 - `clockwork-company/scripts/data/unit_definition.gd` defines the editable unit data Resource type.
-- `clockwork-company/scripts/data/item_definition.gd` defines the editable item data Resource type.
+- `clockwork-company/scripts/data/item_definition.gd` defines the editable item data Resource type, including one optional triggered effect.
 - `clockwork-company/resources/units/*.tres` stores the current demo unit definitions.
 - `clockwork-company/resources/items/*.tres` stores the current demo item definitions.
 
@@ -123,25 +124,47 @@ Current combat rules:
 - unit stats are loaded from `UnitDefinition` Resources instead of hardcoded dictionaries
 - a fixed demo equipment list gives some units one equipped `ItemDefinition`
 - each item has one slot label and flat modifiers for max HP, damage, armor, and action interval
+- each item can also define one simple triggered effect with a trigger, effect type, and amount
 - `UnitState` copies definition data into combat-only runtime state at battle start, then applies equipped item modifiers to produce final battle stats
+- battle-start item effects can further change combat-only runtime stats before the roster is printed
 - every unit starts with `next_action_time = action_interval`
 - the living unit with the lowest `next_action_time` acts next
 - ties use roster order, which keeps the result deterministic
 - every action attacks the frontmost living enemy
-- damage uses `max(1, attacker.damage - defender.armor)`
+- base attack damage uses `max(1, attacker.damage - defender.armor)`
+- attack-triggered bonus damage is added before armor reduces damage
+- hit-triggered armor reduction changes the target's runtime armor for the rest of the battle
+- kill and death trigger hooks exist for narrow effects, but the current demo items focus on battle-start, attack, and hit effects
+- log entries can have invisible integer IDs, and child entries render indented below their parent
+- child log entries do not print their own time because they explain the same parent combat moment
 - defeated units stop acting
 - the fight ends when one side has no living units
 
 The simulator currently has no random rolls. A future version can introduce seeded randomness, but this early combat test stays deterministic by construction.
 
+Combat log responsibility split:
+
+- `CombatLogEntry` stores one invisible entry ID, optional parent ID, optional visible time, text, and child entry IDs.
+- `CombatLog` owns the entry list, assigns IDs, attaches children to parents, and renders the final `Array[String]`.
+- `CombatSimulator` decides what happened and whether a line is a parent event or a child explanation.
+- `combat_test_scene.gd` still receives plain lines and does not know about IDs or hierarchy.
+
+Triggered item responsibility split:
+
+- `ItemDefinition` owns inspectable source data: trigger name, effect name, and effect amount.
+- `UnitState` owns the mutable combat copy of stats that triggered effects can change.
+- `CombatSimulator` owns trigger timing and effect resolution.
+- The UI still only asks the simulator for a log and displays it.
+
 Manual test:
 
 - Open the Godot project in `clockwork-company/`.
 - Press Play.
-- Click `Run Gear-Modified 3v3 Fight`.
-- Confirm the text log shows equipped gear, final roster stats, action times, damage, defeats, and final result.
+- Click `Run Triggered-Item 3v3 Fight`.
+- Confirm the text log shows equipped gear, battle-start item effects, final roster stats, action times, damage, defeats, and final result.
+- Confirm attack triggers, hit triggers, damage, and defeat lines appear indented below their parent attack line.
 - Edit one `.tres` file in `clockwork-company/resources/units/`, run again, and confirm the roster/log reflects that data change.
-- Edit one `.tres` file in `clockwork-company/resources/items/`, run again, and confirm the equipped unit's final roster stats and combat log reflect that item change.
+- Edit one `.tres` file in `clockwork-company/resources/items/`, run again, and confirm the equipped unit's final roster stats or triggered-effect log lines reflect that item change.
 
 ## Non-goals for early prototype
 
