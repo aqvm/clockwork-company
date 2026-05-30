@@ -1,9 +1,11 @@
-[gd_resource type="Resource" script_class="ItemDefinition" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="ItemDefinition" format=3 uid="uid://c8n2w7jla6pxt"]
 
-[ext_resource type="Script" path="res://scripts/data/item_definition.gd" id="1_shortblade"]
+[ext_resource type="Script" uid="uid://h21mlqiqe25f" path="res://scripts/data/item_definition.gd" id="1_shortblade"]
 
 [resource]
 script = ExtResource("1_shortblade")
 display_name = "Shortblade"
-slot = "Weapon"
 damage_modifier = 2
+trigger = "Hit"
+effect = "Reduce Target Armor"
+effect_amount = 1

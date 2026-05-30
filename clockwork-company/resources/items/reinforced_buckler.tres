@@ -1,6 +1,6 @@
-[gd_resource type="Resource" script_class="ItemDefinition" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="ItemDefinition" format=3 uid="uid://dy6r8tndi7a46"]
 
-[ext_resource type="Script" path="res://scripts/data/item_definition.gd" id="1_buckler"]
+[ext_resource type="Script" uid="uid://h21mlqiqe25f" path="res://scripts/data/item_definition.gd" id="1_buckler"]
 
 [resource]
 script = ExtResource("1_buckler")
@@ -9,3 +9,6 @@ slot = "Armor"
 max_hp_modifier = 6
 armor_modifier = 2
 action_interval_modifier = 1
+trigger = "Battle Start"
+effect = "Gain Armor"
+effect_amount = 1

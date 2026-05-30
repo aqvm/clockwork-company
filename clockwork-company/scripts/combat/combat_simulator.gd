@@ -11,6 +11,18 @@ class_name CombatSimulator
 const TEAM_ALLY := "Allies"
 const TEAM_ENEMY := "Enemies"
 const MAX_ACTIONS := 100
+const TRIGGER_NONE := "None"
+const TRIGGER_BATTLE_START := "Battle Start"
+const TRIGGER_ATTACK := "Attack"
+const TRIGGER_HIT := "Hit"
+const TRIGGER_KILL := "Kill"
+const TRIGGER_DEATH := "Death"
+const EFFECT_NONE := "None"
+const EFFECT_GAIN_ARMOR := "Gain Armor"
+const EFFECT_BONUS_DAMAGE := "Bonus Damage"
+const EFFECT_REDUCE_TARGET_ARMOR := "Reduce Target Armor"
+const EFFECT_HEAL_SELF := "Heal Self"
+const EFFECT_DAMAGE_KILLER := "Damage Killer"
 const DEMO_UNIT_DEFINITIONS: Array[UnitDefinition] = [
 	preload("res://resources/units/alden_guard.tres"),
 	preload("res://resources/units/mira_scout.tres"),
@@ -27,6 +39,79 @@ const DEMO_EQUIPPED_ITEMS: Array = [
 	preload("res://resources/items/shortblade.tres"),
 	null,
 ]
+
+
+class CombatLogEntry:
+	var id := 0
+	var parent_id := -1
+	var time := -1
+	var text := ""
+	var child_ids: Array[int] = []
+
+	func _init(entry_id: int, entry_text: String, entry_time: int = -1, entry_parent_id: int = -1) -> void:
+		id = entry_id
+		text = entry_text
+		time = entry_time
+		parent_id = entry_parent_id
+		child_ids = []
+
+
+class CombatLog:
+	const NO_TIME := -1
+	const NO_PARENT := -1
+	const CHILD_INDENT := "      "
+
+	var entries: Array[CombatLogEntry] = []
+	var root_ids: Array[int] = []
+	var next_id := 0
+
+	func add(text: String) -> int:
+		return _add_entry(text, NO_TIME, NO_PARENT)
+
+	func add_at_time(time: int, text: String) -> int:
+		return _add_entry(text, time, NO_PARENT)
+
+	func add_child(parent_id: int, text: String) -> int:
+		return _add_entry(text, NO_TIME, parent_id)
+
+	func to_lines() -> Array[String]:
+		var lines: Array[String] = []
+		for entry_id in root_ids:
+			_append_entry_lines(lines, entry_id, 0)
+		return lines
+
+	func _add_entry(text: String, time: int, parent_id: int) -> int:
+		var entry_id := next_id
+		next_id += 1
+
+		var entry := CombatLogEntry.new(entry_id, text, time, parent_id)
+		entries.append(entry)
+
+		if parent_id == NO_PARENT:
+			root_ids.append(entry_id)
+		else:
+			entries[parent_id].child_ids.append(entry_id)
+
+		return entry_id
+
+	func _append_entry_lines(lines: Array[String], entry_id: int, depth: int) -> void:
+		var entry := entries[entry_id]
+		lines.append(_format_entry(entry, depth))
+		for child_id in entry.child_ids:
+			_append_entry_lines(lines, child_id, depth + 1)
+
+	func _format_entry(entry: CombatLogEntry, depth: int) -> String:
+		if entry.text.is_empty():
+			return ""
+
+		var indentation := ""
+		for count in depth:
+			indentation += CHILD_INDENT
+
+		if entry.time == NO_TIME:
+			return "%s%s" % [indentation, entry.text]
+
+		return "%st=%03d | %s" % [indentation, entry.time, entry.text]
 
 
 # `class` declares a small helper class inside this script. Here it represents
@@ -79,23 +164,24 @@ class UnitState:
 func run_demo_battle() -> Array[String]:
 	# Calling a function with `()` runs it and gives back its return value.
 	var units := _create_demo_units()
-	# `: Array[String]` explicitly types the variable; `[]` creates an empty array.
-	var log: Array[String] = []
+	var log := CombatLog.new()
 	var actions_taken := 0
 
-	# Dot syntax calls a method on an object. `append(...)` adds one item to the
-	# end of the array.
-	log.append("Phase 3 demo battle")
-	log.append("Random seed: none yet. This fight is deterministic because there are no random rolls.")
-	log.append("Tie-breaker: if two units are ready at the same time, earlier roster position acts first.")
-	log.append("Unit definitions: loaded from Resource files in res://resources/units/.")
-	log.append("Item definitions: loaded from Resource files in res://resources/items/.")
-	log.append("")
+	# Root log entries appear at the left edge; child entries render indented
+	# below the parent entry they explain.
+	log.add("Phase 4 demo battle")
+	log.add("Random seed: none yet. This fight is deterministic because there are no random rolls.")
+	log.add("Tie-breaker: if two units are ready at the same time, earlier roster position acts first.")
+	log.add("Unit definitions: loaded from Resource files in res://resources/units/.")
+	log.add("Item definitions: loaded from Resource files in res://resources/items/.")
+	log.add("")
 	_append_gear_summary(log, units)
-	log.append("")
+	log.add("")
+	_apply_battle_start_item_effects(log, units)
+	log.add("")
 	_append_roster(log, units)
-	log.append("")
-	log.append("Combat log:")
+	log.add("")
+	log.add("Combat log:")
 
 	# `while` repeats the indented block as long as its condition stays true.
 	# `and` combines two boolean checks, so both teams must still have units alive.
@@ -103,7 +189,7 @@ func run_demo_battle() -> Array[String]:
 		# `if` runs its indented block only when the condition is true.
 		if actions_taken >= MAX_ACTIONS:
 			# `%` formats values into a string. `%d` is a placeholder for an integer.
-			log.append("Battle stopped after %d actions to avoid an infinite fight." % MAX_ACTIONS)
+			log.add("Battle stopped after %d actions to avoid an infinite fight." % MAX_ACTIONS)
 			# `break` exits the nearest loop immediately.
 			break
 
@@ -111,29 +197,35 @@ func run_demo_battle() -> Array[String]:
 		var actor: UnitState = _find_next_actor(units)
 		var target: UnitState = _find_frontmost_target(units, _opposing_team(actor.team))
 		var current_time := actor.next_action_time
-		var damage_taken: int = max(1, actor.damage - target.armor)
+		var attack_entry_id := log.add_at_time(current_time, "%s attacks %s." % [actor.unit_name, target.unit_name])
+		var bonus_damage := _apply_attack_item_effects(log, attack_entry_id, actor, target)
+		var damage_taken: int = max(1, actor.damage + bonus_damage - target.armor)
 		var previous_hp := target.hp
 
 		target.hp = max(0, target.hp - damage_taken)
 		actions_taken += 1
 
-		# Parentheses can wrap a long function call over several lines. The array
-		# after `%` supplies values for each placeholder in order.
-		log.append(
-			"t=%03d | %s attacks %s for %d damage. HP: %d -> %d"
-			% [current_time, actor.unit_name, target.unit_name, damage_taken, previous_hp, target.hp]
+		log.add_child(
+			attack_entry_id,
+			"Damage dealt: %d. %s HP: %d -> %d."
+			% [damage_taken, target.unit_name, previous_hp, target.hp]
 		)
+
+		if target.is_alive():
+			_apply_hit_item_effects(log, attack_entry_id, actor, target)
 
 		# `not` flips a boolean value, so this means "if the target is not alive."
 		if not target.is_alive():
-			log.append("      %s is defeated." % target.unit_name)
+			log.add_child(attack_entry_id, "%s is defeated." % target.unit_name)
+			_apply_kill_item_effects(log, attack_entry_id, actor)
+			_apply_death_item_effects(log, attack_entry_id, target, actor)
 
 		# `+=` is shorthand for assigning the old value plus something else.
 		actor.next_action_time += actor.action_interval
 
-	log.append("")
-	log.append(_build_result_line(units, actions_taken))
-	return log
+	log.add("")
+	log.add(_build_result_line(units, actions_taken))
+	return log.to_lines()
 
 
 func _create_demo_units() -> Array:
@@ -145,26 +237,118 @@ func _create_demo_units() -> Array:
 	return units
 
 
-func _append_gear_summary(log: Array[String], units: Array) -> void:
-	log.append("Equipped gear:")
+func _append_gear_summary(log: CombatLog, units: Array) -> void:
+	var gear_entry_id := log.add("Equipped gear:")
 	for unit: UnitState in units:
 		if unit.equipped_item == null:
-			log.append("  %s: none" % unit.unit_name)
+			log.add_child(gear_entry_id, "%s: none" % unit.unit_name)
 		else:
-			log.append("  %s: %s" % [unit.unit_name, _describe_item(unit.equipped_item)])
+			log.add_child(gear_entry_id, "%s: %s" % [unit.unit_name, _describe_item(unit.equipped_item)])
 
 
-func _append_roster(log: Array[String], units: Array) -> void:
-	log.append("Roster:")
+func _apply_battle_start_item_effects(log: CombatLog, units: Array) -> void:
+	var battle_start_entry_id := log.add("Battle start item effects:")
+	var any_effects := false
+	for unit: UnitState in units:
+		if not _item_has_trigger(unit.equipped_item, TRIGGER_BATTLE_START):
+			continue
+
+		any_effects = true
+		if unit.equipped_item.effect == EFFECT_GAIN_ARMOR:
+			unit.armor = max(0, unit.armor + unit.equipped_item.effect_amount)
+			log.add_child(
+				battle_start_entry_id,
+				"%s triggers %s: gains %d armor for this battle."
+				% [unit.unit_name, unit.equipped_item.display_name, unit.equipped_item.effect_amount]
+			)
+		else:
+			log.add_child(battle_start_entry_id, _unsupported_effect_text(unit, TRIGGER_BATTLE_START))
+
+	if not any_effects:
+		log.add_child(battle_start_entry_id, "none")
+
+
+func _apply_attack_item_effects(log: CombatLog, parent_entry_id: int, actor: UnitState, target: UnitState) -> int:
+	if not _item_has_trigger(actor.equipped_item, TRIGGER_ATTACK):
+		return 0
+
+	if actor.equipped_item.effect == EFFECT_BONUS_DAMAGE:
+		log.add_child(
+			parent_entry_id,
+			"%s triggers %s on attack: +%d damage against %s."
+			% [actor.unit_name, actor.equipped_item.display_name, actor.equipped_item.effect_amount, target.unit_name]
+		)
+		return actor.equipped_item.effect_amount
+
+	log.add_child(parent_entry_id, _unsupported_effect_text(actor, TRIGGER_ATTACK))
+	return 0
+
+
+func _apply_hit_item_effects(log: CombatLog, parent_entry_id: int, actor: UnitState, target: UnitState) -> void:
+	if not _item_has_trigger(actor.equipped_item, TRIGGER_HIT):
+		return
+
+	if actor.equipped_item.effect == EFFECT_REDUCE_TARGET_ARMOR:
+		var previous_armor := target.armor
+		target.armor = max(0, target.armor - actor.equipped_item.effect_amount)
+		log.add_child(
+			parent_entry_id,
+			"%s triggers %s on hit: %s armor %d -> %d."
+			% [actor.unit_name, actor.equipped_item.display_name, target.unit_name, previous_armor, target.armor]
+		)
+		return
+
+	log.add_child(parent_entry_id, _unsupported_effect_text(actor, TRIGGER_HIT))
+
+
+func _apply_kill_item_effects(log: CombatLog, parent_entry_id: int, actor: UnitState) -> void:
+	if not _item_has_trigger(actor.equipped_item, TRIGGER_KILL):
+		return
+
+	if actor.equipped_item.effect == EFFECT_HEAL_SELF:
+		var previous_hp := actor.hp
+		actor.hp = min(actor.max_hp, actor.hp + actor.equipped_item.effect_amount)
+		log.add_child(
+			parent_entry_id,
+			"%s triggers %s on kill: heals %d -> %d HP."
+			% [actor.unit_name, actor.equipped_item.display_name, previous_hp, actor.hp]
+		)
+		return
+
+	log.add_child(parent_entry_id, _unsupported_effect_text(actor, TRIGGER_KILL))
+
+
+func _apply_death_item_effects(log: CombatLog, parent_entry_id: int, defeated_unit: UnitState, killer: UnitState) -> void:
+	if not _item_has_trigger(defeated_unit.equipped_item, TRIGGER_DEATH):
+		return
+
+	if defeated_unit.equipped_item.effect == EFFECT_DAMAGE_KILLER:
+		var previous_hp := killer.hp
+		killer.hp = max(0, killer.hp - defeated_unit.equipped_item.effect_amount)
+		log.add_child(
+			parent_entry_id,
+			"%s triggers %s on death: %s HP %d -> %d."
+			% [defeated_unit.unit_name, defeated_unit.equipped_item.display_name, killer.unit_name, previous_hp, killer.hp]
+		)
+		if not killer.is_alive():
+			log.add_child(parent_entry_id, "%s is defeated by the death effect." % killer.unit_name)
+		return
+
+	log.add_child(parent_entry_id, _unsupported_effect_text(defeated_unit, TRIGGER_DEATH))
+
+
+func _append_roster(log: CombatLog, units: Array) -> void:
+	var roster_entry_id := log.add("Roster:")
 	# This loop uses an inline array literal so the roster prints allies first,
 	# then enemies.
 	for team in [TEAM_ALLY, TEAM_ENEMY]:
-		log.append("  %s" % team)
+		var team_entry_id := log.add_child(roster_entry_id, "%s" % team)
 		# `for unit: UnitState in units` adds a type hint to each loop variable.
 		for unit: UnitState in units:
 			if unit.team == team:
-				log.append(
-					"    %s | HP %d | damage %d | armor %d | interval %d | item %s"
+				log.add_child(
+					team_entry_id,
+					"%s | HP %d | damage %d | armor %d | interval %d | item %s"
 					% [unit.unit_name, unit.max_hp, unit.damage, unit.armor, unit.action_interval, _item_name_or_none(unit)]
 				)
 
@@ -226,7 +410,7 @@ func _item_name_or_none(unit: UnitState) -> String:
 
 
 func _describe_item(item: ItemDefinition) -> String:
-	return "%s [%s] (%s)" % [item.display_name, item.slot, _describe_item_modifiers(item)]
+	return "%s [%s] (%s; %s)" % [item.display_name, item.slot, _describe_item_modifiers(item), _describe_item_effect(item)]
 
 
 func _describe_item_modifiers(item: ItemDefinition) -> String:
@@ -240,6 +424,13 @@ func _describe_item_modifiers(item: ItemDefinition) -> String:
 		return "no stat changes"
 
 	return _join_text_parts(parts, ", ")
+
+
+func _describe_item_effect(item: ItemDefinition) -> String:
+	if item.trigger == TRIGGER_NONE or item.effect == EFFECT_NONE or item.effect_amount == 0:
+		return "no triggered effect"
+
+	return "%s -> %s %d" % [item.trigger, item.effect, item.effect_amount]
 
 
 func _append_modifier_text(parts: Array[String], label: String, amount: int) -> void:
@@ -260,6 +451,18 @@ func _join_text_parts(parts: Array[String], separator: String) -> String:
 		text += part
 
 	return text
+
+
+func _item_has_trigger(item: ItemDefinition, trigger: String) -> bool:
+	return item != null and item.trigger == trigger and item.effect != EFFECT_NONE and item.effect_amount != 0
+
+
+func _unsupported_effect_text(unit: UnitState, trigger: String) -> String:
+	return "%s triggers %s on %s, but that effect is not implemented yet." % [
+		unit.unit_name,
+		unit.equipped_item.display_name,
+		trigger.to_lower()
+	]
 
 
 func _build_result_line(units: Array, actions_taken: int) -> String:
