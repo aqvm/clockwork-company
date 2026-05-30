@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ItemDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_definition.gd" id="1_boots"]
+
+[resource]
+script = ExtResource("1_boots")
+display_name = "Light-Step Boots"
+slot = "Trinket"
+armor_modifier = -1
+action_interval_modifier = -2

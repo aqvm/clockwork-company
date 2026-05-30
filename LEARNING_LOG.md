@@ -13,6 +13,53 @@ Each entry should include:
 - Manual exercise
 - Open questions
 
+## 2026-05-30 - Phase 3 basic gear
+
+Feature worked on:
+
+- Added simple item definitions and equipped demo items that modify combat stats.
+
+Godot concepts introduced:
+
+- A second custom `Resource` type can sit beside `UnitDefinition` to define editable game data.
+- `.tres` item files can store exported slot and modifier values in the same data-driven style as units.
+- A script can preload both unit Resources and item Resources, then combine them at runtime.
+
+Game architecture concepts introduced:
+
+- `ItemDefinition` is source data: the stable facts about an item before combat starts.
+- `UnitState` is still runtime state: it now stores final battle-ready stats after gear modifiers are applied.
+- Equipment is currently a fixed demo assignment in the simulator, not an inventory or reward system.
+- Gear modifiers are flat and deterministic, so combat remains predictable and readable.
+
+Files touched:
+
+- `clockwork-company/scripts/data/item_definition.gd`
+- `clockwork-company/resources/items/reinforced_buckler.tres`
+- `clockwork-company/resources/items/shortblade.tres`
+- `clockwork-company/resources/items/light_step_boots.tres`
+- `clockwork-company/resources/items/glass_focus.tres`
+- `clockwork-company/scripts/combat/combat_simulator.gd`
+- `clockwork-company/scenes/combat_test_scene.tscn`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why item definitions are data Resources instead of hardcoded stat changes inside attack logic.
+- Why final combat stats belong to `UnitState`.
+- How one equipped item changes max HP, damage, armor, or action interval before the first action is scheduled.
+- How changing an item `.tres` file can alter the combat log without rewriting the simulator rules.
+
+Manual exercise:
+
+- Open `clockwork-company/resources/items/light_step_boots.tres`, change `action_interval_modifier` from `-2` to `0`, run the combat scene, and predict which Mira Scout log lines move later.
+
+Open questions:
+
+- Should equipment assignments eventually live on unit definitions, party definitions, or a separate encounter/loadout definition?
+
 ## 2026-05-30 - Phase 2 data-driven units
 
 Feature worked on:

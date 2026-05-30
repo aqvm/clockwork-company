@@ -36,6 +36,8 @@ Gear should create tradeoffs and pivots:
 
 Avoid pure "number goes up forever" design.
 
+Phase 3 keeps gear intentionally blunt: items are one-slot Resources with flat stat modifiers. Even this small version should show pressure, so some demo items pair an upside with a drawback, such as more armor with slower action timing or faster action timing with less armor.
+
 ### Jobs as identity
 
 Jobs should provide:

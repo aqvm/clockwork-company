@@ -19,6 +19,14 @@ const DEMO_UNIT_DEFINITIONS: Array[UnitDefinition] = [
 	preload("res://resources/units/ash_cutpurse.tres"),
 	preload("res://resources/units/glass_wisp.tres"),
 ]
+const DEMO_EQUIPPED_ITEMS: Array = [
+	preload("res://resources/items/reinforced_buckler.tres"),
+	preload("res://resources/items/light_step_boots.tres"),
+	preload("res://resources/items/glass_focus.tres"),
+	preload("res://resources/items/reinforced_buckler.tres"),
+	preload("res://resources/items/shortblade.tres"),
+	null,
+]
 
 
 # `class` declares a small helper class inside this script. Here it represents
@@ -35,21 +43,30 @@ class UnitState:
 	var action_interval := 10
 	var next_action_time := 10
 	var slot_index := 0
+	var equipped_item: ItemDefinition = null
 
 	# `func` declares a function. `_init` is Godot's constructor hook, called
 	# when code uses `UnitState.new(...)`. The text after `:` gives parameter
 	# types, and `-> void` means this function does not return a value.
-	func _init(definition: UnitDefinition, unit_slot_index: int) -> void:
+	func _init(definition: UnitDefinition, unit_slot_index: int, equipped_item_definition: ItemDefinition = null) -> void:
 		# Dot syntax reads exported properties from the UnitDefinition Resource.
 		unit_name = definition.display_name
 		team = definition.team
 		max_hp = definition.max_hp
-		hp = max_hp
 		damage = definition.damage
 		armor = definition.armor
 		action_interval = definition.action_interval
-		next_action_time = action_interval
 		slot_index = unit_slot_index
+		equipped_item = equipped_item_definition
+
+		if equipped_item != null:
+			max_hp = max(1, max_hp + equipped_item.max_hp_modifier)
+			damage = max(1, damage + equipped_item.damage_modifier)
+			armor = max(0, armor + equipped_item.armor_modifier)
+			action_interval = max(1, action_interval + equipped_item.action_interval_modifier)
+
+		hp = max_hp
+		next_action_time = action_interval
 
 	# `-> bool` means callers should expect this function to return true or false.
 	func is_alive() -> bool:
@@ -68,10 +85,13 @@ func run_demo_battle() -> Array[String]:
 
 	# Dot syntax calls a method on an object. `append(...)` adds one item to the
 	# end of the array.
-	log.append("Phase 2 demo battle")
+	log.append("Phase 3 demo battle")
 	log.append("Random seed: none yet. This fight is deterministic because there are no random rolls.")
 	log.append("Tie-breaker: if two units are ready at the same time, earlier roster position acts first.")
 	log.append("Unit definitions: loaded from Resource files in res://resources/units/.")
+	log.append("Item definitions: loaded from Resource files in res://resources/items/.")
+	log.append("")
+	_append_gear_summary(log, units)
 	log.append("")
 	_append_roster(log, units)
 	log.append("")
@@ -121,8 +141,17 @@ func _create_demo_units() -> Array:
 	# `for ... in ...` loops over each value in a collection. `DEMO_UNIT_DEFINITIONS.size()`
 	# returns an integer, and Godot treats that as the range `0` through `size - 1`.
 	for index in DEMO_UNIT_DEFINITIONS.size():
-		units.append(UnitState.new(DEMO_UNIT_DEFINITIONS[index], index))
+		units.append(UnitState.new(DEMO_UNIT_DEFINITIONS[index], index, DEMO_EQUIPPED_ITEMS[index]))
 	return units
+
+
+func _append_gear_summary(log: Array[String], units: Array) -> void:
+	log.append("Equipped gear:")
+	for unit: UnitState in units:
+		if unit.equipped_item == null:
+			log.append("  %s: none" % unit.unit_name)
+		else:
+			log.append("  %s: %s" % [unit.unit_name, _describe_item(unit.equipped_item)])
 
 
 func _append_roster(log: Array[String], units: Array) -> void:
@@ -135,8 +164,8 @@ func _append_roster(log: Array[String], units: Array) -> void:
 		for unit: UnitState in units:
 			if unit.team == team:
 				log.append(
-					"    %s | HP %d | damage %d | armor %d | interval %d"
-					% [unit.unit_name, unit.max_hp, unit.damage, unit.armor, unit.action_interval]
+					"    %s | HP %d | damage %d | armor %d | interval %d | item %s"
+					% [unit.unit_name, unit.max_hp, unit.damage, unit.armor, unit.action_interval, _item_name_or_none(unit)]
 				)
 
 
@@ -187,6 +216,50 @@ func _opposing_team(team: String) -> String:
 
 	# This fallback return runs when the earlier `if` did not return.
 	return TEAM_ALLY
+
+
+func _item_name_or_none(unit: UnitState) -> String:
+	if unit.equipped_item == null:
+		return "none"
+
+	return unit.equipped_item.display_name
+
+
+func _describe_item(item: ItemDefinition) -> String:
+	return "%s [%s] (%s)" % [item.display_name, item.slot, _describe_item_modifiers(item)]
+
+
+func _describe_item_modifiers(item: ItemDefinition) -> String:
+	var parts: Array[String] = []
+	_append_modifier_text(parts, "HP", item.max_hp_modifier)
+	_append_modifier_text(parts, "damage", item.damage_modifier)
+	_append_modifier_text(parts, "armor", item.armor_modifier)
+	_append_modifier_text(parts, "interval", item.action_interval_modifier)
+
+	if parts.is_empty():
+		return "no stat changes"
+
+	return _join_text_parts(parts, ", ")
+
+
+func _append_modifier_text(parts: Array[String], label: String, amount: int) -> void:
+	if amount == 0:
+		return
+
+	if amount > 0:
+		parts.append("%s +%d" % [label, amount])
+	else:
+		parts.append("%s %d" % [label, amount])
+
+
+func _join_text_parts(parts: Array[String], separator: String) -> String:
+	var text := ""
+	for part in parts:
+		if not text.is_empty():
+			text += separator
+		text += part
+
+	return text
 
 
 func _build_result_line(units: Array, actions_taken: int) -> String:

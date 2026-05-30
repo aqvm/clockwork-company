@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ItemDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_definition.gd" id="1_buckler"]
+
+[resource]
+script = ExtResource("1_buckler")
+display_name = "Reinforced Buckler"
+slot = "Armor"
+max_hp_modifier = 6
+armor_modifier = 2
+action_interval_modifier = 1

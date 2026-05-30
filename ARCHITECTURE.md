@@ -54,6 +54,7 @@ Keep definitions and runtime state conceptually separate.
 Example:
 
 - `UnitDefinition`: what a Warrior is in general.
+- `ItemDefinition`: what a Shortblade is in general.
 - `UnitState`: this specific Warrior right now, with current HP and next action time.
 
 ### UI / presentation
@@ -102,7 +103,7 @@ Initial damage formula:
 
 This is intentionally crude and replaceable.
 
-## Current Phase 2 implementation
+## Current Phase 3 implementation
 
 The first playable test is a text-only combat scene:
 
@@ -110,7 +111,9 @@ The first playable test is a text-only combat scene:
 - `clockwork-company/scripts/ui/combat_test_scene.gd` owns the button and combat log display.
 - `clockwork-company/scripts/combat/combat_simulator.gd` owns the combat rules.
 - `clockwork-company/scripts/data/unit_definition.gd` defines the editable unit data Resource type.
+- `clockwork-company/scripts/data/item_definition.gd` defines the editable item data Resource type.
 - `clockwork-company/resources/units/*.tres` stores the current demo unit definitions.
+- `clockwork-company/resources/items/*.tres` stores the current demo item definitions.
 
 The scene is set as the main scene in `clockwork-company/project.godot`, so pressing Play in Godot should open the combat test.
 
@@ -118,7 +121,9 @@ Current combat rules:
 
 - the fight still uses a fixed 3 allies against 3 enemies roster
 - unit stats are loaded from `UnitDefinition` Resources instead of hardcoded dictionaries
-- `UnitState` copies definition data into combat-only runtime state at battle start
+- a fixed demo equipment list gives some units one equipped `ItemDefinition`
+- each item has one slot label and flat modifiers for max HP, damage, armor, and action interval
+- `UnitState` copies definition data into combat-only runtime state at battle start, then applies equipped item modifiers to produce final battle stats
 - every unit starts with `next_action_time = action_interval`
 - the living unit with the lowest `next_action_time` acts next
 - ties use roster order, which keeps the result deterministic
@@ -133,9 +138,10 @@ Manual test:
 
 - Open the Godot project in `clockwork-company/`.
 - Press Play.
-- Click `Run Data-Driven 3v3 Fight`.
-- Confirm the text log shows the roster, action times, damage, defeats, and final result.
+- Click `Run Gear-Modified 3v3 Fight`.
+- Confirm the text log shows equipped gear, final roster stats, action times, damage, defeats, and final result.
 - Edit one `.tres` file in `clockwork-company/resources/units/`, run again, and confirm the roster/log reflects that data change.
+- Edit one `.tres` file in `clockwork-company/resources/items/`, run again, and confirm the equipped unit's final roster stats and combat log reflect that item change.
 
 ## Non-goals for early prototype
 
