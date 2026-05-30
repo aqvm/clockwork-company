@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ItemDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_definition.gd" id="1_focus"]
+
+[resource]
+script = ExtResource("1_focus")
+display_name = "Glass Focus"
+slot = "Weapon"
+max_hp_modifier = -2
+damage_modifier = 3
