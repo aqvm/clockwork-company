@@ -13,6 +13,89 @@ Each entry should include:
 - Manual exercise
 - Open questions
 
+## 2026-05-30 - Armor reduction and temporary guard armor
+
+Feature worked on:
+
+- Clarified how Shortblade-style armor reduction interacts with guard's temporary armor.
+
+Godot concepts introduced:
+
+- A small helper method on an inner class can expose derived runtime values such as total armor.
+
+Game architecture concepts introduced:
+
+- Base battle armor and temporary guard armor are now separate pieces of runtime state.
+- Damage uses total armor, but armor reduction changes base armor first.
+- If base armor is already zero, armor reduction can reduce temporary guard armor.
+
+Files touched:
+
+- `clockwork-company/scripts/combat/combat_simulator.gd`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why temporary armor should not be mixed into the same field as base armor.
+- Why damage calculation wants total armor, while armor-reduction effects need to know the armor source.
+- How the Shortblade rule behaves against 0 base armor plus temporary armor versus 1 base armor plus temporary armor.
+
+Manual exercise:
+
+- In `combat_simulator.gd`, find `_reduce_target_armor()` and trace what happens when the target has `armor = 0` and `guard_armor = 2`.
+
+Open questions:
+
+- Should future armor buffs identify whether they add base battle armor, temporary armor, or a named status?
+
+## 2026-05-30 - Phase 5 basic tactics
+
+Feature worked on:
+
+- Added priority-ordered tactics so units can choose attack, heal, or guard from small readable rules.
+
+Godot concepts introduced:
+
+- A new `TacticDefinition` `Resource` uses `@export_enum` to constrain condition, action, and target choices.
+- Resource objects can be created in code with `.new()` for temporary demo data before `.tres` files are worth adding.
+- Typed arrays can hold custom Resource types such as `Array[TacticDefinition]`.
+
+Game architecture concepts introduced:
+
+- Tactics are source rule data, while `UnitState` keeps the runtime list assigned to a combat copy.
+- The simulator evaluates tactics in priority order on each turn.
+- Conditions, target rules, and action resolution are separate helper steps so the combat log can explain the decision.
+- Guard is runtime-only temporary armor and is cleared at the start of that unit's next turn.
+
+Files touched:
+
+- `clockwork-company/scripts/data/tactic_definition.gd`
+- `clockwork-company/scripts/data/tactic_definition.gd.uid`
+- `clockwork-company/scripts/combat/combat_simulator.gd`
+- `clockwork-company/scenes/combat_test_scene.tscn`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- How a `condition -> action -> target` tactic becomes a concrete combat action.
+- Why tactics are evaluated in order instead of all at once.
+- Why healing and guarding modify `UnitState`, not unit or tactic Resources.
+- How parent/child log entries show the turn, selected tactic, action, and triggered item effects.
+
+Manual exercise:
+
+- In `combat_simulator.gd`, change Mira Scout's first tactic from `Ally HP Below Half -> Heal -> Lowest HP Ally` to `Always -> Heal -> Lowest HP Ally`, run the fight, and explain why that can make her stop attacking.
+
+Open questions:
+
+- Should tactics eventually live on unit, party, loadout, or encounter Resources?
+- Should "Lowest HP Ally" mean lowest raw HP, lowest HP percentage, or most missing HP?
+- Should guard remain temporary armor, or become a named status once status effects exist?
+
 ## 2026-05-30 - Structured combat log entries
 
 Feature worked on:

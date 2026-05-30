@@ -80,6 +80,20 @@ Tactics should be:
 - priority-ordered
 - explainable through combat logs
 
+Phase 5 starts tactics as tiny authored rules in the form `condition -> action -> target`.
+
+Current tactic design rules:
+
+- tactics are evaluated from top to bottom
+- the first true condition with a valid target wins
+- supported actions are only attack, heal, and guard
+- heal is a small fixed amount so it stays predictable
+- guard is temporary armor until the unit's next turn
+- every selected tactic must explain itself in the combat log
+- fixed demo tactic lists live in the simulator until party, encounter, or loadout data exists
+
+Armor reduction should stay readable when temporary armor exists. Base battle armor cannot go below zero. Effects such as Shortblade reduce base armor first; if a target has no base armor left, the same reduction can reduce temporary guard armor instead.
+
 ### Enemy doctrine later
 
 Higher difficulties may eventually let enemies infer and exploit player doctrine:

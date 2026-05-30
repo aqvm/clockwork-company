@@ -103,7 +103,7 @@ Initial damage formula:
 
 This is intentionally crude and replaceable.
 
-## Current Phase 4 implementation
+## Current Phase 5 implementation
 
 The first playable test is a text-only combat scene:
 
@@ -113,6 +113,7 @@ The first playable test is a text-only combat scene:
 - `CombatLog` and `CombatLogEntry` are small helper classes inside `combat_simulator.gd` that build the readable text log.
 - `clockwork-company/scripts/data/unit_definition.gd` defines the editable unit data Resource type.
 - `clockwork-company/scripts/data/item_definition.gd` defines the editable item data Resource type, including one optional triggered effect.
+- `clockwork-company/scripts/data/tactic_definition.gd` defines the small tactic rule Resource type.
 - `clockwork-company/resources/units/*.tres` stores the current demo unit definitions.
 - `clockwork-company/resources/items/*.tres` stores the current demo item definitions.
 
@@ -130,8 +131,16 @@ Current combat rules:
 - every unit starts with `next_action_time = action_interval`
 - the living unit with the lowest `next_action_time` acts next
 - ties use roster order, which keeps the result deterministic
-- every action attacks the frontmost living enemy
-- base attack damage uses `max(1, attacker.damage - defender.armor)`
+- every turn evaluates that unit's fixed demo tactics in priority order
+- each tactic is a limited `condition -> action -> target` rule
+- the first tactic with a true condition and valid target is selected
+- if no tactic matches, the simulator falls back to attacking the frontmost living enemy
+- current supported actions are attack, heal, and guard
+- heal restores a fixed 5 HP without exceeding max HP
+- guard grants 2 temporary armor until that unit's next turn
+- runtime armor is split into base battle armor and temporary guard armor
+- armor-reduction effects reduce base battle armor first, then temporary guard armor only if no base armor remains or the reduction has leftover
+- base attack damage uses `max(1, attacker.damage - defender total armor)`
 - attack-triggered bonus damage is added before armor reduces damage
 - hit-triggered armor reduction changes the target's runtime armor for the rest of the battle
 - kill and death trigger hooks exist for narrow effects, but the current demo items focus on battle-start, attack, and hit effects
@@ -156,13 +165,22 @@ Triggered item responsibility split:
 - `CombatSimulator` owns trigger timing and effect resolution.
 - The UI still only asks the simulator for a log and displays it.
 
+Tactic responsibility split:
+
+- `TacticDefinition` owns inspectable source data: one condition, one action, and one target rule.
+- `UnitState` owns the fixed priority-ordered tactic list assigned to this combat copy.
+- `CombatSimulator` owns tactic evaluation, target validation, and action resolution.
+- The current demo assigns tactics in code so Phase 5 can focus on behavior before party editing or encounter data exists.
+- The UI still receives plain rendered log lines and does not know how tactics are evaluated.
+
 Manual test:
 
 - Open the Godot project in `clockwork-company/`.
 - Press Play.
-- Click `Run Triggered-Item 3v3 Fight`.
-- Confirm the text log shows equipped gear, battle-start item effects, final roster stats, action times, damage, defeats, and final result.
-- Confirm attack triggers, hit triggers, damage, and defeat lines appear indented below their parent attack line.
+- Click `Run Tactics 3v3 Fight`.
+- Confirm the text log shows equipped gear, demo tactics, battle-start item effects, final roster stats, action times, selected tactics, damage, healing or guarding, defeats, and final result.
+- Confirm selected tactics appear indented below each turn.
+- Confirm attack triggers, hit triggers, damage, and defeat lines appear indented below their parent attack action.
 - Edit one `.tres` file in `clockwork-company/resources/units/`, run again, and confirm the roster/log reflects that data change.
 - Edit one `.tres` file in `clockwork-company/resources/items/`, run again, and confirm the equipped unit's final roster stats or triggered-effect log lines reflect that item change.
 

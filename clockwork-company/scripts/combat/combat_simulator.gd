@@ -23,6 +23,18 @@ const EFFECT_BONUS_DAMAGE := "Bonus Damage"
 const EFFECT_REDUCE_TARGET_ARMOR := "Reduce Target Armor"
 const EFFECT_HEAL_SELF := "Heal Self"
 const EFFECT_DAMAGE_KILLER := "Damage Killer"
+const CONDITION_ALWAYS := "Always"
+const CONDITION_SELF_HP_BELOW_HALF := "Self HP Below Half"
+const CONDITION_ALLY_HP_BELOW_HALF := "Ally HP Below Half"
+const CONDITION_ENEMY_ALIVE := "Enemy Alive"
+const ACTION_ATTACK := "Attack"
+const ACTION_HEAL := "Heal"
+const ACTION_GUARD := "Guard"
+const TARGET_SELF := "Self"
+const TARGET_LOWEST_HP_ALLY := "Lowest HP Ally"
+const TARGET_FRONTMOST_ENEMY := "Frontmost Enemy"
+const HEAL_AMOUNT := 5
+const GUARD_ARMOR_AMOUNT := 2
 const DEMO_UNIT_DEFINITIONS: Array[UnitDefinition] = [
 	preload("res://resources/units/alden_guard.tres"),
 	preload("res://resources/units/mira_scout.tres"),
@@ -129,11 +141,18 @@ class UnitState:
 	var next_action_time := 10
 	var slot_index := 0
 	var equipped_item: ItemDefinition = null
+	var tactics: Array = []
+	var guard_armor := 0
 
 	# `func` declares a function. `_init` is Godot's constructor hook, called
 	# when code uses `UnitState.new(...)`. The text after `:` gives parameter
 	# types, and `-> void` means this function does not return a value.
-	func _init(definition: UnitDefinition, unit_slot_index: int, equipped_item_definition: ItemDefinition = null) -> void:
+	func _init(
+		definition: UnitDefinition,
+		unit_slot_index: int,
+		equipped_item_definition: ItemDefinition = null,
+		tactic_definitions: Array = []
+	) -> void:
 		# Dot syntax reads exported properties from the UnitDefinition Resource.
 		unit_name = definition.display_name
 		team = definition.team
@@ -143,6 +162,7 @@ class UnitState:
 		action_interval = definition.action_interval
 		slot_index = unit_slot_index
 		equipped_item = equipped_item_definition
+		tactics = tactic_definitions
 
 		if equipped_item != null:
 			max_hp = max(1, max_hp + equipped_item.max_hp_modifier)
@@ -158,6 +178,9 @@ class UnitState:
 		# Comparison operators like `>` produce a boolean result.
 		return hp > 0
 
+	func total_armor() -> int:
+		return armor + guard_armor
+
 
 # `Array[String]` is a typed array: this function promises to return an array
 # whose entries are strings.
@@ -169,13 +192,16 @@ func run_demo_battle() -> Array[String]:
 
 	# Root log entries appear at the left edge; child entries render indented
 	# below the parent entry they explain.
-	log.add("Phase 4 demo battle")
+	log.add("Phase 5 demo battle")
 	log.add("Random seed: none yet. This fight is deterministic because there are no random rolls.")
 	log.add("Tie-breaker: if two units are ready at the same time, earlier roster position acts first.")
 	log.add("Unit definitions: loaded from Resource files in res://resources/units/.")
 	log.add("Item definitions: loaded from Resource files in res://resources/items/.")
+	log.add("Tactics: fixed demo priority lists using condition -> action -> target rules.")
 	log.add("")
 	_append_gear_summary(log, units)
+	log.add("")
+	_append_tactics_summary(log, units)
 	log.add("")
 	_apply_battle_start_item_effects(log, units)
 	log.add("")
@@ -195,30 +221,12 @@ func run_demo_battle() -> Array[String]:
 
 		# `var actor: UnitState` declares a variable with an explicit custom type.
 		var actor: UnitState = _find_next_actor(units)
-		var target: UnitState = _find_frontmost_target(units, _opposing_team(actor.team))
 		var current_time := actor.next_action_time
-		var attack_entry_id := log.add_at_time(current_time, "%s attacks %s." % [actor.unit_name, target.unit_name])
-		var bonus_damage := _apply_attack_item_effects(log, attack_entry_id, actor, target)
-		var damage_taken: int = max(1, actor.damage + bonus_damage - target.armor)
-		var previous_hp := target.hp
+		var turn_entry_id := log.add_at_time(current_time, "%s takes a turn." % actor.unit_name)
 
-		target.hp = max(0, target.hp - damage_taken)
+		_clear_guard_if_needed(log, turn_entry_id, actor)
+		_take_tactical_action(log, turn_entry_id, actor, units)
 		actions_taken += 1
-
-		log.add_child(
-			attack_entry_id,
-			"Damage dealt: %d. %s HP: %d -> %d."
-			% [damage_taken, target.unit_name, previous_hp, target.hp]
-		)
-
-		if target.is_alive():
-			_apply_hit_item_effects(log, attack_entry_id, actor, target)
-
-		# `not` flips a boolean value, so this means "if the target is not alive."
-		if not target.is_alive():
-			log.add_child(attack_entry_id, "%s is defeated." % target.unit_name)
-			_apply_kill_item_effects(log, attack_entry_id, actor)
-			_apply_death_item_effects(log, attack_entry_id, target, actor)
 
 		# `+=` is shorthand for assigning the old value plus something else.
 		actor.next_action_time += actor.action_interval
@@ -230,11 +238,47 @@ func run_demo_battle() -> Array[String]:
 
 func _create_demo_units() -> Array:
 	var units: Array = []
+	var demo_tactics := _create_demo_tactics()
 	# `for ... in ...` loops over each value in a collection. `DEMO_UNIT_DEFINITIONS.size()`
 	# returns an integer, and Godot treats that as the range `0` through `size - 1`.
 	for index in DEMO_UNIT_DEFINITIONS.size():
-		units.append(UnitState.new(DEMO_UNIT_DEFINITIONS[index], index, DEMO_EQUIPPED_ITEMS[index]))
+		units.append(UnitState.new(DEMO_UNIT_DEFINITIONS[index], index, DEMO_EQUIPPED_ITEMS[index], demo_tactics[index]))
 	return units
+
+
+func _create_demo_tactics() -> Array:
+	return [
+		[
+			_create_tactic(CONDITION_ENEMY_ALIVE, ACTION_GUARD, TARGET_SELF),
+			_create_tactic(CONDITION_ALWAYS, ACTION_ATTACK, TARGET_FRONTMOST_ENEMY),
+		],
+		[
+			_create_tactic(CONDITION_ALLY_HP_BELOW_HALF, ACTION_HEAL, TARGET_LOWEST_HP_ALLY),
+			_create_tactic(CONDITION_ALWAYS, ACTION_ATTACK, TARGET_FRONTMOST_ENEMY),
+		],
+		[
+			_create_tactic(CONDITION_ALWAYS, ACTION_ATTACK, TARGET_FRONTMOST_ENEMY),
+		],
+		[
+			_create_tactic(CONDITION_ENEMY_ALIVE, ACTION_GUARD, TARGET_SELF),
+			_create_tactic(CONDITION_ALWAYS, ACTION_ATTACK, TARGET_FRONTMOST_ENEMY),
+		],
+		[
+			_create_tactic(CONDITION_ALWAYS, ACTION_ATTACK, TARGET_FRONTMOST_ENEMY),
+		],
+		[
+			_create_tactic(CONDITION_ALLY_HP_BELOW_HALF, ACTION_HEAL, TARGET_LOWEST_HP_ALLY),
+			_create_tactic(CONDITION_ALWAYS, ACTION_ATTACK, TARGET_FRONTMOST_ENEMY),
+		],
+	]
+
+
+func _create_tactic(condition: String, action: String, target: String) -> TacticDefinition:
+	var tactic := TacticDefinition.new()
+	tactic.condition = condition
+	tactic.action = action
+	tactic.target = target
+	return tactic
 
 
 func _append_gear_summary(log: CombatLog, units: Array) -> void:
@@ -244,6 +288,15 @@ func _append_gear_summary(log: CombatLog, units: Array) -> void:
 			log.add_child(gear_entry_id, "%s: none" % unit.unit_name)
 		else:
 			log.add_child(gear_entry_id, "%s: %s" % [unit.unit_name, _describe_item(unit.equipped_item)])
+
+
+func _append_tactics_summary(log: CombatLog, units: Array) -> void:
+	var tactics_entry_id := log.add("Demo tactics:")
+	for unit: UnitState in units:
+		var tactic_texts: Array[String] = []
+		for tactic: TacticDefinition in unit.tactics:
+			tactic_texts.append(_describe_tactic(tactic))
+		log.add_child(tactics_entry_id, "%s: %s" % [unit.unit_name, _join_text_parts(tactic_texts, "; ")])
 
 
 func _apply_battle_start_item_effects(log: CombatLog, units: Array) -> void:
@@ -289,16 +342,39 @@ func _apply_hit_item_effects(log: CombatLog, parent_entry_id: int, actor: UnitSt
 		return
 
 	if actor.equipped_item.effect == EFFECT_REDUCE_TARGET_ARMOR:
-		var previous_armor := target.armor
-		target.armor = max(0, target.armor - actor.equipped_item.effect_amount)
-		log.add_child(
-			parent_entry_id,
-			"%s triggers %s on hit: %s armor %d -> %d."
-			% [actor.unit_name, actor.equipped_item.display_name, target.unit_name, previous_armor, target.armor]
-		)
+		_reduce_target_armor(log, parent_entry_id, actor, target)
 		return
 
 	log.add_child(parent_entry_id, _unsupported_effect_text(actor, TRIGGER_HIT))
+
+
+func _reduce_target_armor(log: CombatLog, parent_entry_id: int, actor: UnitState, target: UnitState) -> void:
+	var previous_base_armor := target.armor
+	var previous_guard_armor := target.guard_armor
+	var remaining_reduction := actor.equipped_item.effect_amount
+
+	if target.armor > 0:
+		var base_reduction: int = min(target.armor, remaining_reduction)
+		target.armor -= base_reduction
+		remaining_reduction -= base_reduction
+
+	if remaining_reduction > 0 and target.guard_armor > 0:
+		var guard_reduction: int = min(target.guard_armor, remaining_reduction)
+		target.guard_armor -= guard_reduction
+
+	log.add_child(
+		parent_entry_id,
+		"%s triggers %s on hit: %s base armor %d -> %d, temporary armor %d -> %d."
+		% [
+			actor.unit_name,
+			actor.equipped_item.display_name,
+			target.unit_name,
+			previous_base_armor,
+			target.armor,
+			previous_guard_armor,
+			target.guard_armor,
+		]
+	)
 
 
 func _apply_kill_item_effects(log: CombatLog, parent_entry_id: int, actor: UnitState) -> void:
@@ -348,9 +424,156 @@ func _append_roster(log: CombatLog, units: Array) -> void:
 			if unit.team == team:
 				log.add_child(
 					team_entry_id,
-					"%s | HP %d | damage %d | armor %d | interval %d | item %s"
-					% [unit.unit_name, unit.max_hp, unit.damage, unit.armor, unit.action_interval, _item_name_or_none(unit)]
+					"%s | HP %d | damage %d | armor %d | interval %d | item %s | tactics %d"
+					% [unit.unit_name, unit.max_hp, unit.damage, unit.total_armor(), unit.action_interval, _item_name_or_none(unit), unit.tactics.size()]
 				)
+
+
+func _take_tactical_action(log: CombatLog, turn_entry_id: int, actor: UnitState, units: Array) -> void:
+	for tactic: TacticDefinition in actor.tactics:
+		if not _condition_matches(tactic.condition, actor, units):
+			continue
+
+		var target := _find_tactic_target(tactic.target, actor, units)
+		if target == null:
+			log.add_child(turn_entry_id, "Tactic skipped: %s. No valid target." % _describe_tactic(tactic))
+			continue
+
+		log.add_child(
+			turn_entry_id,
+			"Tactic selected: %s. Condition true; target is %s."
+			% [_describe_tactic(tactic), target.unit_name]
+		)
+		_resolve_tactic_action(log, turn_entry_id, actor, target, tactic.action)
+		return
+
+	var fallback_target := _find_frontmost_target(units, _opposing_team(actor.team))
+	log.add_child(turn_entry_id, "No tactic matched; default attack used against %s." % fallback_target.unit_name)
+	_resolve_attack(log, turn_entry_id, actor, fallback_target)
+
+
+func _resolve_tactic_action(
+	log: CombatLog,
+	turn_entry_id: int,
+	actor: UnitState,
+	target: UnitState,
+	action: String
+) -> void:
+	if action == ACTION_HEAL:
+		_resolve_heal(log, turn_entry_id, actor, target)
+		return
+
+	if action == ACTION_GUARD:
+		_resolve_guard(log, turn_entry_id, actor)
+		return
+
+	_resolve_attack(log, turn_entry_id, actor, target)
+
+
+func _resolve_attack(log: CombatLog, turn_entry_id: int, actor: UnitState, target: UnitState) -> void:
+	var attack_entry_id := log.add_child(turn_entry_id, "%s attacks %s." % [actor.unit_name, target.unit_name])
+	var bonus_damage := _apply_attack_item_effects(log, attack_entry_id, actor, target)
+	var target_armor := target.total_armor()
+	var damage_taken: int = max(1, actor.damage + bonus_damage - target_armor)
+	var previous_hp := target.hp
+
+	target.hp = max(0, target.hp - damage_taken)
+
+	log.add_child(
+		attack_entry_id,
+		"Damage dealt: %d. %s armor: %d. HP: %d -> %d."
+		% [damage_taken, target.unit_name, target_armor, previous_hp, target.hp]
+	)
+
+	if target.is_alive():
+		_apply_hit_item_effects(log, attack_entry_id, actor, target)
+
+	# `not` flips a boolean value, so this means "if the target is not alive."
+	if not target.is_alive():
+		log.add_child(attack_entry_id, "%s is defeated." % target.unit_name)
+		_apply_kill_item_effects(log, attack_entry_id, actor)
+		_apply_death_item_effects(log, attack_entry_id, target, actor)
+
+
+func _resolve_heal(log: CombatLog, turn_entry_id: int, actor: UnitState, target: UnitState) -> void:
+	var previous_hp := target.hp
+	target.hp = min(target.max_hp, target.hp + HEAL_AMOUNT)
+	log.add_child(
+		turn_entry_id,
+		"%s heals %s for %d HP. HP: %d -> %d."
+		% [actor.unit_name, target.unit_name, target.hp - previous_hp, previous_hp, target.hp]
+	)
+
+
+func _resolve_guard(log: CombatLog, turn_entry_id: int, actor: UnitState) -> void:
+	actor.guard_armor = GUARD_ARMOR_AMOUNT
+	log.add_child(
+		turn_entry_id,
+		"%s guards: temporary armor +%d until their next turn. Armor is now %d."
+		% [actor.unit_name, actor.guard_armor, actor.total_armor()]
+	)
+
+
+func _clear_guard_if_needed(log: CombatLog, turn_entry_id: int, actor: UnitState) -> void:
+	if actor.guard_armor == 0:
+		return
+
+	var previous_armor := actor.total_armor()
+	log.add_child(
+		turn_entry_id,
+		"%s's guard expires: armor %d -> %d."
+		% [actor.unit_name, previous_armor, actor.armor]
+	)
+	actor.guard_armor = 0
+
+
+func _condition_matches(condition: String, actor: UnitState, units: Array) -> bool:
+	if condition == CONDITION_ALWAYS:
+		return true
+
+	if condition == CONDITION_SELF_HP_BELOW_HALF:
+		return _is_below_half_hp(actor)
+
+	if condition == CONDITION_ALLY_HP_BELOW_HALF:
+		return _find_lowest_hp_ally_below_half(units, actor.team) != null
+
+	if condition == CONDITION_ENEMY_ALIVE:
+		return _team_has_living_unit(units, _opposing_team(actor.team))
+
+	return false
+
+
+func _find_tactic_target(target_rule: String, actor: UnitState, units: Array) -> UnitState:
+	if target_rule == TARGET_SELF:
+		return actor
+
+	if target_rule == TARGET_LOWEST_HP_ALLY:
+		return _find_lowest_hp_ally_below_half(units, actor.team)
+
+	if target_rule == TARGET_FRONTMOST_ENEMY:
+		return _find_frontmost_target(units, _opposing_team(actor.team))
+
+	return null
+
+
+func _find_lowest_hp_ally_below_half(units: Array, team: String) -> UnitState:
+	var lowest_ally: UnitState = null
+	for unit: UnitState in units:
+		if unit.team != team or not unit.is_alive() or not _is_below_half_hp(unit):
+			continue
+
+		if lowest_ally == null:
+			lowest_ally = unit
+		elif unit.hp < lowest_ally.hp:
+			lowest_ally = unit
+		elif unit.hp == lowest_ally.hp and unit.slot_index < lowest_ally.slot_index:
+			lowest_ally = unit
+
+	return lowest_ally
+
+
+func _is_below_half_hp(unit: UnitState) -> bool:
+	return unit.hp * 2 < unit.max_hp
 
 
 func _find_next_actor(units: Array) -> UnitState:
@@ -411,6 +634,10 @@ func _item_name_or_none(unit: UnitState) -> String:
 
 func _describe_item(item: ItemDefinition) -> String:
 	return "%s [%s] (%s; %s)" % [item.display_name, item.slot, _describe_item_modifiers(item), _describe_item_effect(item)]
+
+
+func _describe_tactic(tactic: TacticDefinition) -> String:
+	return "%s -> %s -> %s" % [tactic.condition, tactic.action, tactic.target]
 
 
 func _describe_item_modifiers(item: ItemDefinition) -> String:
