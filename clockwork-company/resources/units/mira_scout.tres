@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="UnitDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/unit_definition.gd" id="1_mira"]
+
+[resource]
+script = ExtResource("1_mira")
+display_name = "Mira Scout"
+team = "Allies"
+max_hp = 22
+damage = 5
+armor = 1
+action_interval = 8

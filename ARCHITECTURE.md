@@ -102,19 +102,23 @@ Initial damage formula:
 
 This is intentionally crude and replaceable.
 
-## Current Phase 1 implementation
+## Current Phase 2 implementation
 
 The first playable test is a text-only combat scene:
 
 - `clockwork-company/scenes/combat_test_scene.tscn` owns the visible test scene.
 - `clockwork-company/scripts/ui/combat_test_scene.gd` owns the button and combat log display.
 - `clockwork-company/scripts/combat/combat_simulator.gd` owns the combat rules.
+- `clockwork-company/scripts/data/unit_definition.gd` defines the editable unit data Resource type.
+- `clockwork-company/resources/units/*.tres` stores the current demo unit definitions.
 
 The scene is set as the main scene in `clockwork-company/project.godot`, so pressing Play in Godot should open the combat test.
 
 Current combat rules:
 
-- the fight is hardcoded as 3 allies against 3 enemies
+- the fight still uses a fixed 3 allies against 3 enemies roster
+- unit stats are loaded from `UnitDefinition` Resources instead of hardcoded dictionaries
+- `UnitState` copies definition data into combat-only runtime state at battle start
 - every unit starts with `next_action_time = action_interval`
 - the living unit with the lowest `next_action_time` acts next
 - ties use roster order, which keeps the result deterministic
@@ -123,14 +127,15 @@ Current combat rules:
 - defeated units stop acting
 - the fight ends when one side has no living units
 
-The simulator currently has no random rolls. A future version can introduce seeded randomness, but Phase 1 stays deterministic by construction.
+The simulator currently has no random rolls. A future version can introduce seeded randomness, but this early combat test stays deterministic by construction.
 
 Manual test:
 
 - Open the Godot project in `clockwork-company/`.
 - Press Play.
-- Click `Run Hardcoded 3v3 Fight`.
+- Click `Run Data-Driven 3v3 Fight`.
 - Confirm the text log shows the roster, action times, damage, defeats, and final result.
+- Edit one `.tres` file in `clockwork-company/resources/units/`, run again, and confirm the roster/log reflects that data change.
 
 ## Non-goals for early prototype
 
