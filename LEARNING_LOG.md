@@ -13,6 +13,90 @@ Each entry should include:
 - Manual exercise
 - Open questions
 
+## 2026-05-30 - Phase 2 data-driven units
+
+Feature worked on:
+
+- Moved the demo unit definitions out of the combat simulator and into Godot Resource files.
+
+Godot concepts introduced:
+
+- `Resource` scripts can define editable data types that are not scene nodes.
+- `@export` makes a script property visible/editable in the Godot Inspector.
+- `@export_enum` constrains a string property to a small set of choices in the Inspector.
+- `.tres` files are text Resource assets that can store exported property values.
+- `preload()` can load Resource files as well as scripts.
+
+Game architecture concepts introduced:
+
+- `UnitDefinition` is source data: the stable facts about a demo unit before combat starts.
+- `UnitState` is runtime state: this specific combat copy, with current HP and next action time.
+- The simulator still owns combat rules, but no longer owns the unit stat table directly.
+- The current roster is still fixed; only the unit facts moved into data.
+
+Files touched:
+
+- `clockwork-company/scripts/data/unit_definition.gd`
+- `clockwork-company/resources/units/alden_guard.tres`
+- `clockwork-company/resources/units/mira_scout.tres`
+- `clockwork-company/resources/units/sol_apprentice.tres`
+- `clockwork-company/resources/units/iron_brute.tres`
+- `clockwork-company/resources/units/ash_cutpurse.tres`
+- `clockwork-company/resources/units/glass_wisp.tres`
+- `clockwork-company/scripts/combat/combat_simulator.gd`
+- `clockwork-company/scenes/combat_test_scene.tscn`
+- `ARCHITECTURE.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why unit definitions live outside the simulator.
+- Why current HP belongs to `UnitState`, not `UnitDefinition`.
+- How a `.tres` unit file connects to `unit_definition.gd`.
+- Why the combat result stays deterministic even though unit data moved.
+
+Manual exercise:
+
+- Open `clockwork-company/resources/units/mira_scout.tres`, change `action_interval` from `8` to `7`, run the combat scene, and predict which Mira log lines move earlier.
+
+Open questions:
+
+- Should team membership remain on each unit definition, or should a later encounter/party definition decide which side a unit fights for?
+
+## 2026-05-30 - GDScript syntax comments in combat simulator
+
+Feature worked on:
+
+- Added teaching comments to the combat simulator explaining each first use of important GDScript syntax.
+
+Godot concepts introduced:
+
+- `extends`, `class_name`, `RefCounted`, typed variables, typed arrays, typed function parameters, return types, dictionaries, arrays, inner classes, constructor `_init`, and common control-flow syntax.
+
+Game architecture concepts introduced:
+
+- No combat responsibilities changed. The comments reinforce that `UnitState` is runtime combat state and the simulator owns deterministic combat rules.
+
+Files touched:
+
+- `clockwork-company/scripts/combat/combat_simulator.gd`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- How to read the first few lines of a Godot script.
+- Why `UnitState` is a helper class inside the simulator.
+- How arrays and dictionaries are used for the hardcoded demo units.
+- How loops, conditions, early returns, and tie-breaking work in this combat file.
+
+Manual exercise:
+
+- Read `run_demo_battle()` from top to bottom and point to the line where combat time advances to the next actor's scheduled action.
+
+Open questions:
+
+- Which syntax still feels mysterious after reading the comments?
+
 ## 2026-05-30 - Phase 1 text-only combat simulator
 
 Feature worked on:

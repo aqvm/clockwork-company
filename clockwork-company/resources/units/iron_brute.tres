@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="UnitDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/unit_definition.gd" id="1_iron"]
+
+[resource]
+script = ExtResource("1_iron")
+display_name = "Iron Brute"
+team = "Enemies"
+max_hp = 32
+damage = 7
+armor = 2
+action_interval = 13

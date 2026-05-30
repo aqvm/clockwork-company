@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="UnitDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/unit_definition.gd" id="1_sol"]
+
+[resource]
+script = ExtResource("1_sol")
+display_name = "Sol Apprentice"
+team = "Allies"
+max_hp = 20
+damage = 8
+armor = 0
+action_interval = 10

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="UnitDefinition" format=3 uid="uid://jfidqdgtjybf"]
+
+[ext_resource type="Script" uid="uid://dyw5fadftvlju" path="res://scripts/data/unit_definition.gd" id="1_alden"]
+
+[resource]
+script = ExtResource("1_alden")
+display_name = "Alden Guard"
+max_hp = 34
+damage = 6
+armor = 4
+action_interval = 12

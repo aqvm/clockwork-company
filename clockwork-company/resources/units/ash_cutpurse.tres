@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="UnitDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/unit_definition.gd" id="1_ash"]
+
+[resource]
+script = ExtResource("1_ash")
+display_name = "Ash Cutpurse"
+team = "Enemies"
+max_hp = 20
+damage = 6
+armor = 1
+action_interval = 9
