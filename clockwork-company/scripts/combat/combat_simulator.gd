@@ -33,6 +33,9 @@ const ACTION_GUARD := "Guard"
 const TARGET_SELF := "Self"
 const TARGET_LOWEST_HP_ALLY := "Lowest HP Ally"
 const TARGET_FRONTMOST_ENEMY := "Frontmost Enemy"
+const JOB_EFFECT_GUARD_TRAINING := "Guard Training"
+const JOB_EFFECT_FIRST_AID := "First Aid"
+const JOB_EFFECT_SHARPENED_EDGE := "Sharpened Edge"
 const HEAL_AMOUNT := 5
 const GUARD_ARMOR_AMOUNT := 2
 const DEMO_UNIT_DEFINITIONS: Array[UnitDefinition] = [
@@ -42,14 +45,6 @@ const DEMO_UNIT_DEFINITIONS: Array[UnitDefinition] = [
 	preload("res://resources/units/iron_brute.tres"),
 	preload("res://resources/units/ash_cutpurse.tres"),
 	preload("res://resources/units/glass_wisp.tres"),
-]
-const DEMO_EQUIPPED_ITEMS: Array = [
-	preload("res://resources/items/reinforced_buckler.tres"),
-	preload("res://resources/items/light_step_boots.tres"),
-	preload("res://resources/items/glass_focus.tres"),
-	preload("res://resources/items/reinforced_buckler.tres"),
-	preload("res://resources/items/shortblade.tres"),
-	null,
 ]
 
 
@@ -140,7 +135,10 @@ class UnitState:
 	var action_interval := 10
 	var next_action_time := 10
 	var slot_index := 0
-	var equipped_item: ItemDefinition = null
+	var loadout: UnitLoadoutDefinition = null
+	var current_job: JobDefinition = null
+	var equipped_items: Array[ItemDefinition] = []
+	var skipped_items: Array[ItemDefinition] = []
 	var tactics: Array = []
 	var guard_armor := 0
 
@@ -149,9 +147,7 @@ class UnitState:
 	# types, and `-> void` means this function does not return a value.
 	func _init(
 		definition: UnitDefinition,
-		unit_slot_index: int,
-		equipped_item_definition: ItemDefinition = null,
-		tactic_definitions: Array = []
+		unit_slot_index: int
 	) -> void:
 		# Dot syntax reads exported properties from the UnitDefinition Resource.
 		unit_name = definition.display_name
@@ -161,14 +157,26 @@ class UnitState:
 		armor = definition.armor
 		action_interval = definition.action_interval
 		slot_index = unit_slot_index
-		equipped_item = equipped_item_definition
-		tactics = tactic_definitions
+		loadout = definition.loadout
+		equipped_items = []
+		skipped_items = []
 
-		if equipped_item != null:
-			max_hp = max(1, max_hp + equipped_item.max_hp_modifier)
-			damage = max(1, damage + equipped_item.damage_modifier)
-			armor = max(0, armor + equipped_item.armor_modifier)
-			action_interval = max(1, action_interval + equipped_item.action_interval_modifier)
+		if loadout != null:
+			current_job = loadout.current_job
+			tactics = loadout.tactics.duplicate()
+
+		if current_job != null:
+			max_hp = max(1, max_hp + current_job.max_hp_modifier)
+			damage = max(1, damage + current_job.damage_modifier)
+			armor = max(0, armor + current_job.armor_modifier)
+			action_interval = max(1, action_interval + current_job.action_interval_modifier)
+
+		for item in assigned_items():
+			if _can_equip_item(item):
+				equipped_items.append(item)
+				_apply_item_stat_modifiers(item)
+			else:
+				skipped_items.append(item)
 
 		hp = max_hp
 		next_action_time = action_interval
@@ -181,6 +189,59 @@ class UnitState:
 	func total_armor() -> int:
 		return armor + guard_armor
 
+	func current_job_name() -> String:
+		if current_job == null:
+			return "No Job"
+
+		return current_job.display_name
+
+	func loadout_name() -> String:
+		if loadout == null:
+			return "No Loadout"
+
+		return loadout.display_name
+
+	func job_effect() -> String:
+		if current_job == null:
+			return "None"
+
+		return current_job.job_effect
+
+	func assigned_items() -> Array[ItemDefinition]:
+		var items: Array[ItemDefinition] = []
+		if loadout == null:
+			return items
+
+		for item in [loadout.weapon, loadout.armor, loadout.trinket]:
+			if item != null:
+				items.append(item)
+
+		return items
+
+	func _apply_item_stat_modifiers(item: ItemDefinition) -> void:
+		max_hp = max(1, max_hp + item.max_hp_modifier)
+		damage = max(1, damage + item.damage_modifier)
+		armor = max(0, armor + item.armor_modifier)
+		action_interval = max(1, action_interval + item.action_interval_modifier)
+
+	func _can_equip_item(item: ItemDefinition) -> bool:
+		if item == null:
+			return false
+
+		if current_job == null:
+			return true
+
+		if item.slot == "Weapon":
+			return current_job.can_equip_weapon
+
+		if item.slot == "Armor":
+			return current_job.can_equip_armor
+
+		if item.slot == "Trinket":
+			return current_job.can_equip_trinket
+
+		return false
+
 
 # `Array[String]` is a typed array: this function promises to return an array
 # whose entries are strings.
@@ -192,12 +253,16 @@ func run_demo_battle() -> Array[String]:
 
 	# Root log entries appear at the left edge; child entries render indented
 	# below the parent entry they explain.
-	log.add("Phase 5 demo battle")
+	log.add("Phase 6 demo battle")
 	log.add("Random seed: none yet. This fight is deterministic because there are no random rolls.")
 	log.add("Tie-breaker: if two units are ready at the same time, earlier roster position acts first.")
 	log.add("Unit definitions: loaded from Resource files in res://resources/units/.")
 	log.add("Item definitions: loaded from Resource files in res://resources/items/.")
-	log.add("Tactics: fixed demo priority lists using condition -> action -> target rules.")
+	log.add("Job definitions: loaded from Resource files in res://resources/jobs/.")
+	log.add("Loadout definitions: loaded through each UnitDefinition.")
+	log.add("Tactics: loaded from Resource files through each loadout.")
+	log.add("")
+	_append_jobs_summary(log, units)
 	log.add("")
 	_append_gear_summary(log, units)
 	log.add("")
@@ -238,120 +303,123 @@ func run_demo_battle() -> Array[String]:
 
 func _create_demo_units() -> Array:
 	var units: Array = []
-	var demo_tactics := _create_demo_tactics()
 	# `for ... in ...` loops over each value in a collection. `DEMO_UNIT_DEFINITIONS.size()`
 	# returns an integer, and Godot treats that as the range `0` through `size - 1`.
 	for index in DEMO_UNIT_DEFINITIONS.size():
-		units.append(UnitState.new(DEMO_UNIT_DEFINITIONS[index], index, DEMO_EQUIPPED_ITEMS[index], demo_tactics[index]))
+		units.append(UnitState.new(DEMO_UNIT_DEFINITIONS[index], index))
 	return units
 
 
-func _create_demo_tactics() -> Array:
-	return [
-		[
-			_create_tactic(CONDITION_ENEMY_ALIVE, ACTION_GUARD, TARGET_SELF),
-			_create_tactic(CONDITION_ALWAYS, ACTION_ATTACK, TARGET_FRONTMOST_ENEMY),
-		],
-		[
-			_create_tactic(CONDITION_ALLY_HP_BELOW_HALF, ACTION_HEAL, TARGET_LOWEST_HP_ALLY),
-			_create_tactic(CONDITION_ALWAYS, ACTION_ATTACK, TARGET_FRONTMOST_ENEMY),
-		],
-		[
-			_create_tactic(CONDITION_ALWAYS, ACTION_ATTACK, TARGET_FRONTMOST_ENEMY),
-		],
-		[
-			_create_tactic(CONDITION_ENEMY_ALIVE, ACTION_GUARD, TARGET_SELF),
-			_create_tactic(CONDITION_ALWAYS, ACTION_ATTACK, TARGET_FRONTMOST_ENEMY),
-		],
-		[
-			_create_tactic(CONDITION_ALWAYS, ACTION_ATTACK, TARGET_FRONTMOST_ENEMY),
-		],
-		[
-			_create_tactic(CONDITION_ALLY_HP_BELOW_HALF, ACTION_HEAL, TARGET_LOWEST_HP_ALLY),
-			_create_tactic(CONDITION_ALWAYS, ACTION_ATTACK, TARGET_FRONTMOST_ENEMY),
-		],
-	]
-
-
-func _create_tactic(condition: String, action: String, target: String) -> TacticDefinition:
-	var tactic := TacticDefinition.new()
-	tactic.condition = condition
-	tactic.action = action
-	tactic.target = target
-	return tactic
+func _append_jobs_summary(log: CombatLog, units: Array) -> void:
+	var jobs_entry_id := log.add("Jobs:")
+	for unit: UnitState in units:
+		log.add_child(
+			jobs_entry_id,
+			"%s: %s loadout, %s job. Job effect: %s. Final stats before battle-start effects: HP %d, damage %d, armor %d, interval %d."
+			% [
+				unit.unit_name,
+				unit.loadout_name(),
+				unit.current_job_name(),
+				unit.job_effect().to_lower(),
+				unit.max_hp,
+				unit.damage,
+				unit.total_armor(),
+				unit.action_interval,
+			]
+		)
 
 
 func _append_gear_summary(log: CombatLog, units: Array) -> void:
 	var gear_entry_id := log.add("Equipped gear:")
 	for unit: UnitState in units:
-		if unit.equipped_item == null:
+		if unit.equipped_items.is_empty() and unit.skipped_items.is_empty():
 			log.add_child(gear_entry_id, "%s: none" % unit.unit_name)
-		else:
-			log.add_child(gear_entry_id, "%s: %s" % [unit.unit_name, _describe_item(unit.equipped_item)])
+			continue
+
+		for item in unit.equipped_items:
+			log.add_child(
+				gear_entry_id,
+				"%s: %s allowed by %s."
+				% [unit.unit_name, _describe_item(item), unit.current_job_name()]
+			)
+
+		for item in unit.skipped_items:
+			log.add_child(
+				gear_entry_id,
+				"%s: %s skipped. %s cannot equip %s."
+				% [unit.unit_name, _describe_item(item), unit.current_job_name(), item.slot.to_lower()]
+			)
 
 
 func _append_tactics_summary(log: CombatLog, units: Array) -> void:
-	var tactics_entry_id := log.add("Demo tactics:")
+	var tactics_entry_id := log.add("Loadout tactics:")
 	for unit: UnitState in units:
 		var tactic_texts: Array[String] = []
 		for tactic: TacticDefinition in unit.tactics:
 			tactic_texts.append(_describe_tactic(tactic))
-		log.add_child(tactics_entry_id, "%s: %s" % [unit.unit_name, _join_text_parts(tactic_texts, "; ")])
+		if tactic_texts.is_empty():
+			log.add_child(tactics_entry_id, "%s: none" % unit.unit_name)
+		else:
+			log.add_child(tactics_entry_id, "%s: %s" % [unit.unit_name, _join_text_parts(tactic_texts, "; ")])
 
 
 func _apply_battle_start_item_effects(log: CombatLog, units: Array) -> void:
 	var battle_start_entry_id := log.add("Battle start item effects:")
 	var any_effects := false
 	for unit: UnitState in units:
-		if not _item_has_trigger(unit.equipped_item, TRIGGER_BATTLE_START):
-			continue
+		for item in unit.equipped_items:
+			if not _item_has_trigger(item, TRIGGER_BATTLE_START):
+				continue
 
-		any_effects = true
-		if unit.equipped_item.effect == EFFECT_GAIN_ARMOR:
-			unit.armor = max(0, unit.armor + unit.equipped_item.effect_amount)
-			log.add_child(
-				battle_start_entry_id,
-				"%s triggers %s: gains %d armor for this battle."
-				% [unit.unit_name, unit.equipped_item.display_name, unit.equipped_item.effect_amount]
-			)
-		else:
-			log.add_child(battle_start_entry_id, _unsupported_effect_text(unit, TRIGGER_BATTLE_START))
+			any_effects = true
+			if item.effect == EFFECT_GAIN_ARMOR:
+				unit.armor = max(0, unit.armor + item.effect_amount)
+				log.add_child(
+					battle_start_entry_id,
+					"%s triggers %s: gains %d armor for this battle."
+					% [unit.unit_name, item.display_name, item.effect_amount]
+				)
+			else:
+				log.add_child(battle_start_entry_id, _unsupported_effect_text(unit, item, TRIGGER_BATTLE_START))
 
 	if not any_effects:
 		log.add_child(battle_start_entry_id, "none")
 
 
 func _apply_attack_item_effects(log: CombatLog, parent_entry_id: int, actor: UnitState, target: UnitState) -> int:
-	if not _item_has_trigger(actor.equipped_item, TRIGGER_ATTACK):
-		return 0
+	var bonus_damage := 0
+	for item in actor.equipped_items:
+		if not _item_has_trigger(item, TRIGGER_ATTACK):
+			continue
 
-	if actor.equipped_item.effect == EFFECT_BONUS_DAMAGE:
-		log.add_child(
-			parent_entry_id,
-			"%s triggers %s on attack: +%d damage against %s."
-			% [actor.unit_name, actor.equipped_item.display_name, actor.equipped_item.effect_amount, target.unit_name]
-		)
-		return actor.equipped_item.effect_amount
+		if item.effect == EFFECT_BONUS_DAMAGE:
+			log.add_child(
+				parent_entry_id,
+				"%s triggers %s on attack: +%d damage against %s."
+				% [actor.unit_name, item.display_name, item.effect_amount, target.unit_name]
+			)
+			bonus_damage += item.effect_amount
+		else:
+			log.add_child(parent_entry_id, _unsupported_effect_text(actor, item, TRIGGER_ATTACK))
 
-	log.add_child(parent_entry_id, _unsupported_effect_text(actor, TRIGGER_ATTACK))
-	return 0
+	return bonus_damage
 
 
 func _apply_hit_item_effects(log: CombatLog, parent_entry_id: int, actor: UnitState, target: UnitState) -> void:
-	if not _item_has_trigger(actor.equipped_item, TRIGGER_HIT):
-		return
+	for item in actor.equipped_items:
+		if not _item_has_trigger(item, TRIGGER_HIT):
+			continue
 
-	if actor.equipped_item.effect == EFFECT_REDUCE_TARGET_ARMOR:
-		_reduce_target_armor(log, parent_entry_id, actor, target)
-		return
+		if item.effect == EFFECT_REDUCE_TARGET_ARMOR:
+			_reduce_target_armor(log, parent_entry_id, actor, target, item)
+		else:
+			log.add_child(parent_entry_id, _unsupported_effect_text(actor, item, TRIGGER_HIT))
 
-	log.add_child(parent_entry_id, _unsupported_effect_text(actor, TRIGGER_HIT))
 
-
-func _reduce_target_armor(log: CombatLog, parent_entry_id: int, actor: UnitState, target: UnitState) -> void:
+func _reduce_target_armor(log: CombatLog, parent_entry_id: int, actor: UnitState, target: UnitState, item: ItemDefinition) -> void:
 	var previous_base_armor := target.armor
 	var previous_guard_armor := target.guard_armor
-	var remaining_reduction := actor.equipped_item.effect_amount
+	var remaining_reduction := item.effect_amount
 
 	if target.armor > 0:
 		var base_reduction: int = min(target.armor, remaining_reduction)
@@ -367,7 +435,7 @@ func _reduce_target_armor(log: CombatLog, parent_entry_id: int, actor: UnitState
 		"%s triggers %s on hit: %s base armor %d -> %d, temporary armor %d -> %d."
 		% [
 			actor.unit_name,
-			actor.equipped_item.display_name,
+			item.display_name,
 			target.unit_name,
 			previous_base_armor,
 			target.armor,
@@ -378,39 +446,39 @@ func _reduce_target_armor(log: CombatLog, parent_entry_id: int, actor: UnitState
 
 
 func _apply_kill_item_effects(log: CombatLog, parent_entry_id: int, actor: UnitState) -> void:
-	if not _item_has_trigger(actor.equipped_item, TRIGGER_KILL):
-		return
+	for item in actor.equipped_items:
+		if not _item_has_trigger(item, TRIGGER_KILL):
+			continue
 
-	if actor.equipped_item.effect == EFFECT_HEAL_SELF:
-		var previous_hp := actor.hp
-		actor.hp = min(actor.max_hp, actor.hp + actor.equipped_item.effect_amount)
-		log.add_child(
-			parent_entry_id,
-			"%s triggers %s on kill: heals %d -> %d HP."
-			% [actor.unit_name, actor.equipped_item.display_name, previous_hp, actor.hp]
-		)
-		return
-
-	log.add_child(parent_entry_id, _unsupported_effect_text(actor, TRIGGER_KILL))
+		if item.effect == EFFECT_HEAL_SELF:
+			var previous_hp := actor.hp
+			actor.hp = min(actor.max_hp, actor.hp + item.effect_amount)
+			log.add_child(
+				parent_entry_id,
+				"%s triggers %s on kill: heals %d -> %d HP."
+				% [actor.unit_name, item.display_name, previous_hp, actor.hp]
+			)
+		else:
+			log.add_child(parent_entry_id, _unsupported_effect_text(actor, item, TRIGGER_KILL))
 
 
 func _apply_death_item_effects(log: CombatLog, parent_entry_id: int, defeated_unit: UnitState, killer: UnitState) -> void:
-	if not _item_has_trigger(defeated_unit.equipped_item, TRIGGER_DEATH):
-		return
+	for item in defeated_unit.equipped_items:
+		if not _item_has_trigger(item, TRIGGER_DEATH):
+			continue
 
-	if defeated_unit.equipped_item.effect == EFFECT_DAMAGE_KILLER:
-		var previous_hp := killer.hp
-		killer.hp = max(0, killer.hp - defeated_unit.equipped_item.effect_amount)
-		log.add_child(
-			parent_entry_id,
-			"%s triggers %s on death: %s HP %d -> %d."
-			% [defeated_unit.unit_name, defeated_unit.equipped_item.display_name, killer.unit_name, previous_hp, killer.hp]
-		)
-		if not killer.is_alive():
-			log.add_child(parent_entry_id, "%s is defeated by the death effect." % killer.unit_name)
-		return
-
-	log.add_child(parent_entry_id, _unsupported_effect_text(defeated_unit, TRIGGER_DEATH))
+		if item.effect == EFFECT_DAMAGE_KILLER:
+			var previous_hp := killer.hp
+			killer.hp = max(0, killer.hp - item.effect_amount)
+			log.add_child(
+				parent_entry_id,
+				"%s triggers %s on death: %s HP %d -> %d."
+				% [defeated_unit.unit_name, item.display_name, killer.unit_name, previous_hp, killer.hp]
+			)
+			if not killer.is_alive():
+				log.add_child(parent_entry_id, "%s is defeated by the death effect." % killer.unit_name)
+		else:
+			log.add_child(parent_entry_id, _unsupported_effect_text(defeated_unit, item, TRIGGER_DEATH))
 
 
 func _append_roster(log: CombatLog, units: Array) -> void:
@@ -472,7 +540,8 @@ func _resolve_tactic_action(
 
 func _resolve_attack(log: CombatLog, turn_entry_id: int, actor: UnitState, target: UnitState) -> void:
 	var attack_entry_id := log.add_child(turn_entry_id, "%s attacks %s." % [actor.unit_name, target.unit_name])
-	var bonus_damage := _apply_attack_item_effects(log, attack_entry_id, actor, target)
+	var bonus_damage := _apply_job_attack_effects(log, attack_entry_id, actor)
+	bonus_damage += _apply_attack_item_effects(log, attack_entry_id, actor, target)
 	var target_armor := target.total_armor()
 	var damage_taken: int = max(1, actor.damage + bonus_damage - target_armor)
 	var previous_hp := target.hp
@@ -497,7 +566,8 @@ func _resolve_attack(log: CombatLog, turn_entry_id: int, actor: UnitState, targe
 
 func _resolve_heal(log: CombatLog, turn_entry_id: int, actor: UnitState, target: UnitState) -> void:
 	var previous_hp := target.hp
-	target.hp = min(target.max_hp, target.hp + HEAL_AMOUNT)
+	var heal_amount := HEAL_AMOUNT + _job_heal_bonus(log, turn_entry_id, actor)
+	target.hp = min(target.max_hp, target.hp + heal_amount)
 	log.add_child(
 		turn_entry_id,
 		"%s heals %s for %d HP. HP: %d -> %d."
@@ -506,7 +576,7 @@ func _resolve_heal(log: CombatLog, turn_entry_id: int, actor: UnitState, target:
 
 
 func _resolve_guard(log: CombatLog, turn_entry_id: int, actor: UnitState) -> void:
-	actor.guard_armor = GUARD_ARMOR_AMOUNT
+	actor.guard_armor = GUARD_ARMOR_AMOUNT + _job_guard_bonus(log, turn_entry_id, actor)
 	log.add_child(
 		turn_entry_id,
 		"%s guards: temporary armor +%d until their next turn. Armor is now %d."
@@ -525,6 +595,30 @@ func _clear_guard_if_needed(log: CombatLog, turn_entry_id: int, actor: UnitState
 		% [actor.unit_name, previous_armor, actor.armor]
 	)
 	actor.guard_armor = 0
+
+
+func _apply_job_attack_effects(log: CombatLog, parent_entry_id: int, actor: UnitState) -> int:
+	if actor.job_effect() != JOB_EFFECT_SHARPENED_EDGE:
+		return 0
+
+	log.add_child(parent_entry_id, "Job effect Sharpened Edge: +1 damage.")
+	return 1
+
+
+func _job_heal_bonus(log: CombatLog, turn_entry_id: int, actor: UnitState) -> int:
+	if actor.job_effect() != JOB_EFFECT_FIRST_AID:
+		return 0
+
+	log.add_child(turn_entry_id, "Job effect First Aid: +2 healing.")
+	return 2
+
+
+func _job_guard_bonus(log: CombatLog, turn_entry_id: int, actor: UnitState) -> int:
+	if actor.job_effect() != JOB_EFFECT_GUARD_TRAINING:
+		return 0
+
+	log.add_child(turn_entry_id, "Job effect Guard Training: +1 temporary armor.")
+	return 1
 
 
 func _condition_matches(condition: String, actor: UnitState, units: Array) -> bool:
@@ -626,10 +720,14 @@ func _opposing_team(team: String) -> String:
 
 
 func _item_name_or_none(unit: UnitState) -> String:
-	if unit.equipped_item == null:
+	if unit.equipped_items.is_empty():
 		return "none"
 
-	return unit.equipped_item.display_name
+	var item_names: Array[String] = []
+	for item in unit.equipped_items:
+		item_names.append(item.display_name)
+
+	return _join_text_parts(item_names, ", ")
 
 
 func _describe_item(item: ItemDefinition) -> String:
@@ -684,10 +782,10 @@ func _item_has_trigger(item: ItemDefinition, trigger: String) -> bool:
 	return item != null and item.trigger == trigger and item.effect != EFFECT_NONE and item.effect_amount != 0
 
 
-func _unsupported_effect_text(unit: UnitState, trigger: String) -> String:
+func _unsupported_effect_text(unit: UnitState, item: ItemDefinition, trigger: String) -> String:
 	return "%s triggers %s on %s, but that effect is not implemented yet." % [
 		unit.unit_name,
-		unit.equipped_item.display_name,
+		item.display_name,
 		trigger.to_lower()
 	]
 

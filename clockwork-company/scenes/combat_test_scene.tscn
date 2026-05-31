@@ -29,12 +29,12 @@ theme_override_constants/separation = 8
 
 [node name="TitleLabel" type="Label" parent="MarginContainer/VBoxContainer" unique_id=1742556195]
 layout_mode = 2
-text = "Phase 5 Combat Simulator"
+text = "Phase 6 Combat Simulator"
 
 [node name="RunButton" type="Button" parent="MarginContainer/VBoxContainer" unique_id=1860827549]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Run Tactics 3v3 Fight"
+text = "Run Jobs 3v3 Fight"
 
 [node name="CombatLog" type="TextEdit" parent="MarginContainer/VBoxContainer" unique_id=969021937]
 unique_name_in_owner = true

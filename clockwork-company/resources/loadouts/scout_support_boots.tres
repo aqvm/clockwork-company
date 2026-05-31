@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="UnitLoadoutDefinition" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/unit_loadout_definition.gd" id="1_loadout"]
+[ext_resource type="Resource" path="res://resources/jobs/scout.tres" id="2_job"]
+[ext_resource type="Resource" path="res://resources/items/light_step_boots.tres" id="3_trinket"]
+[ext_resource type="Resource" path="res://resources/tactics/heal_lowest_ally_below_half.tres" id="4_heal"]
+[ext_resource type="Resource" path="res://resources/tactics/attack_frontmost.tres" id="5_attack"]
+
+[resource]
+script = ExtResource("1_loadout")
+display_name = "Scout Support Boots"
+current_job = ExtResource("2_job")
+trinket = ExtResource("3_trinket")
+tactics = [ExtResource("4_heal"), ExtResource("5_attack")]

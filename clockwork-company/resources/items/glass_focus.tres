@@ -5,6 +5,7 @@
 [resource]
 script = ExtResource("1_focus")
 display_name = "Glass Focus"
+slot = "Trinket"
 max_hp_modifier = -2
 damage_modifier = 3
 trigger = "Attack"

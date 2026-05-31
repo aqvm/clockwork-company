@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UnitLoadoutDefinition" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/unit_loadout_definition.gd" id="1_loadout"]
+[ext_resource type="Resource" path="res://resources/jobs/scout.tres" id="2_job"]
+[ext_resource type="Resource" path="res://resources/items/shortblade.tres" id="3_weapon"]
+[ext_resource type="Resource" path="res://resources/tactics/attack_frontmost.tres" id="4_attack"]
+
+[resource]
+script = ExtResource("1_loadout")
+display_name = "Scout Shortblade"
+current_job = ExtResource("2_job")
+weapon = ExtResource("3_weapon")
+tactics = [ExtResource("4_attack")]
