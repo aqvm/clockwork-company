@@ -55,7 +55,15 @@ Current combat log design rules:
 - only parent action entries need visible timestamps
 - child entries inherit the parent moment in the player's reading of the log
 - indentation should clarify causality, not hide important outcomes
-- the UI can still display plain text until a richer combat log viewer is worth building
+- static setup information and timed combat events should be visually separated
+- the static combat conditions should be visible when the scene opens
+- the combat test should wait for an explicit run click before replaying combat events
+- setup should sit above replay and use only the height it needs, capped at half the visible log area
+- the UI can reveal the already-generated combat events over time to make the fight easier to follow
+- replay pacing should be readable rather than literal; one parent combat event per second is the current default
+- manual scrolling during replay should stop forced autoscroll so the player can inspect earlier events
+- live log replay is presentation-only and must not make combat rules frame-dependent or real-time
+- a `RichTextLabel` is preferred for the visible log so future keyword coloration can live in the UI layer
 
 ### Jobs as identity
 

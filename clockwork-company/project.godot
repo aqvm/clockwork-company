@@ -15,6 +15,12 @@ run/main_scene="res://scenes/combat_test_scene.tscn"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 config/icon="res://icon.svg"
 
+[display]
+
+window/size/viewport_width=1660
+window/size/viewport_height=935
+window/size/initial_position_type=1
+
 [physics]
 
 3d/physics_engine="Jolt Physics"
