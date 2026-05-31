@@ -14,6 +14,27 @@ Act as a tutor and pair-programmer, not a ghostwriter. The goal is that the huma
 - Use Godot 4.x and GDScript unless told otherwise.
 - Use Godot Resources for data definitions when they make the project more inspectable in Godot.
 
+## Context and handoff hygiene
+
+Prefer chats that stay coherent as one reviewable unit of work. A good chat scope might be one project phase, one logging improvement pass, one focused combat-system change, or one documentation/design discussion.
+
+If the human appears to be continuing into a new unrelated phase, piling a second substantial feature onto a chat whose earlier context is no longer relevant, or asking for work that would be easier to review in a clean conversation, pause before implementing and recommend starting a new chat.
+
+When recommending a new chat, provide a handoff prompt that includes:
+
+- the current phase or topic name
+- what was just completed or decided
+- the next goal
+- relevant files to inspect first
+- non-goals and scope boundaries
+- important design or architecture decisions to preserve
+- documentation update expectations
+- manual test expectations
+- final-response requirements from this file
+- a reminder to inspect the repository before trusting the handoff text
+
+Do not force a new chat for small follow-ups, clarifying questions, bug fixes directly related to the current change, or review feedback on the same patch. The heuristic is whether the chat still reads as one relevant whole.
+
 ## Scope discipline
 
 Do not introduce these unless explicitly requested:
@@ -51,6 +72,24 @@ Whenever you change code, include:
 - Update `LEARNING_LOG.md` after meaningful changes.
 - Update `ARCHITECTURE.md` when responsibilities or structure change.
 - Update `DESIGN_NOTES.md` when design decisions are made or revised.
+
+## Godot command-line checks
+
+When checking scripts from Codex, use a project-local log file so Godot does not try to write to its normal `user://logs` location outside the workspace sandbox:
+
+```powershell
+Godot_v4.6-stable_win64_console.exe --headless --path clockwork-company --log-file godot-check.log --check-only --script res://scripts/ui/combat_test_scene.gd
+```
+
+Why this matters:
+
+- Codex runs shell commands in a workspace-write sandbox.
+- Godot's default startup path tries to create a `user://logs` directory in its normal per-user app data location.
+- That location is outside the writable workspace, so the sandbox can block it.
+- In Godot 4.6 stable on Windows, that blocked log-directory creation can crash with signal 11 before any project or script diagnostics are printed.
+- Passing `--log-file godot-check.log` redirects the log into the Godot project directory, which is writable from Codex, and lets `--check-only` report script diagnostics normally.
+
+Delete `clockwork-company/godot-check.log` after the check unless the log contents are useful for troubleshooting.
 
 ## GitHub guidance
 

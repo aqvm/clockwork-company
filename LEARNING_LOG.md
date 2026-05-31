@@ -13,6 +13,129 @@ Each entry should include:
 - Manual exercise
 - Open questions
 
+## 2026-05-31 - Godot headless check sandbox note
+
+Feature worked on:
+
+- Documented the Codex-safe Godot command-line check for `combat_test_scene.gd`.
+- Explained why `--log-file godot-check.log` avoids the signal 11 crash seen before diagnostics.
+
+Godot concepts introduced:
+
+- `--check-only` parses a script for errors without running the full scene.
+- `--log-file` redirects Godot's output log away from the default `user://logs` location.
+- `user://` points to Godot's per-user data location, which is not necessarily inside the project folder.
+
+Game architecture concepts introduced:
+
+- None. This was a tooling and workflow documentation change.
+
+Files touched:
+
+- `AGENTS.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why Codex's workspace-write sandbox can block Godot from creating its normal user log directory.
+- Why that blocked startup write can crash Godot 4.6 stable on Windows before script diagnostics appear.
+- Why writing `godot-check.log` inside the project makes the headless check usable from Codex.
+
+Manual exercise:
+
+- Run the documented `--check-only` command with `--log-file godot-check.log`, confirm it exits cleanly, then delete `clockwork-company/godot-check.log`.
+
+Open questions:
+
+- Should we add a tiny script or PowerShell helper later so the check command is easier to run consistently?
+
+## 2026-05-31 - Interstitial Phase 6.5 live combat log replay
+
+Feature worked on:
+
+- Changed the combat test UI so the simulator still generates the full deterministic log immediately, but the visible combat events reveal one parent action per second.
+- Replaced the plain `TextEdit` log display with a `RichTextLabel` so future keyword coloration can be added in one UI helper.
+- Split the visible log into static combat conditions and live combat replay panes.
+- Updated the combat test scene so static combat conditions appear on open, while the run button starts only the combat replay.
+- Changed the visible log panes to a top/bottom split and resized the game window to roughly three quarters of the usable screen area on launch.
+- Added default project window dimensions for a larger initial game window.
+
+Godot concepts introduced:
+
+- `RichTextLabel` displays read-only rich text and can parse BBCode-like markup.
+- `Timer` emits `timeout` at a fixed interval, which is useful for UI presentation pacing.
+- `VSplitContainer` can stack two related UI sections while letting one section receive most of the remaining space.
+- `DisplayServer` can inspect the usable screen area and set the game window size and position at runtime.
+- A `RichTextLabel` exposes a vertical scrollbar that can be observed to detect manual scrolling.
+- A small BBCode escaping helper lets plain log text be appended safely before future color tags are introduced.
+
+Game architecture concepts introduced:
+
+- Presentation timing is separate from combat timing.
+- The combat simulator remains deterministic and instant from the UI's point of view.
+- The UI can replay an already-produced `Array[String]` without owning combat rules or changing combat outcomes.
+- Static setup information can be displayed immediately, while timestamped combat events are replayed separately.
+
+Files touched:
+
+- `clockwork-company/scenes/combat_test_scene.tscn`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why the replay timer belongs to the UI scene instead of the combat simulator.
+- Why escaping `[` matters before appending simulator text to a BBCode-enabled `RichTextLabel`.
+- How the UI splits the simulator's plain lines into static setup lines and replay event lines.
+- How `combat_replay_events` and `replay_event_index` let the UI reveal one parent combat event per second.
+- Why `_ready()` now connects signals, sizes the window, and runs a deterministic preview without starting replay.
+- Why `_ready()` fills the static conditions pane but does not start replay.
+- How `_resize_conditions_pane()` caps the static setup pane at half the available log area.
+- Why manual scrolling disables automatic scroll-to-bottom during the current replay.
+
+Manual exercise:
+
+- In `combat_test_scene.gd`, change `SECONDS_BETWEEN_REPLAY_ACTIONS` from `1.0` to `0.25`, run the scene, and explain why combat replay becomes faster without changing the generated combat result.
+
+Open questions:
+
+- Should the next logging pass color whole categories of lines first, or should the simulator eventually return structured log entries with categories?
+
+## 2026-05-31 - Chat handoff guidance
+
+Feature worked on:
+
+- Added repo-level guidance for when an assistant should recommend moving to a clean chat and provide a handoff prompt.
+
+Godot concepts introduced:
+
+- None. This was a collaboration/process documentation change.
+
+Game architecture concepts introduced:
+
+- None. The change supports project continuity, not combat behavior.
+
+Files touched:
+
+- `AGENTS.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why one chat should usually contain work that is relevant as a whole.
+- Why a clean chat plus a good handoff prompt can reduce stale assumptions.
+- What information a useful handoff prompt should preserve.
+
+Manual exercise:
+
+- At the end of the next focused phase, ask for a handoff prompt and check whether it names the phase, completed work, next goal, files to inspect, non-goals, docs, tests, and the reminder to verify the repo.
+
+Open questions:
+
+- Should future phase wrap-ups include a standard "handoff prompt" section by default, or only when the next task is likely to start in a clean chat?
+
 ## 2026-05-30 - Unit loadout Resources
 
 Feature worked on:

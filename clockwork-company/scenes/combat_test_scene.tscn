@@ -36,9 +36,49 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Run Jobs 3v3 Fight"
 
-[node name="CombatLog" type="TextEdit" parent="MarginContainer/VBoxContainer" unique_id=969021937]
+[node name="LogSplit" type="VSplitContainer" parent="MarginContainer/VBoxContainer" unique_id=260957601]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
-editable = false
-wrap_mode = 1
+split_offset = 260
+
+[node name="ConditionsColumn" type="VBoxContainer" parent="MarginContainer/VBoxContainer/LogSplit" unique_id=726247852]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ConditionsLabel" type="Label" parent="MarginContainer/VBoxContainer/LogSplit/ConditionsColumn" unique_id=771427300]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Combat Conditions"
+
+[node name="CombatSummary" type="RichTextLabel" parent="MarginContainer/VBoxContainer/LogSplit/ConditionsColumn" unique_id=406096502]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = true
+scroll_active = true
+autowrap_mode = 3
+
+[node name="ReplayColumn" type="VBoxContainer" parent="MarginContainer/VBoxContainer/LogSplit" unique_id=320607774]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 4
+
+[node name="PaneDivider" type="HSeparator" parent="MarginContainer/VBoxContainer/LogSplit/ReplayColumn" unique_id=1465120435]
+layout_mode = 2
+
+[node name="ReplayLabel" type="Label" parent="MarginContainer/VBoxContainer/LogSplit/ReplayColumn" unique_id=1199970523]
+layout_mode = 2
+text = "Combat Replay"
+
+[node name="CombatLog" type="RichTextLabel" parent="MarginContainer/VBoxContainer/LogSplit/ReplayColumn" unique_id=969021937]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = true
+scroll_active = true
+autowrap_mode = 3
+
+[node name="ReplayTimer" type="Timer" parent="." unique_id=1205822638]
+unique_name_in_owner = true
+one_shot = true

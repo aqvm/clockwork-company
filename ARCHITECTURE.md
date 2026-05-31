@@ -64,6 +64,8 @@ Responsible for:
 
 - buttons
 - combat log display
+- timed reveal of already-generated combat logs
+- static display of combat setup information
 - reward choices eventually
 - party/equipment screens eventually
 
@@ -109,7 +111,7 @@ This is intentionally crude and replaceable.
 The first playable test is a text-only combat scene:
 
 - `clockwork-company/scenes/combat_test_scene.tscn` owns the visible test scene.
-- `clockwork-company/scripts/ui/combat_test_scene.gd` owns the button and combat log display.
+- `clockwork-company/scripts/ui/combat_test_scene.gd` owns the button, static combat setup display, and live replay timing for already-generated combat event lines.
 - `clockwork-company/scripts/combat/combat_simulator.gd` owns the combat rules.
 - `CombatLog` and `CombatLogEntry` are small helper classes inside `combat_simulator.gd` that build the readable text log.
 - `clockwork-company/scripts/data/unit_definition.gd` defines the editable unit data Resource type.
@@ -171,6 +173,12 @@ Combat log responsibility split:
 - `CombatLog` owns the entry list, assigns IDs, attaches children to parents, and renders the final `Array[String]`.
 - `CombatSimulator` decides what happened and whether a line is a parent event or a child explanation.
 - `combat_test_scene.gd` still receives plain lines and does not know about IDs or hierarchy.
+- The combat test UI splits those plain lines at `Combat log:`. Setup, roster, loadout, gear, and tactic information appears immediately in a static `RichTextLabel`; timestamped combat events appear in a separate replay `RichTextLabel`.
+- The static setup pane is populated when the scene opens by running the deterministic simulator once and caching the combat-event lines for later replay.
+- The replay does not start when the scene opens. The UI waits for the run button, then clears and starts the timed replay pane from the cached combat-event lines.
+- The replay shows one timestamped parent combat event per second. Child explanation lines without their own timestamp appear with the most recent parent event.
+- The combat test scene sizes the game window to roughly three quarters of the current monitor's usable area and stacks setup above replay in a vertical split. The setup pane is resized after each run to use the smaller of its content height or half the available log area.
+- This is presentation only: `run_demo_battle()` still finishes the deterministic simulation before replay starts.
 
 Triggered item responsibility split:
 
