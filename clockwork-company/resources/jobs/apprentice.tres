@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="JobDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/job_definition.gd" id="1_apprentice_job"]
+
+[resource]
+script = ExtResource("1_apprentice_job")
+display_name = "Apprentice"
+max_hp_modifier = -2
+action_interval_modifier = -1
+can_equip_weapon = false
+can_equip_armor = false
+can_equip_trinket = true
+job_effect = "First Aid"

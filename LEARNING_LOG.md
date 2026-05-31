@@ -13,6 +13,101 @@ Each entry should include:
 - Manual exercise
 - Open questions
 
+## 2026-05-30 - Unit loadout Resources
+
+Feature worked on:
+
+- Moved jobs, equipment slots, and tactic assignments out of simulator demo arrays and into editor-editable Resources.
+
+Godot concepts introduced:
+
+- A `UnitLoadoutDefinition` `Resource` can reference other Resources, including jobs, items, and tactic rules.
+- A `UnitDefinition` can point to another custom Resource, giving one asset a reusable data dependency.
+- Resource arrays can store ordered tactic lists that the simulator reads at runtime.
+
+Game architecture concepts introduced:
+
+- Base unit data and build/loadout data are now separate concepts.
+- A loadout is the current archetype layer: it combines a current job, weapon, armor, trinket, and tactics.
+- The simulator still owns combat rules, but no longer owns the specific demo jobs, gear, or tactics.
+- The fixed 3v3 roster remains in code for now; encounter/party composition can become a Resource later.
+
+Files touched:
+
+- `clockwork-company/scripts/data/unit_definition.gd`
+- `clockwork-company/scripts/data/unit_loadout_definition.gd`
+- `clockwork-company/scripts/combat/combat_simulator.gd`
+- `clockwork-company/resources/units/*.tres`
+- `clockwork-company/resources/loadouts/*.tres`
+- `clockwork-company/resources/tactics/*.tres`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why `UnitDefinition` and `UnitLoadoutDefinition` are separate Resources.
+- How a loadout can be reused by multiple units with different base stats.
+- How weapon, armor, and trinket permissions are checked one item at a time.
+- Why tactics can now be edited as `.tres` assets instead of being created in simulator code.
+
+Manual exercise:
+
+- Open `clockwork-company/resources/units/sol_apprentice.tres`, change its `loadout` to `res://resources/loadouts/scout_shortblade.tres`, run combat, and explain which stats, equipment permissions, tactics, and job effect changed.
+
+Open questions:
+
+- Should the fixed 3v3 roster move into a `CombatScenarioDefinition` or `EncounterDefinition` next?
+- Should loadouts stay on units permanently, or should a later party editor assign loadouts separately from unit definitions?
+
+## 2026-05-30 - Phase 6 basic jobs
+
+Feature worked on:
+
+- Added basic jobs so current job identity can shape stats, equipment permissions, and one small job effect.
+
+Godot concepts introduced:
+
+- A `JobDefinition` `Resource` uses exported integers, booleans, and an `@export_enum` job-effect label.
+- `.tres` job Resources make current-job data inspectable in Godot beside unit, item, and tactic data.
+- Multiple Resource definitions can be combined into one runtime combat object without rewriting the source Resources.
+
+Game architecture concepts introduced:
+
+- Jobs are source data, while current job assignment and job effects are copied into `UnitState` for one battle.
+- Job stat modifiers affect runtime stats after unit data is copied and before allowed item modifiers are applied.
+- Job equipment permissions filter demo gear; skipped gear is logged and does not apply modifiers or triggers.
+- A current job effect can change combat behavior without changing the unit's base stats.
+
+Files touched:
+
+- `clockwork-company/scripts/data/job_definition.gd`
+- `clockwork-company/resources/jobs/guard.tres`
+- `clockwork-company/resources/jobs/scout.tres`
+- `clockwork-company/resources/jobs/apprentice.tres`
+- `clockwork-company/scripts/combat/combat_simulator.gd`
+- `clockwork-company/resources/items/glass_focus.tres`
+- `clockwork-company/scenes/combat_test_scene.tscn`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why `JobDefinition` is data and `UnitState` is the battle copy that actually changes.
+- How job stat modifiers, item modifiers, and battle-start effects happen in order.
+- Why equipment permissions should skip an item before its stats or triggers apply.
+- How a current job effect such as `First Aid` or `Sharpened Edge` changes combat behavior.
+
+Manual exercise:
+
+- In `clockwork-company/resources/jobs/apprentice.tres`, temporarily set `can_equip_trinket` to `false`, run the fight, and explain why Sol's Glass Focus no longer changes stats or triggers on attack.
+
+Open questions:
+
+- Should learned effects eventually come from a unit career/progression Resource once jobs stop acting like simple classes?
+- Should equipment permissions live only on jobs, or should future items have additional unit-specific requirements?
+
 ## 2026-05-30 - Armor reduction and temporary guard armor
 
 Feature worked on:

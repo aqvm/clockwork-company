@@ -69,6 +69,23 @@ Jobs should provide:
 
 Past jobs should leave residue.
 
+Phase 6 starts jobs as a tiny readable identity layer, not a full progression system.
+
+Current job design rules:
+
+- each unit points to one reusable loadout Resource
+- each loadout has exactly one current job
+- current jobs apply small flat stat modifiers to runtime combat stats
+- current jobs decide whether weapon, armor, and trinket items can be equipped
+- forbidden loadout equipment is skipped and explained in the combat log
+- each current job has one small job effect
+- job effects are deterministic and narrow: extra attack damage, extra healing, or extra guard armor
+- job effects modify `UnitState` combat outcomes, not unit or job Resource files
+
+This is deliberately not a job tree, XP system, unlock system, visual loadout editor, or progression UI. Those can come later once the small version is understandable.
+
+Loadouts are the current composability layer. A `UnitDefinition` stores base stats and points to a `UnitLoadoutDefinition`; the loadout stores current job, weapon, armor, trinket, and tactics. This lets the same build archetype move between units with different base bodies without changing combat code.
+
 ### Tactics as authored behavior
 
 The player does not act during combat. The player authors behavior beforehand.
@@ -90,7 +107,7 @@ Current tactic design rules:
 - heal is a small fixed amount so it stays predictable
 - guard is temporary armor until the unit's next turn
 - every selected tactic must explain itself in the combat log
-- fixed demo tactic lists live in the simulator until party, encounter, or loadout data exists
+- tactic Resources live in loadouts so behavior can be edited in Godot without changing simulator code
 
 Armor reduction should stay readable when temporary armor exists. Base battle armor cannot go below zero. Effects such as Shortblade reduce base armor first; if a target has no base armor left, the same reduction can reduce temporary guard armor instead.
 

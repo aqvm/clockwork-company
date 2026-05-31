@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="JobDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/job_definition.gd" id="1_scout_job"]
+
+[resource]
+script = ExtResource("1_scout_job")
+display_name = "Scout"
+damage_modifier = 1
+armor_modifier = -1
+action_interval_modifier = -1
+can_equip_weapon = true
+can_equip_armor = false
+can_equip_trinket = true
+job_effect = "Sharpened Edge"

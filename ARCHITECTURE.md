@@ -33,8 +33,9 @@ Responsible for:
 
 - unit definitions
 - item definitions
-- job definitions eventually
-- tactics definitions eventually
+- job definitions
+- tactics definitions
+- loadout definitions
 - encounters
 
 Prefer data-driven definitions where reasonable. Use Resources when they make the project more inspectable in Godot.
@@ -103,7 +104,7 @@ Initial damage formula:
 
 This is intentionally crude and replaceable.
 
-## Current Phase 5 implementation
+## Current Phase 6 implementation
 
 The first playable test is a text-only combat scene:
 
@@ -113,9 +114,14 @@ The first playable test is a text-only combat scene:
 - `CombatLog` and `CombatLogEntry` are small helper classes inside `combat_simulator.gd` that build the readable text log.
 - `clockwork-company/scripts/data/unit_definition.gd` defines the editable unit data Resource type.
 - `clockwork-company/scripts/data/item_definition.gd` defines the editable item data Resource type, including one optional triggered effect.
+- `clockwork-company/scripts/data/job_definition.gd` defines the editable job data Resource type, including stat modifiers, equipment permissions, and one learnable effect label.
+- `clockwork-company/scripts/data/unit_loadout_definition.gd` defines a reusable build package with a current job, weapon, armor, trinket, and tactic list.
 - `clockwork-company/scripts/data/tactic_definition.gd` defines the small tactic rule Resource type.
 - `clockwork-company/resources/units/*.tres` stores the current demo unit definitions.
 - `clockwork-company/resources/items/*.tres` stores the current demo item definitions.
+- `clockwork-company/resources/jobs/*.tres` stores the current demo job definitions.
+- `clockwork-company/resources/loadouts/*.tres` stores reusable demo build archetypes.
+- `clockwork-company/resources/tactics/*.tres` stores reusable tactic rule definitions.
 
 The scene is set as the main scene in `clockwork-company/project.godot`, so pressing Play in Godot should open the combat test.
 
@@ -123,15 +129,23 @@ Current combat rules:
 
 - the fight still uses a fixed 3 allies against 3 enemies roster
 - unit stats are loaded from `UnitDefinition` Resources instead of hardcoded dictionaries
-- a fixed demo equipment list gives some units one equipped `ItemDefinition`
+- each `UnitDefinition` points to one `UnitLoadoutDefinition`
+- a loadout gives a unit one current `JobDefinition`
+- a loadout can assign one weapon, one armor item, and one trinket item
+- the current job decides whether each assigned item is allowed before item modifiers or triggers apply
+- a loadout owns the unit's priority-ordered tactic Resource list
 - each item has one slot label and flat modifiers for max HP, damage, armor, and action interval
 - each item can also define one simple triggered effect with a trigger, effect type, and amount
-- `UnitState` copies definition data into combat-only runtime state at battle start, then applies equipped item modifiers to produce final battle stats
+- each job has flat modifiers for max HP, damage, armor, and action interval
+- each job has permission booleans for weapon, armor, and trinket items
+- `UnitState` copies definition data into combat-only runtime state at battle start, reads the unit's loadout, applies current job modifiers, checks equipment permissions, then applies allowed item modifiers to produce final battle stats
 - battle-start item effects can further change combat-only runtime stats before the roster is printed
+- skipped equipment is logged and does not provide stat modifiers or triggered effects
+- current job effects are tiny deterministic combat hooks: `Sharpened Edge` adds attack damage, `First Aid` improves healing, and `Guard Training` improves guard armor
 - every unit starts with `next_action_time = action_interval`
 - the living unit with the lowest `next_action_time` acts next
 - ties use roster order, which keeps the result deterministic
-- every turn evaluates that unit's fixed demo tactics in priority order
+- every turn evaluates that unit's loadout tactics in priority order
 - each tactic is a limited `condition -> action -> target` rule
 - the first tactic with a true condition and valid target is selected
 - if no tactic matches, the simulator falls back to attacking the frontmost living enemy
@@ -168,17 +182,30 @@ Triggered item responsibility split:
 Tactic responsibility split:
 
 - `TacticDefinition` owns inspectable source data: one condition, one action, and one target rule.
-- `UnitState` owns the fixed priority-ordered tactic list assigned to this combat copy.
+- `UnitLoadoutDefinition` owns the source tactic list for a reusable build.
+- `UnitState` owns the runtime copy of that priority-ordered tactic list for this combat copy.
 - `CombatSimulator` owns tactic evaluation, target validation, and action resolution.
-- The current demo assigns tactics in code so Phase 5 can focus on behavior before party editing or encounter data exists.
+- The current demo loads tactic Resources through unit loadouts, while party editing and encounter data still wait.
 - The UI still receives plain rendered log lines and does not know how tactics are evaluated.
+
+Job responsibility split:
+
+- `JobDefinition` owns inspectable source data: current-job stat modifiers, equipment permissions, and the effect a job can teach.
+- `UnitLoadoutDefinition` owns the source current-job assignment for a reusable build.
+- `UnitState` owns the runtime current job assigned to this combat copy.
+- `CombatSimulator` owns equipment permission checks and current-job effect resolution.
+- Unit, item, tactic, and job definitions remain separate source data. Runtime combat combines them into one `UnitState` without rewriting any `.tres` definition.
+- The current demo still keeps the fixed 3v3 roster list in code; jobs, gear, and tactics now live in editor-editable unit/loadout Resources.
 
 Manual test:
 
 - Open the Godot project in `clockwork-company/`.
 - Press Play.
-- Click `Run Tactics 3v3 Fight`.
-- Confirm the text log shows equipped gear, demo tactics, battle-start item effects, final roster stats, action times, selected tactics, damage, healing or guarding, defeats, and final result.
+- Click `Run Jobs 3v3 Fight`.
+- Confirm the text log shows loadouts, current jobs, job effects, equipped or skipped gear, loadout tactics, battle-start item effects, final roster stats, action times, selected tactics, damage, healing or guarding, defeats, and final result.
+- Confirm Sol Apprentice uses the `Apprentice Focus` loadout and that Glass Focus still triggers on attack.
+- Confirm Glass Wisp uses the `Apprentice Support` loadout and that the Apprentice job's `First Aid` effect appears when that job heals.
+- Confirm Iron Brute's Light-Step Boots are skipped because Guard cannot equip trinkets.
 - Confirm selected tactics appear indented below each turn.
 - Confirm attack triggers, hit triggers, damage, and defeat lines appear indented below their parent attack action.
 - Edit one `.tres` file in `clockwork-company/resources/units/`, run again, and confirm the roster/log reflects that data change.

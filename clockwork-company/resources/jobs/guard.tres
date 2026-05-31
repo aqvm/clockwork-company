@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="JobDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/job_definition.gd" id="1_guard_job"]
+
+[resource]
+script = ExtResource("1_guard_job")
+display_name = "Guard"
+max_hp_modifier = 4
+armor_modifier = 1
+action_interval_modifier = 1
+can_equip_weapon = true
+can_equip_armor = true
+can_equip_trinket = false
+job_effect = "Guard Training"

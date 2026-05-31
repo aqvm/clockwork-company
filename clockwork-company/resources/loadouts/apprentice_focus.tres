@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UnitLoadoutDefinition" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/unit_loadout_definition.gd" id="1_loadout"]
+[ext_resource type="Resource" path="res://resources/jobs/apprentice.tres" id="2_job"]
+[ext_resource type="Resource" path="res://resources/items/glass_focus.tres" id="3_trinket"]
+[ext_resource type="Resource" path="res://resources/tactics/attack_frontmost.tres" id="4_attack"]
+
+[resource]
+script = ExtResource("1_loadout")
+display_name = "Apprentice Focus"
+current_job = ExtResource("2_job")
+trinket = ExtResource("3_trinket")
+tactics = [ExtResource("4_attack")]
