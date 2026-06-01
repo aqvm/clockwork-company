@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://bwypver014851"]
 
 [ext_resource type="Script" uid="uid://bha8swoxgq5r6" path="res://scripts/ui/combat_test_scene.gd" id="1_combat_ui"]
+[ext_resource type="Script" path="res://scripts/ui/unit_status_dot.gd" id="2_unit_dot"]
 
 [node name="CombatTestScene" type="Control" unique_id=1765527660]
 layout_mode = 3
@@ -10,6 +11,16 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_combat_ui")
+
+[node name="Background" type="ColorRect" parent="." unique_id=764332918]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.0705882, 0.0862745, 0.117647, 1)
 
 [node name="MarginContainer" type="MarginContainer" parent="." unique_id=1193553979]
 layout_mode = 1
@@ -71,13 +82,58 @@ layout_mode = 2
 layout_mode = 2
 text = "Combat Replay"
 
-[node name="CombatLog" type="RichTextLabel" parent="MarginContainer/VBoxContainer/LogSplit/ReplayColumn" unique_id=969021937]
+[node name="ReplaySplitRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer/LogSplit/ReplayColumn" unique_id=131313131]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="ReplayTextColumn" type="VBoxContainer" parent="MarginContainer/VBoxContainer/LogSplit/ReplayColumn/ReplaySplitRow" unique_id=141414141]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="CombatLog" type="RichTextLabel" parent="MarginContainer/VBoxContainer/LogSplit/ReplayColumn/ReplaySplitRow/ReplayTextColumn" unique_id=969021937]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
 size_flags_vertical = 3
 bbcode_enabled = true
 scroll_active = true
 autowrap_mode = 3
+
+[node name="ReplayVerticalRule" type="VSeparator" parent="MarginContainer/VBoxContainer/LogSplit/ReplayColumn/ReplaySplitRow" unique_id=151515151]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ReplayVizColumn" type="VBoxContainer" parent="MarginContainer/VBoxContainer/LogSplit/ReplayColumn/ReplaySplitRow" unique_id=161616161]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="ReplayVizLabel" type="Label" parent="MarginContainer/VBoxContainer/LogSplit/ReplayColumn/ReplaySplitRow/ReplayVizColumn" unique_id=171717171]
+layout_mode = 2
+text = "Unit Replay (Prototype)"
+
+[node name="AlliesRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer/LogSplit/ReplayColumn/ReplaySplitRow/ReplayVizColumn" unique_id=181818181]
+unique_name_in_owner = true
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 6
+
+[node name="TeamRule" type="HSeparator" parent="MarginContainer/VBoxContainer/LogSplit/ReplayColumn/ReplaySplitRow/ReplayVizColumn" unique_id=191919191]
+layout_mode = 2
+
+[node name="EnemiesRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer/LogSplit/ReplayColumn/ReplaySplitRow/ReplayVizColumn" unique_id=202020202]
+unique_name_in_owner = true
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 6
+
+[node name="UnitDotTemplate" type="Control" parent="MarginContainer/VBoxContainer/LogSplit/ReplayColumn/ReplaySplitRow/ReplayVizColumn" unique_id=212121212]
+visible = false
+layout_mode = 2
+script = ExtResource("2_unit_dot")
 
 [node name="ReplayTimer" type="Timer" parent="." unique_id=1205822638]
 unique_name_in_owner = true

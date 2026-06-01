@@ -64,6 +64,12 @@ Current combat log design rules:
 - manual scrolling during replay should stop forced autoscroll so the player can inspect earlier events
 - live log replay is presentation-only and must not make combat rules frame-dependent or real-time
 - a `RichTextLabel` is preferred for the visible log so future keyword coloration can live in the UI layer
+- keyword highlighting should stay a small UI categorization pass over plain log lines, not a combat-system rewrite
+- highlight category colors should be exposed as inspectable `Color` fields on a Resource so tuning can happen with Godot color pickers
+- the combat test scene background should be an intentional dark neutral so highlight colors retain readable contrast
+- replay text and replay visualization can coexist in the same pane, with a clear divider so readability stays primary
+- a first-pass replay visualization can be reconstructed from deterministic log text if it stays explicitly presentation-only
+- cooldown visualization should map to simulation time so a unit acts when its cooldown bar reaches empty
 
 ### Jobs as identity
 

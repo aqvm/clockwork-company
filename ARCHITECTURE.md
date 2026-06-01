@@ -112,6 +112,7 @@ The first playable test is a text-only combat scene:
 
 - `clockwork-company/scenes/combat_test_scene.tscn` owns the visible test scene.
 - `clockwork-company/scripts/ui/combat_test_scene.gd` owns the button, static combat setup display, and live replay timing for already-generated combat event lines.
+- `clockwork-company/scripts/ui/unit_status_dot.gd` owns drawing one unit's circular replay marker, health arc, and cooldown bar.
 - `clockwork-company/scripts/combat/combat_simulator.gd` owns the combat rules.
 - `CombatLog` and `CombatLogEntry` are small helper classes inside `combat_simulator.gd` that build the readable text log.
 - `clockwork-company/scripts/data/unit_definition.gd` defines the editable unit data Resource type.
@@ -178,6 +179,10 @@ Combat log responsibility split:
 - The replay does not start when the scene opens. The UI waits for the run button, then clears and starts the timed replay pane from the cached combat-event lines.
 - The replay shows one timestamped parent combat event per second. Child explanation lines without their own timestamp appear with the most recent parent event.
 - The combat test scene sizes the game window to roughly three quarters of the current monitor's usable area and stacks setup above replay in a vertical split. The setup pane is resized after each run to use the smaller of its content height or half the available log area.
+- The replay and setup panes now apply UI-layer keyword highlighting to plain simulator lines by wrapping BBCode-safe text in color tags by category (timestamp, attacks, damage, healing, guard, tactics, job effects, item triggers, defeats, and result).
+- The replay pane now has a left/right split: left is the existing text replay, right is a lightweight unit visualization panel separated by a vertical rule.
+- The visualization panel is still presentation-only: it parses roster/action/HP text lines into a UI replay model, then draws unit circles, health arcs, and cooldown bars without changing simulator rules.
+- Highlight colors are configured in a dedicated `CombatLogHighlightPalette` Resource so color tuning stays editor-visible and does not require editing code constants.
 - This is presentation only: `run_demo_battle()` still finishes the deterministic simulation before replay starts.
 
 Triggered item responsibility split:

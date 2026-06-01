@@ -88,8 +88,7 @@ Why this matters:
 - That location is outside the writable workspace, so the sandbox can block it.
 - In Godot 4.6 stable on Windows, that blocked log-directory creation can crash with signal 11 before any project or script diagnostics are printed.
 - Passing `--log-file godot-check.log` redirects the log into the Godot project directory, which is writable from Codex, and lets `--check-only` report script diagnostics normally.
-
-Delete `clockwork-company/godot-check.log` after the check unless the log contents are useful for troubleshooting.
+- Keep using the same `godot-check.log` path each run; it can be treated as a reusable scratch log and is git-ignored.
 
 ## GitHub guidance
 
