@@ -2,6 +2,22 @@
 
 [ext_resource type="Script" uid="uid://bha8swoxgq5r6" path="res://scripts/ui/combat_test_scene.gd" id="1_combat_ui"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mods_panel"]
+bg_color = Color(0.0705882, 0.0862745, 0.117647, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.286275, 0.329412, 0.388235, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+content_margin_left = 6.0
+content_margin_top = 6.0
+content_margin_right = 6.0
+content_margin_bottom = 6.0
+
 [node name="CombatTestScene" type="Control" unique_id=1765527660]
 layout_mode = 3
 anchors_preset = 15
@@ -41,15 +57,44 @@ theme_override_constants/separation = 8
 layout_mode = 2
 text = "Phase 6 Combat Simulator"
 
-[node name="RunButton" type="Button" parent="MarginContainer/VBoxContainer" unique_id=1860827549]
+[node name="ControlsRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer" unique_id=213141313]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="RunButton" type="Button" parent="MarginContainer/VBoxContainer/ControlsRow" unique_id=1860827549]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Run Jobs 3v3 Fight"
+
+[node name="ModsMenuButton" type="Button" parent="MarginContainer/VBoxContainer/ControlsRow" unique_id=787878787]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Mods"
+
+[node name="ModsListPanel" type="PanelContainer" parent="." unique_id=565656565]
+unique_name_in_owner = true
+visible = false
+layout_mode = 0
+offset_right = 280.0
+offset_bottom = 180.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_mods_panel")
+
+[node name="ModsListScroll" type="ScrollContainer" parent="ModsListPanel" unique_id=575757575]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="ModsListVBox" type="VBoxContainer" parent="ModsListPanel/ModsListScroll" unique_id=585858585]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
 
 [node name="LogSplit" type="VSplitContainer" parent="MarginContainer/VBoxContainer" unique_id=260957601]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
+split_offsets = PackedInt32Array(260)
 split_offset = 260
 
 [node name="ConditionsColumn" type="VBoxContainer" parent="MarginContainer/VBoxContainer/LogSplit" unique_id=726247852]
@@ -66,8 +111,6 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 bbcode_enabled = true
-scroll_active = true
-autowrap_mode = 3
 
 [node name="ReplayColumn" type="VBoxContainer" parent="MarginContainer/VBoxContainer/LogSplit" unique_id=320607774]
 layout_mode = 2
@@ -97,8 +140,6 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 bbcode_enabled = true
-scroll_active = true
-autowrap_mode = 3
 
 [node name="ReplayVerticalRule" type="VSeparator" parent="MarginContainer/VBoxContainer/LogSplit/ReplayColumn/ReplaySplitRow" unique_id=151515151]
 layout_mode = 2
@@ -117,8 +158,8 @@ text = "Unit Replay (Prototype)"
 [node name="AlliesRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer/LogSplit/ReplayColumn/ReplaySplitRow/ReplayVizColumn" unique_id=181818181]
 unique_name_in_owner = true
 layout_mode = 2
-alignment = 1
 theme_override_constants/separation = 6
+alignment = 1
 
 [node name="TeamRule" type="HSeparator" parent="MarginContainer/VBoxContainer/LogSplit/ReplayColumn/ReplaySplitRow/ReplayVizColumn" unique_id=191919191]
 layout_mode = 2
@@ -126,8 +167,8 @@ layout_mode = 2
 [node name="EnemiesRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer/LogSplit/ReplayColumn/ReplaySplitRow/ReplayVizColumn" unique_id=202020202]
 unique_name_in_owner = true
 layout_mode = 2
-alignment = 1
 theme_override_constants/separation = 6
+alignment = 1
 
 [node name="ReplayTimer" type="Timer" parent="." unique_id=1205822638]
 unique_name_in_owner = true

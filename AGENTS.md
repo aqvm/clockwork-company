@@ -72,6 +72,8 @@ Whenever you change code, include:
 - Update `LEARNING_LOG.md` after meaningful changes.
 - Update `ARCHITECTURE.md` when responsibilities or structure change.
 - Update `DESIGN_NOTES.md` when design decisions are made or revised.
+- For JSON content/modding files, keep adjacent `*.options.md` docs fully up to date with every field/enum/keyword/reference rule change.
+- If JSON schema/keywords change in loader or data scripts, update both the sidecar docs next to affected JSON files and any repository-level modding docs in the same patch.
 
 ## Godot command-line checks
 

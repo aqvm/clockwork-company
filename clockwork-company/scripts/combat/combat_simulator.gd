@@ -4,15 +4,22 @@ class_name CombatSimulator
 const CombatLogScript := preload("res://scripts/combat/logging/combat_log.gd")
 const CombatConstantsScript := preload("res://scripts/combat/combat_constants.gd")
 const CombatTextFormatterScript := preload("res://scripts/combat/logging/combat_text_formatter.gd")
+const CombatEventsScript := preload("res://scripts/combat/logging/combat_events.gd")
 const TurnSchedulerScript := preload("res://scripts/combat/runtime/turn_scheduler.gd")
 const TacticResolverScript := preload("res://scripts/combat/rules/tactic_resolver.gd")
 const JobEffectResolverScript := preload("res://scripts/combat/rules/job_effect_resolver.gd")
 const ItemEffectResolverScript := preload("res://scripts/combat/rules/item_effect_resolver.gd")
 const TargetingRulesScript := preload("res://scripts/combat/rules/targeting_rules.gd")
 const DemoBattleFactoryScript := preload("res://scripts/combat/scenarios/demo_battle_factory.gd")
+const LOG_VERSION := 1
 
-func run_demo_battle() -> Array[String]:
-	var units: Array = DemoBattleFactoryScript.create_demo_units()
+func run_demo_battle(enabled_mod_pack_ids: Variant = null) -> Array[String]:
+	var report := run_demo_battle_report(enabled_mod_pack_ids)
+	return report["lines"]
+
+
+func run_demo_battle_report(enabled_mod_pack_ids: Variant = null) -> Dictionary:
+	var units: Array = DemoBattleFactoryScript.create_demo_units(enabled_mod_pack_ids)
 	var log = CombatLogScript.new()
 	var actions_taken := 0
 
@@ -44,7 +51,8 @@ func run_demo_battle() -> Array[String]:
 
 		var actor = TurnSchedulerScript.find_next_actor(units)
 		var current_time: int = actor.next_action_time
-		var turn_entry_id: int = log.add_at_time(current_time, "%s takes a turn." % actor.unit_name)
+		var turn_event := CombatEventsScript.turn_start(actor, actor.next_action_time)
+		var turn_entry_id: int = log.add_event("%s takes a turn." % actor.unit_name, turn_event["event_type"], current_time, CombatLogScript.NO_PARENT, turn_event["payload"], turn_event["tags"])
 
 		_clear_guard_if_needed(log, turn_entry_id, actor)
 		_take_tactical_action(log, turn_entry_id, actor, units)
@@ -52,8 +60,15 @@ func run_demo_battle() -> Array[String]:
 		TurnSchedulerScript.schedule_next_turn(actor)
 
 	log.add("")
-	log.add(CombatTextFormatterScript.build_result_line(units, actions_taken))
-	return log.to_lines()
+	var result_text := CombatTextFormatterScript.build_result_line(units, actions_taken)
+	var result_event := CombatEventsScript.result(result_text)
+	log.add_event(result_text, result_event["event_type"], CombatLogScript.NO_TIME, CombatLogScript.NO_PARENT, result_event["payload"], result_event["tags"])
+	return {
+		"log_version": LOG_VERSION,
+		"lines": log.to_lines(),
+		"events": log.to_event_objects(),
+		"roster_units": _build_roster_units(units),
+	}
 
 
 func _append_jobs_summary(log, units: Array) -> void:
@@ -98,8 +113,14 @@ func _append_roster(log, units: Array) -> void:
 func _take_tactical_action(log, turn_entry_id: int, actor, units: Array) -> void:
 	var decision: Dictionary = TacticResolverScript.choose_action(actor, units)
 	for skipped_reason: String in decision.get("skipped_reasons", []):
-		log.add_child(turn_entry_id, skipped_reason)
-	log.add_child(turn_entry_id, decision["reason"])
+		var skipped_event := CombatEventsScript.tactic_skipped(actor, skipped_reason)
+		log.add_event(skipped_reason, skipped_event["event_type"], CombatLogScript.NO_TIME, turn_entry_id, skipped_event["payload"], skipped_event["tags"])
+	if String(decision.get("reason_type", "")) == "selected":
+		var selected_event := CombatEventsScript.tactic_selected(actor, decision["action"], decision["target"], String(decision.get("reason_tactic", "")))
+		log.add_event(decision["reason"], selected_event["event_type"], CombatLogScript.NO_TIME, turn_entry_id, selected_event["payload"], selected_event["tags"])
+	else:
+		var fallback_event := CombatEventsScript.tactic_fallback(actor, decision["target"])
+		log.add_event(decision["reason"], fallback_event["event_type"], CombatLogScript.NO_TIME, turn_entry_id, fallback_event["payload"], fallback_event["tags"])
 	_resolve_tactic_action(log, turn_entry_id, actor, decision["target"], decision["action"])
 
 
@@ -114,18 +135,22 @@ func _resolve_tactic_action(log, turn_entry_id: int, actor, target, action: Stri
 
 
 func _resolve_attack(log, turn_entry_id: int, actor, target) -> void:
-	var attack_entry_id: int = log.add_child(turn_entry_id, "%s attacks %s." % [actor.unit_name, target.unit_name])
+	var attack_event := CombatEventsScript.attack(actor, target)
+	var attack_entry_id: int = log.add_event("%s attacks %s." % [actor.unit_name, target.unit_name], attack_event["event_type"], CombatLogScript.NO_TIME, turn_entry_id, attack_event["payload"], attack_event["tags"])
 	var bonus_damage: int = JobEffectResolverScript.attack_bonus(log, attack_entry_id, actor)
 	bonus_damage += ItemEffectResolverScript.apply_attack_item_effects(log, attack_entry_id, actor, target)
 	var target_armor: int = target.total_armor()
 	var damage_taken: int = max(1, actor.damage + bonus_damage - target_armor)
 	var previous_hp: int = target.hp
 	target.hp = max(0, target.hp - damage_taken)
-	log.add_child(attack_entry_id, "Damage dealt: %d. %s armor: %d. HP: %d -> %d." % [damage_taken, target.unit_name, target_armor, previous_hp, target.hp])
+	_assert_damage_event_consistency(damage_taken, previous_hp, target.hp)
+	var damage_event := CombatEventsScript.damage(actor, target, damage_taken, target_armor, previous_hp, target.hp)
+	log.add_event("Damage dealt: %d. %s armor: %d. HP: %d -> %d." % [damage_taken, target.unit_name, target_armor, previous_hp, target.hp], damage_event["event_type"], CombatLogScript.NO_TIME, attack_entry_id, damage_event["payload"], damage_event["tags"])
 	if target.is_alive():
 		ItemEffectResolverScript.apply_hit_item_effects(log, attack_entry_id, actor, target)
 	if not target.is_alive():
-		log.add_child(attack_entry_id, "%s is defeated." % target.unit_name)
+		var defeat_event := CombatEventsScript.defeat(target)
+		log.add_event("%s is defeated." % target.unit_name, defeat_event["event_type"], CombatLogScript.NO_TIME, attack_entry_id, defeat_event["payload"], defeat_event["tags"])
 		ItemEffectResolverScript.apply_kill_item_effects(log, attack_entry_id, actor)
 		ItemEffectResolverScript.apply_death_item_effects(log, attack_entry_id, target, actor)
 
@@ -134,17 +159,47 @@ func _resolve_heal(log, turn_entry_id: int, actor, target) -> void:
 	var previous_hp: int = target.hp
 	var heal_amount: int = CombatConstantsScript.HEAL_AMOUNT + JobEffectResolverScript.heal_bonus(log, turn_entry_id, actor)
 	target.hp = min(target.max_hp, target.hp + heal_amount)
-	log.add_child(turn_entry_id, "%s heals %s for %d HP. HP: %d -> %d." % [actor.unit_name, target.unit_name, target.hp - previous_hp, previous_hp, target.hp])
+	var applied_heal: int = target.hp - previous_hp
+	_assert_heal_event_consistency(applied_heal, previous_hp, target.hp, heal_amount)
+	var heal_event := CombatEventsScript.heal(actor, target, applied_heal, previous_hp, target.hp)
+	log.add_event("%s heals %s for %d HP. HP: %d -> %d." % [actor.unit_name, target.unit_name, applied_heal, previous_hp, target.hp], heal_event["event_type"], CombatLogScript.NO_TIME, turn_entry_id, heal_event["payload"], heal_event["tags"])
 
 
 func _resolve_guard(log, turn_entry_id: int, actor) -> void:
 	actor.guard_armor = CombatConstantsScript.GUARD_ARMOR_AMOUNT + JobEffectResolverScript.guard_bonus(log, turn_entry_id, actor)
-	log.add_child(turn_entry_id, "%s guards: temporary armor +%d until their next turn. Armor is now %d." % [actor.unit_name, actor.guard_armor, actor.total_armor()])
+	var guard_event := CombatEventsScript.guard(actor, actor.guard_armor, actor.total_armor())
+	log.add_event("%s guards: temporary armor +%d until their next turn. Armor is now %d." % [actor.unit_name, actor.guard_armor, actor.total_armor()], guard_event["event_type"], CombatLogScript.NO_TIME, turn_entry_id, guard_event["payload"], guard_event["tags"])
 
 
 func _clear_guard_if_needed(log, turn_entry_id: int, actor) -> void:
 	if actor.guard_armor == 0:
 		return
 	var previous_armor: int = actor.total_armor()
-	log.add_child(turn_entry_id, "%s's guard expires: armor %d -> %d." % [actor.unit_name, previous_armor, actor.armor])
+	var guard_expire_event := CombatEventsScript.guard_expire(actor, previous_armor, actor.armor)
+	log.add_event("%s's guard expires: armor %d -> %d." % [actor.unit_name, previous_armor, actor.armor], guard_expire_event["event_type"], CombatLogScript.NO_TIME, turn_entry_id, guard_expire_event["payload"], guard_expire_event["tags"])
 	actor.guard_armor = 0
+
+
+func _build_roster_units(units: Array) -> Array[Dictionary]:
+	var roster_units: Array[Dictionary] = []
+	for unit in units:
+		roster_units.append({
+			"id": unit.unit_id,
+			"name": unit.unit_name,
+			"team": unit.team,
+			"max_hp": unit.max_hp,
+			"action_interval": unit.action_interval,
+		})
+	return roster_units
+
+
+func _assert_damage_event_consistency(damage_taken: int, previous_hp: int, new_hp: int) -> void:
+	assert(damage_taken >= 1, "Damage must be at least 1.")
+	assert(new_hp <= previous_hp, "Damage event increased HP unexpectedly.")
+	assert(previous_hp - new_hp == damage_taken or new_hp == 0, "Damage/HP delta mismatch.")
+
+
+func _assert_heal_event_consistency(applied_heal: int, previous_hp: int, new_hp: int, attempted_heal: int) -> void:
+	assert(attempted_heal >= 0, "Attempted heal must be non-negative.")
+	assert(new_hp >= previous_hp, "Heal event reduced HP unexpectedly.")
+	assert(applied_heal == (new_hp - previous_hp), "Heal/HP delta mismatch.")

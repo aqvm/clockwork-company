@@ -2,6 +2,7 @@ extends RefCounted
 class_name UnitState
 
 var unit_name := ""
+var unit_id := ""
 var team := ""
 var max_hp := 1
 var hp := 1
@@ -20,6 +21,7 @@ var guard_armor := 0
 
 func _init(definition: UnitDefinition, unit_slot_index: int) -> void:
 	unit_name = definition.display_name
+	unit_id = _build_unit_id(definition.team, unit_slot_index, definition.display_name)
 	team = definition.team
 	max_hp = definition.max_hp
 	damage = definition.damage
@@ -113,3 +115,8 @@ func _can_equip_item(item: ItemDefinition) -> bool:
 		return current_job.can_equip_trinket
 
 	return false
+
+
+func _build_unit_id(unit_team: String, unit_slot_index: int, display_name: String) -> String:
+	var safe_name := display_name.to_lower().replace(" ", "_")
+	return "%s_%d_%s" % [unit_team.to_lower(), unit_slot_index, safe_name]

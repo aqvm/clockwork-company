@@ -13,6 +13,313 @@ Each entry should include:
 - Manual exercise
 - Open questions
 
+## 2026-05-31 - Interstitial Phase 6.5.5.5 combat replay visualization effects pass
+
+## 2026-06-01 - Interstitial Phase 6.5.5.5 mod-pack toggle UI pass
+
+Feature worked on:
+
+- Added a dropdown mod menu with checkable entries in the combat test scene.
+- Added enable/disable behavior per mod JSON pack before running simulation.
+- Added persistence of enabled mod ids to `user://mod_settings.cfg`.
+- Updated preview loading so toggling mods immediately refreshes setup/replay source data.
+- Threaded enabled-pack filtering from UI -> simulator -> demo battle factory -> JSON content loader.
+
+Godot concepts introduced:
+
+- `MenuButton` + `PopupMenu` check items can serve as a compact multi-select dropdown.
+- `ConfigFile` can persist lightweight UI state in `user://`.
+- UI can re-run deterministic preview generation safely when content selection changes.
+
+Game architecture concepts introduced:
+
+- Mod selection remains a presentation/config concern; simulator rules stay unchanged.
+- Content pipeline selection is explicit input to scenario/unit construction.
+
+Files touched:
+
+- `clockwork-company/scenes/combat_test_scene.tscn`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `clockwork-company/scripts/combat/combat_simulator.gd`
+- `clockwork-company/scripts/combat/scenarios/demo_battle_factory.gd`
+- `clockwork-company/scripts/modding/json_content_loader.gd`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- How the mod checkbox dropdown maps to an enabled id array used by the content loader.
+- Why toggling mods does not require simulator logic changes.
+- How persisted mod selection in `user://` affects next launch behavior.
+
+Manual exercise:
+
+- Disable all mods from the dropdown, run once, then enable one mod and run again; compare setup lines and any loadout/stat differences.
+
+Open questions:
+
+- Should the mod list include an explicit `Enable All / Disable All` quick action row?
+
+## 2026-06-01 - Interstitial Phase 6.5.5.5 integration test mod-pack coverage pass
+
+Feature worked on:
+
+- Added a dedicated integration test mod pack JSON that intentionally covers add/override behavior for every major content collection.
+- Added sidecar markdown coverage matrix and expected-observation checklist for quick manual verification.
+- Added modding guide note pointing to the integration test pack as a regression/debug tool.
+
+Godot concepts introduced:
+
+- None new at API level; this is data-contract and verification coverage content.
+
+Game architecture concepts introduced:
+
+- A single pack can be used as a repeatable wiring test for loader merge paths, id references, and UI mod-toggle behavior.
+- Mod validation confidence improves when one pack touches all content layers (items/jobs/tactics/loadouts/units/roster).
+
+Files touched:
+
+- `clockwork-company/modding/reference/integration_test_mod_pack.json`
+- `clockwork-company/modding/reference/integration_test_mod_pack.options.md`
+- `MODDING.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- How this integration pack tests both new-id add and existing-id override paths.
+- Which visible setup/replay signals confirm each data layer is actually wired.
+
+Manual exercise:
+
+- Enable only `Integration Test Mod Pack [ref]`, run once, and verify Mira's interval, Borin's presence, patched loadout names, and trigger/tactic lines.
+
+Open questions:
+
+- Should we add a lightweight automated text assertion script that checks key setup lines from this integration pack?
+
+## 2026-06-01 - Interstitial Phase 6.5.5.5 mod UI usability and result replay fix pass
+
+Feature worked on:
+
+- Replaced modal `PopupMenu` mod toggles with a non-modal inline checkbox panel so other UI interactions (like log scrolling) remain usable while selecting mods.
+- Fixed replay event grouping so non-turn root events (including final `Result:`) are replayed again instead of being dropped.
+
+Godot concepts introduced:
+
+- `CheckBox` controls in a standard `PanelContainer` avoid modal popup input capture behavior.
+- Structured event replay grouping should include untimed root events, not only timed turn-start roots.
+
+Game architecture concepts introduced:
+
+- None at combat-rule level; this is UI behavior and replay presentation correctness.
+
+Files touched:
+
+- `clockwork-company/scenes/combat_test_scene.tscn`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why modal popup menus can interfere with unrelated interactions in dense UI views.
+- Why replay pipelines should preserve terminal summary events even when they are untimed.
+
+Manual exercise:
+
+- Open the mod list panel, leave it open, scroll the replay text pane, then run a fight and confirm the final `Result:` line appears.
+
+Open questions:
+
+- Should we cap the inline mod panel height differently when many packs exist?
+
+## 2026-05-31 - Interstitial Phase 6.5.5.5 structured logging hardening pass
+
+Feature worked on:
+
+- Hardened structured combat logging with an explicit event schema and validation checks.
+- Added typed event builder helpers so event payloads are created through named constructors, not ad hoc dictionaries.
+- Added stable `unit_id` fields to runtime units and structured event payloads.
+- Added `log_version` to simulator report output for forward-compatible format evolution.
+- Expanded structured event coverage beyond basics (turn start, tactic decisions, attack, damage, heal, guard, guard expire, defeat, job effects, item triggers, result).
+- Updated replay UI consumption to prefer unit IDs from payloads and only fall back to names.
+
+Godot concepts introduced:
+
+- Contract-style validation using `assert()` at event write time catches schema drift early in deterministic workflows.
+- Static helper scripts can act as typed-ish event factories in GDScript without requiring a full custom class hierarchy.
+- Runtime IDs can be derived deterministically from team + slot + display name for stable short-term identity.
+
+Game architecture concepts introduced:
+
+- Structured logs now have a formal contract (`event_type` + required payload keys) rather than a loose convention.
+- Human-readable lines remain a view representation; machine consumers should rely on structured payloads.
+- Replay and visualization become less brittle against text phrasing changes and unit display-name edits.
+
+Files touched:
+
+- `clockwork-company/scripts/combat/logging/combat_event_schema.gd`
+- `clockwork-company/scripts/combat/logging/combat_events.gd`
+- `clockwork-company/scripts/combat/logging/combat_log.gd`
+- `clockwork-company/scripts/combat/combat_simulator.gd`
+- `clockwork-company/scripts/combat/runtime/unit_state.gd`
+- `clockwork-company/scripts/combat/rules/tactic_resolver.gd`
+- `clockwork-company/scripts/combat/rules/job_effect_resolver.gd`
+- `clockwork-company/scripts/combat/rules/item_effect_resolver.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- How `CombatEventSchema` and `CombatLog.add_event()` validation work together to prevent malformed replay events.
+- Why `CombatEvents` helpers reduce typo/regression risk compared to inline payload dictionaries.
+- How `unit_id` is used in structured events and replay lookup, and why names remain a fallback only.
+
+Manual exercise:
+
+- In `combat_event_schema.gd`, temporarily add one required key to `EVENT_HEAL`, run the headless check, and observe where schema validation catches missing payload data.
+
+Open questions:
+
+- Should unit IDs eventually come from immutable data resources (GUID-like) rather than generated runtime strings?
+
+## 2026-05-31 - Interstitial Phase 6.5.5.5 JSON modding bridge foundation
+
+Feature worked on:
+
+- Added a JSON content loader that preserves `.tres` authoring ergonomics while enabling mod overrides from `res://mods/*.json`.
+- Implemented load/merge/validate/build flow for items, jobs, tactics, loadouts, units, and optional demo roster order.
+- Switched demo battle unit sourcing from fixed preloaded unit list to loader-built unit definitions.
+- Added reference JSON packs and sidecar options docs in `res://modding/reference/`.
+- Added repository-level instruction updates requiring sidecar options docs to stay in sync with JSON/schema changes.
+
+Godot concepts introduced:
+
+- Runtime `Resource` reconstruction from JSON dictionaries can coexist with editor-authored `.tres` source assets.
+- `DirAccess` + `FileAccess` + `JSON.parse_string` provide a lightweight pack loader pipeline.
+- Deterministic mod merge by stable ids enables patch-style overrides without editing base assets.
+
+Game architecture concepts introduced:
+
+- Base content and modded content now share one runtime pipeline.
+- `.tres` remains first-party authoring UX; JSON is an extensibility/interchange layer.
+- Validation constraints centralize enum/reference safety before simulation begins.
+
+Files touched:
+
+- `clockwork-company/scripts/modding/json_content_loader.gd`
+- `clockwork-company/scripts/combat/scenarios/demo_battle_factory.gd`
+- `clockwork-company/modding/reference/base_content.json`
+- `clockwork-company/modding/reference/base_content.options.md`
+- `clockwork-company/modding/reference/example_mod_pack.json`
+- `clockwork-company/modding/reference/example_mod_pack.options.md`
+- `clockwork-company/mods/README.md`
+- `AGENTS.md`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- How base `.tres` content is converted into merged dictionaries, then rebuilt as runtime Resources.
+- How id-based JSON patching works for adding or overriding content definitions.
+- Why sidecar options docs are required for every modding JSON file.
+
+Manual exercise:
+
+- Copy `res://modding/reference/example_mod_pack.json` into `res://mods/`, run the fight, and verify the modified loadout/unit values show up in setup and combat pacing.
+
+Open questions:
+
+- Should we add an in-editor exporter button/script that regenerates `base_content.json` from `.tres` automatically to avoid manual drift?
+
+## 2026-05-31 - Interstitial Phase 6.5.5.5 structured combat log event pass
+
+Feature worked on:
+
+- Added structured event metadata to combat log entries while preserving readable rendered text lines.
+- Added a simulator report API (`run_demo_battle_report`) that returns plain lines, structured events, and roster snapshots.
+- Migrated replay visualization to consume structured event payloads (`turn_start`, `damage`, `heal`, `defeat`) instead of parsing combat line phrasing.
+- Kept text replay rendering unchanged so existing readability and highlight behavior remains intact.
+
+Godot concepts introduced:
+
+- Dictionary-first report APIs can be used as lightweight JSON-like contracts between simulation and UI layers.
+- Hierarchical log entries can carry both human text and machine-friendly metadata simultaneously.
+- UI replay grouping can follow parent/child event IDs and event types instead of string parsing.
+
+Game architecture concepts introduced:
+
+- Combat log now serves two consumers: human-readable text rendering and systems-facing structured replay data.
+- Presentation systems no longer depend on simulator prose phrasing for core replay state changes.
+- Roster snapshots are explicitly exported for UI bootstrap instead of being reconstructed from setup text lines.
+
+Files touched:
+
+- `clockwork-company/scripts/combat/logging/combat_log.gd`
+- `clockwork-company/scripts/combat/combat_simulator.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why structured event metadata is safer than parsing text phrases for replay behavior.
+- How `run_demo_battle_report()` creates a compatibility bridge while we still keep `run_demo_battle()`.
+- How replay VFX now keys off `event_type` and payload fields instead of fragile string matching.
+
+Manual exercise:
+
+- In `combat_simulator.gd`, find where `"damage"` events are emitted and trace how `previous_hp`/`new_hp` flow into floating text in `combat_test_scene.gd`.
+
+Open questions:
+
+- Should item/job/tactic child lines also gain explicit structured event types for richer future replay overlays?
+
+Feature worked on:
+
+- Added a focused polish pass for right-pane unit replay visuals without changing simulator logic.
+- Added an action pulse ring when a unit takes a turn.
+- Added floating HP delta text (`+X` / `-X`) when a unit is healed or damaged.
+- Added defeat-state fade/desaturation so dead units remain visible but visually de-emphasized.
+- Kept all effect triggering in UI-side replay parsing based on existing deterministic log lines.
+
+Godot concepts introduced:
+
+- Custom `Control` drawing can layer multiple lightweight effects (`draw_arc`, `draw_string`, alpha fades) in one `_draw()` pass.
+- Replay-time metadata can be carried as dictionary snapshot fields and consumed by per-unit controls via `configure()`.
+- Time-windowed effects can be implemented with simple `display_time - effect_start_time` checks, avoiding animation systems.
+
+Game architecture concepts introduced:
+
+- Visual effects remain presentation-only and are derived from replay/log data in `combat_test_scene.gd`.
+- Combat rules, scheduler behavior, and deterministic outcomes remain unchanged in simulator modules.
+- UI replay model now carries transient effect state (`turn_pulse_started_at`, `floating_text`, `defeat_time`) separate from combat state authority.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `clockwork-company/scripts/ui/unit_status_dot.gd`
+- `DESIGN_NOTES.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- How the action pulse and floating text are timestamped from replay events rather than from combat internals.
+- Why defeat fade belongs in the draw layer and not in simulator data.
+- How parser assumptions around `"takes a turn"`, `"HP: A -> B"`, and `"is defeated"` drive visual effects.
+
+Manual exercise:
+
+- In `unit_status_dot.gd`, set `PULSE_DURATION` from `0.45` to `0.2`, run replay, and compare readability of turn ownership.
+
+Open questions:
+
+- Should cooldown shimmer be added as a fourth effect now, or delayed until parser fragility is reduced with structured replay snapshots?
+
 ## 2026-05-31 - Interstitial Phase 6.5.5.5 combat simulator modularization pass
 
 Feature worked on:

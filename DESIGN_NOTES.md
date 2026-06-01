@@ -69,7 +69,16 @@ Current combat log design rules:
 - the combat test scene background should be an intentional dark neutral so highlight colors retain readable contrast
 - replay text and replay visualization can coexist in the same pane, with a clear divider so readability stays primary
 - a first-pass replay visualization can be reconstructed from deterministic log text if it stays explicitly presentation-only
+- once replay effects expand, UI systems should consume structured combat events (`event_type` + payload) rather than parsing prose line phrasing
+- structured event types should be validated at write-time so missing payload fields fail early during development
+- event payloads should carry stable unit IDs in addition to display names so rename-friendly UI features remain safe
+- core authoring can stay `.tres`-first for editor ergonomics while modding uses JSON packs with equivalent fields/enums
+- every modding JSON file should have an adjacent options/keywords markdown so schema expectations stay explicit for non-programmer modders
+- mod-pack enable/disable controls should live in UI presentation and never alter simulator rules directly; they only change which validated content packs are loaded before simulation
 - cooldown visualization should map to simulation time so a unit acts when its cooldown bar reaches empty
+- turn ownership should be readable at a glance through a short pulse around the acting unit
+- HP changes should be reinforced with brief floating +/− value text on the affected unit
+- defeated units should fade/desaturate so board state remains legible without removing unit slots
 - combat simulator orchestration should stay thin; scheduling, targeting, effect resolution, and text formatting should live in dedicated scripts with clear names
 
 ### Jobs as identity

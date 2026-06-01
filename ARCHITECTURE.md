@@ -112,6 +112,7 @@ The first playable test is a text-only combat scene:
 
 - `clockwork-company/scenes/combat_test_scene.tscn` owns the visible test scene.
 - `clockwork-company/scripts/ui/combat_test_scene.gd` owns the button, static combat setup display, and live replay timing for already-generated combat event lines.
+- `clockwork-company/scripts/ui/combat_test_scene.gd` now also owns the local mod-pack toggle UI state (checkbox dropdown), including enabled-pack persistence and preview refresh behavior.
 - `clockwork-company/scripts/ui/unit_status_dot.gd` owns drawing one unit's circular replay marker, health arc, and cooldown bar.
 - `clockwork-company/scripts/combat/combat_simulator.gd` owns the combat rules.
 - `clockwork-company/scripts/combat/combat_constants.gd` owns shared combat labels and numeric constants.
@@ -124,8 +125,14 @@ The first playable test is a text-only combat scene:
 - `clockwork-company/scripts/combat/rules/job_effect_resolver.gd` owns current-job combat bonus hooks.
 - `clockwork-company/scripts/combat/rules/item_effect_resolver.gd` owns triggered item effect resolution.
 - `clockwork-company/scripts/combat/scenarios/demo_battle_factory.gd` owns current fixed demo roster construction.
-- `CombatLog` and `CombatLogEntry` are small helper classes inside `combat_simulator.gd` that build the readable text log.
+- `clockwork-company/scripts/modding/json_content_loader.gd` owns JSON pack loading/merging/validation and runtime Resource reconstruction for items, jobs, tactics, loadouts, and units.
+- `CombatLog` and `CombatLogEntry` are dedicated helper classes in `scripts/combat/logging/combat_log.gd` that build readable text logs and structured event metadata.
+- `scripts/combat/logging/combat_event_schema.gd` defines known event types and required payload keys as the structured logging contract.
+- `scripts/combat/logging/combat_events.gd` provides typed event-construction helpers so simulator/rule code does not handcraft payload dictionaries ad hoc.
 - `combat_simulator.gd` now orchestrates a battle by delegating logging, targeting, tactic selection, effect resolution, scheduling, and demo roster setup to dedicated scripts.
+- `combat_simulator.gd` now also provides a structured battle report API (`run_demo_battle_report`) that returns rendered lines, structured events, and roster snapshots.
+- Base game content remains authored in `.tres` Resources; the loader derives JSON-like dictionaries from those Resources, then applies mod JSON overrides from `res://mods/*.json` before constructing runtime Resources.
+- Structured report payloads now include a `log_version` field for format evolution safety.
 - `clockwork-company/scripts/data/unit_definition.gd` defines the editable unit data Resource type.
 - `clockwork-company/scripts/data/item_definition.gd` defines the editable item data Resource type, including one optional triggered effect.
 - `clockwork-company/scripts/data/job_definition.gd` defines the editable job data Resource type, including stat modifiers, equipment permissions, and one learnable effect label.
@@ -181,10 +188,12 @@ The simulator currently has no random rolls. A future version can introduce seed
 
 Combat log responsibility split:
 
-- `CombatLogEntry` stores one invisible entry ID, optional parent ID, optional visible time, text, and child entry IDs.
-- `CombatLog` owns the entry list, assigns IDs, attaches children to parents, and renders the final `Array[String]`.
+- `CombatLogEntry` stores one invisible entry ID, optional parent ID, optional visible time, text, child entry IDs, and structured metadata (`event_type`, `payload`, `tags`).
+- `CombatLog` owns the entry list, assigns IDs, attaches children to parents, renders `Array[String]`, and can emit structured JSON-like event dictionaries.
+- `CombatLog.add_event(...)` validates event type and required payload keys against `combat_event_schema.gd` before accepting an event.
 - `CombatSimulator` decides what happened and whether a line is a parent event or a child explanation.
-- `combat_test_scene.gd` still receives plain lines and does not know about IDs or hierarchy.
+- `combat_test_scene.gd` still renders plain lines for readable logs, but replay visualization now consumes structured event metadata instead of parsing combat prose.
+- Replay identity now prefers stable `unit_id` references from event payloads and only falls back to display names when needed.
 - The combat test UI splits those plain lines at `Combat log:`. Setup, roster, loadout, gear, and tactic information appears immediately in a static `RichTextLabel`; timestamped combat events appear in a separate replay `RichTextLabel`.
 - The static setup pane is populated when the scene opens by running the deterministic simulator once and caching the combat-event lines for later replay.
 - The replay does not start when the scene opens. The UI waits for the run button, then clears and starts the timed replay pane from the cached combat-event lines.
@@ -192,7 +201,7 @@ Combat log responsibility split:
 - The combat test scene sizes the game window to roughly three quarters of the current monitor's usable area and stacks setup above replay in a vertical split. The setup pane is resized after each run to use the smaller of its content height or half the available log area.
 - The replay and setup panes now apply UI-layer keyword highlighting to plain simulator lines by wrapping BBCode-safe text in color tags by category (timestamp, attacks, damage, healing, guard, tactics, job effects, item triggers, defeats, and result).
 - The replay pane now has a left/right split: left is the existing text replay, right is a lightweight unit visualization panel separated by a vertical rule.
-- The visualization panel is still presentation-only: it parses roster/action/HP text lines into a UI replay model, then draws unit circles, health arcs, and cooldown bars without changing simulator rules.
+- The visualization panel is still presentation-only: it reads roster snapshots and structured replay events from the simulator report, then draws unit circles, health arcs, cooldown bars, and lightweight VFX without changing simulator rules.
 - Highlight colors are configured in a dedicated `CombatLogHighlightPalette` Resource so color tuning stays editor-visible and does not require editing code constants.
 - This is presentation only: `run_demo_battle()` still finishes the deterministic simulation before replay starts.
 
