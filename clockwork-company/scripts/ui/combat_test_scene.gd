@@ -4,8 +4,8 @@ const CombatSimulatorScript := preload("res://scripts/combat/combat_simulator.gd
 const CombatLogHighlightPaletteScript := preload("res://scripts/ui/combat_log_highlight_palette.gd")
 const UnitStatusDotScript := preload("res://scripts/ui/unit_status_dot.gd")
 const JsonContentLoaderScript := preload("res://scripts/modding/json_content_loader.gd")
+const RunStateScript := preload("res://scripts/run/run_state.gd")
 const COMBAT_LOG_HEADER := "Combat log:"
-const RUN_BUTTON_READY_TEXT := "Run Jobs 3v3 Fight"
 const RUN_BUTTON_REPLAYING_TEXT := "Replaying..."
 const MODS_BUTTON_BASE_TEXT := "Mods"
 const MOD_SETTINGS_PATH := "user://mod_settings.cfg"
@@ -32,6 +32,7 @@ const DEFAULT_LOG_HIGHLIGHT_PALETTE := preload("res://resources/ui/combat_log_hi
 
 var cached_replay_lines: Array[String] = []
 var cached_static_lines: Array[String] = []
+var cached_fight_static_lines: Array[String] = []
 var combat_replay_events: Array[Dictionary] = []
 var cached_structured_events: Array[Dictionary] = []
 var cached_roster_units: Array[Dictionary] = []
@@ -49,6 +50,10 @@ var event_transition_elapsed := 0.0
 var active_event_actor_name := ""
 var available_mod_packs: Array[Dictionary] = []
 var enabled_mod_pack_ids := {}
+var run_state = null
+var cached_battle_report := {}
+var reward_buttons: Array[Button] = []
+var loss_test_button: Button = null
 
 
 func _ready() -> void:
@@ -60,7 +65,8 @@ func _ready() -> void:
 	combat_log.get_v_scroll_bar().value_changed.connect(_on_combat_log_scroll_value_changed)
 	get_viewport().size_changed.connect(_on_viewport_size_changed)
 	_setup_mod_menu()
-	_load_combat_preview()
+	_setup_run_controls()
+	_start_new_run(false)
 
 
 func _process(delta: float) -> void:
@@ -75,6 +81,15 @@ func _process(delta: float) -> void:
 
 
 func _on_run_button_pressed() -> void:
+	if run_state == null:
+		_start_new_run(false)
+		return
+	if run_state.status == RunStateScript.STATUS_WON or run_state.status == RunStateScript.STATUS_LOST:
+		_start_new_run(false)
+		return
+	if run_state.status != RunStateScript.STATUS_ACTIVE:
+		return
+
 	_stop_log_replay()
 	_clear_replay_log()
 
@@ -120,23 +135,28 @@ func _on_mods_button_pressed() -> void:
 
 func _load_combat_preview() -> void:
 	_clear_logs()
+	if run_state == null:
+		return
 
 	var simulator: CombatSimulator = CombatSimulatorScript.new()
-	var report: Dictionary = simulator.run_demo_battle_report(_enabled_mod_pack_ids_array())
+	var report: Dictionary = simulator.run_battle_report(run_state.build_current_fight_definitions(), run_state.current_fight_title())
 	var log_lines: Array[String] = report.get("lines", [])
 	var static_lines: Array[String] = []
 
+	cached_battle_report = report.duplicate(true)
 	cached_replay_lines.clear()
 	cached_static_lines.clear()
 	cached_structured_events = report.get("events", []).duplicate(true)
 	cached_roster_units = report.get("roster_units", []).duplicate(true)
 	_split_log_lines(log_lines, static_lines, cached_replay_lines)
-	cached_static_lines = static_lines.duplicate()
-	_append_lines(combat_summary, static_lines)
+	cached_fight_static_lines = static_lines.duplicate()
+	cached_static_lines = _build_run_static_lines(static_lines)
+	_append_lines(combat_summary, cached_static_lines)
 	_build_visual_replay_model()
 	_build_visual_replay_widgets()
 	displayed_sim_time = 0.0
 	active_event_actor_name = ""
+	_update_run_controls()
 	_update_visual_replay_widgets()
 	call_deferred("_resize_conditions_pane")
 
@@ -158,6 +178,84 @@ func _setup_mod_menu() -> void:
 			enabled_mod_pack_ids[pack_id] = true
 
 	_rebuild_mod_menu()
+
+
+func _setup_run_controls() -> void:
+	loss_test_button = Button.new()
+	loss_test_button.text = "Start Loss Test"
+	loss_test_button.pressed.connect(_on_loss_test_button_pressed)
+	run_button.get_parent().add_child(loss_test_button)
+
+	for index in 3:
+		var reward_button := Button.new()
+		reward_button.visible = false
+		reward_button.pressed.connect(_on_reward_button_pressed.bind(index))
+		run_button.get_parent().add_child(reward_button)
+		reward_buttons.append(reward_button)
+
+
+func _start_new_run(should_force_loss: bool) -> void:
+	_stop_log_replay()
+	run_state = RunStateScript.new()
+	run_state.start(_enabled_mod_pack_ids_array(), should_force_loss)
+	_load_combat_preview()
+
+
+func _on_loss_test_button_pressed() -> void:
+	_start_new_run(true)
+
+
+func _on_reward_button_pressed(index: int) -> void:
+	if run_state == null or run_state.status != RunStateScript.STATUS_REWARD:
+		return
+
+	run_state.apply_reward(index)
+	_load_combat_preview()
+
+
+func _build_run_static_lines(fight_static_lines: Array[String]) -> Array[String]:
+	var lines: Array[String] = run_state.status_lines()
+	lines.append("")
+	for line in fight_static_lines:
+		lines.append(line)
+	return lines
+
+
+func _update_run_controls() -> void:
+	if run_state == null:
+		run_button.disabled = false
+		run_button.text = "Start Run"
+		return
+
+	loss_test_button.disabled = replay_is_active
+	if replay_is_active:
+		run_button.disabled = true
+		run_button.text = RUN_BUTTON_REPLAYING_TEXT
+	elif run_state.status == RunStateScript.STATUS_ACTIVE:
+		run_button.disabled = false
+		run_button.text = "Run Fight %d/%d" % [run_state.current_fight_number(), RunStateScript.FIGHT_COUNT]
+	elif run_state.status == RunStateScript.STATUS_REWARD:
+		run_button.disabled = true
+		run_button.text = "Choose Reward"
+	elif run_state.status == RunStateScript.STATUS_WON:
+		run_button.disabled = false
+		run_button.text = "Run Won - Start New Run"
+	elif run_state.status == RunStateScript.STATUS_LOST:
+		run_button.disabled = false
+		run_button.text = "Run Lost - Start New Run"
+
+	var options: Array[Dictionary] = []
+	if run_state.status == RunStateScript.STATUS_REWARD:
+		options = run_state.reward_options()
+	for index in reward_buttons.size():
+		var reward_button := reward_buttons[index]
+		var has_option: bool = index < options.size()
+		reward_button.visible = has_option
+		reward_button.disabled = replay_is_active or not has_option
+		if has_option:
+			var option: Dictionary = options[index]
+			reward_button.text = String(option["label"])
+			reward_button.tooltip_text = String(option["description"])
 
 
 func _rebuild_mod_menu() -> void:
@@ -197,7 +295,7 @@ func _on_mod_checkbox_toggled(pressed: bool, pack_id: String) -> void:
 		enabled_mod_pack_ids.erase(pack_id)
 
 	_save_enabled_mod_pack_ids(_enabled_mod_pack_ids_array())
-	_load_combat_preview()
+	_start_new_run(false)
 
 
 func _position_mods_panel() -> void:
@@ -461,14 +559,19 @@ func _stop_log_replay() -> void:
 	autoscroll_enabled = true
 	is_programmatic_scroll = false
 	run_button.disabled = false
-	run_button.text = RUN_BUTTON_READY_TEXT
+	_update_run_controls()
 
 
 func _finish_log_replay() -> void:
 	replay_timer.stop()
 	replay_is_active = false
-	run_button.disabled = false
-	run_button.text = RUN_BUTTON_READY_TEXT
+	if run_state != null and run_state.status == RunStateScript.STATUS_ACTIVE:
+		run_state.complete_fight(cached_battle_report)
+		combat_summary.clear()
+		cached_static_lines = _build_run_static_lines(cached_fight_static_lines)
+		_append_lines(combat_summary, cached_static_lines)
+		call_deferred("_resize_conditions_pane")
+	_update_run_controls()
 
 
 func _build_visual_replay_model() -> void:

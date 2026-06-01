@@ -135,6 +135,20 @@ Current tactic design rules:
 
 Armor reduction should stay readable when temporary armor exists. Base battle armor cannot go below zero. Effects such as Shortblade reduce base armor first; if a target has no base armor left, the same reduction can reduce temporary guard armor instead.
 
+### Short roguelite run loop
+
+Phase 7 turns the combat test into a tiny vertical slice: five fights, reward choices between fights, and a clear win/loss endpoint.
+
+Current run-loop design rules:
+
+- the run loop should orchestrate battles, not change combat rules
+- a run should be deterministic and inspectable while the project is still teaching its systems
+- reward choices should be concrete equipment/build decisions, even if the first UI is just buttons
+- the first version can immediately equip rewards instead of supporting a full inventory screen
+- run progression should explain itself in the static summary before each fight
+- both win and loss states should be easy to reach during testing
+- enemy progression is fixed scaling for now, not procedural generation or adaptive difficulty
+
 ### Enemy doctrine later
 
 Higher difficulties may eventually let enemies infer and exploit player doctrine:

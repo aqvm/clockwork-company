@@ -20,10 +20,19 @@ func run_demo_battle(enabled_mod_pack_ids: Variant = null) -> Array[String]:
 
 func run_demo_battle_report(enabled_mod_pack_ids: Variant = null) -> Dictionary:
 	var units: Array = DemoBattleFactoryScript.create_demo_units(enabled_mod_pack_ids)
+	return run_battle_report_from_units(units, "Phase 6 demo battle")
+
+
+func run_battle_report(definitions: Array[UnitDefinition], battle_title := "Run battle") -> Dictionary:
+	var units: Array = DemoBattleFactoryScript.create_units_from_definitions(definitions)
+	return run_battle_report_from_units(units, battle_title)
+
+
+func run_battle_report_from_units(units: Array, battle_title := "Run battle") -> Dictionary:
 	var log = CombatLogScript.new()
 	var actions_taken := 0
 
-	log.add("Phase 6 demo battle")
+	log.add(battle_title)
 	log.add("Random seed: none yet. This fight is deterministic because there are no random rolls.")
 	log.add("Tie-breaker: if two units are ready at the same time, earlier roster position acts first.")
 	log.add("Unit definitions: loaded from Resource files in res://resources/units/.")
@@ -68,6 +77,8 @@ func run_demo_battle_report(enabled_mod_pack_ids: Variant = null) -> Dictionary:
 		"lines": log.to_lines(),
 		"events": log.to_event_objects(),
 		"roster_units": _build_roster_units(units),
+		"winner": _winner_for_units(units),
+		"actions_taken": actions_taken,
 	}
 
 
@@ -191,6 +202,16 @@ func _build_roster_units(units: Array) -> Array[Dictionary]:
 			"action_interval": unit.action_interval,
 		})
 	return roster_units
+
+
+func _winner_for_units(units: Array) -> String:
+	var allies_alive := TargetingRulesScript.team_has_living_unit(units, CombatConstantsScript.TEAM_ALLY)
+	var enemies_alive := TargetingRulesScript.team_has_living_unit(units, CombatConstantsScript.TEAM_ENEMY)
+	if allies_alive and not enemies_alive:
+		return CombatConstantsScript.TEAM_ALLY
+	if enemies_alive and not allies_alive:
+		return CombatConstantsScript.TEAM_ENEMY
+	return "None"
 
 
 func _assert_damage_event_consistency(damage_taken: int, previous_hp: int, new_hp: int) -> void:

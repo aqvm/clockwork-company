@@ -106,12 +106,12 @@ Initial damage formula:
 
 This is intentionally crude and replaceable.
 
-## Current Phase 6 implementation
+## Current Phase 7 implementation
 
 The first playable test is a text-only combat scene:
 
 - `clockwork-company/scenes/combat_test_scene.tscn` owns the visible test scene.
-- `clockwork-company/scripts/ui/combat_test_scene.gd` owns the button, static combat setup display, and live replay timing for already-generated combat event lines.
+- `clockwork-company/scripts/ui/combat_test_scene.gd` owns the run/fight/reward buttons, static combat setup display, and live replay timing for already-generated combat event lines.
 - `clockwork-company/scripts/ui/combat_test_scene.gd` now also owns the local mod-pack toggle UI state (checkbox dropdown), including enabled-pack persistence and preview refresh behavior.
 - `clockwork-company/scripts/ui/unit_status_dot.gd` owns drawing one unit's circular replay marker, health arc, and cooldown bar.
 - `clockwork-company/scripts/combat/combat_simulator.gd` owns the combat rules.
@@ -125,12 +125,13 @@ The first playable test is a text-only combat scene:
 - `clockwork-company/scripts/combat/rules/job_effect_resolver.gd` owns current-job combat bonus hooks.
 - `clockwork-company/scripts/combat/rules/item_effect_resolver.gd` owns triggered item effect resolution.
 - `clockwork-company/scripts/combat/scenarios/demo_battle_factory.gd` owns current fixed demo roster construction.
+- `clockwork-company/scripts/run/run_state.gd` owns short-run progression state: current fight index, active/reward/won/lost status, cloned party definitions, reward inventory history, fixed enemy scaling, and reward application.
 - `clockwork-company/scripts/modding/json_content_loader.gd` owns JSON pack loading/merging/validation and runtime Resource reconstruction for items, jobs, tactics, loadouts, and units.
 - `CombatLog` and `CombatLogEntry` are dedicated helper classes in `scripts/combat/logging/combat_log.gd` that build readable text logs and structured event metadata.
 - `scripts/combat/logging/combat_event_schema.gd` defines known event types and required payload keys as the structured logging contract.
 - `scripts/combat/logging/combat_events.gd` provides typed event-construction helpers so simulator/rule code does not handcraft payload dictionaries ad hoc.
 - `combat_simulator.gd` now orchestrates a battle by delegating logging, targeting, tactic selection, effect resolution, scheduling, and demo roster setup to dedicated scripts.
-- `combat_simulator.gd` now also provides a structured battle report API (`run_demo_battle_report`) that returns rendered lines, structured events, and roster snapshots.
+- `combat_simulator.gd` now also provides structured battle report APIs (`run_demo_battle_report` and `run_battle_report`) that return rendered lines, structured events, roster snapshots, winner, and action count.
 - Base game content remains authored in `.tres` Resources; the loader derives JSON-like dictionaries from those Resources, then applies mod JSON overrides from `res://mods/*.json` before constructing runtime Resources.
 - Structured report payloads now include a `log_version` field for format evolution safety.
 - `clockwork-company/scripts/data/unit_definition.gd` defines the editable unit data Resource type.
@@ -144,7 +145,19 @@ The first playable test is a text-only combat scene:
 - `clockwork-company/resources/loadouts/*.tres` stores reusable demo build archetypes.
 - `clockwork-company/resources/tactics/*.tres` stores reusable tactic rule definitions.
 
-The scene is set as the main scene in `clockwork-company/project.godot`, so pressing Play in Godot should open the combat test.
+The scene is set as the main scene in `clockwork-company/project.godot`, so pressing Play in Godot should open the Phase 7 run-loop test.
+
+Current run-loop rules:
+
+- a run contains exactly five deterministic fights
+- the player starts with the current three ally definitions loaded through the existing `.tres`/JSON bridge
+- enemies are cloned from the current demo enemy definitions, then receive small fixed scaling by fight index
+- winning fights 1-4 moves the run to reward choice
+- choosing one reward immediately equips that reward item onto its named ally, replacing that slot for future fights
+- winning fight 5 sets the run status to won
+- losing any fight sets the run status to lost
+- `Start Loss Test` starts a deliberately harsh run so the loss state can be checked on demand
+- reward inventory is currently a readable history of applied equipment decisions, not a separate unequipped item bag
 
 Current combat rules:
 

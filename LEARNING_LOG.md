@@ -13,6 +13,52 @@ Each entry should include:
 - Manual exercise
 - Open questions
 
+## 2026-06-01 - Phase 7 short run-loop kickoff
+
+Feature worked on:
+
+- Added a tiny five-fight roguelite run loop on top of the existing deterministic combat simulator.
+- Added reward buttons between fights that immediately equip a selected reward item onto a named ally.
+- Added visible run terminal states: normal five-fight win and a `Start Loss Test` path for checking loss.
+
+Godot concepts introduced:
+
+- A `RefCounted` model (`RunState`) can hold non-visual game flow state outside the scene tree.
+- UI buttons can be created dynamically from script and connected with `pressed.connect(...)`.
+- Resource instances can be cloned at runtime so run rewards can mutate this run's party without rewriting source `.tres` files.
+
+Game architecture concepts introduced:
+
+- Run flow is separate from combat rules: `RunState` decides which roster to fight and what reward was applied, while `CombatSimulator` still decides how a battle resolves.
+- A battle report can include machine-readable summary fields like `winner` and `actions_taken` without changing the human-readable combat log.
+- A first inventory/equipment slice can be button-driven and immediate while still preserving the later option to build a fuller equipment screen.
+
+Files touched:
+
+- `clockwork-company/scripts/run/run_state.gd`
+- `clockwork-company/scripts/combat/combat_simulator.gd`
+- `clockwork-company/scripts/combat/scenarios/demo_battle_factory.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why `RunState` owns fight index, reward state, and cloned party definitions instead of putting those rules inside `CombatSimulator`.
+- Why rewards clone and replace runtime loadout items rather than editing the original `.tres` Resources.
+- How the UI knows whether to show `Run Fight`, reward choices, `Run Won`, or `Run Lost`.
+- Why the loss-test button is useful while the normal run path is tuned to be winnable.
+
+Manual exercise:
+
+- Change one reward in `run_state.gd` by 1 stat point, then predict which later fight roster summary line should change before pressing Play.
+
+Open questions:
+
+- Should the next run-loop pass add a true inventory screen, or first add authored encounter definitions as Resources?
+- Should rewards eventually be random from a seeded table, fixed by fight number, or selected from encounter-specific pools?
+
 ## 2026-05-31 - Interstitial Phase 6.5.5.5 combat replay visualization effects pass
 
 ## 2026-06-01 - Interstitial Phase 6.5.5.5 mod-pack toggle UI pass
