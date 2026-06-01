@@ -1,6 +1,7 @@
 # Godot 4+ specific ignores
 .godot/
 .nomedia
+clockwork-company/godot-check.log
 
 # Godot-specific ignores
 .import/

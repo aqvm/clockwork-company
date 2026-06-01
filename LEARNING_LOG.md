@@ -13,6 +13,299 @@ Each entry should include:
 - Manual exercise
 - Open questions
 
+## 2026-05-31 - Interstitial Phase 6.5.5.5 combat simulator modularization pass
+
+Feature worked on:
+
+- Refactored `combat_simulator.gd` from a single large file into dedicated combat modules.
+- Kept `CombatSimulator` as orchestration, while moving logging, runtime state, scheduler, targeting, tactics, job effects, item effects, text formatting, and demo roster setup into separate scripts.
+- Preserved deterministic battle behavior and log style while improving file-level responsibility clarity.
+
+Godot concepts introduced:
+
+- `preload()`-based composition between plain `RefCounted` utility scripts.
+- `static func` helper modules for deterministic rule utilities.
+- Thin orchestrator pattern: one script coordinates specialized modules.
+
+Game architecture concepts introduced:
+
+- Separation of concerns inside combat simulation now mirrors the project’s broader architecture principles.
+- Rules, runtime state, and text/log presentation helpers are explicitly separated even before adding more features.
+- Scenario construction (demo roster) is now isolated from rule execution.
+
+Files touched:
+
+- `clockwork-company/scripts/combat/combat_simulator.gd`
+- `clockwork-company/scripts/combat/combat_constants.gd`
+- `clockwork-company/scripts/combat/logging/combat_log.gd`
+- `clockwork-company/scripts/combat/logging/combat_text_formatter.gd`
+- `clockwork-company/scripts/combat/runtime/unit_state.gd`
+- `clockwork-company/scripts/combat/runtime/turn_scheduler.gd`
+- `clockwork-company/scripts/combat/rules/targeting_rules.gd`
+- `clockwork-company/scripts/combat/rules/tactic_resolver.gd`
+- `clockwork-company/scripts/combat/rules/job_effect_resolver.gd`
+- `clockwork-company/scripts/combat/rules/item_effect_resolver.gd`
+- `clockwork-company/scripts/combat/scenarios/demo_battle_factory.gd`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Which script now owns each major combat responsibility by name alone.
+- Why `CombatSimulator` is now easier to read as a battle flow controller.
+- How deterministic behavior can be preserved through refactoring when responsibilities are moved, not redesigned.
+
+Manual exercise:
+
+- Open `combat_simulator.gd` and trace one attack turn end-to-end, listing each helper script called in order (scheduler, tactic resolver, job/item effect resolvers, formatter/log output).
+
+Open questions:
+
+- Should the next refactor replace UI-side log parsing with structured replay snapshots from these new combat modules?
+
+## 2026-05-31 - Interstitial Phase 6.5.5.5 replay bugfix cleanup
+
+Feature worked on:
+
+- Fixed an empty Unit Replay panel bug by reading roster/setup data from cached simulator output lines instead of `RichTextLabel.text`.
+- Changed replay pacing from fixed one-event-per-second to a simulation-time-scaled delay with a minimum clamp.
+- Removed an unused scene template node used during early UI prototyping.
+
+Godot concepts introduced:
+
+- `RichTextLabel.append_text()` content should not be treated as a reliable data source for downstream parsing in this flow.
+- Replay pacing can map from simulation deltas to wall-clock delay via a simple scale constant plus a minimum wait guard.
+- Cleaning unused scene nodes reduces editor noise and makes ownership clearer.
+
+Game architecture concepts introduced:
+
+- Presentation parsers should read from source-of-truth cached simulation lines, not rendered UI state.
+- Time readability in replay is a UX transform, not a combat-rule change.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `clockwork-company/scenes/combat_test_scene.tscn`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why the Unit Replay pane failed to render despite replay logs still working.
+- Why variable replay pacing better reflects action timing than a fixed one-second step.
+- Why removing temporary scene scaffolding helps future refactors.
+
+Manual exercise:
+
+- In `combat_test_scene.gd`, temporarily set `SECONDS_PER_SIM_SECOND` to `1.0`, run replay, then set it to `0.1` and compare readability versus speed.
+
+Open questions:
+
+- Should replay speed scaling become an exposed inspector setting (or runtime slider) once we add more visual effects?
+
+## 2026-05-31 - Interstitial Phase 6.5.5.5 replay pane split and unit dots
+
+Feature worked on:
+
+- Split the Combat Replay area into two columns with a vertical divider.
+- Kept the left column as the highlighted text replay log.
+- Added a right-column prototype visual replay panel that shows one dot per unit, with name, HP arc, and cooldown bar.
+- Made cooldown bars deplete against interpolated simulation time between timestamped events so the acting unit reaches empty when its turn line appears.
+- Kept combat simulation unchanged by parsing existing roster and replay log text into a UI-only replay model.
+
+Godot concepts introduced:
+
+- `HBoxContainer` plus `VSeparator` can create an explicit left/right pane split inside an existing replay area.
+- A custom `Control` script with `_draw()` (`UnitStatusDot`) can render circles, arcs, bars, and labels without textures.
+- `_process(delta)` can drive smooth interpolation between replay keyframes while `Timer` still controls event cadence.
+- UI code can create scripted controls at runtime (`UnitStatusDotScript.new()`) from parsed replay data.
+
+Game architecture concepts introduced:
+
+- This is still presentation-only; simulator determinism and combat rules are untouched.
+- Replay state can be reconstructed from plain text logs when the parser remains narrow and intentional.
+- Visual replay timing should map to simulation time, not wall-clock frame logic in combat rules.
+
+Files touched:
+
+- `clockwork-company/scenes/combat_test_scene.tscn`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `clockwork-company/scripts/ui/unit_status_dot.gd`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why the new replay split belongs in UI scene structure, not simulator code.
+- How `combat_test_scene.gd` parses roster and HP lines into a visual replay model.
+- How `displayed_sim_time` interpolation makes cooldown depletion line up with action events.
+- What `UnitStatusDot` owns versus what `combat_test_scene.gd` owns.
+
+Manual exercise:
+
+- In `unit_status_dot.gd`, temporarily invert `_cooldown_ratio()` to `1.0 - ratio`, run replay, and explain why that no longer matches the action timing shown in text.
+
+Open questions:
+
+- Should the visual replay panel eventually read structured simulator snapshots instead of parsing text lines once we need richer effects (portraits, statuses, cast bars)?
+
+## 2026-05-31 - Interstitial Phase 6.5 log readability background pass
+
+Feature worked on:
+
+- Replaced the default gray scene backdrop with an intentional dark neutral background for better text contrast.
+- Kept this as a scene-level presentation change so combat logic and replay behavior remain unchanged.
+
+Godot concepts introduced:
+
+- `ColorRect` can act as a full-viewport background layer in `Control`-based UI scenes.
+- `mouse_filter = Ignore` on the background prevents it from intercepting button/scroll input.
+
+Game architecture concepts introduced:
+
+- None at the combat-system level. This is purely a readability and UX presentation adjustment.
+
+Files touched:
+
+- `clockwork-company/scenes/combat_test_scene.tscn`
+- `DESIGN_NOTES.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why a stable background tone matters when category colors are semantically meaningful.
+- How to add a non-interactive background layer in a Godot UI scene.
+- Why this does not affect simulator determinism or replay timing.
+
+Manual exercise:
+
+- In `combat_test_scene.tscn`, tweak the `Background` `ColorRect` color slightly lighter and darker, run replay, and compare readability of `guard`, `takes a turn`, and `is defeated` lines.
+
+Open questions:
+
+- Should we expose the background color in the same palette Resource so contrast tuning happens in one place?
+
+## 2026-05-31 - Interstitial Phase 6.5 intentional color-system pass
+
+Feature worked on:
+
+- Reworked the default combat log highlight palette to a deliberate hue map so categories are instantly distinguishable.
+- Avoided clustering semantically different categories into nearby blue shades.
+- Kept the same category set and UI behavior, changing only color assignments in the palette Resource.
+
+Godot concepts introduced:
+
+- A `Resource`-backed palette supports iterative visual design without touching control-flow logic.
+- Color tuning can happen directly in the Inspector while preserving script stability.
+
+Game architecture concepts introduced:
+
+- This is a pure presentation pass: simulator output and deterministic combat resolution stay unchanged.
+- Semantic categories can map to a stable visual language that improves log scannability.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/combat_log_highlight_palette.gd`
+- `clockwork-company/resources/ui/combat_log_highlight_palette_default.tres`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why separating category logic from color values makes balancing readability easier.
+- How to tune palette cohesion while still keeping category contrast high.
+- Why this kind of UX pass belongs in UI data, not combat systems.
+
+Manual exercise:
+
+- In Godot, open `combat_log_highlight_palette_default.tres`, adjust only `attack_color` and `item_trigger_color` to be intentionally too similar, run replay, then separate them again and compare scan speed.
+
+Open questions:
+
+- Should we eventually ship two built-in palettes (default and color-blind-friendly) and expose a runtime toggle?
+
+## 2026-05-31 - Interstitial Phase 6.5 highlight palette Resource
+
+Feature worked on:
+
+- Refactored combat-log category colors out of script constants into a dedicated `CombatLogHighlightPalette` Resource.
+- Added a default palette `.tres` asset and wired `combat_test_scene.gd` to use it via an exported field.
+- Kept line categorization logic in UI code, but now each category resolves to a `Color` from the Resource.
+
+Godot concepts introduced:
+
+- Custom `Resource` scripts can hold grouped editor-tunable values such as `Color` fields.
+- Exported Resource references on a node script let the Inspector swap presets without code edits.
+- `Color.to_html(false)` can convert an inspector-selected color into a BBCode color string.
+
+Game architecture concepts introduced:
+
+- Presentation configuration can be data-driven independently from simulator rules.
+- Combat readability tuning now lives as editable UI data, while simulator determinism and output text stay unchanged.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/combat_log_highlight_palette.gd`
+- `clockwork-company/resources/ui/combat_log_highlight_palette_default.tres`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why moving colors to a Resource improves manual tuning workflow.
+- How `log_highlight_palette` on `combat_test_scene.gd` separates category logic from specific color choices.
+- Why this refactor changes UX/editor ergonomics without changing combat simulation behavior.
+
+Manual exercise:
+
+- Duplicate `combat_log_highlight_palette_default.tres`, change three category colors in the Inspector, assign the duplicate palette on the `CombatTestScene` node, and verify replay colors change while fight outcomes remain identical.
+
+Open questions:
+
+- Should we later support multiple palette presets (for contrast/accessibility themes) switchable from the UI at runtime?
+
+## 2026-05-31 - Interstitial Phase 6.5 combat log keyword highlighting
+
+Feature worked on:
+
+- Added UI-layer keyword/category highlighting for combat log readability now that both panes use `RichTextLabel`.
+- Kept simulator output as plain deterministic strings and applied color tags only in `combat_test_scene.gd`.
+- Preserved BBCode safety by escaping line text before adding any color wrapper tags.
+
+Godot concepts introduced:
+
+- `RichTextLabel` BBCode color tags can be applied per appended line.
+- A small line-categorization helper can map text patterns to visual styles without changing source combat data.
+- Escaping user/content text before adding BBCode tags prevents accidental markup parsing.
+
+Game architecture concepts introduced:
+
+- Log semantics still belong to the simulator; readability styling belongs to UI presentation.
+- Visual emphasis can be added as a non-deterministic-neutral post-process over already-generated log text.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why highlighting was added in the UI script instead of combat simulator logic.
+- How `_format_log_line_with_highlighting()` and `_log_highlight_color_for_line()` separate styling from replay timing.
+- Why escaping `[` is still required before wrapping text in BBCode color tags.
+
+Manual exercise:
+
+- In `combat_test_scene.gd`, change one category color constant (for example `LOG_COLOR_DAMAGE`), run replay, and explain which lines changed and why the combat result did not.
+
+Open questions:
+
+- Should we keep whole-line coloring only, or add a second small pass later for phrase-level emphasis inside mixed lines?
+
 ## 2026-05-31 - Godot headless check sandbox note
 
 Feature worked on:
@@ -43,7 +336,7 @@ What I should now be able to explain:
 
 Manual exercise:
 
-- Run the documented `--check-only` command with `--log-file godot-check.log`, confirm it exits cleanly, then delete `clockwork-company/godot-check.log`.
+- Run the documented `--check-only` command with `--log-file godot-check.log`, confirm it exits cleanly, then run it again and confirm the same git-ignored scratch log path can be reused.
 
 Open questions:
 
