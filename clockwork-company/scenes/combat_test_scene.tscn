@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://bwypver014851"]
 
 [ext_resource type="Script" uid="uid://bha8swoxgq5r6" path="res://scripts/ui/combat_test_scene.gd" id="1_combat_ui"]
-[ext_resource type="Script" path="res://scripts/ui/unit_status_dot.gd" id="2_unit_dot"]
 
 [node name="CombatTestScene" type="Control" unique_id=1765527660]
 layout_mode = 3
@@ -129,11 +128,6 @@ unique_name_in_owner = true
 layout_mode = 2
 alignment = 1
 theme_override_constants/separation = 6
-
-[node name="UnitDotTemplate" type="Control" parent="MarginContainer/VBoxContainer/LogSplit/ReplayColumn/ReplaySplitRow/ReplayVizColumn" unique_id=212121212]
-visible = false
-layout_mode = 2
-script = ExtResource("2_unit_dot")
 
 [node name="ReplayTimer" type="Timer" parent="." unique_id=1205822638]
 unique_name_in_owner = true

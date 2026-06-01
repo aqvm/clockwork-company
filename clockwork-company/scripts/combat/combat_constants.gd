@@ -1,0 +1,33 @@
+extends RefCounted
+class_name CombatConstants
+
+const TEAM_ALLY := "Allies"
+const TEAM_ENEMY := "Enemies"
+const MAX_ACTIONS := 100
+const TRIGGER_NONE := "None"
+const TRIGGER_BATTLE_START := "Battle Start"
+const TRIGGER_ATTACK := "Attack"
+const TRIGGER_HIT := "Hit"
+const TRIGGER_KILL := "Kill"
+const TRIGGER_DEATH := "Death"
+const EFFECT_NONE := "None"
+const EFFECT_GAIN_ARMOR := "Gain Armor"
+const EFFECT_BONUS_DAMAGE := "Bonus Damage"
+const EFFECT_REDUCE_TARGET_ARMOR := "Reduce Target Armor"
+const EFFECT_HEAL_SELF := "Heal Self"
+const EFFECT_DAMAGE_KILLER := "Damage Killer"
+const CONDITION_ALWAYS := "Always"
+const CONDITION_SELF_HP_BELOW_HALF := "Self HP Below Half"
+const CONDITION_ALLY_HP_BELOW_HALF := "Ally HP Below Half"
+const CONDITION_ENEMY_ALIVE := "Enemy Alive"
+const ACTION_ATTACK := "Attack"
+const ACTION_HEAL := "Heal"
+const ACTION_GUARD := "Guard"
+const TARGET_SELF := "Self"
+const TARGET_LOWEST_HP_ALLY := "Lowest HP Ally"
+const TARGET_FRONTMOST_ENEMY := "Frontmost Enemy"
+const JOB_EFFECT_GUARD_TRAINING := "Guard Training"
+const JOB_EFFECT_FIRST_AID := "First Aid"
+const JOB_EFFECT_SHARPENED_EDGE := "Sharpened Edge"
+const HEAL_AMOUNT := 5
+const GUARD_ARMOR_AMOUNT := 2

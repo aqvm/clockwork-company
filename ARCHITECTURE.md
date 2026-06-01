@@ -114,7 +114,18 @@ The first playable test is a text-only combat scene:
 - `clockwork-company/scripts/ui/combat_test_scene.gd` owns the button, static combat setup display, and live replay timing for already-generated combat event lines.
 - `clockwork-company/scripts/ui/unit_status_dot.gd` owns drawing one unit's circular replay marker, health arc, and cooldown bar.
 - `clockwork-company/scripts/combat/combat_simulator.gd` owns the combat rules.
+- `clockwork-company/scripts/combat/combat_constants.gd` owns shared combat labels and numeric constants.
+- `clockwork-company/scripts/combat/logging/combat_log.gd` owns hierarchical log entry storage and line rendering.
+- `clockwork-company/scripts/combat/logging/combat_text_formatter.gd` owns combat summary text formatting helpers.
+- `clockwork-company/scripts/combat/runtime/unit_state.gd` owns per-unit runtime combat state initialization and helpers.
+- `clockwork-company/scripts/combat/runtime/turn_scheduler.gd` owns deterministic next-actor selection and action re-scheduling.
+- `clockwork-company/scripts/combat/rules/targeting_rules.gd` owns team and target selection helpers.
+- `clockwork-company/scripts/combat/rules/tactic_resolver.gd` owns tactic evaluation/selection decisions.
+- `clockwork-company/scripts/combat/rules/job_effect_resolver.gd` owns current-job combat bonus hooks.
+- `clockwork-company/scripts/combat/rules/item_effect_resolver.gd` owns triggered item effect resolution.
+- `clockwork-company/scripts/combat/scenarios/demo_battle_factory.gd` owns current fixed demo roster construction.
 - `CombatLog` and `CombatLogEntry` are small helper classes inside `combat_simulator.gd` that build the readable text log.
+- `combat_simulator.gd` now orchestrates a battle by delegating logging, targeting, tactic selection, effect resolution, scheduling, and demo roster setup to dedicated scripts.
 - `clockwork-company/scripts/data/unit_definition.gd` defines the editable unit data Resource type.
 - `clockwork-company/scripts/data/item_definition.gd` defines the editable item data Resource type, including one optional triggered effect.
 - `clockwork-company/scripts/data/job_definition.gd` defines the editable job data Resource type, including stat modifiers, equipment permissions, and one learnable effect label.

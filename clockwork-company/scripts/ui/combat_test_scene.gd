@@ -332,6 +332,8 @@ func _build_visual_replay_model() -> void:
 	replay_units_by_name.clear()
 	var in_roster := false
 	var roster_team := ""
+	# Visual replay intentionally rebuilds unit state from static setup text, so
+	# this parser must stay aligned with the roster line format in CombatSimulator.
 	for line in cached_static_lines:
 		if line.strip_edges() == "Roster:":
 			in_roster = true
@@ -410,6 +412,8 @@ func _apply_event_lines_to_visual_model(event_lines: Array) -> void:
 
 
 func _apply_event_line(line: String) -> void:
+	# These string checks are deliberately narrow and presentation-only.
+	# If combat log phrasing changes, update this parser alongside that change.
 	if line.ends_with(" takes a turn."):
 		var actor_name := line.get_slice("|", 1).replace("takes a turn.", "").strip_edges()
 		if replay_units_by_name.has(actor_name):

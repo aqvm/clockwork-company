@@ -13,6 +13,96 @@ Each entry should include:
 - Manual exercise
 - Open questions
 
+## 2026-05-31 - Interstitial Phase 6.5.5.5 combat simulator modularization pass
+
+Feature worked on:
+
+- Refactored `combat_simulator.gd` from a single large file into dedicated combat modules.
+- Kept `CombatSimulator` as orchestration, while moving logging, runtime state, scheduler, targeting, tactics, job effects, item effects, text formatting, and demo roster setup into separate scripts.
+- Preserved deterministic battle behavior and log style while improving file-level responsibility clarity.
+
+Godot concepts introduced:
+
+- `preload()`-based composition between plain `RefCounted` utility scripts.
+- `static func` helper modules for deterministic rule utilities.
+- Thin orchestrator pattern: one script coordinates specialized modules.
+
+Game architecture concepts introduced:
+
+- Separation of concerns inside combat simulation now mirrors the project’s broader architecture principles.
+- Rules, runtime state, and text/log presentation helpers are explicitly separated even before adding more features.
+- Scenario construction (demo roster) is now isolated from rule execution.
+
+Files touched:
+
+- `clockwork-company/scripts/combat/combat_simulator.gd`
+- `clockwork-company/scripts/combat/combat_constants.gd`
+- `clockwork-company/scripts/combat/logging/combat_log.gd`
+- `clockwork-company/scripts/combat/logging/combat_text_formatter.gd`
+- `clockwork-company/scripts/combat/runtime/unit_state.gd`
+- `clockwork-company/scripts/combat/runtime/turn_scheduler.gd`
+- `clockwork-company/scripts/combat/rules/targeting_rules.gd`
+- `clockwork-company/scripts/combat/rules/tactic_resolver.gd`
+- `clockwork-company/scripts/combat/rules/job_effect_resolver.gd`
+- `clockwork-company/scripts/combat/rules/item_effect_resolver.gd`
+- `clockwork-company/scripts/combat/scenarios/demo_battle_factory.gd`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Which script now owns each major combat responsibility by name alone.
+- Why `CombatSimulator` is now easier to read as a battle flow controller.
+- How deterministic behavior can be preserved through refactoring when responsibilities are moved, not redesigned.
+
+Manual exercise:
+
+- Open `combat_simulator.gd` and trace one attack turn end-to-end, listing each helper script called in order (scheduler, tactic resolver, job/item effect resolvers, formatter/log output).
+
+Open questions:
+
+- Should the next refactor replace UI-side log parsing with structured replay snapshots from these new combat modules?
+
+## 2026-05-31 - Interstitial Phase 6.5.5.5 replay bugfix cleanup
+
+Feature worked on:
+
+- Fixed an empty Unit Replay panel bug by reading roster/setup data from cached simulator output lines instead of `RichTextLabel.text`.
+- Changed replay pacing from fixed one-event-per-second to a simulation-time-scaled delay with a minimum clamp.
+- Removed an unused scene template node used during early UI prototyping.
+
+Godot concepts introduced:
+
+- `RichTextLabel.append_text()` content should not be treated as a reliable data source for downstream parsing in this flow.
+- Replay pacing can map from simulation deltas to wall-clock delay via a simple scale constant plus a minimum wait guard.
+- Cleaning unused scene nodes reduces editor noise and makes ownership clearer.
+
+Game architecture concepts introduced:
+
+- Presentation parsers should read from source-of-truth cached simulation lines, not rendered UI state.
+- Time readability in replay is a UX transform, not a combat-rule change.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `clockwork-company/scenes/combat_test_scene.tscn`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why the Unit Replay pane failed to render despite replay logs still working.
+- Why variable replay pacing better reflects action timing than a fixed one-second step.
+- Why removing temporary scene scaffolding helps future refactors.
+
+Manual exercise:
+
+- In `combat_test_scene.gd`, temporarily set `SECONDS_PER_SIM_SECOND` to `1.0`, run replay, then set it to `0.1` and compare readability versus speed.
+
+Open questions:
+
+- Should replay speed scaling become an exposed inspector setting (or runtime slider) once we add more visual effects?
+
 ## 2026-05-31 - Interstitial Phase 6.5.5.5 replay pane split and unit dots
 
 Feature worked on:

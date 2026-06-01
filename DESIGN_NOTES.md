@@ -70,6 +70,7 @@ Current combat log design rules:
 - replay text and replay visualization can coexist in the same pane, with a clear divider so readability stays primary
 - a first-pass replay visualization can be reconstructed from deterministic log text if it stays explicitly presentation-only
 - cooldown visualization should map to simulation time so a unit acts when its cooldown bar reaches empty
+- combat simulator orchestration should stay thin; scheduling, targeting, effect resolution, and text formatting should live in dedicated scripts with clear names
 
 ### Jobs as identity
 
