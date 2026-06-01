@@ -6,6 +6,7 @@ const UnitLoadoutDefinitionScript := preload("res://scripts/data/unit_loadout_de
 const JobDefinitionScript := preload("res://scripts/data/job_definition.gd")
 const ItemDefinitionScript := preload("res://scripts/data/item_definition.gd")
 const TacticDefinitionScript := preload("res://scripts/data/tactic_definition.gd")
+const EffectDefinitionScript := preload("res://scripts/data/effect_definition.gd")
 
 const BASE_ITEMS_DIR := "res://resources/items"
 const BASE_JOBS_DIR := "res://resources/jobs"
@@ -28,6 +29,10 @@ const TEAM_VALUES := {"Allies": true, "Enemies": true}
 const ITEM_SLOT_VALUES := {"Weapon": true, "Armor": true, "Trinket": true}
 const ITEM_TRIGGER_VALUES := {"None": true, "Battle Start": true, "Attack": true, "Hit": true, "Kill": true, "Death": true}
 const ITEM_EFFECT_VALUES := {"None": true, "Gain Armor": true, "Bonus Damage": true, "Reduce Target Armor": true, "Heal Self": true, "Damage Killer": true}
+const EFFECT_TRIGGER_VALUES := {"Battle Start": true, "Attack": true, "Hit": true, "Kill": true, "Death": true, "Damaged": true, "HP Below Threshold": true, "Every N Ticks": true}
+const EFFECT_CONDITION_VALUES := {"Always": true, "Self HP Below Percent": true, "Target Has Tag": true, "Target Missing Tag": true}
+const EFFECT_TARGET_VALUES := {"Self": true, "Attack Target": true, "Attacker": true, "Killer": true, "All Allies": true, "All Enemies": true, "Adjacent Allies": true}
+const EFFECT_TYPE_VALUES := {"Gain Armor": true, "Bonus Damage": true, "Reduce Target Armor": true, "Heal": true, "Heal Self": true, "Damage": true, "Damage Killer": true, "Increase Max HP": true}
 const JOB_EFFECT_VALUES := {"None": true, "Guard Training": true, "First Aid": true, "Sharpened Edge": true}
 const TACTIC_CONDITION_VALUES := {"Always": true, "Self HP Below Half": true, "Ally HP Below Half": true, "Enemy Alive": true}
 const TACTIC_ACTION_VALUES := {"Attack": true, "Heal": true, "Guard": true}
@@ -65,11 +70,13 @@ static func _load_base_items() -> Dictionary:
 		out[id] = {
 			"id": id,
 			"display_name": resource.display_name,
+			"tags": resource.tags.duplicate(),
 			"slot": resource.slot,
 			"max_hp_modifier": resource.max_hp_modifier,
 			"damage_modifier": resource.damage_modifier,
 			"armor_modifier": resource.armor_modifier,
 			"action_interval_modifier": resource.action_interval_modifier,
+			"effects": _effect_resources_to_data(resource.effects),
 			"trigger": resource.trigger,
 			"effect": resource.effect,
 			"effect_amount": resource.effect_amount,
@@ -84,6 +91,7 @@ static func _load_base_jobs() -> Dictionary:
 		out[id] = {
 			"id": id,
 			"display_name": resource.display_name,
+			"tags": resource.tags.duplicate(),
 			"max_hp_modifier": resource.max_hp_modifier,
 			"damage_modifier": resource.damage_modifier,
 			"armor_modifier": resource.armor_modifier,
@@ -102,6 +110,7 @@ static func _load_base_tactics() -> Dictionary:
 		var id := _resource_id(resource.resource_path)
 		out[id] = {
 			"id": id,
+			"tags": resource.tags.duplicate(),
 			"condition": resource.condition,
 			"action": resource.action,
 			"target": resource.target,
@@ -132,6 +141,7 @@ static func _load_base_units() -> Dictionary:
 		out[id] = {
 			"id": id,
 			"display_name": resource.display_name,
+			"tags": resource.tags.duplicate(),
 			"team": resource.team,
 			"max_hp": resource.max_hp,
 			"damage": resource.damage,
@@ -188,6 +198,12 @@ static func _validate_merged_data(data: Dictionary) -> void:
 		assert(ITEM_SLOT_VALUES.has(item.get("slot", "")), "Invalid item slot for id %s" % item_id)
 		assert(ITEM_TRIGGER_VALUES.has(item.get("trigger", "")), "Invalid item trigger for id %s" % item_id)
 		assert(ITEM_EFFECT_VALUES.has(item.get("effect", "")), "Invalid item effect for id %s" % item_id)
+		for effect in item.get("effects", []):
+			var effect_data: Dictionary = effect
+			assert(EFFECT_TRIGGER_VALUES.has(effect_data.get("trigger", "")), "Invalid authored effect trigger for item id %s" % item_id)
+			assert(EFFECT_CONDITION_VALUES.has(effect_data.get("condition", "")), "Invalid authored effect condition for item id %s" % item_id)
+			assert(EFFECT_TARGET_VALUES.has(effect_data.get("target_selector", "")), "Invalid authored effect target selector for item id %s" % item_id)
+			assert(EFFECT_TYPE_VALUES.has(effect_data.get("effect_type", "")), "Invalid authored effect type for item id %s" % item_id)
 
 	for job_id in data["jobs"].keys():
 		var job: Dictionary = data["jobs"][job_id]
@@ -243,6 +259,7 @@ static func _build_item_resources(items_data: Dictionary) -> Dictionary:
 		var src: Dictionary = items_data[id]
 		var item: ItemDefinition = ItemDefinitionScript.new()
 		item.display_name = String(src.get("display_name", id))
+		item.tags = _string_array(src.get("tags", []))
 		item.slot = String(src.get("slot", "Weapon"))
 		item.max_hp_modifier = int(src.get("max_hp_modifier", 0))
 		item.damage_modifier = int(src.get("damage_modifier", 0))
@@ -251,8 +268,28 @@ static func _build_item_resources(items_data: Dictionary) -> Dictionary:
 		item.trigger = String(src.get("trigger", "None"))
 		item.effect = String(src.get("effect", "None"))
 		item.effect_amount = int(src.get("effect_amount", 0))
+		item.effects = _build_effect_resources(src.get("effects", []))
 		out[id] = item
 	return out
+
+
+static func _build_effect_resources(effects_data: Array) -> Array[EffectDefinition]:
+	var effects: Array[EffectDefinition] = []
+	for raw in effects_data:
+		var src: Dictionary = raw
+		var effect: EffectDefinition = EffectDefinitionScript.new()
+		effect.display_name = String(src.get("display_name", ""))
+		effect.tags = _string_array(src.get("tags", []))
+		effect.trigger = String(src.get("trigger", "Battle Start"))
+		effect.condition = String(src.get("condition", "Always"))
+		effect.target_selector = String(src.get("target_selector", "Self"))
+		effect.effect_type = String(src.get("effect_type", "Gain Armor"))
+		effect.amount = int(src.get("amount", 0))
+		effect.threshold_percent = int(src.get("threshold_percent", 50))
+		effect.interval_ticks = int(src.get("interval_ticks", 0))
+		effect.once_per_battle = bool(src.get("once_per_battle", false))
+		effects.append(effect)
+	return effects
 
 
 static func _build_job_resources(jobs_data: Dictionary) -> Dictionary:
@@ -261,6 +298,7 @@ static func _build_job_resources(jobs_data: Dictionary) -> Dictionary:
 		var src: Dictionary = jobs_data[id]
 		var job: JobDefinition = JobDefinitionScript.new()
 		job.display_name = String(src.get("display_name", id))
+		job.tags = _string_array(src.get("tags", []))
 		job.max_hp_modifier = int(src.get("max_hp_modifier", 0))
 		job.damage_modifier = int(src.get("damage_modifier", 0))
 		job.armor_modifier = int(src.get("armor_modifier", 0))
@@ -273,11 +311,41 @@ static func _build_job_resources(jobs_data: Dictionary) -> Dictionary:
 	return out
 
 
+static func _effect_resources_to_data(effects: Array[EffectDefinition]) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for effect in effects:
+		if effect == null:
+			continue
+		out.append({
+			"display_name": effect.display_name,
+			"tags": effect.tags.duplicate(),
+			"trigger": effect.trigger,
+			"condition": effect.condition,
+			"target_selector": effect.target_selector,
+			"effect_type": effect.effect_type,
+			"amount": effect.amount,
+			"threshold_percent": effect.threshold_percent,
+			"interval_ticks": effect.interval_ticks,
+			"once_per_battle": effect.once_per_battle,
+		})
+	return out
+
+
+static func _string_array(raw_values: Variant) -> Array[String]:
+	var values: Array[String] = []
+	if typeof(raw_values) != TYPE_ARRAY:
+		return values
+	for raw_value in raw_values:
+		values.append(String(raw_value))
+	return values
+
+
 static func _build_tactic_resources(tactics_data: Dictionary) -> Dictionary:
 	var out := {}
 	for id in tactics_data.keys():
 		var src: Dictionary = tactics_data[id]
 		var tactic: TacticDefinition = TacticDefinitionScript.new()
+		tactic.tags = _string_array(src.get("tags", []))
 		tactic.condition = String(src.get("condition", "Always"))
 		tactic.action = String(src.get("action", "Attack"))
 		tactic.target = String(src.get("target", "Frontmost Enemy"))
@@ -311,6 +379,7 @@ static func _build_unit_resources(units_data: Dictionary, loadouts_by_id: Dictio
 		var src: Dictionary = units_data[id]
 		var unit: UnitDefinition = UnitDefinitionScript.new()
 		unit.display_name = String(src.get("display_name", id))
+		unit.tags = _string_array(src.get("tags", []))
 		unit.team = String(src.get("team", "Allies"))
 		unit.max_hp = int(src.get("max_hp", 1))
 		unit.damage = int(src.get("damage", 1))

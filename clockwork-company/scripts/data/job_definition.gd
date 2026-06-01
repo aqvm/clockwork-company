@@ -3,6 +3,7 @@ extends Resource
 class_name JobDefinition
 
 @export var display_name := ""
+@export var tags: Array[String] = []
 @export var max_hp_modifier := 0
 @export var damage_modifier := 0
 @export var armor_modifier := 0

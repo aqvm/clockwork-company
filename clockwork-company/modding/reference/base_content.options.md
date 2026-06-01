@@ -35,14 +35,48 @@ Required:
 
 Optional fields:
 - `display_name` (`String`)
+- `tags` (`Array[String]`): freeform labels for future conditions, filtering, and content organization.
 - `slot` (`String enum`): `Weapon`, `Armor`, `Trinket`
 - `max_hp_modifier` (`int`)
 - `damage_modifier` (`int`)
 - `armor_modifier` (`int`)
 - `action_interval_modifier` (`int`)
+- `effects` (`Array[Dictionary]`): declarative authored effects. See `items[].effects[]` below.
 - `trigger` (`String enum`): `None`, `Battle Start`, `Attack`, `Hit`, `Kill`, `Death`
 - `effect` (`String enum`): `None`, `Gain Armor`, `Bonus Damage`, `Reduce Target Armor`, `Heal Self`, `Damage Killer`
 - `effect_amount` (`int`)
+
+Compatibility note:
+- `trigger`, `effect`, and `effect_amount` are the legacy one-effect item fields.
+- Prefer `effects` for new content.
+- If an item has matching authored `effects`, the resolver uses those for that trigger. If no authored effect matches a trigger, the legacy fields still work as fallback.
+
+## `items[].effects[]` keys
+
+Optional fields:
+- `display_name` (`String`)
+- `tags` (`Array[String]`): effect labels used by tag conditions and future content tools.
+- `trigger` (`String enum`): `Battle Start`, `Attack`, `Hit`, `Kill`, `Death`, `Damaged`, `HP Below Threshold`, `Every N Ticks`
+- `condition` (`String enum`): `Always`, `Self HP Below Percent`, `Target Has Tag`, `Target Missing Tag`
+- `target_selector` (`String enum`): `Self`, `Attack Target`, `Attacker`, `Killer`, `All Allies`, `All Enemies`, `Adjacent Allies`
+- `effect_type` (`String enum`): `Gain Armor`, `Bonus Damage`, `Reduce Target Armor`, `Heal`, `Heal Self`, `Damage`, `Damage Killer`, `Increase Max HP`
+- `amount` (`int`)
+- `threshold_percent` (`int`, 1-100): used by `Self HP Below Percent` and `HP Below Threshold`.
+- `interval_ticks` (`int`): reserved for `Every N Ticks`.
+- `once_per_battle` (`bool`)
+
+Currently implemented item effect combinations:
+- `Battle Start` + `Gain Armor`
+- `Attack` + `Bonus Damage`
+- `Hit` + `Reduce Target Armor`
+- `Kill` + `Heal` or `Heal Self`
+- `Death` + `Damage Killer`
+- `Damaged` or `HP Below Threshold` + `Heal`, `Heal Self`, or `Increase Max HP`
+
+Reserved but not fully implemented yet:
+- `Every N Ticks` needs periodic scheduler support.
+- `Adjacent Allies` needs formation/adjacency support.
+- `All Allies`, `All Enemies`, and direct `Damage` need multi-target/effect application support.
 
 ## `jobs[]` keys
 
@@ -51,6 +85,7 @@ Required:
 
 Optional fields:
 - `display_name` (`String`)
+- `tags` (`Array[String]`)
 - `max_hp_modifier` (`int`)
 - `damage_modifier` (`int`)
 - `armor_modifier` (`int`)
@@ -66,6 +101,7 @@ Required:
 - `id` (`String`)
 
 Optional fields:
+- `tags` (`Array[String]`)
 - `condition` (`String enum`): `Always`, `Self HP Below Half`, `Ally HP Below Half`, `Enemy Alive`
 - `action` (`String enum`): `Attack`, `Heal`, `Guard`
 - `target` (`String enum`): `Self`, `Lowest HP Ally`, `Frontmost Enemy`
@@ -95,6 +131,7 @@ Required:
 
 Optional fields:
 - `display_name` (`String`)
+- `tags` (`Array[String]`)
 - `team` (`String enum`): `Allies`, `Enemies`
 - `max_hp` (`int`)
 - `damage` (`int`)

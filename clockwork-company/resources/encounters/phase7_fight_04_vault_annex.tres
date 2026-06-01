@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="EncounterDefinition" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/encounter_definition.gd" id="1_encounter"]
+[ext_resource type="Resource" path="res://resources/units/vault_bulwark.tres" id="2_bulwark"]
+[ext_resource type="Resource" path="res://resources/units/clockwork_runner.tres" id="3_runner"]
+[ext_resource type="Resource" path="res://resources/units/glass_adept.tres" id="4_adept"]
+
+[resource]
+script = ExtResource("1_encounter")
+display_name = "Vault Annex Patrol"
+scout_text = "A tank, a fast support-scout, and a focused damage apprentice."
+enemy_units = [ExtResource("2_bulwark"), ExtResource("3_runner"), ExtResource("4_adept")]

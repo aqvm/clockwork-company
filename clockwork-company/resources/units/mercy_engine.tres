@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="UnitDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/unit_definition.gd" id="1_unit"]
+[ext_resource type="Resource" path="res://resources/loadouts/apprentice_support.tres" id="2_loadout"]
+
+[resource]
+script = ExtResource("1_unit")
+display_name = "Mercy Engine"
+team = "Enemies"
+max_hp = 24
+damage = 8
+armor = 1
+action_interval = 12
+loadout = ExtResource("2_loadout")

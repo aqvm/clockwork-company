@@ -159,6 +159,7 @@ func _resolve_attack(log, turn_entry_id: int, actor, target) -> void:
 	log.add_event("Damage dealt: %d. %s armor: %d. HP: %d -> %d." % [damage_taken, target.unit_name, target_armor, previous_hp, target.hp], damage_event["event_type"], CombatLogScript.NO_TIME, attack_entry_id, damage_event["payload"], damage_event["tags"])
 	if target.is_alive():
 		ItemEffectResolverScript.apply_hit_item_effects(log, attack_entry_id, actor, target)
+		ItemEffectResolverScript.apply_damaged_item_effects(log, attack_entry_id, target, actor)
 	if not target.is_alive():
 		var defeat_event := CombatEventsScript.defeat(target)
 		log.add_event("%s is defeated." % target.unit_name, defeat_event["event_type"], CombatLogScript.NO_TIME, attack_entry_id, defeat_event["payload"], defeat_event["tags"])

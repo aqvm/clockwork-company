@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="EncounterDefinition" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/encounter_definition.gd" id="1_encounter"]
+[ext_resource type="Resource" path="res://resources/units/union_shield.tres" id="2_shield"]
+[ext_resource type="Resource" path="res://resources/units/lane_knifer.tres" id="3_knifer"]
+[ext_resource type="Resource" path="res://resources/units/glass_wisp.tres" id="4_wisp"]
+
+[resource]
+script = ExtResource("1_encounter")
+display_name = "Union Toll Gate"
+scout_text = "A tougher guard protects a quick blade and a glass support caster."
+enemy_units = [ExtResource("2_shield"), ExtResource("3_knifer"), ExtResource("4_wisp")]

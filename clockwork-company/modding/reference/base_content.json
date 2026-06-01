@@ -5,11 +5,26 @@
 	{
 	  "id": "glass_focus",
 	  "display_name": "Glass Focus",
+	  "tags": ["focus", "damage"],
 	  "slot": "Trinket",
 	  "max_hp_modifier": -2,
 	  "damage_modifier": 3,
 	  "armor_modifier": 0,
 	  "action_interval_modifier": 0,
+	  "effects": [
+		{
+		  "display_name": "Glass Focus Attack Burst",
+		  "tags": ["damage", "focus"],
+		  "trigger": "Attack",
+		  "condition": "Always",
+		  "target_selector": "Attack Target",
+		  "effect_type": "Bonus Damage",
+		  "amount": 2,
+		  "threshold_percent": 50,
+		  "interval_ticks": 0,
+		  "once_per_battle": false
+		}
+	  ],
 	  "trigger": "Attack",
 	  "effect": "Bonus Damage",
 	  "effect_amount": 2
@@ -17,6 +32,7 @@
 	{
 	  "id": "light_step_boots",
 	  "display_name": "Light-Step Boots",
+	  "tags": ["speed", "trinket"],
 	  "slot": "Trinket",
 	  "max_hp_modifier": 0,
 	  "damage_modifier": 0,
@@ -29,11 +45,26 @@
 	{
 	  "id": "reinforced_buckler",
 	  "display_name": "Reinforced Buckler",
+	  "tags": ["armor", "guard"],
 	  "slot": "Armor",
 	  "max_hp_modifier": 6,
 	  "damage_modifier": 0,
 	  "armor_modifier": 2,
 	  "action_interval_modifier": 1,
+	  "effects": [
+		{
+		  "display_name": "Buckler Brace",
+		  "tags": ["armor", "battle_start"],
+		  "trigger": "Battle Start",
+		  "condition": "Always",
+		  "target_selector": "Self",
+		  "effect_type": "Gain Armor",
+		  "amount": 1,
+		  "threshold_percent": 50,
+		  "interval_ticks": 0,
+		  "once_per_battle": false
+		}
+	  ],
 	  "trigger": "Battle Start",
 	  "effect": "Gain Armor",
 	  "effect_amount": 1
@@ -41,14 +72,56 @@
 	{
 	  "id": "shortblade",
 	  "display_name": "Shortblade",
+	  "tags": ["weapon", "blade"],
 	  "slot": "Weapon",
 	  "max_hp_modifier": 0,
 	  "damage_modifier": 2,
 	  "armor_modifier": 0,
 	  "action_interval_modifier": 0,
+	  "effects": [
+		{
+		  "display_name": "Shortblade Notch",
+		  "tags": ["armor_break", "blade"],
+		  "trigger": "Hit",
+		  "condition": "Always",
+		  "target_selector": "Attack Target",
+		  "effect_type": "Reduce Target Armor",
+		  "amount": 1,
+		  "threshold_percent": 50,
+		  "interval_ticks": 0,
+		  "once_per_battle": false
+		}
+	  ],
 	  "trigger": "Hit",
 	  "effect": "Reduce Target Armor",
 	  "effect_amount": 1
+	},
+	{
+	  "id": "stubborn_heart_charm",
+	  "display_name": "Stubborn Heart Charm",
+	  "tags": ["trinket", "survival", "example"],
+	  "slot": "Trinket",
+	  "max_hp_modifier": 0,
+	  "damage_modifier": 0,
+	  "armor_modifier": 0,
+	  "action_interval_modifier": 0,
+	  "effects": [
+		{
+		  "display_name": "Stubborn Heart",
+		  "tags": ["survival", "low_hp"],
+		  "trigger": "HP Below Threshold",
+		  "condition": "Self HP Below Percent",
+		  "target_selector": "Self",
+		  "effect_type": "Increase Max HP",
+		  "amount": 6,
+		  "threshold_percent": 50,
+		  "interval_ticks": 0,
+		  "once_per_battle": true
+		}
+	  ],
+	  "trigger": "None",
+	  "effect": "None",
+	  "effect_amount": 0
 	}
   ],
   "jobs": [

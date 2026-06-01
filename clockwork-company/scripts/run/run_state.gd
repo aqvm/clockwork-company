@@ -6,18 +6,32 @@ const JsonContentLoaderScript := preload("res://scripts/modding/json_content_loa
 const UnitDefinitionScript := preload("res://scripts/data/unit_definition.gd")
 const UnitLoadoutDefinitionScript := preload("res://scripts/data/unit_loadout_definition.gd")
 const ItemDefinitionScript := preload("res://scripts/data/item_definition.gd")
-
 const STATUS_ACTIVE := "active"
 const STATUS_REWARD := "reward"
+const STATUS_EQUIPMENT := "equipment"
 const STATUS_WON := "won"
 const STATUS_LOST := "lost"
 const FIGHT_COUNT := 5
+const ENCOUNTER_PATHS := [
+	"res://resources/encounters/phase7_fight_01_street_corner.tres",
+	"res://resources/encounters/phase7_fight_02_toll_gate.tres",
+	"res://resources/encounters/phase7_fight_03_rooftop.tres",
+	"res://resources/encounters/phase7_fight_04_vault_annex.tres",
+	"res://resources/encounters/phase7_fight_05_clocktower.tres",
+]
+const REWARD_PATHS := [
+	"res://resources/rewards/guardplate_for_alden.tres",
+	"res://resources/rewards/honed_blade_for_mira.tres",
+	"res://resources/rewards/focus_lens_for_sol.tres",
+]
 
 var fight_index := 0
 var status := STATUS_ACTIVE
 var ally_definitions: Array[UnitDefinition] = []
-var enemy_definitions: Array[UnitDefinition] = []
-var inventory_names: Array[String] = []
+var encounter_definitions: Array = []
+var reward_definitions: Array = []
+var inventory_items: Array[ItemDefinition] = []
+var reward_history: Array[String] = []
 var last_result_summary := ""
 var loss_test_mode := false
 
@@ -25,18 +39,18 @@ var loss_test_mode := false
 func start(enabled_mod_pack_ids: Array[String], should_force_loss := false) -> void:
 	fight_index = 0
 	status = STATUS_ACTIVE
-	inventory_names.clear()
+	inventory_items.clear()
+	reward_history.clear()
 	last_result_summary = ""
 	loss_test_mode = should_force_loss
 
 	ally_definitions.clear()
-	enemy_definitions.clear()
+	encounter_definitions = _load_encounter_definitions()
+	reward_definitions = _load_reward_definitions()
 	for definition: UnitDefinition in JsonContentLoaderScript.load_demo_unit_definitions(enabled_mod_pack_ids):
 		var copy := _clone_unit_definition(definition)
 		if copy.team == CombatConstantsScript.TEAM_ALLY:
 			ally_definitions.append(copy)
-		else:
-			enemy_definitions.append(copy)
 
 	if loss_test_mode:
 		for ally in ally_definitions:
@@ -51,17 +65,27 @@ func current_fight_number() -> int:
 
 func current_fight_title() -> String:
 	var suffix := " (loss test)" if loss_test_mode else ""
-	return "Phase 7 run fight %d of %d%s" % [current_fight_number(), FIGHT_COUNT, suffix]
+	return "Phase 7 run fight %d of %d: %s%s" % [current_fight_number(), FIGHT_COUNT, current_encounter_name(), suffix]
+
+
+func current_encounter_name() -> String:
+	var encounter := _current_encounter()
+	if encounter == null:
+		return "Missing Encounter"
+	return encounter.display_name
 
 
 func build_current_fight_definitions() -> Array[UnitDefinition]:
 	var definitions: Array[UnitDefinition] = []
 	for ally in ally_definitions:
 		definitions.append(_clone_unit_definition(ally))
-	for enemy in enemy_definitions:
-		var scaled_enemy := _clone_unit_definition(enemy)
-		_apply_enemy_scaling(scaled_enemy)
-		definitions.append(scaled_enemy)
+	var encounter := _current_encounter()
+	if encounter == null:
+		return definitions
+	for enemy in encounter.enemy_units:
+		var enemy_copy := _clone_unit_definition(enemy)
+		_apply_loss_test_enemy_pressure(enemy_copy)
+		definitions.append(enemy_copy)
 	return definitions
 
 
@@ -82,42 +106,18 @@ func complete_fight(report: Dictionary) -> void:
 
 
 func reward_options() -> Array[Dictionary]:
-	var fight_number := current_fight_number()
-	return [
-		_build_reward(
-			"Guardplate for Alden",
-			"Equip Alden with sturdier armor: +5 HP, +1 armor, +1 interval.",
-			"Alden Guard",
-			"Armor",
-			"Run Guardplate %d" % fight_number,
-			5,
-			0,
-			1,
-			1
-		),
-		_build_reward(
-			"Honed Blade for Mira",
-			"Equip Mira with a sharper weapon: +2 damage.",
-			"Mira Scout",
-			"Weapon",
-			"Run Honed Blade %d" % fight_number,
-			0,
-			2,
-			0,
-			0
-		),
-		_build_reward(
-			"Focus Lens for Sol",
-			"Equip Sol with a stronger trinket: -1 HP, +2 damage.",
-			"Sol Apprentice",
-			"Trinket",
-			"Run Focus Lens %d" % fight_number,
-			-1,
-			2,
-			0,
-			0
-		),
-	]
+	var options: Array[Dictionary] = []
+	for reward in reward_definitions:
+		if reward == null or reward.item == null:
+			continue
+		options.append({
+			"label": reward.display_name,
+			"description": reward.description,
+			"unit_name": reward.target_unit_name,
+			"item": reward.item,
+			"item_name": reward.item.display_name,
+		})
+	return options
 
 
 func apply_reward(reward_index: int) -> void:
@@ -126,77 +126,133 @@ func apply_reward(reward_index: int) -> void:
 		return
 
 	var reward: Dictionary = options[reward_index]
-	var target := _find_ally(String(reward["unit_name"]))
+	var item: ItemDefinition = _clone_item_definition(reward["item"])
+	inventory_items.append(item)
+	reward_history.append("%s gained after fight %d" % [item.display_name, current_fight_number()])
+	fight_index += 1
+	status = STATUS_EQUIPMENT
+	last_result_summary = "Reward gained: %s. Equip inventory before fight %d, or continue as-is." % [String(reward["label"]), current_fight_number()]
+
+
+func continue_to_next_fight() -> void:
+	if status != STATUS_EQUIPMENT:
+		return
+
+	status = STATUS_ACTIVE
+	last_result_summary = "Fight %d is ready." % current_fight_number()
+
+
+func equip_options() -> Array[Dictionary]:
+	var options: Array[Dictionary] = []
+	for item_index in inventory_items.size():
+		var item := inventory_items[item_index]
+		for ally in ally_definitions:
+			if not _can_equip_item(ally, item):
+				continue
+			options.append({
+				"item_index": item_index,
+				"unit_name": ally.display_name,
+				"label": "Equip %s -> %s" % [item.display_name, ally.display_name],
+			})
+	return options
+
+
+func equip_inventory_item(item_index: int, unit_name: String) -> void:
+	if item_index < 0 or item_index >= inventory_items.size():
+		return
+
+	var target := _find_ally(unit_name)
 	if target == null:
 		return
 
-	var item := _item_from_reward(reward)
+	var item := inventory_items[item_index]
+	if not _can_equip_item(target, item):
+		last_result_summary = "%s cannot equip %s." % [target.display_name, item.display_name]
+		return
+
 	var loadout := _ensure_loadout_clone(target)
+	var replaced_item: ItemDefinition = null
 	if item.slot == "Weapon":
+		replaced_item = loadout.weapon
 		loadout.weapon = item
 	elif item.slot == "Armor":
+		replaced_item = loadout.armor
 		loadout.armor = item
 	elif item.slot == "Trinket":
+		replaced_item = loadout.trinket
 		loadout.trinket = item
 
-	inventory_names.append("%s -> %s" % [String(reward["item_name"]), target.display_name])
-	fight_index += 1
-	status = STATUS_ACTIVE
-	last_result_summary = "Reward equipped: %s. Fight %d is ready." % [String(reward["label"]), current_fight_number()]
+	inventory_items.remove_at(item_index)
+	if replaced_item != null:
+		inventory_items.append(_clone_item_definition(replaced_item))
+		last_result_summary = "Equipped %s on %s. %s returned to inventory." % [item.display_name, target.display_name, replaced_item.display_name]
+	else:
+		last_result_summary = "Equipped %s on %s." % [item.display_name, target.display_name]
 
 
 func status_lines() -> Array[String]:
 	var lines: Array[String] = []
 	lines.append("Run status: %s" % status.capitalize())
 	lines.append("Current fight: %d/%d" % [current_fight_number(), FIGHT_COUNT])
+	lines.append("Encounter: %s" % current_encounter_name())
+	var encounter := _current_encounter()
+	if encounter != null and not encounter.scout_text.is_empty():
+		lines.append("Scout note: %s" % encounter.scout_text)
 	if not last_result_summary.is_empty():
 		lines.append(last_result_summary)
-	if inventory_names.is_empty():
-		lines.append("Inventory/equipment rewards: none yet")
+	if reward_history.is_empty():
+		lines.append("Reward history: none yet")
 	else:
-		lines.append("Inventory/equipment rewards:")
-		for entry in inventory_names:
+		lines.append("Reward history:")
+		for entry in reward_history:
 			lines.append("- %s" % entry)
+	if inventory_items.is_empty():
+		lines.append("Inventory: empty")
+	else:
+		lines.append("Inventory:")
+		for item in inventory_items:
+			lines.append("- %s (%s)" % [item.display_name, item.slot])
+	lines.append("Party equipment:")
+	for ally in ally_definitions:
+		lines.append("- %s: %s" % [ally.display_name, _equipment_summary(ally)])
 	return lines
 
 
-func _apply_enemy_scaling(enemy: UnitDefinition) -> void:
-	var step := fight_index
-	enemy.max_hp += step * 2
-	enemy.damage += int(step / 3)
-	if step >= 2:
-		enemy.armor += 1
-
-	if loss_test_mode:
-		enemy.max_hp += 30
-		enemy.damage += 10
-		enemy.armor += 3
-		enemy.action_interval = max(1, enemy.action_interval - 3)
+func _load_encounter_definitions() -> Array:
+	var encounters: Array = []
+	for path in ENCOUNTER_PATHS:
+		var encounter = load(path)
+		if encounter != null:
+			encounters.append(encounter)
+	assert(encounters.size() == FIGHT_COUNT, "Phase 7 run requires exactly %d encounters." % FIGHT_COUNT)
+	return encounters
 
 
-func _build_reward(label: String, description: String, unit_name: String, slot: String, item_name: String, max_hp_modifier: int, damage_modifier: int, armor_modifier: int, action_interval_modifier: int) -> Dictionary:
-	return {
-		"label": label,
-		"description": description,
-		"unit_name": unit_name,
-		"slot": slot,
-		"item_name": item_name,
-		"max_hp_modifier": max_hp_modifier,
-		"damage_modifier": damage_modifier,
-		"armor_modifier": armor_modifier,
-		"action_interval_modifier": action_interval_modifier,
-	}
+func _load_reward_definitions() -> Array:
+	var rewards: Array = []
+	for path in REWARD_PATHS:
+		var reward = load(path)
+		if reward != null:
+			rewards.append(reward)
+	assert(rewards.size() == REWARD_PATHS.size(), "Phase 7 run reward list is missing one or more rewards.")
+	return rewards
 
 
-func _item_from_reward(reward: Dictionary) -> ItemDefinition:
-	var item: ItemDefinition = ItemDefinitionScript.new()
-	item.display_name = String(reward["item_name"])
-	item.slot = String(reward["slot"])
-	item.max_hp_modifier = int(reward["max_hp_modifier"])
-	item.damage_modifier = int(reward["damage_modifier"])
-	item.armor_modifier = int(reward["armor_modifier"])
-	item.action_interval_modifier = int(reward["action_interval_modifier"])
-	return item
+func _current_encounter():
+	if encounter_definitions.is_empty():
+		return null
+	var safe_index: int = clamp(fight_index, 0, encounter_definitions.size() - 1)
+	return encounter_definitions[safe_index]
+
+
+func _apply_loss_test_enemy_pressure(enemy: UnitDefinition) -> void:
+	if not loss_test_mode:
+		return
+
+	enemy.max_hp += 30
+	enemy.damage += 10
+	enemy.armor += 3
+	enemy.action_interval = max(1, enemy.action_interval - 3)
 
 
 func _find_ally(unit_name: String) -> UnitDefinition:
@@ -204,6 +260,37 @@ func _find_ally(unit_name: String) -> UnitDefinition:
 		if ally.display_name == unit_name:
 			return ally
 	return null
+
+
+func _can_equip_item(unit: UnitDefinition, item: ItemDefinition) -> bool:
+	if item == null:
+		return false
+	if unit.loadout == null or unit.loadout.current_job == null:
+		return true
+	var job := unit.loadout.current_job
+	if item.slot == "Weapon":
+		return job.can_equip_weapon
+	if item.slot == "Armor":
+		return job.can_equip_armor
+	if item.slot == "Trinket":
+		return job.can_equip_trinket
+	return false
+
+
+func _equipment_summary(unit: UnitDefinition) -> String:
+	if unit.loadout == null:
+		return "no loadout"
+	return "weapon %s, armor %s, trinket %s" % [
+		_item_name_or_empty(unit.loadout.weapon),
+		_item_name_or_empty(unit.loadout.armor),
+		_item_name_or_empty(unit.loadout.trinket),
+	]
+
+
+func _item_name_or_empty(item: ItemDefinition) -> String:
+	if item == null:
+		return "none"
+	return item.display_name
 
 
 func _ensure_loadout_clone(unit: UnitDefinition) -> UnitLoadoutDefinition:
@@ -218,6 +305,7 @@ func _ensure_loadout_clone(unit: UnitDefinition) -> UnitLoadoutDefinition:
 func _clone_unit_definition(source: UnitDefinition) -> UnitDefinition:
 	var copy: UnitDefinition = UnitDefinitionScript.new()
 	copy.display_name = source.display_name
+	copy.tags = source.tags.duplicate()
 	copy.team = source.team
 	copy.max_hp = source.max_hp
 	copy.damage = source.damage
@@ -241,6 +329,7 @@ func _clone_loadout_definition(source: UnitLoadoutDefinition) -> UnitLoadoutDefi
 func _clone_item_definition(source: ItemDefinition) -> ItemDefinition:
 	var copy: ItemDefinition = ItemDefinitionScript.new()
 	copy.display_name = source.display_name
+	copy.tags = source.tags.duplicate()
 	copy.slot = source.slot
 	copy.max_hp_modifier = source.max_hp_modifier
 	copy.damage_modifier = source.damage_modifier
@@ -249,4 +338,5 @@ func _clone_item_definition(source: ItemDefinition) -> ItemDefinition:
 	copy.trigger = source.trigger
 	copy.effect = source.effect
 	copy.effect_amount = source.effect_amount
+	copy.effects = source.effects.duplicate()
 	return copy

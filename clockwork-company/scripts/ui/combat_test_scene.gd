@@ -15,6 +15,7 @@ const DEFAULT_WINDOW_AREA_FRACTION := 0.75
 const MIN_CONDITIONS_HEIGHT := 120
 const SECONDS_PER_SIM_SECOND := 0.2
 const MIN_SECONDS_BETWEEN_REPLAY_ACTIONS := 0.1
+const MAX_EQUIPMENT_BUTTONS := 12
 const DEFAULT_LOG_HIGHLIGHT_PALETTE := preload("res://resources/ui/combat_log_highlight_palette_default.tres")
 
 @onready var run_button: Button = %RunButton
@@ -53,6 +54,8 @@ var enabled_mod_pack_ids := {}
 var run_state = null
 var cached_battle_report := {}
 var reward_buttons: Array[Button] = []
+var equipment_buttons: Array[Button] = []
+var continue_button: Button = null
 var loss_test_button: Button = null
 
 
@@ -193,6 +196,19 @@ func _setup_run_controls() -> void:
 		run_button.get_parent().add_child(reward_button)
 		reward_buttons.append(reward_button)
 
+	continue_button = Button.new()
+	continue_button.text = "Continue to Next Fight"
+	continue_button.visible = false
+	continue_button.pressed.connect(_on_continue_button_pressed)
+	run_button.get_parent().add_child(continue_button)
+
+	for index in MAX_EQUIPMENT_BUTTONS:
+		var equipment_button := Button.new()
+		equipment_button.visible = false
+		equipment_button.pressed.connect(_on_equipment_button_pressed.bind(index))
+		run_button.get_parent().add_child(equipment_button)
+		equipment_buttons.append(equipment_button)
+
 
 func _start_new_run(should_force_loss: bool) -> void:
 	_stop_log_replay()
@@ -210,6 +226,27 @@ func _on_reward_button_pressed(index: int) -> void:
 		return
 
 	run_state.apply_reward(index)
+	_load_combat_preview()
+
+
+func _on_continue_button_pressed() -> void:
+	if run_state == null or run_state.status != RunStateScript.STATUS_EQUIPMENT:
+		return
+
+	run_state.continue_to_next_fight()
+	_load_combat_preview()
+
+
+func _on_equipment_button_pressed(index: int) -> void:
+	if run_state == null or run_state.status != RunStateScript.STATUS_EQUIPMENT:
+		return
+
+	var options: Array[Dictionary] = run_state.equip_options()
+	if index < 0 or index >= options.size():
+		return
+
+	var option: Dictionary = options[index]
+	run_state.equip_inventory_item(int(option["item_index"]), String(option["unit_name"]))
 	_load_combat_preview()
 
 
@@ -237,6 +274,9 @@ func _update_run_controls() -> void:
 	elif run_state.status == RunStateScript.STATUS_REWARD:
 		run_button.disabled = true
 		run_button.text = "Choose Reward"
+	elif run_state.status == RunStateScript.STATUS_EQUIPMENT:
+		run_button.disabled = true
+		run_button.text = "Equip Or Continue"
 	elif run_state.status == RunStateScript.STATUS_WON:
 		run_button.disabled = false
 		run_button.text = "Run Won - Start New Run"
@@ -256,6 +296,21 @@ func _update_run_controls() -> void:
 			var option: Dictionary = options[index]
 			reward_button.text = String(option["label"])
 			reward_button.tooltip_text = String(option["description"])
+
+	continue_button.visible = run_state.status == RunStateScript.STATUS_EQUIPMENT
+	continue_button.disabled = replay_is_active
+
+	var equip_options: Array[Dictionary] = []
+	if run_state.status == RunStateScript.STATUS_EQUIPMENT:
+		equip_options = run_state.equip_options()
+	for index in equipment_buttons.size():
+		var equipment_button := equipment_buttons[index]
+		var has_equip_option: bool = index < equip_options.size()
+		equipment_button.visible = has_equip_option
+		equipment_button.disabled = replay_is_active or not has_equip_option
+		if has_equip_option:
+			var equip_option: Dictionary = equip_options[index]
+			equipment_button.text = String(equip_option["label"])
 
 
 func _rebuild_mod_menu() -> void:

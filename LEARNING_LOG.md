@@ -59,6 +59,210 @@ Open questions:
 - Should the next run-loop pass add a true inventory screen, or first add authored encounter definitions as Resources?
 - Should rewards eventually be random from a seeded table, fixed by fight number, or selected from encounter-specific pools?
 
+## 2026-06-01 - Phase 7.1 data-driven encounters
+
+Feature worked on:
+
+- Added an `EncounterDefinition` Resource for authored enemy-party fights.
+- Added five Phase 7 encounter `.tres` files.
+- Added a small set of enemy unit variants that still use normal unit/loadout/job/item/tactic building blocks.
+- Updated `RunState` to load the fixed encounter sequence instead of scaling cloned demo enemies in code.
+
+Godot concepts introduced:
+
+- Resource arrays can reference other Resources, such as an encounter pointing to multiple unit definitions.
+- New data Resources can unlock content authoring without adding new combat rules.
+
+Game architecture concepts introduced:
+
+- Encounters are opposing party compositions, not bespoke monster scripts.
+- This keeps the eventual async-multiplayer path cleaner because enemies and players remain expressible through the same build vocabulary.
+
+Files touched:
+
+- `clockwork-company/scripts/data/encounter_definition.gd`
+- `clockwork-company/scripts/run/run_state.gd`
+- `clockwork-company/resources/encounters/*.tres`
+- `clockwork-company/resources/units/training_brute.tres`
+- `clockwork-company/resources/units/lane_knifer.tres`
+- `clockwork-company/resources/units/backroom_mender.tres`
+- `clockwork-company/resources/units/union_shield.tres`
+- `clockwork-company/resources/units/roofline_duelist.tres`
+- `clockwork-company/resources/units/glass_adept.tres`
+- `clockwork-company/resources/units/vault_bulwark.tres`
+- `clockwork-company/resources/units/clockwork_runner.tres`
+- `clockwork-company/resources/units/mercy_engine.tres`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why an encounter is an array of enemy `UnitDefinition` Resources.
+- Why enemy variants should use the same jobs, items, loadouts, and tactics as player units.
+- Why `RunState` still owns the fixed encounter order while each encounter owns its enemy party content.
+
+Manual exercise:
+
+- Open one `phase7_fight_*.tres` encounter and swap one enemy reference for another enemy `UnitDefinition`, then predict how the fight setup summary should change.
+
+Open questions:
+
+- Should encounter order eventually live in a `RunDefinition` Resource instead of a constant list in `RunState`?
+- Should encounter Resources later own reward pools, scout notes, and difficulty labels?
+
+## 2026-06-01 - Phase 7.2 data-driven rewards
+
+Feature worked on:
+
+- Added a `RewardDefinition` Resource for run reward offers.
+- Added three reward item Resources.
+- Added three reward Resources for Alden, Mira, and Sol.
+- Updated `RunState` to load reward choices from `.tres` files instead of hardcoded stat dictionaries.
+
+Godot concepts introduced:
+
+- A Resource can reference another Resource as its payload.
+- Content files can separate an offer (`RewardDefinition`) from the item it grants (`ItemDefinition`).
+
+Game architecture concepts introduced:
+
+- Rewards now produce normal items, which keeps build rewards aligned with the same equipment system used by loadouts.
+- Immediate equip is still a temporary run-loop shortcut; the next step is a small inventory/equipment UI that can hold these item rewards before equipping.
+
+Files touched:
+
+- `clockwork-company/scripts/data/reward_definition.gd`
+- `clockwork-company/scripts/run/run_state.gd`
+- `clockwork-company/resources/items/run_guardplate.tres`
+- `clockwork-company/resources/items/run_honed_blade.tres`
+- `clockwork-company/resources/items/run_focus_lens.tres`
+- `clockwork-company/resources/rewards/guardplate_for_alden.tres`
+- `clockwork-company/resources/rewards/honed_blade_for_mira.tres`
+- `clockwork-company/resources/rewards/focus_lens_for_sol.tres`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why a reward references an item Resource instead of duplicating item stat fields.
+- Why the reward still has a suggested target unit while the item itself stays target-agnostic.
+- Why cloning the item before equipping prevents the run from mutating the source `.tres` item.
+
+Manual exercise:
+
+- Open `run_honed_blade.tres`, change its damage modifier by 1, then predict which setup line should change after picking Honed Blade.
+
+Open questions:
+
+- Should reward offers later be encounter-specific, generated from a pool, or fixed by run position?
+- Should rewards target a suggested unit, or should the player always choose the recipient from inventory?
+
+## 2026-06-01 - Phase 7.3 minimal inventory/equipment decisions
+
+Feature worked on:
+
+- Added a between-fight `equipment` run state.
+- Changed reward choice so it adds the reward item to inventory instead of immediately equipping it.
+- Added valid equip-option generation based on each ally's current job permissions.
+- Added dynamic equipment buttons and a `Continue to Next Fight` button to the combat test scene.
+- Returning replaced gear to inventory prevents silent item loss.
+
+Godot concepts introduced:
+
+- Dynamic UI can mirror game state without requiring a new scene file for every prototype screen.
+- Resource references can move through runtime inventory and equipment slots as normal objects.
+
+Game architecture concepts introduced:
+
+- Inventory is run state, not combat state.
+- Equipment permission checks can be shared conceptually with combat setup so the player cannot equip illegal gear between fights.
+- A crude button list is enough to validate the loop before building a polished party management screen.
+
+Files touched:
+
+- `clockwork-company/scripts/run/run_state.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why reward choice and equipment choice are separate states.
+- Why replaced items return to inventory.
+- Why the UI asks `RunState` for valid equip options instead of deciding equipment legality itself.
+
+Manual exercise:
+
+- Pick a reward after fight 1, equip it on the suggested unit, then equip the returned old item somewhere legal if an option appears. Predict which unit's setup stats should change.
+
+Open questions:
+
+- Should the inventory eventually become a dedicated scene/panel instead of temporary buttons in the combat test scene?
+- Should equipment changes be reversible with an explicit undo, or is returned-to-inventory enough for now?
+
+## 2026-06-01 - Phase 8-ish declarative item effect foundation
+
+Feature worked on:
+
+- Added `EffectDefinition` as a declarative effect Resource.
+- Added freeform `tags` to units, items, jobs, tactics, and effects.
+- Added `effects: Array[EffectDefinition]` to items while keeping legacy `trigger/effect/effect_amount` fallback fields.
+- Updated item effect resolution to read authored effect Resources for current supported item triggers.
+- Added damaged/low-HP effect handling for item effects such as once-per-battle max HP increases.
+- Added `Stubborn Heart Charm` as an authoring example for low-HP max HP growth.
+- Updated the JSON/modding bridge and schema docs for tags and item effects.
+
+Godot concepts introduced:
+
+- Resource arrays can hold typed effect Resources.
+- Subresources inside `.tres` files can define item-specific effects without requiring separate files for every effect.
+- Exported `Array[String]` fields are a lightweight tag authoring surface.
+
+Game architecture concepts introduced:
+
+- Declarative effects keep content deterministic and inspectable, which is important for eventual async multiplayer.
+- The simulator still interprets a known vocabulary; items do not run arbitrary scripts.
+- Reserved vocabulary can point toward future systems, but docs must distinguish implemented behavior from future hooks.
+
+Files touched:
+
+- `clockwork-company/scripts/data/effect_definition.gd`
+- `clockwork-company/scripts/data/item_definition.gd`
+- `clockwork-company/scripts/data/unit_definition.gd`
+- `clockwork-company/scripts/data/job_definition.gd`
+- `clockwork-company/scripts/data/tactic_definition.gd`
+- `clockwork-company/scripts/combat/rules/item_effect_resolver.gd`
+- `clockwork-company/scripts/combat/runtime/unit_state.gd`
+- `clockwork-company/scripts/combat/combat_simulator.gd`
+- `clockwork-company/scripts/modding/json_content_loader.gd`
+- `clockwork-company/resources/items/*.tres`
+- `MODDING.md`
+- `clockwork-company/modding/reference/base_content.json`
+- `clockwork-company/modding/reference/base_content.options.md`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why item effects are now Resources instead of only three flat fields on `ItemDefinition`.
+- Why legacy item effect fields still exist during the transition.
+- Which effect trigger/type combinations are actually implemented today.
+- Why periodic and adjacency effects need scheduler/formation support before they can be honest content tools.
+
+Manual exercise:
+
+- Equip `Stubborn Heart Charm` on a unit that can use trinkets, then predict when its once-per-battle max HP effect should trigger.
+
+Open questions:
+
+- Should the next pass add periodic scheduler hooks or formation/adjacency first?
+- Should jobs move from hardcoded job effect labels to `EffectDefinition` arrays next?
+- Should actions/skills become Resources that contain effects, so tactics choose authored actions instead of fixed strings?
+
 ## 2026-05-31 - Interstitial Phase 6.5.5.5 combat replay visualization effects pass
 
 ## 2026-06-01 - Interstitial Phase 6.5.5.5 mod-pack toggle UI pass

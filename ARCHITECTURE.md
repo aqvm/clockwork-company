@@ -125,7 +125,7 @@ The first playable test is a text-only combat scene:
 - `clockwork-company/scripts/combat/rules/job_effect_resolver.gd` owns current-job combat bonus hooks.
 - `clockwork-company/scripts/combat/rules/item_effect_resolver.gd` owns triggered item effect resolution.
 - `clockwork-company/scripts/combat/scenarios/demo_battle_factory.gd` owns current fixed demo roster construction.
-- `clockwork-company/scripts/run/run_state.gd` owns short-run progression state: current fight index, active/reward/won/lost status, cloned party definitions, reward inventory history, fixed enemy scaling, and reward application.
+- `clockwork-company/scripts/run/run_state.gd` owns short-run progression state: current fight index, active/reward/equipment/won/lost status, cloned party definitions, run inventory, fixed encounter order, and reward/equipment application.
 - `clockwork-company/scripts/modding/json_content_loader.gd` owns JSON pack loading/merging/validation and runtime Resource reconstruction for items, jobs, tactics, loadouts, and units.
 - `CombatLog` and `CombatLogEntry` are dedicated helper classes in `scripts/combat/logging/combat_log.gd` that build readable text logs and structured event metadata.
 - `scripts/combat/logging/combat_event_schema.gd` defines known event types and required payload keys as the structured logging contract.
@@ -135,15 +135,20 @@ The first playable test is a text-only combat scene:
 - Base game content remains authored in `.tres` Resources; the loader derives JSON-like dictionaries from those Resources, then applies mod JSON overrides from `res://mods/*.json` before constructing runtime Resources.
 - Structured report payloads now include a `log_version` field for format evolution safety.
 - `clockwork-company/scripts/data/unit_definition.gd` defines the editable unit data Resource type.
-- `clockwork-company/scripts/data/item_definition.gd` defines the editable item data Resource type, including one optional triggered effect.
+- `clockwork-company/scripts/data/item_definition.gd` defines the editable item data Resource type, including flat modifiers, tags, and authored effect references.
+- `clockwork-company/scripts/data/effect_definition.gd` defines the first declarative effect payload for data-authored triggers, conditions, target selectors, amounts, limits, and tags.
 - `clockwork-company/scripts/data/job_definition.gd` defines the editable job data Resource type, including stat modifiers, equipment permissions, and one learnable effect label.
 - `clockwork-company/scripts/data/unit_loadout_definition.gd` defines a reusable build package with a current job, weapon, armor, trinket, and tactic list.
 - `clockwork-company/scripts/data/tactic_definition.gd` defines the small tactic rule Resource type.
+- `clockwork-company/scripts/data/encounter_definition.gd` defines a run encounter as a named enemy party made from normal `UnitDefinition` Resources.
+- `clockwork-company/scripts/data/reward_definition.gd` defines a run reward as a named offer with a suggested recipient and a normal `ItemDefinition` payload.
 - `clockwork-company/resources/units/*.tres` stores the current demo unit definitions.
 - `clockwork-company/resources/items/*.tres` stores the current demo item definitions.
 - `clockwork-company/resources/jobs/*.tres` stores the current demo job definitions.
 - `clockwork-company/resources/loadouts/*.tres` stores reusable demo build archetypes.
 - `clockwork-company/resources/tactics/*.tres` stores reusable tactic rule definitions.
+- `clockwork-company/resources/encounters/*.tres` stores the current fixed Phase 7 encounter sequence.
+- `clockwork-company/resources/rewards/*.tres` stores the current fixed Phase 7 reward choices.
 
 The scene is set as the main scene in `clockwork-company/project.godot`, so pressing Play in Godot should open the Phase 7 run-loop test.
 
@@ -151,9 +156,14 @@ Current run-loop rules:
 
 - a run contains exactly five deterministic fights
 - the player starts with the current three ally definitions loaded through the existing `.tres`/JSON bridge
-- enemies are cloned from the current demo enemy definitions, then receive small fixed scaling by fight index
+- each fight loads a fixed `EncounterDefinition`
+- encounter enemies are normal `UnitDefinition` Resources with normal jobs, items, loadouts, and tactics
+- reward choices are `RewardDefinition` Resources that point to normal item Resources
 - winning fights 1-4 moves the run to reward choice
-- choosing one reward immediately equips that reward item onto its named ally, replacing that slot for future fights
+- choosing one reward adds that reward's item to run inventory and moves the run to equipment decisions for the next fight
+- equipment buttons show valid item/unit pairings based on current job equipment permissions
+- equipping an inventory item replaces that unit's existing item in the matching slot and returns the replaced item to inventory
+- `Continue to Next Fight` leaves the equipment state and starts the next active fight
 - winning fight 5 sets the run status to won
 - losing any fight sets the run status to lost
 - `Start Loss Test` starts a deliberately harsh run so the loss state can be checked on demand
@@ -169,7 +179,9 @@ Current combat rules:
 - the current job decides whether each assigned item is allowed before item modifiers or triggers apply
 - a loadout owns the unit's priority-ordered tactic Resource list
 - each item has one slot label and flat modifiers for max HP, damage, armor, and action interval
-- each item can also define one simple triggered effect with a trigger, effect type, and amount
+- each item can also define declarative authored effects through `Array[EffectDefinition]`
+- legacy one-effect item fields (`trigger`, `effect`, `effect_amount`) remain as a compatibility fallback
+- items, jobs, tactics, and units can carry freeform tags for future filtering/conditions/content tools
 - each job has flat modifiers for max HP, damage, armor, and action interval
 - each job has permission booleans for weapon, armor, and trinket items
 - `UnitState` copies definition data into combat-only runtime state at battle start, reads the unit's loadout, applies current job modifiers, checks equipment permissions, then applies allowed item modifiers to produce final battle stats
@@ -191,6 +203,7 @@ Current combat rules:
 - base attack damage uses `max(1, attacker.damage - defender total armor)`
 - attack-triggered bonus damage is added before armor reduces damage
 - hit-triggered armor reduction changes the target's runtime armor for the rest of the battle
+- damaged/low-HP item effects can currently heal the damaged unit or increase their max HP once/per configured limit
 - kill and death trigger hooks exist for narrow effects, but the current demo items focus on battle-start, attack, and hit effects
 - log entries can have invisible integer IDs, and child entries render indented below their parent
 - child log entries do not print their own time because they explain the same parent combat moment

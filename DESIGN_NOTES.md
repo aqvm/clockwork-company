@@ -47,6 +47,9 @@ Current triggered item design rules:
 - triggered effects may change runtime combat state, not source definitions
 - demo effects should create visible combat patterns with small numbers
 - unsupported trigger/effect pairings should stay obvious rather than silently doing something surprising
+- new item behavior should prefer declarative `EffectDefinition` Resources over one-off code paths
+- tags are freeform authoring hooks for future filtering and conditions, not a full attribute system yet
+- reserved effect vocabulary is allowed when it clarifies the design direction, but unimplemented combinations must be documented plainly
 
 Combat log structure now matters because triggers make one action contain several explainable sub-events. A parent entry should name the main combat moment, such as a unit attacking at a time. Child entries should explain what happened inside that moment, such as item triggers, final damage, armor changes, defeat, or follow-up effects.
 
@@ -144,10 +147,13 @@ Current run-loop design rules:
 - the run loop should orchestrate battles, not change combat rules
 - a run should be deterministic and inspectable while the project is still teaching its systems
 - reward choices should be concrete equipment/build decisions, even if the first UI is just buttons
-- the first version can immediately equip rewards instead of supporting a full inventory screen
+- a minimal inventory/equipment state should exist before a full inventory screen
+- replacing equipment should return the old item to inventory so the player can reason about tradeoffs rather than losing gear silently
+- reward content should reference normal item Resources rather than inventing reward-only stat blobs
 - run progression should explain itself in the static summary before each fight
 - both win and loss states should be easy to reach during testing
-- enemy progression is fixed scaling for now, not procedural generation or adaptive difficulty
+- enemy progression is authored as fixed encounter Resources, not procedural generation or adaptive difficulty
+- enemies in encounters should remain normal unit/loadout/job/item/tactic builds, not a separate monster-only ruleset
 
 ### Enemy doctrine later
 

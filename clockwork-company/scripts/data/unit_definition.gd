@@ -3,6 +3,7 @@ extends Resource
 class_name UnitDefinition
 
 @export var display_name := ""
+@export var tags: Array[String] = []
 @export_enum("Allies", "Enemies") var team := "Allies"
 @export var max_hp := 1
 @export var damage := 1

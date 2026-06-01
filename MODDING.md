@@ -7,6 +7,8 @@ This project supports a hybrid data workflow:
 
 The runtime loader merges base Resource-derived data with JSON override/addition packs.
 
+Current JSON content supports freeform `tags` on items, jobs, tactics, and units. Items also support declarative `effects` arrays for the first version of data-authored item behavior. See `clockwork-company/modding/reference/base_content.options.md` for the supported triggers, conditions, targets, effect types, and currently implemented combinations.
+
 ## Active Mod Folder
 
 - Active mod JSON files: `clockwork-company/mods/*.json`

@@ -36,6 +36,15 @@ static func _describe_item_modifiers(item: ItemDefinition) -> String:
 	return join_text_parts(parts, ", ")
 
 static func _describe_item_effect(item: ItemDefinition) -> String:
+	if not item.effects.is_empty():
+		var parts: Array[String] = []
+		for effect in item.effects:
+			if effect == null:
+				continue
+			var limit_text := ", once" if effect.once_per_battle else ""
+			parts.append("%s -> %s %d%s" % [effect.trigger, effect.effect_type, effect.amount, limit_text])
+		if not parts.is_empty():
+			return join_text_parts(parts, "; ")
 	if item.trigger == CombatConstantsScript.TRIGGER_NONE or item.effect == CombatConstantsScript.EFFECT_NONE or item.effect_amount == 0:
 		return "no triggered effect"
 	return "%s -> %s %d" % [item.trigger, item.effect, item.effect_amount]

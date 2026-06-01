@@ -1,13 +1,25 @@
-[gd_resource type="Resource" script_class="ItemDefinition" format=3 uid="uid://pc1mha3dss8h"]
+[gd_resource type="Resource" script_class="ItemDefinition" load_steps=3 format=3 uid="uid://pc1mha3dss8h"]
 
 [ext_resource type="Script" uid="uid://h21mlqiqe25f" path="res://scripts/data/item_definition.gd" id="1_focus"]
+[ext_resource type="Script" path="res://scripts/data/effect_definition.gd" id="2_effect"]
+
+[sub_resource type="Resource" id="Resource_focus_attack"]
+script = ExtResource("2_effect")
+display_name = "Glass Focus Attack Burst"
+tags = ["damage", "focus"]
+trigger = "Attack"
+target_selector = "Attack Target"
+effect_type = "Bonus Damage"
+amount = 2
 
 [resource]
 script = ExtResource("1_focus")
 display_name = "Glass Focus"
+tags = ["focus", "damage"]
 slot = "Trinket"
 max_hp_modifier = -2
 damage_modifier = 3
+effects = [SubResource("Resource_focus_attack")]
 trigger = "Attack"
 effect = "Bonus Damage"
 effect_amount = 2

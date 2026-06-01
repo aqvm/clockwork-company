@@ -1,14 +1,25 @@
-[gd_resource type="Resource" script_class="ItemDefinition" format=3 uid="uid://dy6r8tndi7a46"]
+[gd_resource type="Resource" script_class="ItemDefinition" load_steps=3 format=3 uid="uid://dy6r8tndi7a46"]
 
 [ext_resource type="Script" uid="uid://h21mlqiqe25f" path="res://scripts/data/item_definition.gd" id="1_buckler"]
+[ext_resource type="Script" path="res://scripts/data/effect_definition.gd" id="2_effect"]
+
+[sub_resource type="Resource" id="Resource_buckler_start"]
+script = ExtResource("2_effect")
+display_name = "Buckler Brace"
+tags = ["armor", "battle_start"]
+trigger = "Battle Start"
+effect_type = "Gain Armor"
+amount = 1
 
 [resource]
 script = ExtResource("1_buckler")
 display_name = "Reinforced Buckler"
+tags = ["armor", "guard"]
 slot = "Armor"
 max_hp_modifier = 6
 armor_modifier = 2
 action_interval_modifier = 1
+effects = [SubResource("Resource_buckler_start")]
 trigger = "Battle Start"
 effect = "Gain Armor"
 effect_amount = 1

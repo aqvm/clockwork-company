@@ -3,6 +3,7 @@ class_name UnitState
 
 var unit_name := ""
 var unit_id := ""
+var tags: Array[String] = []
 var team := ""
 var max_hp := 1
 var hp := 1
@@ -15,13 +16,15 @@ var loadout: UnitLoadoutDefinition = null
 var current_job: JobDefinition = null
 var equipped_items: Array[ItemDefinition] = []
 var skipped_items: Array[ItemDefinition] = []
-var tactics: Array = []
+var tactics: Array[TacticDefinition] = []
 var guard_armor := 0
+var effect_usage_counts := {}
 
 
 func _init(definition: UnitDefinition, unit_slot_index: int) -> void:
 	unit_name = definition.display_name
 	unit_id = _build_unit_id(definition.team, unit_slot_index, definition.display_name)
+	tags = definition.tags.duplicate()
 	team = definition.team
 	max_hp = definition.max_hp
 	damage = definition.damage
