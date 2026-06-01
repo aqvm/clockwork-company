@@ -1,0 +1,238 @@
+{
+  "pack_id": "base_reference_pack",
+  "pack_version": 1,
+  "items": [
+	{
+	  "id": "glass_focus",
+	  "display_name": "Glass Focus",
+	  "slot": "Trinket",
+	  "max_hp_modifier": -2,
+	  "damage_modifier": 3,
+	  "armor_modifier": 0,
+	  "action_interval_modifier": 0,
+	  "trigger": "Attack",
+	  "effect": "Bonus Damage",
+	  "effect_amount": 2
+	},
+	{
+	  "id": "light_step_boots",
+	  "display_name": "Light-Step Boots",
+	  "slot": "Trinket",
+	  "max_hp_modifier": 0,
+	  "damage_modifier": 0,
+	  "armor_modifier": -1,
+	  "action_interval_modifier": -2,
+	  "trigger": "None",
+	  "effect": "None",
+	  "effect_amount": 0
+	},
+	{
+	  "id": "reinforced_buckler",
+	  "display_name": "Reinforced Buckler",
+	  "slot": "Armor",
+	  "max_hp_modifier": 6,
+	  "damage_modifier": 0,
+	  "armor_modifier": 2,
+	  "action_interval_modifier": 1,
+	  "trigger": "Battle Start",
+	  "effect": "Gain Armor",
+	  "effect_amount": 1
+	},
+	{
+	  "id": "shortblade",
+	  "display_name": "Shortblade",
+	  "slot": "Weapon",
+	  "max_hp_modifier": 0,
+	  "damage_modifier": 2,
+	  "armor_modifier": 0,
+	  "action_interval_modifier": 0,
+	  "trigger": "Hit",
+	  "effect": "Reduce Target Armor",
+	  "effect_amount": 1
+	}
+  ],
+  "jobs": [
+	{
+	  "id": "apprentice",
+	  "display_name": "Apprentice",
+	  "max_hp_modifier": -2,
+	  "damage_modifier": 0,
+	  "armor_modifier": 0,
+	  "action_interval_modifier": -1,
+	  "can_equip_weapon": false,
+	  "can_equip_armor": false,
+	  "can_equip_trinket": true,
+	  "job_effect": "First Aid"
+	},
+	{
+	  "id": "guard",
+	  "display_name": "Guard",
+	  "max_hp_modifier": 4,
+	  "damage_modifier": 0,
+	  "armor_modifier": 1,
+	  "action_interval_modifier": 1,
+	  "can_equip_weapon": true,
+	  "can_equip_armor": true,
+	  "can_equip_trinket": false,
+	  "job_effect": "Guard Training"
+	},
+	{
+	  "id": "scout",
+	  "display_name": "Scout",
+	  "max_hp_modifier": 0,
+	  "damage_modifier": 1,
+	  "armor_modifier": -1,
+	  "action_interval_modifier": -1,
+	  "can_equip_weapon": true,
+	  "can_equip_armor": false,
+	  "can_equip_trinket": true,
+	  "job_effect": "Sharpened Edge"
+	}
+  ],
+  "tactics": [
+	{
+	  "id": "attack_frontmost",
+	  "condition": "Always",
+	  "action": "Attack",
+	  "target": "Frontmost Enemy"
+	},
+	{
+	  "id": "guard_when_enemy_alive",
+	  "condition": "Enemy Alive",
+	  "action": "Guard",
+	  "target": "Self"
+	},
+	{
+	  "id": "heal_lowest_ally_below_half",
+	  "condition": "Ally HP Below Half",
+	  "action": "Heal",
+	  "target": "Lowest HP Ally"
+	}
+  ],
+  "loadouts": [
+	{
+	  "id": "apprentice_focus",
+	  "display_name": "Apprentice Focus",
+	  "current_job_id": "apprentice",
+	  "weapon_id": "",
+	  "armor_id": "",
+	  "trinket_id": "glass_focus",
+	  "tactic_ids": ["attack_frontmost"]
+	},
+	{
+	  "id": "apprentice_support",
+	  "display_name": "Apprentice Support",
+	  "current_job_id": "apprentice",
+	  "weapon_id": "",
+	  "armor_id": "",
+	  "trinket_id": "",
+	  "tactic_ids": ["heal_lowest_ally_below_half", "attack_frontmost"]
+	},
+	{
+	  "id": "guard_buckler",
+	  "display_name": "Guard Buckler",
+	  "current_job_id": "guard",
+	  "weapon_id": "",
+	  "armor_id": "reinforced_buckler",
+	  "trinket_id": "",
+	  "tactic_ids": ["guard_when_enemy_alive", "attack_frontmost"]
+	},
+	{
+	  "id": "guard_forbidden_boots",
+	  "display_name": "Guard With Forbidden Boots",
+	  "current_job_id": "guard",
+	  "weapon_id": "",
+	  "armor_id": "",
+	  "trinket_id": "light_step_boots",
+	  "tactic_ids": ["guard_when_enemy_alive", "attack_frontmost"]
+	},
+	{
+	  "id": "scout_shortblade",
+	  "display_name": "Scout Shortblade",
+	  "current_job_id": "scout",
+	  "weapon_id": "shortblade",
+	  "armor_id": "",
+	  "trinket_id": "",
+	  "tactic_ids": ["attack_frontmost"]
+	},
+	{
+	  "id": "scout_support_boots",
+	  "display_name": "Scout Support Boots",
+	  "current_job_id": "scout",
+	  "weapon_id": "",
+	  "armor_id": "",
+	  "trinket_id": "light_step_boots",
+	  "tactic_ids": ["heal_lowest_ally_below_half", "attack_frontmost"]
+	}
+  ],
+  "units": [
+	{
+	  "id": "alden_guard",
+	  "display_name": "Alden Guard",
+	  "team": "Allies",
+	  "max_hp": 34,
+	  "damage": 6,
+	  "armor": 2,
+	  "action_interval": 12,
+	  "loadout_id": "guard_buckler"
+	},
+	{
+	  "id": "mira_scout",
+	  "display_name": "Mira Scout",
+	  "team": "Allies",
+	  "max_hp": 22,
+	  "damage": 5,
+	  "armor": 1,
+	  "action_interval": 8,
+	  "loadout_id": "scout_support_boots"
+	},
+	{
+	  "id": "sol_apprentice",
+	  "display_name": "Sol Apprentice",
+	  "team": "Allies",
+	  "max_hp": 20,
+	  "damage": 8,
+	  "armor": 0,
+	  "action_interval": 10,
+	  "loadout_id": "apprentice_focus"
+	},
+	{
+	  "id": "iron_brute",
+	  "display_name": "Iron Brute",
+	  "team": "Enemies",
+	  "max_hp": 32,
+	  "damage": 7,
+	  "armor": 2,
+	  "action_interval": 13,
+	  "loadout_id": "guard_forbidden_boots"
+	},
+	{
+	  "id": "ash_cutpurse",
+	  "display_name": "Ash Cutpurse",
+	  "team": "Enemies",
+	  "max_hp": 20,
+	  "damage": 6,
+	  "armor": 1,
+	  "action_interval": 9,
+	  "loadout_id": "scout_shortblade"
+	},
+	{
+	  "id": "glass_wisp",
+	  "display_name": "Glass Wisp",
+	  "team": "Enemies",
+	  "max_hp": 16,
+	  "damage": 9,
+	  "armor": 0,
+	  "action_interval": 14,
+	  "loadout_id": "apprentice_support"
+	}
+  ],
+  "demo_roster": [
+	"alden_guard",
+	"mira_scout",
+	"sol_apprentice",
+	"iron_brute",
+	"ash_cutpurse",
+    "glass_wisp"
+  ]
+}

@@ -3,9 +3,14 @@ extends Control
 const CombatSimulatorScript := preload("res://scripts/combat/combat_simulator.gd")
 const CombatLogHighlightPaletteScript := preload("res://scripts/ui/combat_log_highlight_palette.gd")
 const UnitStatusDotScript := preload("res://scripts/ui/unit_status_dot.gd")
+const JsonContentLoaderScript := preload("res://scripts/modding/json_content_loader.gd")
 const COMBAT_LOG_HEADER := "Combat log:"
 const RUN_BUTTON_READY_TEXT := "Run Jobs 3v3 Fight"
 const RUN_BUTTON_REPLAYING_TEXT := "Replaying..."
+const MODS_BUTTON_BASE_TEXT := "Mods"
+const MOD_SETTINGS_PATH := "user://mod_settings.cfg"
+const MOD_SETTINGS_SECTION := "mods"
+const MOD_SETTINGS_KEY_ENABLED_IDS := "enabled_pack_ids"
 const DEFAULT_WINDOW_AREA_FRACTION := 0.75
 const MIN_CONDITIONS_HEIGHT := 120
 const SECONDS_PER_SIM_SECOND := 0.2
@@ -13,6 +18,9 @@ const MIN_SECONDS_BETWEEN_REPLAY_ACTIONS := 0.1
 const DEFAULT_LOG_HIGHLIGHT_PALETTE := preload("res://resources/ui/combat_log_highlight_palette_default.tres")
 
 @onready var run_button: Button = %RunButton
+@onready var mods_menu_button: Button = %ModsMenuButton
+@onready var mods_list_panel: PanelContainer = %ModsListPanel
+@onready var mods_list_vbox: VBoxContainer = %ModsListVBox
 @onready var log_split: VSplitContainer = %LogSplit
 @onready var conditions_label: Label = %ConditionsLabel
 @onready var combat_summary: RichTextLabel = %CombatSummary
@@ -25,7 +33,10 @@ const DEFAULT_LOG_HIGHLIGHT_PALETTE := preload("res://resources/ui/combat_log_hi
 var cached_replay_lines: Array[String] = []
 var cached_static_lines: Array[String] = []
 var combat_replay_events: Array[Dictionary] = []
+var cached_structured_events: Array[Dictionary] = []
+var cached_roster_units: Array[Dictionary] = []
 var replay_units_by_name := {}
+var replay_units_by_id := {}
 var replay_unit_widgets_by_name := {}
 var replay_event_index := 0
 var autoscroll_enabled := true
@@ -35,15 +46,20 @@ var displayed_sim_time := 0.0
 var current_event_time := 0.0
 var next_event_time := 0.0
 var event_transition_elapsed := 0.0
+var active_event_actor_name := ""
+var available_mod_packs: Array[Dictionary] = []
+var enabled_mod_pack_ids := {}
 
 
 func _ready() -> void:
 	_size_window_to_half_screen()
 	run_button.pressed.connect(_on_run_button_pressed)
+	mods_menu_button.pressed.connect(_on_mods_button_pressed)
 	replay_timer.timeout.connect(_on_replay_timer_timeout)
 	replay_timer.one_shot = true
 	combat_log.get_v_scroll_bar().value_changed.connect(_on_combat_log_scroll_value_changed)
 	get_viewport().size_changed.connect(_on_viewport_size_changed)
+	_setup_mod_menu()
 	_load_combat_preview()
 
 
@@ -75,6 +91,7 @@ func _on_run_button_pressed() -> void:
 	current_event_time = 0.0
 	next_event_time = 0.0
 	event_transition_elapsed = 0.0
+	active_event_actor_name = ""
 
 	_append_log_line(COMBAT_LOG_HEADER)
 	_show_next_replay_event()
@@ -95,19 +112,143 @@ func _on_viewport_size_changed() -> void:
 	call_deferred("_resize_conditions_pane")
 
 
+func _on_mods_button_pressed() -> void:
+	mods_list_panel.visible = not mods_list_panel.visible
+	if mods_list_panel.visible:
+		_position_mods_panel()
+
+
 func _load_combat_preview() -> void:
 	_clear_logs()
 
 	var simulator: CombatSimulator = CombatSimulatorScript.new()
-	var log_lines := simulator.run_demo_battle()
+	var report: Dictionary = simulator.run_demo_battle_report(_enabled_mod_pack_ids_array())
+	var log_lines: Array[String] = report.get("lines", [])
 	var static_lines: Array[String] = []
 
 	cached_replay_lines.clear()
 	cached_static_lines.clear()
+	cached_structured_events = report.get("events", []).duplicate(true)
+	cached_roster_units = report.get("roster_units", []).duplicate(true)
 	_split_log_lines(log_lines, static_lines, cached_replay_lines)
 	cached_static_lines = static_lines.duplicate()
 	_append_lines(combat_summary, static_lines)
+	_build_visual_replay_model()
+	_build_visual_replay_widgets()
+	displayed_sim_time = 0.0
+	active_event_actor_name = ""
+	_update_visual_replay_widgets()
 	call_deferred("_resize_conditions_pane")
+
+
+func _setup_mod_menu() -> void:
+	available_mod_packs = JsonContentLoaderScript.list_available_mod_packs()
+	enabled_mod_pack_ids.clear()
+
+	var saved_enabled_ids := _load_saved_enabled_mod_pack_ids()
+	var has_saved_selection := not saved_enabled_ids.is_empty()
+	for pack in available_mod_packs:
+		var pack_id := String(pack.get("id", ""))
+		if pack_id.is_empty():
+			continue
+		if has_saved_selection:
+			if saved_enabled_ids.has(pack_id):
+				enabled_mod_pack_ids[pack_id] = true
+		elif bool(pack.get("default_enabled", true)):
+			enabled_mod_pack_ids[pack_id] = true
+
+	_rebuild_mod_menu()
+
+
+func _rebuild_mod_menu() -> void:
+	for child in mods_list_vbox.get_children():
+		child.queue_free()
+
+	if available_mod_packs.is_empty():
+		mods_menu_button.disabled = true
+		mods_menu_button.text = "%s (none)" % MODS_BUTTON_BASE_TEXT
+		mods_list_panel.visible = false
+		return
+
+	mods_menu_button.disabled = false
+	for pack in available_mod_packs:
+		var pack_id := String(pack.get("id", ""))
+		var display_name := String(pack.get("display_name", pack_id))
+		if bool(pack.get("is_reference", false)):
+			display_name = "%s [ref]" % display_name
+		var checkbox := CheckButton.new()
+		checkbox.text = display_name
+		checkbox.button_pressed = enabled_mod_pack_ids.has(pack_id)
+		checkbox.toggled.connect(_on_mod_checkbox_toggled.bind(pack_id))
+		mods_list_vbox.add_child(checkbox)
+
+	mods_menu_button.text = "%s (%d/%d)" % [MODS_BUTTON_BASE_TEXT, enabled_mod_pack_ids.size(), available_mod_packs.size()]
+	if mods_list_panel.visible:
+		call_deferred("_position_mods_panel")
+
+
+func _on_mod_checkbox_toggled(pressed: bool, pack_id: String) -> void:
+	if pack_id.is_empty():
+		return
+
+	if pressed:
+		enabled_mod_pack_ids[pack_id] = true
+	else:
+		enabled_mod_pack_ids.erase(pack_id)
+
+	_save_enabled_mod_pack_ids(_enabled_mod_pack_ids_array())
+	_load_combat_preview()
+
+
+func _position_mods_panel() -> void:
+	var button_rect := mods_menu_button.get_global_rect()
+	var viewport_rect := get_viewport_rect()
+	var desired_size := Vector2(300.0, 220.0)
+	var x: float = min(button_rect.position.x, viewport_rect.size.x - desired_size.x - 8.0)
+	var y: float = min(button_rect.end.y + 4.0, viewport_rect.size.y - desired_size.y - 8.0)
+	mods_list_panel.global_position = Vector2(max(8.0, x), max(8.0, y))
+	mods_list_panel.size = desired_size
+
+
+func _input(event: InputEvent) -> void:
+	if not mods_list_panel.visible:
+		return
+	if event is InputEventMouseButton and event.pressed:
+		var mouse_event := event as InputEventMouseButton
+		if mouse_event.button_index > MOUSE_BUTTON_MIDDLE:
+			return
+		var click_pos := mouse_event.global_position
+		var in_panel := mods_list_panel.get_global_rect().has_point(click_pos)
+		var in_button := mods_menu_button.get_global_rect().has_point(click_pos)
+		if not in_panel and not in_button:
+			mods_list_panel.visible = false
+
+
+func _enabled_mod_pack_ids_array() -> Array[String]:
+	var ids: Array[String] = []
+	for pack_id in enabled_mod_pack_ids.keys():
+		ids.append(String(pack_id))
+	ids.sort()
+	return ids
+
+
+func _load_saved_enabled_mod_pack_ids() -> Dictionary:
+	var out := {}
+	var config := ConfigFile.new()
+	if config.load(MOD_SETTINGS_PATH) != OK:
+		return out
+	var raw_ids: Array = config.get_value(MOD_SETTINGS_SECTION, MOD_SETTINGS_KEY_ENABLED_IDS, [])
+	for id in raw_ids:
+		out[String(id)] = true
+	return out
+
+
+func _save_enabled_mod_pack_ids(enabled_ids: Array[String]) -> void:
+	var config := ConfigFile.new()
+	config.set_value(MOD_SETTINGS_SECTION, MOD_SETTINGS_KEY_ENABLED_IDS, enabled_ids)
+	var err := config.save(MOD_SETTINGS_PATH)
+	if err != OK:
+		push_warning("Failed to save mod settings to %s" % MOD_SETTINGS_PATH)
 
 
 func _split_log_lines(log_lines: Array[String], static_lines: Array[String], replay_lines: Array[String]) -> void:
@@ -123,37 +264,38 @@ func _split_log_lines(log_lines: Array[String], static_lines: Array[String], rep
 			static_lines.append(line)
 
 
-func _prepare_replay_events(replay_lines: Array[String]) -> void:
+func _prepare_replay_events(_replay_lines: Array[String]) -> void:
 	combat_replay_events.clear()
-	var current_event: Dictionary = {}
-	for line in replay_lines:
-		if _line_is_timestamped_action(line):
-			var event_time := _parse_event_time(line)
-			current_event = {
-				"time": event_time,
-				"lines": [line],
-			}
-			combat_replay_events.append(current_event)
+	var event_by_id := {}
+	var root_ids: Array[int] = []
+	for entry: Dictionary in cached_structured_events:
+		var entry_id := int(entry.get("id", -1))
+		event_by_id[entry_id] = entry
+		if int(entry.get("parent_id", -1)) == -1:
+			root_ids.append(entry_id)
+
+	var last_timed_event := 0.0
+	for root_id in root_ids:
+		if not event_by_id.has(root_id):
 			continue
+		var entry: Dictionary = event_by_id[root_id]
+		var grouped_lines: Array[String] = []
+		var grouped_events: Array[Dictionary] = []
+		for nested: Dictionary in cached_structured_events:
+			var nested_id := int(nested.get("id", -1))
+			if _event_is_descendant_of(nested_id, root_id, event_by_id):
+				grouped_events.append(nested)
+				grouped_lines.append(String(nested.get("rendered_line", nested.get("text", ""))))
 
-		if current_event.is_empty():
-			current_event = {
-				"time": 0.0,
-				"lines": [line],
-			}
-			combat_replay_events.append(current_event)
-		else:
-			var current_event_lines: Array = current_event["lines"]
-			current_event_lines.append(line)
-
-
-func _line_is_timestamped_action(line: String) -> bool:
-	return line.begins_with("t=")
-
-
-func _parse_event_time(line: String) -> float:
-	var time_text := line.substr(2, 3)
-	return float(time_text.to_int())
+		var timed_value := int(entry.get("time", -1))
+		if timed_value >= 0:
+			last_timed_event = float(timed_value)
+		var replay_time := last_timed_event if timed_value < 0 else float(timed_value)
+		combat_replay_events.append({
+			"time": replay_time,
+			"lines": grouped_lines,
+			"events": grouped_events,
+		})
 
 
 func _show_next_replay_event() -> void:
@@ -164,7 +306,7 @@ func _show_next_replay_event() -> void:
 	var event := combat_replay_events[replay_event_index]
 	current_event_time = float(event.get("time", current_event_time))
 	displayed_sim_time = current_event_time
-	_apply_event_lines_to_visual_model(event["lines"])
+	_apply_structured_events_to_visual_model(event.get("events", []))
 	_update_visual_replay_widgets()
 
 	var event_lines: Array = event["lines"]
@@ -303,6 +445,7 @@ func _clear_logs() -> void:
 func _clear_replay_log() -> void:
 	combat_log.clear()
 	replay_units_by_name.clear()
+	replay_units_by_id.clear()
 	replay_unit_widgets_by_name.clear()
 	for child in allies_row.get_children():
 		child.queue_free()
@@ -330,59 +473,35 @@ func _finish_log_replay() -> void:
 
 func _build_visual_replay_model() -> void:
 	replay_units_by_name.clear()
-	var in_roster := false
-	var roster_team := ""
-	# Visual replay intentionally rebuilds unit state from static setup text, so
-	# this parser must stay aligned with the roster line format in CombatSimulator.
-	for line in cached_static_lines:
-		if line.strip_edges() == "Roster:":
-			in_roster = true
+	replay_units_by_id.clear()
+	for unit: Dictionary in cached_roster_units:
+		var unit_id := String(unit.get("id", ""))
+		var name := String(unit.get("name", ""))
+		if name.is_empty():
 			continue
-		if not in_roster:
-			continue
-		if line.strip_edges() == "Allies":
-			roster_team = "Allies"
-			continue
-		if line.strip_edges() == "Enemies":
-			roster_team = "Enemies"
-			continue
-		if not line.contains("| HP "):
-			continue
-
-		var parsed := _parse_roster_line(line.strip_edges(), roster_team)
-		if not parsed.is_empty():
-			replay_units_by_name[parsed["name"]] = parsed
-
-
-func _parse_roster_line(line: String, team: String) -> Dictionary:
-	var parts := line.split("|")
-	if parts.size() < 5:
-		return {}
-
-	var name := parts[0].strip_edges()
-	var max_hp := _parse_stat_segment(parts[1], "HP")
-	var action_interval := _parse_stat_segment(parts[4], "interval")
-	if team.is_empty():
-		team = "Enemies"
-
-	return {
-		"name": name,
-		"team": team,
-		"max_hp": max_hp,
-		"hp": max_hp,
-		"action_interval": action_interval,
-		"next_action_time": float(action_interval),
-		"display_time": 0.0,
-		"is_alive": true,
-	}
-
-
-func _parse_stat_segment(segment: String, label: String) -> int:
-	var prefix := "%s " % label
-	var text := segment.strip_edges()
-	if not text.begins_with(prefix):
-		return 0
-	return text.trim_prefix(prefix).to_int()
+		var max_hp: int = max(1, int(unit.get("max_hp", 1)))
+		var action_interval: int = max(1, int(unit.get("action_interval", 1)))
+		var state := {
+			"id": unit_id,
+			"name": name,
+			"team": String(unit.get("team", "Enemies")),
+			"max_hp": max_hp,
+			"hp": max_hp,
+			"previous_hp": max_hp,
+			"action_interval": action_interval,
+			"next_action_time": float(action_interval),
+			"display_time": 0.0,
+			"is_alive": true,
+			"turn_pulse_started_at": -9999.0,
+			"floating_text": "",
+			"floating_text_started_at": -9999.0,
+			"floating_text_pulse_started_at": -9999.0,
+			"defeat_time": -9999.0,
+			"is_defeated": false,
+		}
+		replay_units_by_name[name] = state
+		if not unit_id.is_empty():
+			replay_units_by_id[unit_id] = state
 
 
 func _build_visual_replay_widgets() -> void:
@@ -406,45 +525,77 @@ func _build_visual_replay_widgets() -> void:
 	_update_visual_replay_widgets()
 
 
-func _apply_event_lines_to_visual_model(event_lines: Array) -> void:
-	for line: String in event_lines:
-		_apply_event_line(line)
+func _apply_structured_events_to_visual_model(events: Array) -> void:
+	for raw_event in events:
+		var event: Dictionary = raw_event
+		var event_type := String(event.get("event_type", "text"))
+		var payload: Dictionary = event.get("payload", {})
+		if event_type == "turn_start":
+			_apply_turn_start_event(payload)
+			continue
+		if event_type == "damage" or event_type == "heal":
+			_apply_hp_change_event(payload)
+			continue
+		if event_type == "defeat":
+			_apply_defeat_event(payload)
 
 
-func _apply_event_line(line: String) -> void:
-	# These string checks are deliberately narrow and presentation-only.
-	# If combat log phrasing changes, update this parser alongside that change.
-	if line.ends_with(" takes a turn."):
-		var actor_name := line.get_slice("|", 1).replace("takes a turn.", "").strip_edges()
-		if replay_units_by_name.has(actor_name):
-			var actor_state: Dictionary = replay_units_by_name[actor_name]
-			actor_state["next_action_time"] = current_event_time + float(actor_state["action_interval"])
+func _apply_turn_start_event(payload: Dictionary) -> void:
+	var actor_state: Dictionary = _find_unit_state_from_payload(payload, "actor_id", "actor")
+	if actor_state.is_empty():
 		return
+	actor_state["next_action_time"] = current_event_time + float(actor_state["action_interval"])
+	actor_state["turn_pulse_started_at"] = displayed_sim_time
+	var actor_name := String(actor_state.get("name", ""))
+	active_event_actor_name = actor_name
 
-	if line.contains(" HP: ") and line.contains(" -> "):
-		var target_name := _target_name_from_hp_line(line)
-		if replay_units_by_name.has(target_name):
-			var hp_section := line.get_slice("HP: ", 1)
-			var new_hp := hp_section.get_slice(" -> ", 1).trim_suffix(".").to_int()
-			var target_state: Dictionary = replay_units_by_name[target_name]
-			target_state["hp"] = new_hp
-			target_state["is_alive"] = new_hp > 0
+
+func _apply_hp_change_event(payload: Dictionary) -> void:
+	var target_state: Dictionary = _find_unit_state_from_payload(payload, "target_id", "target")
+	if target_state.is_empty():
 		return
+	var previous_hp := int(payload.get("previous_hp", 0))
+	var new_hp := int(payload.get("new_hp", previous_hp))
+	target_state["previous_hp"] = previous_hp
+	target_state["hp"] = new_hp
+	target_state["is_alive"] = new_hp > 0
+	var delta := new_hp - previous_hp
+	if delta != 0:
+		var delta_prefix := "+" if delta > 0 else ""
+		target_state["floating_text"] = "%s%d" % [delta_prefix, delta]
+		target_state["floating_text_started_at"] = displayed_sim_time
+		target_state["floating_text_pulse_started_at"] = displayed_sim_time
 
-	if line.ends_with(" is defeated."):
-		var defeated_name := line.replace("is defeated.", "").strip_edges()
-		if replay_units_by_name.has(defeated_name):
-			var defeated_state: Dictionary = replay_units_by_name[defeated_name]
-			defeated_state["hp"] = 0
-			defeated_state["is_alive"] = false
+
+func _apply_defeat_event(payload: Dictionary) -> void:
+	var defeated_state: Dictionary = _find_unit_state_from_payload(payload, "target_id", "target")
+	if defeated_state.is_empty():
+		return
+	defeated_state["hp"] = 0
+	defeated_state["is_alive"] = false
+	defeated_state["is_defeated"] = true
+	defeated_state["defeat_time"] = displayed_sim_time
 
 
-func _target_name_from_hp_line(line: String) -> String:
-	if line.contains(" heals "):
-		return line.get_slice(" heals ", 1).get_slice(" for ", 0).strip_edges()
+func _event_is_descendant_of(entry_id: int, root_id: int, event_by_id: Dictionary) -> bool:
+	var current_id := entry_id
+	while event_by_id.has(current_id):
+		if current_id == root_id:
+			return true
+		current_id = int(event_by_id[current_id].get("parent_id", -1))
+		if current_id == -1:
+			return false
+	return false
 
-	var before_hp := line.get_slice(" HP:", 0)
-	return before_hp.get_slice(". ", 1).get_slice(" armor:", 0).strip_edges()
+
+func _find_unit_state_from_payload(payload: Dictionary, id_key: String, name_key: String) -> Dictionary:
+	var unit_id := String(payload.get(id_key, ""))
+	if not unit_id.is_empty() and replay_units_by_id.has(unit_id):
+		return replay_units_by_id[unit_id]
+	var unit_name := String(payload.get(name_key, ""))
+	if not unit_name.is_empty() and replay_units_by_name.has(unit_name):
+		return replay_units_by_name[unit_name]
+	return {}
 
 
 func _update_visual_replay_widgets() -> void:
@@ -453,5 +604,6 @@ func _update_visual_replay_widgets() -> void:
 			continue
 		var state: Dictionary = replay_units_by_name[name]
 		state["display_time"] = displayed_sim_time
+		state["is_acting"] = name == active_event_actor_name
 		var dot: Control = replay_unit_widgets_by_name[name]
 		dot.configure(state)

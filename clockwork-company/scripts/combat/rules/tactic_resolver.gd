@@ -17,6 +17,8 @@ static func choose_action(actor, units: Array) -> Dictionary:
 			"action": tactic.action,
 			"target": target,
 			"reason": "Tactic selected: %s. Condition true; target is %s." % [_describe_tactic(tactic), target.unit_name],
+			"reason_type": "selected",
+			"reason_tactic": _describe_tactic(tactic),
 			"skipped_reasons": skipped_reasons,
 		}
 	var fallback_target = TargetingRulesScript.find_frontmost_target(units, TargetingRulesScript.opposing_team(actor.team))
@@ -24,6 +26,8 @@ static func choose_action(actor, units: Array) -> Dictionary:
 		"action": CombatConstantsScript.ACTION_ATTACK,
 		"target": fallback_target,
 		"reason": "No tactic matched; default attack used against %s." % fallback_target.unit_name,
+		"reason_type": "fallback",
+		"reason_tactic": "",
 		"skipped_reasons": skipped_reasons,
 	}
 

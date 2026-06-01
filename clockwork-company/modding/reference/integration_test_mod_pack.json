@@ -1,0 +1,127 @@
+{
+  "pack_id": "integration_test_mod_pack",
+  "display_name": "Integration Test Mod Pack",
+  "pack_version": 1,
+  "items": [
+    {
+      "id": "tower_shield_it",
+      "display_name": "Tower Shield IT",
+      "slot": "Armor",
+      "max_hp_modifier": 10,
+      "damage_modifier": -2,
+      "armor_modifier": 4,
+      "action_interval_modifier": 3,
+      "trigger": "Battle Start",
+      "effect": "Gain Armor",
+      "effect_amount": 2
+    },
+    {
+      "id": "glass_focus",
+      "display_name": "Glass Focus (IT Override)",
+      "slot": "Trinket",
+      "max_hp_modifier": -6,
+      "damage_modifier": 6,
+      "armor_modifier": 0,
+      "action_interval_modifier": 1,
+      "trigger": "Attack",
+      "effect": "Bonus Damage",
+      "effect_amount": 4
+    }
+  ],
+  "jobs": [
+    {
+      "id": "warden_it",
+      "display_name": "Warden IT",
+      "max_hp_modifier": 8,
+      "damage_modifier": -1,
+      "armor_modifier": 3,
+      "action_interval_modifier": 2,
+      "can_equip_weapon": true,
+      "can_equip_armor": true,
+      "can_equip_trinket": true,
+      "job_effect": "Guard Training"
+    },
+    {
+      "id": "apprentice",
+      "display_name": "Apprentice (IT Override)",
+      "max_hp_modifier": -4,
+      "damage_modifier": 1,
+      "armor_modifier": 0,
+      "action_interval_modifier": -2,
+      "can_equip_weapon": false,
+      "can_equip_armor": false,
+      "can_equip_trinket": true,
+      "job_effect": "First Aid"
+    }
+  ],
+  "tactics": [
+    {
+      "id": "guard_then_attack_it",
+      "condition": "Enemy Alive",
+      "action": "Guard",
+      "target": "Self"
+    },
+    {
+      "id": "attack_frontmost",
+      "condition": "Always",
+      "action": "Attack",
+      "target": "Frontmost Enemy"
+    }
+  ],
+  "loadouts": [
+    {
+      "id": "warden_anchor_it",
+      "display_name": "Warden Anchor IT",
+      "current_job_id": "warden_it",
+      "weapon_id": "shortblade",
+      "armor_id": "tower_shield_it",
+      "trinket_id": "glass_focus",
+      "tactic_ids": [
+        "guard_then_attack_it",
+        "attack_frontmost"
+      ]
+    },
+    {
+      "id": "scout_support_boots",
+      "display_name": "Scout Support Boots (IT Override)",
+      "current_job_id": "scout",
+      "weapon_id": "",
+      "armor_id": "",
+      "trinket_id": "light_step_boots",
+      "tactic_ids": [
+        "heal_lowest_ally_below_half",
+        "attack_frontmost"
+      ]
+    }
+  ],
+  "units": [
+    {
+      "id": "borin_anchor_it",
+      "display_name": "Borin Anchor IT",
+      "team": "Allies",
+      "max_hp": 46,
+      "damage": 5,
+      "armor": 3,
+      "action_interval": 15,
+      "loadout_id": "warden_anchor_it"
+    },
+    {
+      "id": "mira_scout",
+      "display_name": "Mira Scout (IT Override)",
+      "team": "Allies",
+      "max_hp": 24,
+      "damage": 4,
+      "armor": 1,
+      "action_interval": 70,
+      "loadout_id": "scout_support_boots"
+    }
+  ],
+  "demo_roster": [
+    "borin_anchor_it",
+    "mira_scout",
+    "sol_apprentice",
+    "iron_brute",
+    "ash_cutpurse",
+    "glass_wisp"
+  ]
+}
