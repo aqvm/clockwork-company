@@ -1,0 +1,56 @@
+[gd_resource type="Resource" script_class="JobDefinition" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/job_definition.gd" id="1_job"]
+[ext_resource type="Script" path="res://scripts/data/skill_definition.gd" id="2_skill"]
+[ext_resource type="Script" path="res://scripts/data/passive_definition.gd" id="3_passive"]
+[ext_resource type="Script" path="res://scripts/data/reaction_definition.gd" id="4_reaction"]
+[ext_resource type="Script" path="res://scripts/data/tactic_definition.gd" id="5_tactic"]
+
+[sub_resource type="Resource" id="Resource_turnkey_skill"]
+script = ExtResource("2_skill")
+display_name = "Lockstep"
+tags = ["control", "guard"]
+action = "Guard"
+default_target = "Self"
+amount_modifier = 1
+
+[sub_resource type="Resource" id="Resource_turnkey_passive"]
+script = ExtResource("3_passive")
+display_name = "Key-Ring Guard"
+tags = ["guard"]
+passive_type = "Guard Armor Bonus"
+amount = 1
+cooldown_turns = 1
+
+[sub_resource type="Resource" id="Resource_turnkey_reaction"]
+script = ExtResource("4_reaction")
+display_name = "Door Slam"
+tags = ["damaged", "reaction"]
+trigger = "Damaged"
+condition = "Always"
+reaction_type = "Damage Attacker"
+amount = 2
+threshold_percent = 50
+cooldown_turns = 4
+
+[sub_resource type="Resource" id="Resource_turnkey_default_tactic"]
+script = ExtResource("5_tactic")
+display_name = "Lock the Line"
+tags = ["job_default"]
+condition = "Enemy Alive"
+action = "Job Skill"
+target = "Self"
+
+[resource]
+script = ExtResource("1_job")
+display_name = "Turnkey"
+tags = ["job", "guard", "control"]
+max_hp_growth = 1
+physical_damage_growth = 0
+magic_damage_growth = 0
+armor_growth = 2
+action_interval_growth = 0
+skill = SubResource("Resource_turnkey_skill")
+passive = SubResource("Resource_turnkey_passive")
+reaction = SubResource("Resource_turnkey_reaction")
+default_tactic = SubResource("Resource_turnkey_default_tactic")

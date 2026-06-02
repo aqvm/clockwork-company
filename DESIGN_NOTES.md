@@ -36,7 +36,7 @@ Gear should create tradeoffs and pivots:
 
 Avoid pure "number goes up forever" design.
 
-Phase 3 keeps gear intentionally blunt: items are one-slot Resources with flat stat modifiers. Even this small version should show pressure, so some demo items pair an upside with a drawback, such as more armor with slower action timing or faster action timing with less armor.
+Phase 3 kept gear intentionally blunt: items were one-slot Resources with flat stat modifiers. The current gear model still values clear tradeoffs, but it now has weapon, armor, helmet, and trinket slots, with shields represented as bundled weapon/armor concepts until offhand rules are worth the extra system weight.
 
 Phase 4 adds triggered item effects, but keeps them deliberately narrow. An item can define one trigger, one effect type, and one amount. This is enough to make gear feel like an identity hook, while avoiding a full ability engine before tactics and jobs exist.
 
@@ -89,7 +89,7 @@ Current combat log design rules:
 Jobs should provide:
 
 - stat tendencies
-- equipment permissions
+- optional equipment restrictions
 - innate behavior
 - learnable actions/passives
 - reasons to develop a unit over time
@@ -102,16 +102,53 @@ Current job design rules:
 
 - each unit points to one reusable loadout Resource
 - each loadout has exactly one current job
-- current jobs apply small flat stat modifiers to runtime combat stats
-- current jobs decide whether weapon, armor, and trinket items can be equipped
+- current jobs define small per-level growth biases instead of applying their old flat stat modifiers directly
+- equipment is allowed by default; a job can explicitly forbid weapon, armor, helmet, or trinket slots for special identities
 - forbidden loadout equipment is skipped and explained in the combat log
-- each current job has one small job effect
-- job effects are deterministic and narrow: extra attack damage, extra healing, or extra guard armor
-- job effects modify `UnitState` combat outcomes, not unit or job Resource files
+- each current job grants one skill, one passive, one reaction, and one default tactic
+- each loadout can override the current job's skill, passive, or reaction to model learned abilities before full progression exists
+- a skill is an active combat action that tactics can select through `Job Skill`
+- a passive is a deterministic combat hook with an optional unit-turn cooldown
+- a reaction is a conditional response with an optional unit-turn cooldown
+- job abilities modify `UnitState` combat outcomes, not unit or job Resource files
 
 This is deliberately not a job tree, XP system, unlock system, visual loadout editor, or progression UI. Those can come later once the small version is understandable.
 
-Loadouts are the current composability layer. A `UnitDefinition` stores base stats and points to a `UnitLoadoutDefinition`; the loadout stores current job, weapon, armor, trinket, and tactics. This lets the same build archetype move between units with different base bodies without changing combat code.
+Current loadout-level equipped ability slots are the first small version of learned job history. Future job progression can replace manual loadout overrides with unlock rules, but the combat simulator already sees the intended shape: current job frame plus equipped skill/passive/reaction.
+
+Current job leveling rules:
+
+- each unit can gain at most five total job levels across all jobs
+- winning a fight currently grants each ally one level's worth of XP in their current job
+- job levels are per unit and per job, not one global unit level
+- job levels permanently apply that job's growth spread to runtime stats
+- unlocks are currently predetermined tracks: skill, passive, and reaction unlock at configured job levels
+- `pending_unlock_choice` exists as scaffolding for future player choice, but this pass auto-unlocks by track
+- job unlock dependency trees are intentionally deferred
+
+Current job growth rules:
+
+- growth uses small integers and should be roughly point-buy balanced
+- `max_hp_growth`, `physical_damage_growth`, `magic_damage_growth`, and `armor_growth` are positive durability/offense axes
+- `action_interval_growth` uses the simulator's native stat: negative means faster, positive means slower
+- no job should dominate both speed and every damage/defense axis without paying somewhere else
+
+Damage is now split into physical and magic damage. A damage source with the `magic` tag uses magic damage; otherwise it uses physical damage. Physical damage is reduced by armor. Magic damage currently ignores armor because there is no magic resistance stat yet.
+
+Loadouts are the current composability layer. A `UnitDefinition` stores ancestry, base stats, and a pointer to a `UnitLoadoutDefinition`; the loadout stores current job, weapon, armor, helmet, trinket, and tactics. This lets the same build archetype move between units with different base bodies without changing combat code.
+
+### Ancestry as body
+
+Ancestry is the "who/what you are" layer, separate from jobs as the "what you trained to do" layer.
+
+Current ancestry design rules:
+
+- ancestry grants future base-stat generation ranges, but current units still store explicit authored stats
+- ancestry grants baseline growth that applies once per total job level, then job-specific growth stacks on top
+- ancestry grants one always-on feature that is active regardless of current job or learned ability loadout
+- ancestry features use limited declarative triggers and cooldowns, not arbitrary scripts
+- ancestry features should be strong and character-defining because they cannot be swapped like gear or jobs
+- Typhon-born is explicitly scaffolded for a future two-helmet feature, but current slot-capacity rules do not implement it yet
 
 ### Tactics as authored behavior
 
@@ -135,8 +172,23 @@ Current tactic design rules:
 - guard is temporary armor until the unit's next turn
 - every selected tactic must explain itself in the combat log
 - tactic Resources live in loadouts so behavior can be edited in Godot without changing simulator code
+- tactics should have human-readable names because a library of behaviors needs to be recognizable in setup and combat logs, not only by filename or raw rule triplet
 
 Armor reduction should stay readable when temporary armor exists. Base battle armor cannot go below zero. Effects such as Shortblade reduce base armor first; if a target has no base armor left, the same reduction can reduce temporary guard armor instead.
+
+### Content catalog rules
+
+The first broad content catalog is a pull-from-later library, not a promise that every Resource is already balanced for the current five-fight run loop.
+
+Current catalog authoring rules:
+
+- prefer memorable build hooks over linear upgrades
+- write enemies as normal unit/loadout/job/item/tactic builds
+- keep items declarative through `EffectDefinition` arrays
+- use tags such as `armored`, `fragile`, `machine`, `support`, `swift`, and `death_backlash` as readable authoring hooks
+- only rely on simulator-supported effect combinations for live content
+- reserve run-loop wiring for a later focused pass
+- use optional catalog encounters/rewards as staging material, not automatically reachable content
 
 ### Short roguelite run loop
 

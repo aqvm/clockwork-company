@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="ItemDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_definition.gd" id="1_item"]
+[ext_resource type="Script" path="res://scripts/data/effect_definition.gd" id="2_effect"]
+
+[sub_resource type="Resource" id="Resource_crowbar_prayer_pry"]
+script = ExtResource("2_effect")
+display_name = "Crowbar Prayer Pry"
+tags = ["armor_break", "tool"]
+trigger = "Hit"
+target_selector = "Attack Target"
+effect_type = "Reduce Target Armor"
+amount = 1
+
+[resource]
+script = ExtResource("1_item")
+display_name = "Crowbar Prayer"
+tags = ["weapon", "tool", "armor_break"]
+slot = "Weapon"
+max_hp_modifier = 2
+physical_damage_modifier = 2
+effects = [SubResource("Resource_crowbar_prayer_pry")]

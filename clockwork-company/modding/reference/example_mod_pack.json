@@ -2,29 +2,33 @@
   "pack_id": "example_swift_guard_pack",
   "pack_version": 1,
   "items": [
-	{
-	  "id": "tower_shield",
-	  "display_name": "Tower Shield",
-	  "slot": "Armor",
-	  "max_hp_modifier": 8,
-	  "damage_modifier": -1,
-	  "armor_modifier": 3,
-	  "action_interval_modifier": 2,
-	  "trigger": "None",
-	  "effect": "None",
-	  "effect_amount": 0
-	}
+    {
+      "id": "tower_shield",
+      "display_name": "Tower Shield",
+      "slot": "Armor",
+      "max_hp_modifier": 8,
+      "armor_modifier": 3,
+      "action_interval_modifier": 2,
+      "trigger": "None",
+      "effect": "None",
+      "effect_amount": 0,
+      "physical_damage_modifier": 0,
+      "magic_damage_modifier": 0
+    }
   ],
   "loadouts": [
-	{
-	  "id": "guard_buckler",
-	  "armor_id": "tower_shield"
-	}
+    {
+      "id": "guard_buckler",
+      "armor_id": "tower_shield"
+    }
   ],
   "units": [
-	{
-	  "id": "mira_scout",
-	  "action_interval": 7
-	}
+    {
+      "id": "mira_scout",
+      "action_interval": 7,
+      "physical_damage": 1,
+      "magic_damage": 0,
+      "ancestry_id": "brassbound"
+    }
   ]
 }

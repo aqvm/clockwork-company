@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="EncounterDefinition" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/encounter_definition.gd" id="1_encounter"]
+[ext_resource type="Resource" path="res://resources/units/nyx_cutpurse.tres" id="2_unit"]
+[ext_resource type="Resource" path="res://resources/units/jory_roofer.tres" id="3_unit"]
+[ext_resource type="Resource" path="res://resources/units/chalk_smile.tres" id="4_unit"]
+
+[resource]
+script = ExtResource("1_encounter")
+display_name = "Catalog Test: Rooftop Knives"
+scout_text = "Fast fragile duelists with armor-break pressure. Good for testing tempo and anti-fragile tools."
+enemy_units = [ExtResource("2_unit"), ExtResource("3_unit"), ExtResource("4_unit")]

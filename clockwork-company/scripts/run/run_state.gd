@@ -6,12 +6,15 @@ const JsonContentLoaderScript := preload("res://scripts/modding/json_content_loa
 const UnitDefinitionScript := preload("res://scripts/data/unit_definition.gd")
 const UnitLoadoutDefinitionScript := preload("res://scripts/data/unit_loadout_definition.gd")
 const ItemDefinitionScript := preload("res://scripts/data/item_definition.gd")
+const JobProgressDefinitionScript := preload("res://scripts/data/job_progress_definition.gd")
 const STATUS_ACTIVE := "active"
 const STATUS_REWARD := "reward"
 const STATUS_EQUIPMENT := "equipment"
 const STATUS_WON := "won"
 const STATUS_LOST := "lost"
 const FIGHT_COUNT := 5
+const MAX_UNIT_JOB_LEVELS := 5
+const JOB_XP_PER_LEVEL := 1
 const ENCOUNTER_PATHS := [
 	"res://resources/encounters/phase7_fight_01_street_corner.tres",
 	"res://resources/encounters/phase7_fight_02_toll_gate.tres",
@@ -55,7 +58,8 @@ func start(enabled_mod_pack_ids: Array[String], should_force_loss := false) -> v
 	if loss_test_mode:
 		for ally in ally_definitions:
 			ally.max_hp = 1
-			ally.damage = 1
+			ally.physical_damage = 1
+			ally.magic_damage = 0
 			ally.armor = 0
 
 
@@ -69,7 +73,7 @@ func current_fight_title() -> String:
 
 
 func current_encounter_name() -> String:
-	var encounter := _current_encounter()
+	var encounter = _current_encounter()
 	if encounter == null:
 		return "Missing Encounter"
 	return encounter.display_name
@@ -79,7 +83,7 @@ func build_current_fight_definitions() -> Array[UnitDefinition]:
 	var definitions: Array[UnitDefinition] = []
 	for ally in ally_definitions:
 		definitions.append(_clone_unit_definition(ally))
-	var encounter := _current_encounter()
+	var encounter = _current_encounter()
 	if encounter == null:
 		return definitions
 	for enemy in encounter.enemy_units:
@@ -97,10 +101,12 @@ func complete_fight(report: Dictionary) -> void:
 		return
 
 	if fight_index >= FIGHT_COUNT - 1:
+		_award_current_job_levels()
 		status = STATUS_WON
 		last_result_summary = "Run won after fight %d. The party cleared the five-fight slice." % current_fight_number()
 		return
 
+	_award_current_job_levels()
 	status = STATUS_REWARD
 	last_result_summary = "Fight %d won. Choose one reward before fight %d." % [current_fight_number(), current_fight_number() + 1]
 
@@ -178,6 +184,9 @@ func equip_inventory_item(item_index: int, unit_name: String) -> void:
 	elif item.slot == "Armor":
 		replaced_item = loadout.armor
 		loadout.armor = item
+	elif item.slot == "Helmet":
+		replaced_item = loadout.helmet
+		loadout.helmet = item
 	elif item.slot == "Trinket":
 		replaced_item = loadout.trinket
 		loadout.trinket = item
@@ -195,7 +204,7 @@ func status_lines() -> Array[String]:
 	lines.append("Run status: %s" % status.capitalize())
 	lines.append("Current fight: %d/%d" % [current_fight_number(), FIGHT_COUNT])
 	lines.append("Encounter: %s" % current_encounter_name())
-	var encounter := _current_encounter()
+	var encounter = _current_encounter()
 	if encounter != null and not encounter.scout_text.is_empty():
 		lines.append("Scout note: %s" % encounter.scout_text)
 	if not last_result_summary.is_empty():
@@ -215,6 +224,9 @@ func status_lines() -> Array[String]:
 	lines.append("Party equipment:")
 	for ally in ally_definitions:
 		lines.append("- %s: %s" % [ally.display_name, _equipment_summary(ally)])
+	lines.append("Job progress:")
+	for ally in ally_definitions:
+		lines.append("- %s: %s" % [ally.display_name, _job_progress_summary(ally)])
 	return lines
 
 
@@ -250,9 +262,75 @@ func _apply_loss_test_enemy_pressure(enemy: UnitDefinition) -> void:
 		return
 
 	enemy.max_hp += 30
-	enemy.damage += 10
+	enemy.physical_damage += 10
 	enemy.armor += 3
 	enemy.action_interval = max(1, enemy.action_interval - 3)
+
+
+func _award_current_job_levels() -> void:
+	for ally in ally_definitions:
+		if ally.loadout == null or ally.loadout.current_job == null:
+			continue
+		if _total_job_levels(ally) >= MAX_UNIT_JOB_LEVELS:
+			continue
+		var progress := _ensure_job_progress(ally, ally.loadout.current_job)
+		progress.xp += 1
+		while progress.xp >= JOB_XP_PER_LEVEL and progress.level < 5 and _total_job_levels(ally) < MAX_UNIT_JOB_LEVELS:
+			progress.xp -= JOB_XP_PER_LEVEL
+			progress.level += 1
+			_apply_job_unlocks(progress)
+
+
+func _ensure_job_progress(unit: UnitDefinition, job: JobDefinition) -> JobProgressDefinition:
+	for progress: JobProgressDefinition in unit.job_progress:
+		if progress != null and progress.job == job:
+			return progress
+	var progress: JobProgressDefinition = JobProgressDefinitionScript.new()
+	progress.job = job
+	unit.job_progress.append(progress)
+	return progress
+
+
+func _apply_job_unlocks(progress: JobProgressDefinition) -> void:
+	var job := progress.job
+	if job == null:
+		return
+	if progress.level >= job.skill_unlock_level:
+		progress.skill_unlocked = true
+	if progress.level >= job.passive_unlock_level:
+		progress.passive_unlocked = true
+	if progress.level >= job.reaction_unlock_level:
+		progress.reaction_unlocked = true
+	progress.pending_unlock_choice = false
+
+
+func _total_job_levels(unit: UnitDefinition) -> int:
+	var total := 0
+	for progress: JobProgressDefinition in unit.job_progress:
+		if progress != null:
+			total += progress.level
+	return total
+
+
+func _job_progress_summary(unit: UnitDefinition) -> String:
+	if unit.job_progress.is_empty():
+		return "none"
+	var parts: Array[String] = []
+	for progress: JobProgressDefinition in unit.job_progress:
+		if progress == null or progress.job == null:
+			continue
+		var unlocks: Array[String] = []
+		if progress.skill_unlocked:
+			unlocks.append("skill")
+		if progress.passive_unlocked:
+			unlocks.append("passive")
+		if progress.reaction_unlocked:
+			unlocks.append("reaction")
+		var unlock_text := "no unlocks" if unlocks.is_empty() else _join_string_parts(unlocks, ",")
+		parts.append("%s L%d XP%d [%s]" % [progress.job.display_name, progress.level, progress.xp, unlock_text])
+	if parts.is_empty():
+		return "none"
+	return _join_string_parts(parts, "; ")
 
 
 func _find_ally(unit_name: String) -> UnitDefinition:
@@ -269,20 +347,23 @@ func _can_equip_item(unit: UnitDefinition, item: ItemDefinition) -> bool:
 		return true
 	var job := unit.loadout.current_job
 	if item.slot == "Weapon":
-		return job.can_equip_weapon
+		return not job.forbid_weapon
 	if item.slot == "Armor":
-		return job.can_equip_armor
+		return not job.forbid_armor
+	if item.slot == "Helmet":
+		return not job.forbid_helmet
 	if item.slot == "Trinket":
-		return job.can_equip_trinket
+		return not job.forbid_trinket
 	return false
 
 
 func _equipment_summary(unit: UnitDefinition) -> String:
 	if unit.loadout == null:
 		return "no loadout"
-	return "weapon %s, armor %s, trinket %s" % [
+	return "weapon %s, armor %s, helmet %s, trinket %s" % [
 		_item_name_or_empty(unit.loadout.weapon),
 		_item_name_or_empty(unit.loadout.armor),
+		_item_name_or_empty(unit.loadout.helmet),
 		_item_name_or_empty(unit.loadout.trinket),
 	]
 
@@ -307,10 +388,13 @@ func _clone_unit_definition(source: UnitDefinition) -> UnitDefinition:
 	copy.display_name = source.display_name
 	copy.tags = source.tags.duplicate()
 	copy.team = source.team
+	copy.ancestry = source.ancestry
 	copy.max_hp = source.max_hp
-	copy.damage = source.damage
+	copy.physical_damage = source.physical_damage
+	copy.magic_damage = source.magic_damage
 	copy.armor = source.armor
 	copy.action_interval = source.action_interval
+	copy.job_progress = _clone_job_progress(source.job_progress)
 	copy.loadout = _clone_loadout_definition(source.loadout) if source.loadout != null else null
 	return copy
 
@@ -319,8 +403,12 @@ func _clone_loadout_definition(source: UnitLoadoutDefinition) -> UnitLoadoutDefi
 	var copy: UnitLoadoutDefinition = UnitLoadoutDefinitionScript.new()
 	copy.display_name = source.display_name
 	copy.current_job = source.current_job
+	copy.equipped_skill = source.equipped_skill
+	copy.equipped_passive = source.equipped_passive
+	copy.equipped_reaction = source.equipped_reaction
 	copy.weapon = _clone_item_definition(source.weapon) if source.weapon != null else null
 	copy.armor = _clone_item_definition(source.armor) if source.armor != null else null
+	copy.helmet = _clone_item_definition(source.helmet) if source.helmet != null else null
 	copy.trinket = _clone_item_definition(source.trinket) if source.trinket != null else null
 	copy.tactics = source.tactics.duplicate()
 	return copy
@@ -332,7 +420,8 @@ func _clone_item_definition(source: ItemDefinition) -> ItemDefinition:
 	copy.tags = source.tags.duplicate()
 	copy.slot = source.slot
 	copy.max_hp_modifier = source.max_hp_modifier
-	copy.damage_modifier = source.damage_modifier
+	copy.physical_damage_modifier = source.physical_damage_modifier
+	copy.magic_damage_modifier = source.magic_damage_modifier
 	copy.armor_modifier = source.armor_modifier
 	copy.action_interval_modifier = source.action_interval_modifier
 	copy.trigger = source.trigger
@@ -340,3 +429,29 @@ func _clone_item_definition(source: ItemDefinition) -> ItemDefinition:
 	copy.effect_amount = source.effect_amount
 	copy.effects = source.effects.duplicate()
 	return copy
+
+
+func _clone_job_progress(source: Array[JobProgressDefinition]) -> Array[JobProgressDefinition]:
+	var results: Array[JobProgressDefinition] = []
+	for progress: JobProgressDefinition in source:
+		if progress == null:
+			continue
+		var copy: JobProgressDefinition = JobProgressDefinitionScript.new()
+		copy.job = progress.job
+		copy.level = progress.level
+		copy.xp = progress.xp
+		copy.skill_unlocked = progress.skill_unlocked
+		copy.passive_unlocked = progress.passive_unlocked
+		copy.reaction_unlocked = progress.reaction_unlocked
+		copy.pending_unlock_choice = progress.pending_unlock_choice
+		results.append(copy)
+	return results
+
+
+func _join_string_parts(parts: Array[String], separator: String) -> String:
+	var text := ""
+	for part in parts:
+		if not text.is_empty():
+			text += separator
+		text += part
+	return text

@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="ItemDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_definition.gd" id="1_item"]
+[ext_resource type="Script" path="res://scripts/data/effect_definition.gd" id="2_effect"]
+
+[sub_resource type="Resource" id="Resource_smoke_apron_cough"]
+script = ExtResource("2_effect")
+display_name = "Smoke Apron Cough"
+tags = ["armor", "battle_start"]
+trigger = "Battle Start"
+target_selector = "Self"
+effect_type = "Gain Armor"
+amount = 1
+
+[resource]
+script = ExtResource("1_item")
+display_name = "Smoke Apron"
+tags = ["armor", "light", "foundry"]
+slot = "Armor"
+max_hp_modifier = 4
+armor_modifier = 1
+action_interval_modifier = -1
+effects = [SubResource("Resource_smoke_apron_cough")]

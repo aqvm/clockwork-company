@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="UnitLoadoutDefinition" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/unit_loadout_definition.gd" id="1_loadout"]
+[ext_resource type="Resource" path="res://resources/jobs/chirurgeon.tres" id="2_job"]
+[ext_resource type="Resource" path="res://resources/items/lender_coat.tres" id="3_armor"]
+[ext_resource type="Resource" path="res://resources/items/oath_pin.tres" id="4_trinket"]
+[ext_resource type="Resource" path="res://resources/items/surgeons_loupe.tres" id="helmet_item"]
+[ext_resource type="Resource" path="res://resources/tactics/mercy_first.tres" id="5_tactic"]
+[ext_resource type="Resource" path="res://resources/tactics/hold_the_line.tres" id="6_tactic"]
+[ext_resource type="Resource" path="res://resources/tactics/steady_strike.tres" id="7_tactic"]
+
+[resource]
+script = ExtResource("1_loadout")
+display_name = "Chirurgeon Oath"
+current_job = ExtResource("2_job")
+armor = ExtResource("3_armor")
+helmet = ExtResource("helmet_item")
+trinket = ExtResource("4_trinket")
+tactics = [ExtResource("5_tactic"), ExtResource("6_tactic"), ExtResource("7_tactic")]
+

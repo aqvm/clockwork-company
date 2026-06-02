@@ -153,6 +153,19 @@ static func job_effect(actor, effect_name: String, details: String) -> Dictionar
 	}
 
 
+static func ancestry_feature(actor, feature_name: String, details: String) -> Dictionary:
+	return {
+		"event_type": Schema.EVENT_ANCESTRY_FEATURE,
+		"payload": {
+			"actor_id": actor.unit_id,
+			"actor": actor.unit_name,
+			"feature": feature_name,
+			"details": details,
+		},
+		"tags": ["ancestry_feature"],
+	}
+
+
 static func item_trigger(actor, item_name: String, trigger_name: String, effect_name: String, details: String) -> Dictionary:
 	return {
 		"event_type": Schema.EVENT_ITEM_TRIGGER,

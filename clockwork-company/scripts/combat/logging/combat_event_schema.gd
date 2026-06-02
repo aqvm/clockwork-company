@@ -13,6 +13,7 @@ const EVENT_GUARD := "guard"
 const EVENT_GUARD_EXPIRE := "guard_expire"
 const EVENT_DEFEAT := "defeat"
 const EVENT_JOB_EFFECT := "job_effect"
+const EVENT_ANCESTRY_FEATURE := "ancestry_feature"
 const EVENT_ITEM_TRIGGER := "item_trigger"
 const EVENT_RESULT := "result"
 
@@ -29,6 +30,7 @@ const REQUIRED_KEYS := {
 	EVENT_GUARD_EXPIRE: ["actor_id", "actor", "previous_armor", "new_armor"],
 	EVENT_DEFEAT: ["target_id", "target"],
 	EVENT_JOB_EFFECT: ["actor_id", "actor", "effect"],
+	EVENT_ANCESTRY_FEATURE: ["actor_id", "actor", "feature"],
 	EVENT_ITEM_TRIGGER: ["actor_id", "actor", "item", "trigger", "effect"],
 	EVENT_RESULT: ["result_text"],
 }

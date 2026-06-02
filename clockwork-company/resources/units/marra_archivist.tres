@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="UnitDefinition" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/unit_definition.gd" id="1_unit"]
+[ext_resource type="Resource" path="res://resources/loadouts/archivist_last_candle.tres" id="2_loadout"]
+
+[ext_resource type="Resource" path="res://resources/ancestries/hollow.tres" id="3_ancestry"]
+[resource]
+script = ExtResource("1_unit")
+display_name = "Marra Archivist"
+tags = ["support", "paper", "fragile"]
+team = "Allies"
+ancestry = ExtResource("3_ancestry")
+max_hp = 18
+physical_damage = 1
+magic_damage = 4
+armor = 0
+action_interval = 9
+loadout = ExtResource("2_loadout")
+

@@ -7,4 +7,4 @@ script = ExtResource("1_item")
 display_name = "Run Honed Blade"
 tags = ["weapon", "reward", "damage"]
 slot = "Weapon"
-damage_modifier = 2
+physical_damage_modifier = 2

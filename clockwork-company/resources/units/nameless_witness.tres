@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="UnitDefinition" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/unit_definition.gd" id="1_unit"]
+[ext_resource type="Resource" path="res://resources/loadouts/witness_glass.tres" id="2_loadout"]
+
+[ext_resource type="Resource" path="res://resources/ancestries/hollow.tres" id="3_ancestry"]
+[resource]
+script = ExtResource("1_unit")
+display_name = "Nameless Witness"
+tags = ["memory", "fragile", "death_backlash"]
+team = "Enemies"
+ancestry = ExtResource("3_ancestry")
+max_hp = 20
+physical_damage = 5
+magic_damage = 0
+armor = 0
+action_interval = 10
+loadout = ExtResource("2_loadout")
+

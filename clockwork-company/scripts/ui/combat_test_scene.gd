@@ -535,7 +535,7 @@ func _log_highlight_color_for_line(line: String) -> String:
 	if line.begins_with("Tactic selected:") or line.begins_with("No tactic matched;") or line.begins_with("Tactic skipped:"):
 		return _bbcode_color_text(log_highlight_palette.tactic_color)
 
-	if line.begins_with("Job effect "):
+	if line.begins_with("Job effect ") or line.begins_with("Ancestry feature "):
 		return _bbcode_color_text(log_highlight_palette.job_effect_color)
 
 	if " triggers " in line:

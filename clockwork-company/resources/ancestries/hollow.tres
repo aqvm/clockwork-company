@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="AncestryDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ancestry_definition.gd" id="1_ancestry"]
+[ext_resource type="Script" path="res://scripts/data/ancestry_feature_definition.gd" id="2_feature"]
+
+[sub_resource type="Resource" id="Feature_echo"]
+script = ExtResource("2_feature")
+display_name = "Second Echo"
+tags = ["echo", "survival"]
+trigger = "HP Below Threshold"
+condition = "Self HP Below Percent"
+feature_type = "Heal Self"
+amount = 5
+threshold_percent = 40
+cooldown_turns = 8
+notes = "A dramatic one-battle self-stabilizer when a fragile unit gets cracked open."
+
+[resource]
+script = ExtResource("1_ancestry")
+display_name = "Hollow"
+tags = ["ancestry", "echo", "fragile"]
+min_max_hp = 11
+max_max_hp = 16
+min_physical_damage = 2
+max_physical_damage = 4
+min_magic_damage = 3
+max_magic_damage = 6
+min_armor = 0
+max_armor = 1
+min_action_interval = 7
+max_action_interval = 9
+max_hp_growth = 0
+physical_damage_growth = 0
+magic_damage_growth = 1
+armor_growth = 0
+action_interval_growth = -1
+feature = SubResource("Feature_echo")
+notes = "Fast and uncanny, with a survival pulse instead of sturdiness."

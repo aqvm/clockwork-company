@@ -5,7 +5,10 @@ const CombatConstantsScript := preload("res://scripts/combat/combat_constants.gd
 const TargetingRulesScript := preload("res://scripts/combat/rules/targeting_rules.gd")
 
 static func describe_tactic(tactic: TacticDefinition) -> String:
-	return "%s -> %s -> %s" % [tactic.condition, tactic.action, tactic.target]
+	var rules_text := "%s -> %s -> %s" % [tactic.condition, tactic.action, tactic.target]
+	if tactic.display_name.is_empty():
+		return rules_text
+	return "%s (%s)" % [tactic.display_name, rules_text]
 
 static func item_name_or_none(unit) -> String:
 	if unit.equipped_items.is_empty():
@@ -28,7 +31,8 @@ static func build_result_line(units: Array, actions_taken: int) -> String:
 static func _describe_item_modifiers(item: ItemDefinition) -> String:
 	var parts: Array[String] = []
 	_append_modifier_text(parts, "HP", item.max_hp_modifier)
-	_append_modifier_text(parts, "damage", item.damage_modifier)
+	_append_modifier_text(parts, "physical", item.physical_damage_modifier)
+	_append_modifier_text(parts, "magic", item.magic_damage_modifier)
 	_append_modifier_text(parts, "armor", item.armor_modifier)
 	_append_modifier_text(parts, "interval", item.action_interval_modifier)
 	if parts.is_empty():

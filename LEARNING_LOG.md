@@ -13,6 +13,330 @@ Each entry should include:
 - Manual exercise
 - Open questions
 
+## 2026-06-02 - Ancestries, helmets, and legacy damage cleanup
+
+Feature worked on:
+
+- Added `AncestryDefinition` and `AncestryFeatureDefinition` Resources.
+- Added always-on ancestry feature resolution for battle-start, attack, damaged/low-HP, and kill hooks.
+- Added a helmet equipment slot to loadouts, runtime equipment checks, run equipment replacement, and JSON content.
+- Removed the old single `damage` / `damage_modifier` data path in favor of explicit physical and magic damage fields.
+- Added seven ancestry Resources: Minotaur, Redcap, Typhon-born, Stonekin, Emberkin, Hollow, and Brassbound.
+- Added five helmet items and assigned ancestry references across the existing unit catalog.
+
+Godot concepts introduced:
+
+- Custom `Resource` scripts can reference other custom Resources, such as a `UnitDefinition` exporting an `AncestryDefinition`.
+- `.tres` files can embed subresources, which is how ancestry features live inside ancestry Resources.
+- Exported enum strings make the Godot inspector constrain authoring choices without needing editor plugins.
+
+Game architecture concepts introduced:
+
+- Ancestry is now the always-on body/origin layer, while jobs remain the trained-role layer.
+- Ancestry baseline growth stacks with job-specific growth when a unit has job levels.
+- Helmet equipment is a normal loadout slot; shields are still represented as bundled weapon/armor concepts.
+
+Files touched:
+
+- `clockwork-company/scripts/data/ancestry_definition.gd`
+- `clockwork-company/scripts/data/ancestry_feature_definition.gd`
+- `clockwork-company/scripts/combat/rules/ancestry_feature_resolver.gd`
+- `clockwork-company/scripts/combat/runtime/unit_state.gd`
+- `clockwork-company/scripts/run/run_state.gd`
+- `clockwork-company/modding/reference/base_content.options.md`
+- `clockwork-company/resources/ancestries/typhon_born.tres`
+
+What I should now be able to explain:
+
+- Why ancestry features are separate from job passives/reactions.
+- Why units still have explicit stats even though ancestries now define stat ranges.
+- Why the old single `damage` field was removed instead of kept as compatibility glue.
+
+Manual exercise:
+
+- Open `clockwork-company/resources/ancestries/typhon_born.tres` and explain why its notes describe two helmets even though the current implemented feature is battle-start armor.
+
+Open questions:
+
+- Should ancestry features eventually be equipped/locked like job features, or should they always remain immutable?
+- When slot capacity is added, should Typhon-born's second helmet be its whole feature or one part of a broader many-headed identity?
+
+## 2026-06-02 - Job leveling and physical/magic damage split
+
+Feature worked on:
+
+- Added per-unit, per-job progress with XP, levels, unlock flags, and future choice scaffolding.
+- Added a five-total-job-level cap per unit.
+- Added per-level job growth fields for HP, physical damage, magic damage, armor, and action interval.
+- Changed runtime combat stats from one damage number to physical and magic damage.
+- Updated combat damage resolution so `magic`-tagged damage sources use magic damage; other damage sources use physical damage.
+- Added run-loop job XP awards after won fights: each ally gains current-job XP, and one XP currently becomes one job level.
+
+Godot concepts introduced:
+
+- `JobProgressDefinition` is a small Resource used as an inspectable record inside a unit.
+- Removing compatibility fields can be cleaner than preserving them when the project is still early and the old model obscures the new rules.
+- Resource arrays are useful for editor-visible lists of structured records, such as one unit's job history.
+
+Game architecture concepts introduced:
+
+- Current job, learned abilities, and job history are now separate concepts.
+- Permanent stat growth is computed from job progress at combat-state creation time.
+- Predetermined unlock tracks are represented with booleans now, while `pending_unlock_choice` leaves a place for future choice UI.
+- Physical damage is reduced by armor; magic damage currently ignores armor because no magic-resistance stat exists yet.
+
+Files touched:
+
+- `clockwork-company/scripts/data/job_progress_definition.gd`
+- `clockwork-company/scripts/data/unit_definition.gd`
+- `clockwork-company/scripts/data/item_definition.gd`
+- `clockwork-company/scripts/data/job_definition.gd`
+- `clockwork-company/scripts/combat/runtime/unit_state.gd`
+- `clockwork-company/scripts/combat/combat_simulator.gd`
+- `clockwork-company/scripts/combat/rules/item_effect_resolver.gd`
+- `clockwork-company/scripts/combat/logging/combat_text_formatter.gd`
+- `clockwork-company/scripts/modding/json_content_loader.gd`
+- `clockwork-company/scripts/run/run_state.gd`
+- `clockwork-company/resources/jobs/*.tres`
+- `clockwork-company/resources/units/*.tres`
+- `clockwork-company/resources/items/*.tres`
+- `clockwork-company/modding/reference/base_content.json`
+- `clockwork-company/modding/reference/base_content.options.md`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `MODDING.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why job levels are per unit/per job rather than a single global unit level.
+- Why `action_interval_growth = -1` means a job makes the unit faster.
+- Why a skill or effect with the `magic` tag uses magic damage.
+- Why `pending_unlock_choice` exists even though unlocks are automatic right now.
+
+Manual exercise:
+
+- Win one run fight, inspect the run status text, and confirm each ally gained one level in their current job. Then predict which stat growth should apply to that ally's next fight.
+
+Open questions:
+
+- Should job XP eventually depend on survival, actions taken, or fight participation instead of awarding all allies after a win?
+- Should magic eventually have a separate resistance/ward stat, or should armor remain the only defense for a while?
+- Should unlock choice happen immediately on level-up, between fights, or in a dedicated career screen later?
+
+## 2026-06-02 - Learned ability loadout slots
+
+Feature worked on:
+
+- Added optional equipped skill, passive, and reaction slots to `UnitLoadoutDefinition`.
+- Updated combat runtime so a loadout can override the current job's granted skill/passive/reaction.
+- Added `Roger Spellsword` and `Cast Sparkblade` as a small authored example of current-job frame plus learned ability overrides.
+- Updated JSON loading, run-state cloning, and docs for the new loadout ability fields.
+- Synced ability `display_name` values into `resource_name` so the Godot Inspector can show useful names for equipped skill/passive/reaction Resources.
+
+Godot concepts introduced:
+
+- A Resource can hold optional typed references that act as overrides only when assigned.
+- A `.tres` loadout can contain inline subresources for learned abilities without needing a separate global ability file yet.
+- `resource_name` is the editor-facing Resource label; syncing it from `display_name` makes nested Resources easier to read in the Inspector.
+
+Game architecture concepts introduced:
+
+- Current job and learned abilities are now separate ideas in the data model.
+- Loadouts are the first build-level place where a unit biography can be assembled.
+- The current implementation still avoids progression UI: it directly authors the equipped ability combination for testing.
+
+Files touched:
+
+- `clockwork-company/scripts/data/unit_loadout_definition.gd`
+- `clockwork-company/scripts/data/skill_definition.gd`
+- `clockwork-company/scripts/data/passive_definition.gd`
+- `clockwork-company/scripts/data/reaction_definition.gd`
+- `clockwork-company/scripts/combat/runtime/unit_state.gd`
+- `clockwork-company/scripts/modding/json_content_loader.gd`
+- `clockwork-company/scripts/run/run_state.gd`
+- `clockwork-company/resources/loadouts/roger_spellsword.tres`
+- `clockwork-company/resources/tactics/cast_sparkblade.tres`
+- `clockwork-company/resources/units/roger_spellsword.tres`
+- `clockwork-company/modding/reference/base_content.options.md`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `MODDING.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- How a loadout can equip a skill/passive/reaction that differs from the current job.
+- Why the current job still provides fallback abilities when the loadout override slots are empty.
+- Why a hybrid loadout should usually author an explicit `Job Skill` tactic with a target that fits the equipped skill.
+- Why file-backed tactic Resources fit the current JSON bridge better than inline tactic subresources inside loadouts.
+- Why `resource_name` and `display_name` are related but not the same thing.
+
+Manual exercise:
+
+- Open `clockwork-company/resources/loadouts/roger_spellsword.tres` and identify which parts come from the current Guard job versus which parts are equipped learned ability overrides.
+
+Open questions:
+
+- Should learned abilities eventually be referenced by id from a global ability library, or remain embedded in jobs/loadouts as subresources?
+- Should loadouts allow multiple learned skills with tactics choosing among them, or keep one equipped skill for now?
+
+## 2026-06-01 - FFT-shaped job ability foundation
+
+Feature worked on:
+
+- Moved jobs from mostly stat/proficiency packages toward a skill/passive/reaction model.
+- Added `SkillDefinition`, `PassiveDefinition`, and `ReactionDefinition` Resources.
+- Updated jobs so each current job grants one skill, one passive, one reaction, and one appended default tactic.
+- Changed equipment rules so weapon/armor/trinket slots are allowed by default, with optional `forbid_weapon`, `forbid_armor`, and `forbid_trinket` flags for special jobs.
+- Added passive and reaction cooldown tracking as combat-only unit-turn counters.
+
+Godot concepts introduced:
+
+- A Resource can contain other Resource subresources, which keeps a job inspectable while still making it richer than a few strings.
+- Exported Resource references such as `skill: SkillDefinition` give the Inspector a typed authoring slot.
+- JSON mod data can mirror nested Resource data by converting dictionaries into Resource objects at load time.
+
+Game architecture concepts introduced:
+
+- Jobs can grant active, passive, and reaction vocabulary without owning simulator code.
+- `Job Skill` is a tactic action that asks the simulator to resolve the current job's active skill.
+- Passives and reactions are runtime effects on `UnitState`; they do not mutate source job or unit Resources.
+- Cooldowns live in runtime state, not in the data Resources, because cooldowns are per combat copy.
+- Equipment forbids are now exceptions, not the central identity of a job.
+
+Files touched:
+
+- `clockwork-company/scripts/data/skill_definition.gd`
+- `clockwork-company/scripts/data/passive_definition.gd`
+- `clockwork-company/scripts/data/reaction_definition.gd`
+- `clockwork-company/scripts/data/job_definition.gd`
+- `clockwork-company/scripts/data/tactic_definition.gd`
+- `clockwork-company/scripts/combat/runtime/unit_state.gd`
+- `clockwork-company/scripts/combat/rules/job_effect_resolver.gd`
+- `clockwork-company/scripts/combat/combat_constants.gd`
+- `clockwork-company/scripts/combat/combat_simulator.gd`
+- `clockwork-company/scripts/modding/json_content_loader.gd`
+- `clockwork-company/scripts/run/run_state.gd`
+- `clockwork-company/resources/jobs/*.tres`
+- `clockwork-company/modding/reference/base_content.json`
+- `clockwork-company/modding/reference/base_content.options.md`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `MODDING.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why a job skill is different from a tactic: the skill defines what can be done, while the tactic defines when and who to target.
+- Why a job's default tactic is appended after loadout tactics, so explicit loadout behavior can override the generic job behavior.
+- Why passive/reaction cooldown counters belong on `UnitState`.
+- Why forbidding equipment is now a special job rule instead of the default way jobs are differentiated.
+
+Manual exercise:
+
+- Open `clockwork-company/resources/jobs/debt_knight.tres`, inspect its skill, passive, reaction, and default tactic subresources, then predict how `Payment Due` behaves when the unit drops below half HP after being attacked.
+
+Open questions:
+
+- Should learned/equipped skill/passive/reaction slots live on `UnitLoadoutDefinition`, a future progression Resource, or a separate unit-history Resource?
+- Should cooldowns count owner turns, global actions, or simulation ticks once more timing systems exist?
+
+## 2026-06-01 - Phase 8 content catalog slice
+
+Feature worked on:
+
+- Added a broad first content catalog slice for future run-loop/reward pulls: 32 items, 12 jobs, 9 named tactics, 18 loadouts, 18 units, 3 optional catalog encounters, and 3 optional catalog rewards.
+- Added `display_name` to `TacticDefinition` so tactics can be recognizable in setup and combat logs.
+- Kept the new catalog declarative and did not wire it into the current five-fight run.
+
+Godot concepts introduced:
+
+- `.tres` Resources can reference other Resources to form inspectable content graphs: units point to loadouts, loadouts point to jobs/items/tactics, and encounters/rewards point back to normal units/items.
+- Exported fields added to a Resource script become editable fields in the Inspector and can be mirrored through JSON mod loading.
+
+Game architecture concepts introduced:
+
+- A content library can be larger than the active run loop as long as the active selector stays explicit.
+- Tags are useful authoring vocabulary for future filters and for current item conditions such as `Target Has Tag`.
+- Content expansion is safest when it stays inside currently implemented simulator behavior instead of relying on reserved effect combinations.
+
+Files touched:
+
+- `clockwork-company/scripts/data/tactic_definition.gd`
+- `clockwork-company/scripts/combat/logging/combat_text_formatter.gd`
+- `clockwork-company/scripts/combat/rules/tactic_resolver.gd`
+- `clockwork-company/scripts/modding/json_content_loader.gd`
+- `clockwork-company/resources/items/*.tres`
+- `clockwork-company/resources/jobs/*.tres`
+- `clockwork-company/resources/tactics/*.tres`
+- `clockwork-company/resources/loadouts/*.tres`
+- `clockwork-company/resources/units/*.tres`
+- `clockwork-company/resources/encounters/catalog_test_*.tres`
+- `clockwork-company/resources/rewards/catalog_reward_*.tres`
+- `clockwork-company/modding/reference/base_content.json`
+- `clockwork-company/modding/reference/base_content.options.md`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `MODDING.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- How an item effect stays declarative even when it has trigger, condition, target, and amount fields.
+- Why a loadout is the reusable build package between a unit body and combat runtime state.
+- Why the catalog can contain enemy builds without creating enemy-only mechanics.
+- Why tactic display names improve authoring without changing tactic logic.
+
+Manual exercise:
+
+- Open `clockwork-company/resources/loadouts/debt_knight_tollhook.tres`, follow each Resource reference in the Inspector, and predict which item effects should appear if that build fights an `armored` target.
+
+Open questions:
+
+- Which catalog units should become player recruit candidates versus enemy-only encounter examples later?
+- Should the next content pass add new tactic conditions/actions, or should balance exploration happen first using the current small tactic grammar?
+
+## 2026-06-01 - Phase 8-ish Godot verification cleanup
+
+Feature worked on:
+
+- Ran the required headless Godot script check after the Phase 7/8 handoff.
+- Fixed compile errors caused by a missing script UID for the new effect Resource and a few ambiguous inferred locals.
+
+Godot concepts introduced:
+
+- Custom `class_name` Resource scripts need their `.gd.uid` sidecar kept with the script so Godot can reliably resolve typed exported properties.
+- `:=` asks Godot to infer a type; when a helper returns an untyped value, an explicit `var name: String` or plain `var encounter = ...` can be clearer and compile reliably.
+
+Game architecture concepts introduced:
+
+- The item-effect authoring model should keep a strict `Array[EffectDefinition]` boundary so the Inspector prevents authors from putting the wrong Resource type into an item effect list.
+- Parser fixes should avoid changing combat behavior when the failure is at the type-boundary level.
+
+Files touched:
+
+- `clockwork-company/scripts/data/item_definition.gd`
+- `clockwork-company/scripts/data/effect_definition.gd.uid`
+- `clockwork-company/scripts/modding/json_content_loader.gd`
+- `clockwork-company/scripts/combat/rules/item_effect_resolver.gd`
+- `clockwork-company/scripts/run/run_state.gd`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why `ItemDefinition.effects` should be typed as `Array[EffectDefinition]` for safer authoring.
+- Why the JSON loader still creates `EffectDefinitionScript.new()` objects.
+- Why Godot sometimes needs explicit local typing instead of relying on `:=`.
+
+Manual exercise:
+
+- Open `run_focus_lens.tres` or another item with authored effects and confirm the Inspector only accepts `EffectDefinition` subresources under the `effects` array.
+
+Open questions:
+
+- Should any future effect-like data types share a base Resource class, or should item effects stay pinned directly to `EffectDefinition`?
+
 ## 2026-06-01 - Phase 7 short run-loop kickoff
 
 Feature worked on:
@@ -1074,7 +1398,7 @@ What I should now be able to explain:
 
 Manual exercise:
 
-- In `clockwork-company/resources/jobs/apprentice.tres`, temporarily set `can_equip_trinket` to `false`, run the fight, and explain why Sol's Glass Focus no longer changes stats or triggers on attack.
+- In `clockwork-company/resources/jobs/apprentice.tres`, temporarily set `forbid_trinket` to `true`, run the fight, and explain why Sol's Glass Focus no longer changes stats or triggers on attack.
 
 Open questions:
 

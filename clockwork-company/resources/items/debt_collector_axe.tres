@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="ItemDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_definition.gd" id="1_item"]
+[ext_resource type="Script" path="res://scripts/data/effect_definition.gd" id="2_effect"]
+
+[sub_resource type="Resource" id="Resource_debt_collector_receipt"]
+script = ExtResource("2_effect")
+display_name = "Debt Collector Receipt"
+tags = ["heal", "kill"]
+trigger = "Kill"
+target_selector = "Self"
+effect_type = "Heal Self"
+amount = 5
+
+[resource]
+script = ExtResource("1_item")
+display_name = "Debt Collector Axe"
+tags = ["weapon", "axe", "slow", "finisher"]
+slot = "Weapon"
+physical_damage_modifier = 5
+action_interval_modifier = 3
+effects = [SubResource("Resource_debt_collector_receipt")]

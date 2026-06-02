@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_item")
 display_name = "Run Focus Lens"
-tags = ["trinket", "reward", "damage"]
+tags = ["trinket", "reward", "damage", "magic"]
 slot = "Trinket"
 max_hp_modifier = -1
-damage_modifier = 2
+magic_damage_modifier = 2

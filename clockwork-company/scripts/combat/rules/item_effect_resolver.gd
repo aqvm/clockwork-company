@@ -36,20 +36,28 @@ static func apply_battle_start_item_effects(log, units: Array) -> void:
 	if not any_effects:
 		log.add_child(battle_start_entry_id, "none")
 
-static func apply_attack_item_effects(log, parent_entry_id: int, actor, target) -> int:
+static func apply_attack_item_effects(log, parent_entry_id: int, actor, target) -> Dictionary:
 	var bonus_damage := 0
+	var magic_bonus_damage := 0
 	for item in actor.equipped_items:
 		for effect in _effects_for_trigger(item, CombatConstantsScript.TRIGGER_ATTACK):
 			if not _effect_can_fire(actor, effect, target):
 				continue
 			if effect.effect_type == CombatConstantsScript.EFFECT_BONUS_DAMAGE:
 				_mark_effect_fired(actor, effect)
-				var event := CombatEventsScript.item_trigger(actor, item.display_name, CombatConstantsScript.TRIGGER_ATTACK, effect.effect_type, "+%d damage against %s" % [effect.amount, target.unit_name])
-				log.add_event("%s triggers %s on attack: +%d damage against %s." % [actor.unit_name, item.display_name, effect.amount, target.unit_name], event["event_type"], -1, parent_entry_id, event["payload"], event["tags"])
-				bonus_damage += effect.amount
+				var damage_type := "magic" if effect.tags.has("magic") else "physical"
+				var event := CombatEventsScript.item_trigger(actor, item.display_name, CombatConstantsScript.TRIGGER_ATTACK, effect.effect_type, "+%d %s damage against %s" % [effect.amount, damage_type, target.unit_name])
+				log.add_event("%s triggers %s on attack: +%d %s damage against %s." % [actor.unit_name, item.display_name, effect.amount, damage_type, target.unit_name], event["event_type"], -1, parent_entry_id, event["payload"], event["tags"])
+				if effect.tags.has("magic"):
+					magic_bonus_damage += effect.amount
+				else:
+					bonus_damage += effect.amount
 			else:
 				log.add_child(parent_entry_id, _unsupported_effect_text(actor, item, effect))
-	return bonus_damage
+	return {
+		"physical": bonus_damage,
+		"magic": magic_bonus_damage,
+	}
 
 static func apply_hit_item_effects(log, parent_entry_id: int, actor, target) -> void:
 	for item in actor.equipped_items:
@@ -188,7 +196,7 @@ static func _mark_effect_fired(owner, effect) -> void:
 	owner.effect_usage_counts[key] = _effect_usage_count(owner, effect) + 1
 
 static func _effect_key(effect) -> String:
-	var name := effect.display_name
+	var name: String = effect.display_name
 	if name.is_empty():
 		name = effect.effect_type
 	return "%s|%s|%s" % [effect.trigger, effect.effect_type, name]

@@ -32,6 +32,7 @@ Should avoid:
 Responsible for:
 
 - unit definitions
+- ancestry definitions
 - item definitions
 - job definitions
 - tactics definitions
@@ -91,20 +92,23 @@ Use a discrete-event model:
 - The unit schedules its next action.
 - Combat ends when one side is dead.
 
-Initial stats:
+Current combat stats:
 
 - max HP
 - current HP
-- damage
+- physical damage
+- magic damage
 - armor
 - action interval
 - targeting rule
 
-Initial damage formula:
+Current damage formula:
 
-`damage_taken = max(1, attacker.damage - defender.armor)`
+- physical component: `max(1, physical_damage - defender.armor)` when physical damage is present
+- magic component: `magic_damage`
+- total damage: `max(1, physical_component_after_armor + magic_component)`
 
-This is intentionally crude and replaceable.
+This is intentionally crude and replaceable. There is no magic resistance stat yet.
 
 ## Current Phase 7 implementation
 
@@ -123,10 +127,11 @@ The first playable test is a text-only combat scene:
 - `clockwork-company/scripts/combat/rules/targeting_rules.gd` owns team and target selection helpers.
 - `clockwork-company/scripts/combat/rules/tactic_resolver.gd` owns tactic evaluation/selection decisions.
 - `clockwork-company/scripts/combat/rules/job_effect_resolver.gd` owns current-job combat bonus hooks.
+- `clockwork-company/scripts/combat/rules/ancestry_feature_resolver.gd` owns always-on ancestry combat hooks.
 - `clockwork-company/scripts/combat/rules/item_effect_resolver.gd` owns triggered item effect resolution.
 - `clockwork-company/scripts/combat/scenarios/demo_battle_factory.gd` owns current fixed demo roster construction.
 - `clockwork-company/scripts/run/run_state.gd` owns short-run progression state: current fight index, active/reward/equipment/won/lost status, cloned party definitions, run inventory, fixed encounter order, and reward/equipment application.
-- `clockwork-company/scripts/modding/json_content_loader.gd` owns JSON pack loading/merging/validation and runtime Resource reconstruction for items, jobs, tactics, loadouts, and units.
+- `clockwork-company/scripts/modding/json_content_loader.gd` owns JSON pack loading/merging/validation and runtime Resource reconstruction for ancestries, items, jobs, tactics, loadouts, and units.
 - `CombatLog` and `CombatLogEntry` are dedicated helper classes in `scripts/combat/logging/combat_log.gd` that build readable text logs and structured event metadata.
 - `scripts/combat/logging/combat_event_schema.gd` defines known event types and required payload keys as the structured logging contract.
 - `scripts/combat/logging/combat_events.gd` provides typed event-construction helpers so simulator/rule code does not handcraft payload dictionaries ad hoc.
@@ -134,19 +139,26 @@ The first playable test is a text-only combat scene:
 - `combat_simulator.gd` now also provides structured battle report APIs (`run_demo_battle_report` and `run_battle_report`) that return rendered lines, structured events, roster snapshots, winner, and action count.
 - Base game content remains authored in `.tres` Resources; the loader derives JSON-like dictionaries from those Resources, then applies mod JSON overrides from `res://mods/*.json` before constructing runtime Resources.
 - Structured report payloads now include a `log_version` field for format evolution safety.
-- `clockwork-company/scripts/data/unit_definition.gd` defines the editable unit data Resource type.
+- `clockwork-company/scripts/data/unit_definition.gd` defines the editable unit data Resource type, including ancestry, base physical/magic damage, and per-job progress.
+- `clockwork-company/scripts/data/ancestry_definition.gd` defines an editable ancestry Resource with future base-stat ranges, baseline growth, notes, and an always-on feature reference.
+- `clockwork-company/scripts/data/ancestry_feature_definition.gd` defines the limited ancestry feature payload, including trigger, condition, feature type, amount, cooldown, and notes.
 - `clockwork-company/scripts/data/item_definition.gd` defines the editable item data Resource type, including flat modifiers, tags, and authored effect references.
 - `clockwork-company/scripts/data/effect_definition.gd` defines the first declarative effect payload for data-authored triggers, conditions, target selectors, amounts, limits, and tags.
-- `clockwork-company/scripts/data/job_definition.gd` defines the editable job data Resource type, including stat modifiers, equipment permissions, and one learnable effect label.
-- `clockwork-company/scripts/data/unit_loadout_definition.gd` defines a reusable build package with a current job, weapon, armor, trinket, and tactic list.
+- `clockwork-company/scripts/data/job_definition.gd` defines the editable job data Resource type, including per-level stat growth, optional equipment forbids, unlock levels, and skill/passive/reaction/default-tactic references.
+- `clockwork-company/scripts/data/job_progress_definition.gd` defines one unit's progress in one job: level, XP, unlocked feature flags, and future choice scaffolding.
+- `clockwork-company/scripts/data/skill_definition.gd` defines the limited active action payload a job can grant.
+- `clockwork-company/scripts/data/passive_definition.gd` defines the limited passive combat hook a job can grant, including cooldown turns.
+- `clockwork-company/scripts/data/reaction_definition.gd` defines the limited reaction hook a job can grant, including trigger, condition, and cooldown turns.
+- `clockwork-company/scripts/data/unit_loadout_definition.gd` defines a reusable build package with a current job, optional equipped learned abilities, weapon, armor, helmet, trinket, and tactic list.
 - `clockwork-company/scripts/data/tactic_definition.gd` defines the small tactic rule Resource type.
 - `clockwork-company/scripts/data/encounter_definition.gd` defines a run encounter as a named enemy party made from normal `UnitDefinition` Resources.
 - `clockwork-company/scripts/data/reward_definition.gd` defines a run reward as a named offer with a suggested recipient and a normal `ItemDefinition` payload.
-- `clockwork-company/resources/units/*.tres` stores the current demo unit definitions.
-- `clockwork-company/resources/items/*.tres` stores the current demo item definitions.
-- `clockwork-company/resources/jobs/*.tres` stores the current demo job definitions.
-- `clockwork-company/resources/loadouts/*.tres` stores reusable demo build archetypes.
-- `clockwork-company/resources/tactics/*.tres` stores reusable tactic rule definitions.
+- `clockwork-company/resources/ancestries/*.tres` stores the current ancestry catalog.
+- `clockwork-company/resources/units/*.tres` stores the current demo unit definitions and a wider catalog of future ally/enemy build bodies.
+- `clockwork-company/resources/items/*.tres` stores the current demo item definitions and a wider catalog of build-enabling gear.
+- `clockwork-company/resources/jobs/*.tres` stores the current demo job definitions and a wider catalog of job identities.
+- `clockwork-company/resources/loadouts/*.tres` stores reusable demo and catalog build archetypes.
+- `clockwork-company/resources/tactics/*.tres` stores reusable named tactic rule definitions.
 - `clockwork-company/resources/encounters/*.tres` stores the current fixed Phase 7 encounter sequence.
 - `clockwork-company/resources/rewards/*.tres` stores the current fixed Phase 7 reward choices.
 
@@ -161,7 +173,7 @@ Current run-loop rules:
 - reward choices are `RewardDefinition` Resources that point to normal item Resources
 - winning fights 1-4 moves the run to reward choice
 - choosing one reward adds that reward's item to run inventory and moves the run to equipment decisions for the next fight
-- equipment buttons show valid item/unit pairings based on current job equipment permissions
+- equipment buttons show valid item/unit pairings based on current job equipment forbids
 - equipping an inventory item replaces that unit's existing item in the matching slot and returns the replaced item to inventory
 - `Continue to Next Fight` leaves the equipment state and starts the next active fight
 - winning fight 5 sets the run status to won
@@ -175,19 +187,30 @@ Current combat rules:
 - unit stats are loaded from `UnitDefinition` Resources instead of hardcoded dictionaries
 - each `UnitDefinition` points to one `UnitLoadoutDefinition`
 - a loadout gives a unit one current `JobDefinition`
-- a loadout can assign one weapon, one armor item, and one trinket item
+- a loadout can assign one weapon, one armor item, one helmet, and one trinket item
 - the current job decides whether each assigned item is allowed before item modifiers or triggers apply
 - a loadout owns the unit's priority-ordered tactic Resource list
-- each item has one slot label and flat modifiers for max HP, damage, armor, and action interval
+- each item has one slot label and flat modifiers for max HP, physical damage, magic damage, armor, and action interval
 - each item can also define declarative authored effects through `Array[EffectDefinition]`
 - legacy one-effect item fields (`trigger`, `effect`, `effect_amount`) remain as a compatibility fallback
-- items, jobs, tactics, and units can carry freeform tags for future filtering/conditions/content tools
-- each job has flat modifiers for max HP, damage, armor, and action interval
-- each job has permission booleans for weapon, armor, and trinket items
-- `UnitState` copies definition data into combat-only runtime state at battle start, reads the unit's loadout, applies current job modifiers, checks equipment permissions, then applies allowed item modifiers to produce final battle stats
+- ancestries, items, jobs, tactics, and units can carry freeform tags for future filtering/conditions/content tools
+- each job has small per-level growth values for HP, physical damage, magic damage, armor, and action interval
+- each unit can gain at most five total job levels across all jobs
+- job progress is stored per unit and per job, with predetermined skill/passive/reaction unlock thresholds
+- ancestries provide baseline stat-growth values that apply once per total unit job level, in addition to the growth from the specific jobs leveled
+- ancestry features are always-on deterministic hooks separate from job passives/reactions
+- equipment is allowed by default; jobs may explicitly forbid weapons, armor, helmets, or trinkets
+- shields currently live inside weapon or armor item concepts; there is no offhand/handedness rules layer yet
+- each current job grants one active skill, one passive, one reaction, and one default tactic
+- loadouts can override the current job's granted skill, passive, or reaction to model learned abilities before progression UI exists
+- `UnitState` copies definition data into combat-only runtime state at battle start, reads ancestry and loadout data, applies ancestry baseline growth and permanent job-progress growth, appends the current job's default tactic, checks equipment forbids, then applies allowed item modifiers to produce final battle stats
 - battle-start item effects can further change combat-only runtime stats before the roster is printed
+- battle-start ancestry features can further change combat-only runtime stats before the roster is printed
 - skipped equipment is logged and does not provide stat modifiers or triggered effects
-- current job effects are tiny deterministic combat hooks: `Sharpened Edge` adds attack damage, `First Aid` improves healing, and `Guard Training` improves guard armor
+- current job passives are deterministic combat hooks such as attack damage, healing, or guard armor bonuses
+- current job reactions are deterministic damaged/low-HP hooks such as temporary armor, self-healing, or damaging the attacker
+- passive and reaction cooldowns are tracked as combat-only unit-turn counters
+- physical damage is reduced by armor; magic-tagged damage uses magic damage and currently ignores armor
 - every unit starts with `next_action_time = action_interval`
 - the living unit with the lowest `next_action_time` acts next
 - ties use roster order, which keeps the result deterministic
@@ -195,13 +218,15 @@ Current combat rules:
 - each tactic is a limited `condition -> action -> target` rule
 - the first tactic with a true condition and valid target is selected
 - if no tactic matches, the simulator falls back to attacking the frontmost living enemy
-- current supported actions are attack, heal, and guard
+- current supported tactic actions are attack, heal, guard, and job skill
 - heal restores a fixed 5 HP without exceeding max HP
 - guard grants 2 temporary armor until that unit's next turn
 - runtime armor is split into base battle armor and temporary guard armor
 - armor-reduction effects reduce base battle armor first, then temporary guard armor only if no base armor remains or the reduction has leftover
-- base attack damage uses `max(1, attacker.damage - defender total armor)`
-- attack-triggered bonus damage is added before armor reduces damage
+- base physical attack damage uses physical damage reduced by defender total armor
+- magic-tagged attacks use magic damage and currently ignore armor
+- attack-triggered bonus damage is split by effect tags: `magic` bonuses are magic damage, other bonuses are physical damage
+- attack-triggered ancestry bonus damage follows the same `magic` tag split
 - hit-triggered armor reduction changes the target's runtime armor for the rest of the battle
 - damaged/low-HP item effects can currently heal the damaged unit or increase their max HP once/per configured limit
 - kill and death trigger hooks exist for narrow effects, but the current demo items focus on battle-start, attack, and hit effects
@@ -240,7 +265,7 @@ Triggered item responsibility split:
 
 Tactic responsibility split:
 
-- `TacticDefinition` owns inspectable source data: one condition, one action, and one target rule.
+- `TacticDefinition` owns inspectable source data: a display name, one condition, one action, and one target rule.
 - `UnitLoadoutDefinition` owns the source tactic list for a reusable build.
 - `UnitState` owns the runtime copy of that priority-ordered tactic list for this combat copy.
 - `CombatSimulator` owns tactic evaluation, target validation, and action resolution.
@@ -249,10 +274,10 @@ Tactic responsibility split:
 
 Job responsibility split:
 
-- `JobDefinition` owns inspectable source data: current-job stat modifiers, equipment permissions, and the effect a job can teach.
-- `UnitLoadoutDefinition` owns the source current-job assignment for a reusable build.
-- `UnitState` owns the runtime current job assigned to this combat copy.
-- `CombatSimulator` owns equipment permission checks and current-job effect resolution.
+- `JobDefinition` owns inspectable source data: current-job stat modifiers, optional equipment forbids, skill, passive, reaction, and default tactic.
+- `UnitLoadoutDefinition` owns the source current-job assignment, optional equipped learned abilities, gear, and tactics for a reusable build.
+- `UnitState` owns the runtime current job and current granted job abilities assigned to this combat copy.
+- `CombatSimulator` owns equipment forbid checks, job skill action resolution, and current-job ability timing.
 - Unit, item, tactic, and job definitions remain separate source data. Runtime combat combines them into one `UnitState` without rewriting any `.tres` definition.
 - The current demo still keeps the fixed 3v3 roster list in code; jobs, gear, and tactics now live in editor-editable unit/loadout Resources.
 
@@ -261,10 +286,10 @@ Manual test:
 - Open the Godot project in `clockwork-company/`.
 - Press Play.
 - Click `Run Jobs 3v3 Fight`.
-- Confirm the text log shows loadouts, current jobs, job effects, equipped or skipped gear, loadout tactics, battle-start item effects, final roster stats, action times, selected tactics, damage, healing or guarding, defeats, and final result.
+- Confirm the text log shows loadouts, current jobs, job skills/passives/reactions, equipped or skipped gear, loadout tactics, battle-start item effects, final roster stats, action times, selected tactics, damage, healing or guarding, defeats, and final result.
 - Confirm Sol Apprentice uses the `Apprentice Focus` loadout and that Glass Focus still triggers on attack.
 - Confirm Glass Wisp uses the `Apprentice Support` loadout and that the Apprentice job's `First Aid` effect appears when that job heals.
-- Confirm Iron Brute's Light-Step Boots are skipped because Guard cannot equip trinkets.
+- Confirm Iron Brute's Light-Step Boots now apply because equipment is allowed by default unless a job explicitly forbids that slot.
 - Confirm selected tactics appear indented below each turn.
 - Confirm attack triggers, hit triggers, damage, and defeat lines appear indented below their parent attack action.
 - Edit one `.tres` file in `clockwork-company/resources/units/`, run again, and confirm the roster/log reflects that data change.

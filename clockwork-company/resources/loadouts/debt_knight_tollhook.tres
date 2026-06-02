@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="UnitLoadoutDefinition" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/unit_loadout_definition.gd" id="1_loadout"]
+[ext_resource type="Resource" path="res://resources/jobs/debt_knight.tres" id="2_job"]
+[ext_resource type="Resource" path="res://resources/items/tollhook.tres" id="3_weapon"]
+[ext_resource type="Resource" path="res://resources/items/union_mail.tres" id="4_armor"]
+[ext_resource type="Resource" path="res://resources/items/mercy_coin.tres" id="5_trinket"]
+[ext_resource type="Resource" path="res://resources/items/horncap.tres" id="helmet_item"]
+[ext_resource type="Resource" path="res://resources/tactics/bloodied_brace.tres" id="6_tactic"]
+[ext_resource type="Resource" path="res://resources/tactics/clean_finish.tres" id="7_tactic"]
+
+[resource]
+script = ExtResource("1_loadout")
+display_name = "Debt Knight Tollhook"
+current_job = ExtResource("2_job")
+weapon = ExtResource("3_weapon")
+armor = ExtResource("4_armor")
+helmet = ExtResource("helmet_item")
+trinket = ExtResource("5_trinket")
+tactics = [ExtResource("6_tactic"), ExtResource("7_tactic")]
+

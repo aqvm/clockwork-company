@@ -1,14 +1,18 @@
-[gd_resource type="Resource" script_class="UnitDefinition" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="UnitDefinition" load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/unit_definition.gd" id="1_unit"]
 [ext_resource type="Resource" path="res://resources/loadouts/apprentice_support.tres" id="2_loadout"]
 
+[ext_resource type="Resource" path="res://resources/ancestries/brassbound.tres" id="3_ancestry"]
 [resource]
 script = ExtResource("1_unit")
 display_name = "Mercy Engine"
 team = "Enemies"
+ancestry = ExtResource("3_ancestry")
 max_hp = 24
-damage = 8
+physical_damage = 8
+magic_damage = 0
 armor = 1
 action_interval = 12
 loadout = ExtResource("2_loadout")
+
