@@ -91,6 +91,7 @@ Current combat log design rules:
 - every modding JSON file should have an adjacent options/keywords markdown so schema expectations stay explicit for non-programmer modders
 - mod-pack enable/disable controls should live in UI presentation and never alter simulator rules directly; they only change which validated content packs are loaded before simulation
 - cooldown visualization should map to simulation time so a unit acts when its cooldown bar reaches empty
+- cooldown shimmer can be a small presentation cue on the existing cooldown bar; it should not imply a separate haste/status system
 - ready units should be explicitly labeled once their cooldown reaches empty so timing is readable at a glance
 - turn ownership should be readable at a glance through a short pulse around the acting unit
 - HP changes should be reinforced with brief floating +/− value text on the affected unit

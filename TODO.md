@@ -34,7 +34,6 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
   - portraits
   - statuses
   - cast bars
-  - cooldown shimmer
 - Keep `CombatLogRichTextFormatter` shared between setup/status text and replay text if highlighting rules change.
 
 ## Units, Jobs, Progression, and Roster

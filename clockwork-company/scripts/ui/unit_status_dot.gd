@@ -24,6 +24,7 @@ const PULSE_DURATION := 0.45
 const FLOATING_TEXT_DURATION := 6.0
 const FLOATING_TEXT_PULSE_DURATION := 1.0
 const DEFEAT_FADE_DURATION := 0.8
+const SHIMMER_BAND_WIDTH := 14.0
 
 func _ready() -> void:
 	custom_minimum_size = Vector2(122, 148)
@@ -83,6 +84,7 @@ func _draw() -> void:
 	var cooldown_width := cooldown_background.size.x * cooldown_ratio
 	if cooldown_width > 0.0:
 		draw_rect(Rect2(cooldown_background.position, Vector2(cooldown_width, cooldown_background.size.y)), team_color, true)
+		_draw_cooldown_shimmer(cooldown_background, cooldown_width)
 	_draw_readiness_badge(cooldown_background)
 
 	var text_color := Color(0.9, 0.93, 0.97, 1.0) if is_alive else Color(0.55, 0.57, 0.62, 1.0)
@@ -175,6 +177,22 @@ func _draw_readiness_badge(cooldown_background: Rect2) -> void:
 		badge_rect.size.x,
 		11,
 		Color(0.74, 1.0, 0.8, 1.0)
+	)
+
+
+func _draw_cooldown_shimmer(cooldown_background: Rect2, cooldown_width: float) -> void:
+	if not is_alive or cooldown_width <= SHIMMER_BAND_WIDTH:
+		return
+	var phase := fmod(display_time * 0.75, 1.0)
+	var shimmer_x := cooldown_background.position.x + ((cooldown_width + SHIMMER_BAND_WIDTH) * phase) - SHIMMER_BAND_WIDTH
+	var clipped_x: float = clamp(shimmer_x, cooldown_background.position.x, cooldown_background.position.x + cooldown_width)
+	var clipped_width: float = min(SHIMMER_BAND_WIDTH, cooldown_background.position.x + cooldown_width - clipped_x)
+	if clipped_width <= 0.0:
+		return
+	draw_rect(
+		Rect2(Vector2(clipped_x, cooldown_background.position.y), Vector2(clipped_width, cooldown_background.size.y)),
+		Color(1.0, 1.0, 1.0, 0.22),
+		true
 	)
 
 

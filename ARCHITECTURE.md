@@ -157,7 +157,7 @@ The first playable test now opens as a scenario workbench with the older combat 
 - `clockwork-company/scripts/ui/resource_tooltip_builder.gd` converts known game Resources into readable tooltip text and related-Resource link data for pinned tooltip traversal.
 - `clockwork-company/scripts/ui/tooltip_presenter.gd` owns the shared floating tooltip panel used by hoverable Resource rows/buttons. Hover shows tooltips, left click pins the visible tooltip, pinned Resource tooltips show related Resource buttons with Back navigation, and Escape or an outside click closes a pinned tooltip.
 - `clockwork-company/scripts/ui/combat_test_scene.gd` now also owns the local mod-pack toggle UI state (checkbox dropdown), including enabled-pack persistence and preview refresh behavior.
-- `clockwork-company/scripts/ui/unit_status_dot.gd` owns drawing one unit's circular replay marker, health arc, cooldown bar, ready badge, and defeated overlay.
+- `clockwork-company/scripts/ui/unit_status_dot.gd` owns drawing one unit's circular replay marker, health arc, cooldown bar with shimmer, ready badge, and defeated overlay.
 - `clockwork-company/scripts/combat/combat_simulator.gd` owns the combat rules.
 - `clockwork-company/scripts/combat/combat_constants.gd` owns shared combat labels and numeric constants.
 - `clockwork-company/scripts/combat/logging/combat_log.gd` owns hierarchical log entry storage and line rendering.

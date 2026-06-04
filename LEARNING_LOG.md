@@ -13,6 +13,44 @@ Each entry should include:
 - Manual exercise
 - Open questions
 
+## 2026-06-04 - Replay cooldown shimmer
+
+Feature worked on:
+
+- Added a subtle shimmer band to replay cooldown bars.
+- Removed the completed cooldown-shimmer replay TODO item.
+
+Godot concepts introduced:
+
+- Custom drawing can layer a small animated highlight by deriving position from existing replay time.
+- `fmod(...)` is useful for looping a presentation-only phase value.
+
+Game architecture concepts introduced:
+
+- A shimmer can clarify timing without adding a new combat mechanic.
+- Presentation effects should reuse existing replay state before asking the simulator for new rules data.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/unit_status_dot.gd`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why cooldown shimmer belongs in `UnitStatusDot`.
+- Why shimmer uses `display_time` rather than real wall-clock time.
+
+Manual exercise:
+
+- Run a fight at `0.5x` and watch the cooldown bars; explain why the shimmer moves even though combat has already been simulated.
+
+Open questions:
+
+- Should future cooldown visuals expose actual ability cooldown counters once abilities become more visible?
+
 ## 2026-06-04 - Collapsed debug harness controls
 
 Feature worked on:
