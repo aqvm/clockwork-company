@@ -144,7 +144,7 @@ The first playable test now opens as a scenario workbench with the older combat 
 - The former `Combat Conditions` pane is now used as a visible `Fight Preview` area for campaign/run status and static setup text.
 - `clockwork-company/scenes/planning_workbench_panel.tscn` and `scripts/ui/planning_workbench_panel.gd` own the stable planning-row layout and forward child-panel signals/tooltips to the main scene.
 - `clockwork-company/scenes/scenario_list_panel.tscn` and `scripts/ui/scenario_list_panel.gd` own scenario list button rendering, campaign state labels, and emit `scenario_selected`.
-- `clockwork-company/scenes/scenario_detail_panel.tscn` and `scripts/ui/scenario_detail_panel.gd` own read-only selected scenario detail rendering, scouting reports, and readable campaign status text.
+- `clockwork-company/scenes/scenario_detail_panel.tscn` and `scripts/ui/scenario_detail_panel.gd` own read-only selected scenario detail rendering, scouting reports, readable campaign status text, and campaign content unlock state.
 - `clockwork-company/scenes/party_panel.tscn` and `scripts/ui/party_panel.gd` own party summary button rendering and emit `unit_selected`.
 - `clockwork-company/scenes/unit_detail_panel.tscn` and `scripts/ui/unit_detail_panel.gd` own read-only selected unit detail rendering, including computed planning stats.
 - `clockwork-company/scenes/unit_action_panel.tscn` and `scripts/ui/unit_action_panel.gd` own selected-unit action button rendering and emit start/equipment-change request signals.

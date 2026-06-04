@@ -2275,6 +2275,7 @@ Files touched:
 - `clockwork-company/scripts/ui/unit_detail_panel.gd`
 - `clockwork-company/scripts/ui/combat_test_scene.gd`
 - `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
 - `TODO.md`
 - `LEARNING_LOG.md`
 
@@ -3364,3 +3365,43 @@ Manual exercise:
 Open questions:
 
 - What should be the second mechanical scenario rule once a scenario genuinely needs a different rule shape?
+
+## 2026-06-04 - Visible content unlock state
+
+Feature worked on:
+
+- Scenario list buttons now annotate scenarios that grant content unlock IDs.
+- Scenario details now split each scenario's content unlocks into unlocked and pending groups when campaign progress is available.
+- Revised the TODO so content unlocks are no longer invisible, while still noting that content IDs do not mechanically gate later options yet.
+
+Godot concepts introduced:
+
+- UI panels can accept optional context, such as campaign progress, without owning or mutating that state.
+
+Game architecture concepts introduced:
+
+- Visibility can come before mechanics: content unlock IDs are now legible in the campaign UI before they drive rules or gates.
+- Scenario detail panels should read campaign progress but leave progression mutations to `CampaignManager`.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/scenario_list_panel.gd`
+- `clockwork-company/scripts/ui/scenario_detail_panel.gd`
+- `clockwork-company/scripts/ui/planning_workbench_panel.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `ARCHITECTURE.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why the scenario detail panel receives campaign progress as read-only context.
+- Why content unlocks are visible but not yet used as mechanical gates.
+
+Manual exercise:
+
+- Complete Roadside Ambush, then select it again and confirm its content unlock appears as unlocked while later scenarios still show their unlocks as pending.
+
+Open questions:
+
+- Which future system should consume content unlock IDs first: gear availability, scenario branches, or lore/intel panels?

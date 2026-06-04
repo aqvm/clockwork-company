@@ -13,7 +13,7 @@ func _ready() -> void:
 	_ensure_content()
 
 
-func show_scenario(scenario: Resource, status_text: String) -> void:
+func show_scenario(scenario: Resource, status_text: String, campaign_progress = null) -> void:
 	_ensure_content()
 	_clear_content()
 	if scenario == null:
@@ -35,6 +35,7 @@ func show_scenario(scenario: Resource, status_text: String) -> void:
 	_add_plain_text("Status: %s" % _status_summary(status_text))
 	_add_plain_text("Tags: %s" % _join_values(scenario.tags, ", "))
 	_add_plain_text("Content unlocks: %s" % _join_values(scenario.content_unlocks, ", "))
+	_add_content_unlock_state(scenario, campaign_progress)
 	if not scenario.story_outro.is_empty():
 		_add_plain_text("Outro: %s" % scenario.story_outro)
 	if not scenario.scenario_rules.is_empty():
@@ -81,6 +82,21 @@ func _add_scouting_reports(encounters: Array) -> void:
 	for encounter in encounters:
 		if encounter != null and "scout_text" in encounter and not String(encounter.scout_text).is_empty():
 			_add_resource_text(encounter, "- %s: %s" % [encounter.display_name, encounter.scout_text])
+
+
+func _add_content_unlock_state(scenario: Resource, campaign_progress) -> void:
+	if campaign_progress == null or scenario.content_unlocks.is_empty():
+		return
+	var unlocked: Array[String] = []
+	var pending: Array[String] = []
+	for content_id in scenario.content_unlocks:
+		var id_text := String(content_id)
+		if campaign_progress.unlocked_content_ids.has(id_text):
+			unlocked.append(id_text)
+		else:
+			pending.append(id_text)
+	_add_plain_text("Unlocked from this scenario: %s" % _join_values(unlocked, ", "))
+	_add_plain_text("Still pending from this scenario: %s" % _join_values(pending, ", "))
 
 
 func _on_resource_mouse_entered(source: Control, resource: Resource) -> void:

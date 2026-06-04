@@ -35,8 +35,8 @@ func show_scenarios(scenarios: Array, progress, selected_scenario: Resource, act
 	scenario_list_panel.call("show_scenarios", scenarios, progress, selected_scenario, active_scenario_id)
 
 
-func show_scenario(scenario: Resource, status_text: String) -> void:
-	scenario_detail_panel.call("show_scenario", scenario, status_text)
+func show_scenario(scenario: Resource, status_text: String, campaign_progress = null) -> void:
+	scenario_detail_panel.call("show_scenario", scenario, status_text, campaign_progress)
 
 
 func show_party(party: Array[UnitDefinition], selected_unit_name: String) -> void:

@@ -478,7 +478,8 @@ func _refresh_planning_panel() -> void:
 	if planning_panel == null:
 		return
 	_update_campaign_controls()
-	planning_panel.call("show_scenario", selected_scenario, _scenario_campaign_status(selected_scenario))
+	var progress = campaign_manager.progress if campaign_manager != null else null
+	planning_panel.call("show_scenario", selected_scenario, _scenario_campaign_status(selected_scenario), progress)
 	planning_panel.call("show_party", planning_party, selected_unit_name)
 	planning_panel.call("show_unit", _find_planning_unit(selected_unit_name), planning_party)
 	_render_unit_actions()

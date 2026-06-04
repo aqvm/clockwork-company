@@ -19,7 +19,7 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 ## Scenario and Campaign
 
 - Add more scenario rule resolvers only when a scenario needs them. `iron_tollgate_armored_enemies` is the first mechanical rule and gives enemies +2 armor.
-- Make scenario rewards and content unlocks visibly change later options.
+- Make scenario rewards and content unlocks mechanically change later options after the campaign progression model is broader. Current UI shows scenario unlock state and content unlock state, but content IDs are still informational.
 - Add campaign save/load for:
   - completed scenarios
   - unlocked scenario IDs
