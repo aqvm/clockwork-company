@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="ItemDefinition" format=3 uid="uid://vk8pmhp62eqo"]
+
+[ext_resource type="Script" uid="uid://h21mlqiqe25f" path="res://scripts/data/item_definition.gd" id="1_item"]
+[ext_resource type="Script" uid="uid://bq86vbaajvphi" path="res://scripts/data/effect_definition.gd" id="2_effect"]
+
+[sub_resource type="Resource" id="Resource_union_mail_link"]
+script = ExtResource("2_effect")
+display_name = "Union Mail Link"
+tags = Array[String](["armor", "battle_start"])
+amount = 2
+
+[resource]
+script = ExtResource("1_item")
+display_name = "Union Mail"
+tags = Array[String](["armor", "union", "armored"])
+slot = "Armor"
+max_hp_modifier = 6
+armor_modifier = 2
+action_interval_modifier = 2
+effects = Array[ExtResource("2_effect")]([SubResource("Resource_union_mail_link")])

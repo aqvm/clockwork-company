@@ -5,6 +5,7 @@
 [resource]
 script = ExtResource("1_boots")
 display_name = "Light-Step Boots"
+tags = ["speed", "trinket"]
 slot = "Trinket"
 armor_modifier = -1
 action_interval_modifier = -2

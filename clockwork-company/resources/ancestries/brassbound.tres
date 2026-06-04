@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="AncestryDefinition" format=3 uid="uid://dfk5rxvjpakvn"]
+
+[ext_resource type="Script" uid="uid://cd1dshturnux8" path="res://scripts/data/ancestry_definition.gd" id="1_ancestry"]
+[ext_resource type="Script" uid="uid://ejchwjlwm2mx" path="res://scripts/data/ancestry_feature_definition.gd" id="2_feature"]
+
+[sub_resource type="Resource" id="Feature_return"]
+resource_name = "Spring Return"
+script = ExtResource("2_feature")
+display_name = "Spring Return"
+tags = Array[String](["machine", "counter"])
+trigger = "Damaged"
+feature_type = "Damage Attacker"
+amount = 2
+cooldown_turns = 4
+notes = "A deterministic counter-ping for machine-bodied units."
+
+[resource]
+resource_name = "Brassbound"
+script = ExtResource("1_ancestry")
+display_name = "Brassbound"
+tags = Array[String](["ancestry", "machine", "clockwork"])
+min_max_hp = 17
+max_max_hp = 23
+min_physical_damage = 4
+max_physical_damage = 6
+min_magic_damage = 1
+max_magic_damage = 3
+min_armor = 1
+max_armor = 3
+min_action_interval = 9
+max_action_interval = 12
+max_hp_growth = 1
+armor_growth = 1
+feature = SubResource("Feature_return")
+notes = "Built from hinges, debt, and someone else's warranty."

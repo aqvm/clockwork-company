@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="ItemDefinition" format=3 uid="uid://mjc7ukjsb7vs"]
+
+[ext_resource type="Script" uid="uid://h21mlqiqe25f" path="res://scripts/data/item_definition.gd" id="1_item"]
+[ext_resource type="Script" uid="uid://bq86vbaajvphi" path="res://scripts/data/effect_definition.gd" id="2_effect"]
+
+[sub_resource type="Resource" id="Resource_bellhammer_crack"]
+script = ExtResource("2_effect")
+display_name = "Bellhammer Crack"
+tags = Array[String](["armor_break", "hammer"])
+trigger = "Hit"
+target_selector = "Attack Target"
+effect_type = "Reduce Target Armor"
+amount = 2
+
+[resource]
+script = ExtResource("1_item")
+display_name = "Bellhammer"
+tags = Array[String](["weapon", "hammer", "slow", "armor_break"])
+physical_damage_modifier = 4
+armor_modifier = 1
+action_interval_modifier = 2
+effects = Array[ExtResource("2_effect")]([SubResource("Resource_bellhammer_crack")])

@@ -3,11 +3,20 @@ extends Resource
 class_name JobDefinition
 
 @export var display_name := ""
-@export var max_hp_modifier := 0
-@export var damage_modifier := 0
-@export var armor_modifier := 0
-@export var action_interval_modifier := 0
-@export var can_equip_weapon := true
-@export var can_equip_armor := true
-@export var can_equip_trinket := true
-@export_enum("None", "Guard Training", "First Aid", "Sharpened Edge") var job_effect := "None"
+@export var tags: Array[String] = []
+@export var max_hp_growth := 0
+@export var physical_damage_growth := 0
+@export var magic_damage_growth := 0
+@export var armor_growth := 0
+@export var action_interval_growth := 0
+@export var forbid_weapon := false
+@export var forbid_armor := false
+@export var forbid_helmet := false
+@export var forbid_trinket := false
+@export var skill: SkillDefinition = null
+@export var passive: PassiveDefinition = null
+@export var reaction: ReactionDefinition = null
+@export var default_tactic: TacticDefinition = null
+@export_range(1, 5, 1) var skill_unlock_level := 1
+@export_range(1, 5, 1) var passive_unlock_level := 2
+@export_range(1, 5, 1) var reaction_unlock_level := 3

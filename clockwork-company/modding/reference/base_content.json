@@ -1,109 +1,371 @@
 {
   "pack_id": "base_reference_pack",
   "pack_version": 1,
+  "ancestries": [
+	{
+	  "id": "brassbound",
+	  "display_name": "Brassbound",
+	  "tags": [
+		"ancestry",
+		"machine",
+        "clockwork"
+	  ],
+	  "min_max_hp": 17,
+	  "max_max_hp": 23,
+	  "min_physical_damage": 4,
+	  "max_physical_damage": 6,
+	  "min_magic_damage": 1,
+	  "max_magic_damage": 3,
+	  "min_armor": 1,
+	  "max_armor": 3,
+	  "min_action_interval": 9,
+	  "max_action_interval": 12,
+	  "max_hp_growth": 1,
+	  "physical_damage_growth": 0,
+	  "magic_damage_growth": 0,
+	  "armor_growth": 1,
+	  "action_interval_growth": 0,
+	  "feature": {
+		"display_name": "Spring Return",
+		"tags": [
+		  "machine",
+          "counter"
+		],
+		"trigger": "Damaged",
+		"condition": "Always",
+		"feature_type": "Damage Attacker",
+		"amount": 2,
+		"threshold_percent": 50,
+		"cooldown_turns": 4,
+		"notes": "A deterministic counter-ping for machine-bodied units."
+	  },
+	  "notes": "Reference ancestry entry. Base Resources include a wider ancestry set."
+	}
+  ],
   "items": [
 	{
 	  "id": "glass_focus",
 	  "display_name": "Glass Focus",
+	  "tags": [
+		"focus",
+        "damage"
+	  ],
 	  "slot": "Trinket",
 	  "max_hp_modifier": -2,
-	  "damage_modifier": 3,
+	  "magic_damage_modifier": 3,
 	  "armor_modifier": 0,
 	  "action_interval_modifier": 0,
-	  "trigger": "Attack",
-	  "effect": "Bonus Damage",
-	  "effect_amount": 2
+	  "effects": [
+		{
+		  "display_name": "Glass Focus Attack Burst",
+		  "tags": [
+			"damage",
+            "focus"
+		  ],
+		  "trigger": "Attack",
+		  "condition": "Always",
+		  "target_selector": "Attack Target",
+		  "effect_type": "Bonus Damage",
+		  "amount": 2,
+		  "threshold_percent": 50,
+		  "interval_ticks": 0,
+		  "once_per_battle": false
+		}
+	  ],
+	  "physical_damage_modifier": 0
 	},
 	{
 	  "id": "light_step_boots",
 	  "display_name": "Light-Step Boots",
+	  "tags": [
+		"speed",
+        "trinket"
+	  ],
 	  "slot": "Trinket",
 	  "max_hp_modifier": 0,
-	  "damage_modifier": 0,
 	  "armor_modifier": -1,
 	  "action_interval_modifier": -2,
-	  "trigger": "None",
-	  "effect": "None",
-	  "effect_amount": 0
+	  "physical_damage_modifier": 0,
+	  "magic_damage_modifier": 0
 	},
 	{
 	  "id": "reinforced_buckler",
 	  "display_name": "Reinforced Buckler",
+	  "tags": [
+		"armor",
+        "guard"
+	  ],
 	  "slot": "Armor",
 	  "max_hp_modifier": 6,
-	  "damage_modifier": 0,
 	  "armor_modifier": 2,
 	  "action_interval_modifier": 1,
-	  "trigger": "Battle Start",
-	  "effect": "Gain Armor",
-	  "effect_amount": 1
+	  "effects": [
+		{
+		  "display_name": "Buckler Brace",
+		  "tags": [
+			"armor",
+            "battle_start"
+		  ],
+		  "trigger": "Battle Start",
+		  "condition": "Always",
+		  "target_selector": "Self",
+		  "effect_type": "Gain Armor",
+		  "amount": 1,
+		  "threshold_percent": 50,
+		  "interval_ticks": 0,
+		  "once_per_battle": false
+		}
+	  ],
+	  "physical_damage_modifier": 0,
+	  "magic_damage_modifier": 0
 	},
 	{
 	  "id": "shortblade",
 	  "display_name": "Shortblade",
+	  "tags": [
+		"weapon",
+        "blade"
+	  ],
 	  "slot": "Weapon",
 	  "max_hp_modifier": 0,
-	  "damage_modifier": 2,
+	  "physical_damage_modifier": 2,
 	  "armor_modifier": 0,
 	  "action_interval_modifier": 0,
-	  "trigger": "Hit",
-	  "effect": "Reduce Target Armor",
-	  "effect_amount": 1
+	  "effects": [
+		{
+		  "display_name": "Shortblade Notch",
+		  "tags": [
+			"armor_break",
+            "blade"
+		  ],
+		  "trigger": "Hit",
+		  "condition": "Always",
+		  "target_selector": "Attack Target",
+		  "effect_type": "Reduce Target Armor",
+		  "amount": 1,
+		  "threshold_percent": 50,
+		  "interval_ticks": 0,
+		  "once_per_battle": false
+		}
+	  ],
+	  "magic_damage_modifier": 0
+	},
+	{
+	  "id": "stubborn_heart_charm",
+	  "display_name": "Stubborn Heart Charm",
+	  "tags": [
+		"trinket",
+		"survival",
+        "example"
+	  ],
+	  "slot": "Trinket",
+	  "max_hp_modifier": 0,
+	  "armor_modifier": 0,
+	  "action_interval_modifier": 0,
+	  "effects": [
+		{
+		  "display_name": "Stubborn Heart",
+		  "tags": [
+			"survival",
+            "low_hp"
+		  ],
+		  "trigger": "HP Below Threshold",
+		  "condition": "Self HP Below Percent",
+		  "target_selector": "Self",
+		  "effect_type": "Increase Max HP",
+		  "amount": 6,
+		  "threshold_percent": 50,
+		  "interval_ticks": 0,
+		  "once_per_battle": true
+		}
+	  ],
+	  "physical_damage_modifier": 0,
+	  "magic_damage_modifier": 0
 	}
   ],
   "jobs": [
 	{
 	  "id": "apprentice",
 	  "display_name": "Apprentice",
-	  "max_hp_modifier": -2,
-	  "damage_modifier": 0,
-	  "armor_modifier": 0,
-	  "action_interval_modifier": -1,
-	  "can_equip_weapon": false,
-	  "can_equip_armor": false,
-	  "can_equip_trinket": true,
-	  "job_effect": "First Aid"
+	  "max_hp_growth": 0,
+	  "physical_damage_growth": 0,
+	  "magic_damage_growth": 1,
+	  "armor_growth": 0,
+	  "action_interval_growth": -1,
+	  "forbid_weapon": false,
+	  "forbid_armor": false,
+	  "forbid_trinket": false,
+	  "skill": {
+		"display_name": "Lesson Spark",
+		"tags": [
+		  "training",
+		  "attack",
+          "magic"
+		],
+		"action": "Attack",
+		"default_target": "Frontmost Enemy",
+		"amount_modifier": 1
+	  },
+	  "passive": {
+		"display_name": "First Aid",
+		"tags": [
+          "support"
+		],
+		"passive_type": "Heal Bonus",
+		"amount": 2,
+		"cooldown_turns": 0
+	  },
+	  "reaction": {
+		"display_name": "Panic Lesson",
+		"tags": [
+		  "low_hp",
+          "reaction"
+		],
+		"trigger": "HP Below Threshold",
+		"condition": "Self HP Below Percent",
+		"reaction_type": "Heal Self",
+		"amount": 3,
+		"threshold_percent": 50,
+		"cooldown_turns": 3
+	  },
+	  "default_tactic": {
+		"display_name": "Practice Spark",
+		"tags": [
+          "job_default"
+		],
+		"condition": "Enemy Alive",
+		"action": "Job Skill",
+		"target": "Frontmost Enemy"
+	  },
+	  "forbid_helmet": false
 	},
 	{
 	  "id": "guard",
 	  "display_name": "Guard",
-	  "max_hp_modifier": 4,
-	  "damage_modifier": 0,
-	  "armor_modifier": 1,
-	  "action_interval_modifier": 1,
-	  "can_equip_weapon": true,
-	  "can_equip_armor": true,
-	  "can_equip_trinket": false,
-	  "job_effect": "Guard Training"
+	  "max_hp_growth": 2,
+	  "physical_damage_growth": 0,
+	  "magic_damage_growth": 0,
+	  "armor_growth": 1,
+	  "action_interval_growth": 0,
+	  "forbid_weapon": false,
+	  "forbid_armor": false,
+	  "forbid_trinket": false,
+	  "skill": {
+		"display_name": "Shield Wall",
+		"tags": [
+		  "guard",
+          "skill"
+		],
+		"action": "Guard",
+		"default_target": "Self",
+		"amount_modifier": 1
+	  },
+	  "passive": {
+		"display_name": "Guard Training",
+		"tags": [
+          "guard"
+		],
+		"passive_type": "Guard Armor Bonus",
+		"amount": 1,
+		"cooldown_turns": 0
+	  },
+	  "reaction": {
+		"display_name": "Hold Fast",
+		"tags": [
+		  "low_hp",
+          "reaction"
+		],
+		"trigger": "HP Below Threshold",
+		"condition": "Self HP Below Percent",
+		"reaction_type": "Gain Armor",
+		"amount": 3,
+		"threshold_percent": 50,
+		"cooldown_turns": 4
+	  },
+	  "default_tactic": {
+		"display_name": "Raise Shield Wall",
+		"tags": [
+          "job_default"
+		],
+		"condition": "Enemy Alive",
+		"action": "Job Skill",
+		"target": "Self"
+	  },
+	  "forbid_helmet": false
 	},
 	{
 	  "id": "scout",
 	  "display_name": "Scout",
-	  "max_hp_modifier": 0,
-	  "damage_modifier": 1,
-	  "armor_modifier": -1,
-	  "action_interval_modifier": -1,
-	  "can_equip_weapon": true,
-	  "can_equip_armor": false,
-	  "can_equip_trinket": true,
-	  "job_effect": "Sharpened Edge"
+	  "max_hp_growth": 0,
+	  "physical_damage_growth": 1,
+	  "magic_damage_growth": 0,
+	  "armor_growth": 0,
+	  "action_interval_growth": -1,
+	  "forbid_weapon": false,
+	  "forbid_armor": false,
+	  "forbid_trinket": false,
+	  "skill": {
+		"display_name": "Opening Cut",
+		"tags": [
+		  "swift",
+          "attack"
+		],
+		"action": "Attack",
+		"default_target": "Frontmost Enemy",
+		"amount_modifier": 1
+	  },
+	  "passive": {
+		"display_name": "Sharpened Edge",
+		"tags": [
+          "blade"
+		],
+		"passive_type": "Attack Damage Bonus",
+		"amount": 1,
+		"cooldown_turns": 0
+	  },
+	  "reaction": {
+		"display_name": "Slip Away",
+		"tags": [
+		  "damaged",
+          "reaction"
+		],
+		"trigger": "Damaged",
+		"condition": "Always",
+		"reaction_type": "Gain Armor",
+		"amount": 2,
+		"threshold_percent": 50,
+		"cooldown_turns": 3
+	  },
+	  "default_tactic": {
+		"display_name": "Find the Opening",
+		"tags": [
+          "job_default"
+		],
+		"condition": "Enemy Alive",
+		"action": "Job Skill",
+		"target": "Frontmost Enemy"
+	  },
+	  "forbid_helmet": false
 	}
   ],
   "tactics": [
 	{
 	  "id": "attack_frontmost",
+	  "display_name": "Attack Frontmost",
 	  "condition": "Always",
 	  "action": "Attack",
 	  "target": "Frontmost Enemy"
 	},
 	{
 	  "id": "guard_when_enemy_alive",
+	  "display_name": "Guard While Threatened",
 	  "condition": "Enemy Alive",
 	  "action": "Guard",
 	  "target": "Self"
 	},
 	{
 	  "id": "heal_lowest_ally_below_half",
+	  "display_name": "Heal Lowest Ally",
 	  "condition": "Ally HP Below Half",
 	  "action": "Heal",
 	  "target": "Lowest HP Ally"
@@ -117,7 +379,9 @@
 	  "weapon_id": "",
 	  "armor_id": "",
 	  "trinket_id": "glass_focus",
-	  "tactic_ids": ["attack_frontmost"]
+	  "tactic_ids": [
+        "attack_frontmost"
+	  ]
 	},
 	{
 	  "id": "apprentice_support",
@@ -126,7 +390,10 @@
 	  "weapon_id": "",
 	  "armor_id": "",
 	  "trinket_id": "",
-	  "tactic_ids": ["heal_lowest_ally_below_half", "attack_frontmost"]
+	  "tactic_ids": [
+		"heal_lowest_ally_below_half",
+        "attack_frontmost"
+	  ]
 	},
 	{
 	  "id": "guard_buckler",
@@ -135,7 +402,10 @@
 	  "weapon_id": "",
 	  "armor_id": "reinforced_buckler",
 	  "trinket_id": "",
-	  "tactic_ids": ["guard_when_enemy_alive", "attack_frontmost"]
+	  "tactic_ids": [
+		"guard_when_enemy_alive",
+        "attack_frontmost"
+	  ]
 	},
 	{
 	  "id": "guard_forbidden_boots",
@@ -144,7 +414,10 @@
 	  "weapon_id": "",
 	  "armor_id": "",
 	  "trinket_id": "light_step_boots",
-	  "tactic_ids": ["guard_when_enemy_alive", "attack_frontmost"]
+	  "tactic_ids": [
+		"guard_when_enemy_alive",
+        "attack_frontmost"
+	  ]
 	},
 	{
 	  "id": "scout_shortblade",
@@ -153,7 +426,9 @@
 	  "weapon_id": "shortblade",
 	  "armor_id": "",
 	  "trinket_id": "",
-	  "tactic_ids": ["attack_frontmost"]
+	  "tactic_ids": [
+        "attack_frontmost"
+	  ]
 	},
 	{
 	  "id": "scout_support_boots",
@@ -162,7 +437,10 @@
 	  "weapon_id": "",
 	  "armor_id": "",
 	  "trinket_id": "light_step_boots",
-	  "tactic_ids": ["heal_lowest_ally_below_half", "attack_frontmost"]
+	  "tactic_ids": [
+		"heal_lowest_ally_below_half",
+        "attack_frontmost"
+	  ]
 	}
   ],
   "units": [
@@ -171,60 +449,72 @@
 	  "display_name": "Alden Guard",
 	  "team": "Allies",
 	  "max_hp": 34,
-	  "damage": 6,
+	  "physical_damage": 6,
+	  "magic_damage": 0,
 	  "armor": 2,
 	  "action_interval": 12,
-	  "loadout_id": "guard_buckler"
+	  "loadout_id": "guard_buckler",
+	  "ancestry_id": "brassbound"
 	},
 	{
 	  "id": "mira_scout",
 	  "display_name": "Mira Scout",
 	  "team": "Allies",
 	  "max_hp": 22,
-	  "damage": 5,
+	  "physical_damage": 5,
+	  "magic_damage": 0,
 	  "armor": 1,
 	  "action_interval": 8,
-	  "loadout_id": "scout_support_boots"
+	  "loadout_id": "scout_support_boots",
+	  "ancestry_id": "brassbound"
 	},
 	{
 	  "id": "sol_apprentice",
 	  "display_name": "Sol Apprentice",
 	  "team": "Allies",
 	  "max_hp": 20,
-	  "damage": 8,
+	  "physical_damage": 2,
+	  "magic_damage": 8,
 	  "armor": 0,
 	  "action_interval": 10,
-	  "loadout_id": "apprentice_focus"
+	  "loadout_id": "apprentice_focus",
+	  "ancestry_id": "brassbound"
 	},
 	{
 	  "id": "iron_brute",
 	  "display_name": "Iron Brute",
 	  "team": "Enemies",
 	  "max_hp": 32,
-	  "damage": 7,
+	  "physical_damage": 7,
+	  "magic_damage": 0,
 	  "armor": 2,
 	  "action_interval": 13,
-	  "loadout_id": "guard_forbidden_boots"
+	  "loadout_id": "guard_forbidden_boots",
+	  "ancestry_id": "brassbound"
 	},
 	{
 	  "id": "ash_cutpurse",
 	  "display_name": "Ash Cutpurse",
 	  "team": "Enemies",
 	  "max_hp": 20,
-	  "damage": 6,
+	  "physical_damage": 6,
+	  "magic_damage": 0,
 	  "armor": 1,
 	  "action_interval": 9,
-	  "loadout_id": "scout_shortblade"
+	  "loadout_id": "scout_shortblade",
+	  "ancestry_id": "brassbound"
 	},
 	{
 	  "id": "glass_wisp",
 	  "display_name": "Glass Wisp",
 	  "team": "Enemies",
 	  "max_hp": 16,
-	  "damage": 9,
+	  "physical_damage": 3,
+	  "magic_damage": 9,
 	  "armor": 0,
 	  "action_interval": 14,
-	  "loadout_id": "apprentice_support"
+	  "loadout_id": "apprentice_support",
+	  "ancestry_id": "brassbound"
 	}
   ],
   "demo_roster": [

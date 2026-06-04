@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="UnitLoadoutDefinition" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/unit_loadout_definition.gd" id="1_loadout"]
+[ext_resource type="Resource" path="res://resources/jobs/lamplighter.tres" id="2_job"]
+[ext_resource type="Resource" path="res://resources/items/hourhand_spear.tres" id="3_weapon"]
+[ext_resource type="Resource" path="res://resources/items/oath_pin.tres" id="4_trinket"]
+[ext_resource type="Resource" path="res://resources/items/typhon_circlet.tres" id="helmet_item"]
+[ext_resource type="Resource" path="res://resources/tactics/last_candle.tres" id="5_tactic"]
+[ext_resource type="Resource" path="res://resources/tactics/steady_strike.tres" id="6_tactic"]
+
+[resource]
+script = ExtResource("1_loadout")
+display_name = "Lamplighter Hourhand"
+current_job = ExtResource("2_job")
+weapon = ExtResource("3_weapon")
+trinket = ExtResource("4_trinket")
+tactics = [ExtResource("5_tactic"), ExtResource("6_tactic")]
+

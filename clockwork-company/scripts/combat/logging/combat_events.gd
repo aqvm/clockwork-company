@@ -4,6 +4,14 @@ class_name CombatEvents
 const Schema := preload("res://scripts/combat/logging/combat_event_schema.gd")
 
 
+static func battle_start() -> Dictionary:
+	return {
+		"event_type": Schema.EVENT_BATTLE_START,
+		"payload": {},
+		"tags": ["replay", "battle_start"],
+	}
+
+
 static func turn_start(actor, next_action_time_before: int) -> Dictionary:
 	return {
 		"event_type": Schema.EVENT_TURN_START,
@@ -150,6 +158,19 @@ static func job_effect(actor, effect_name: String, details: String) -> Dictionar
 			"details": details,
 		},
 		"tags": ["job_effect"],
+	}
+
+
+static func ancestry_feature(actor, feature_name: String, details: String) -> Dictionary:
+	return {
+		"event_type": Schema.EVENT_ANCESTRY_FEATURE,
+		"payload": {
+			"actor_id": actor.unit_id,
+			"actor": actor.unit_name,
+			"feature": feature_name,
+			"details": details,
+		},
+		"tags": ["ancestry_feature"],
 	}
 
 

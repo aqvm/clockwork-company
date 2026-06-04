@@ -8,50 +8,80 @@
       "display_name": "Tower Shield IT",
       "slot": "Armor",
       "max_hp_modifier": 10,
-      "damage_modifier": -2,
       "armor_modifier": 4,
       "action_interval_modifier": 3,
-      "trigger": "Battle Start",
-      "effect": "Gain Armor",
-      "effect_amount": 2
+      "effects": [
+        {
+          "display_name": "Tower Shield IT Brace",
+          "tags": ["armor", "battle_start"],
+          "trigger": "Battle Start",
+          "condition": "Always",
+          "target_selector": "Self",
+          "effect_type": "Gain Armor",
+          "amount": 2,
+          "threshold_percent": 50,
+          "interval_ticks": 0,
+          "once_per_battle": false
+        }
+      ],
+      "physical_damage_modifier": 0,
+      "magic_damage_modifier": 0
     },
     {
       "id": "glass_focus",
       "display_name": "Glass Focus (IT Override)",
       "slot": "Trinket",
       "max_hp_modifier": -6,
-      "damage_modifier": 6,
       "armor_modifier": 0,
       "action_interval_modifier": 1,
-      "trigger": "Attack",
-      "effect": "Bonus Damage",
-      "effect_amount": 4
+      "effects": [
+        {
+          "display_name": "Glass Focus IT Burst",
+          "tags": ["damage", "focus", "magic"],
+          "trigger": "Attack",
+          "condition": "Always",
+          "target_selector": "Attack Target",
+          "effect_type": "Bonus Damage",
+          "amount": 4,
+          "threshold_percent": 50,
+          "interval_ticks": 0,
+          "once_per_battle": false
+        }
+      ],
+      "physical_damage_modifier": 0,
+      "magic_damage_modifier": 0
     }
   ],
   "jobs": [
     {
       "id": "warden_it",
       "display_name": "Warden IT",
-      "max_hp_modifier": 8,
-      "damage_modifier": -1,
-      "armor_modifier": 3,
-      "action_interval_modifier": 2,
-      "can_equip_weapon": true,
-      "can_equip_armor": true,
-      "can_equip_trinket": true,
-      "job_effect": "Guard Training"
+      "forbid_weapon": false,
+      "forbid_armor": false,
+      "forbid_helmet": false,
+      "forbid_trinket": false,
+      "passive": {
+        "display_name": "Warden IT Habit",
+        "tags": [],
+        "passive_type": "None",
+        "amount": 0,
+        "cooldown_turns": 0
+      }
     },
     {
       "id": "apprentice",
       "display_name": "Apprentice (IT Override)",
-      "max_hp_modifier": -4,
-      "damage_modifier": 1,
-      "armor_modifier": 0,
-      "action_interval_modifier": -2,
-      "can_equip_weapon": false,
-      "can_equip_armor": false,
-      "can_equip_trinket": true,
-      "job_effect": "First Aid"
+      "forbid_weapon": false,
+      "forbid_armor": false,
+      "forbid_helmet": false,
+      "forbid_trinket": false,
+      "passive": {
+        "display_name": "Apprentice (IT Override) Habit",
+        "tags": [],
+        "passive_type": "None",
+        "amount": 0,
+        "cooldown_turns": 0
+      }
     }
   ],
   "tactics": [
@@ -100,20 +130,24 @@
       "display_name": "Borin Anchor IT",
       "team": "Allies",
       "max_hp": 46,
-      "damage": 5,
       "armor": 3,
       "action_interval": 15,
-      "loadout_id": "warden_anchor_it"
+      "loadout_id": "warden_anchor_it",
+      "physical_damage": 5,
+      "magic_damage": 0,
+      "ancestry_id": "brassbound"
     },
     {
       "id": "mira_scout",
       "display_name": "Mira Scout (IT Override)",
       "team": "Allies",
       "max_hp": 24,
-      "damage": 4,
       "armor": 1,
       "action_interval": 70,
-      "loadout_id": "scout_support_boots"
+      "loadout_id": "scout_support_boots",
+      "physical_damage": 4,
+      "magic_damage": 0,
+      "ancestry_id": "brassbound"
     }
   ],
   "demo_roster": [

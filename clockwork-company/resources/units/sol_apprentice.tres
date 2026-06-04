@@ -1,14 +1,18 @@
-[gd_resource type="Resource" script_class="UnitDefinition" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="UnitDefinition" load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/unit_definition.gd" id="1_sol"]
 [ext_resource type="Resource" path="res://resources/loadouts/apprentice_focus.tres" id="2_loadout"]
 
+[ext_resource type="Resource" path="res://resources/ancestries/emberkin.tres" id="3_ancestry"]
 [resource]
 script = ExtResource("1_sol")
 display_name = "Sol Apprentice"
 team = "Allies"
+ancestry = ExtResource("3_ancestry")
 max_hp = 20
-damage = 8
+physical_damage = 2
+magic_damage = 8
 armor = 0
 action_interval = 10
 loadout = ExtResource("2_loadout")
+

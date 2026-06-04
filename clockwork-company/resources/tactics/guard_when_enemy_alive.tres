@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_tactic")
+display_name = "Guard While Threatened"
 condition = "Enemy Alive"
 action = "Guard"
 target = "Self"

@@ -24,12 +24,10 @@ Demonstrates three common mod actions:
   - `display_name`
   - `slot`
   - `max_hp_modifier`
-  - `damage_modifier`
+  - `physical_damage_modifier`
+  - `magic_damage_modifier`
   - `armor_modifier`
   - `action_interval_modifier`
-  - `trigger`
-  - `effect`
-  - `effect_amount`
 
 - `loadouts[]`:
   - `id`

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="UnitLoadoutDefinition" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/unit_loadout_definition.gd" id="1_loadout"]
+[ext_resource type="Resource" path="res://resources/jobs/roofer.tres" id="2_job"]
+[ext_resource type="Resource" path="res://resources/items/mosquito_rapier.tres" id="3_weapon"]
+[ext_resource type="Resource" path="res://resources/items/pocket_sundial.tres" id="4_trinket"]
+[ext_resource type="Resource" path="res://resources/items/redcap_hood.tres" id="helmet_item"]
+[ext_resource type="Resource" path="res://resources/tactics/clean_finish.tres" id="5_tactic"]
+
+[resource]
+script = ExtResource("1_loadout")
+display_name = "Roofer Mosquito"
+current_job = ExtResource("2_job")
+weapon = ExtResource("3_weapon")
+trinket = ExtResource("4_trinket")
+tactics = [ExtResource("5_tactic")]
+

@@ -1,14 +1,18 @@
-[gd_resource type="Resource" script_class="UnitDefinition" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="UnitDefinition" load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/unit_definition.gd" id="1_glass"]
 [ext_resource type="Resource" path="res://resources/loadouts/apprentice_support.tres" id="2_loadout"]
 
+[ext_resource type="Resource" path="res://resources/ancestries/emberkin.tres" id="3_ancestry"]
 [resource]
 script = ExtResource("1_glass")
 display_name = "Glass Wisp"
 team = "Enemies"
+ancestry = ExtResource("3_ancestry")
 max_hp = 16
-damage = 9
+physical_damage = 3
+magic_damage = 9
 armor = 0
 action_interval = 14
 loadout = ExtResource("2_loadout")
+

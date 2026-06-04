@@ -7,6 +7,8 @@ This project supports a hybrid data workflow:
 
 The runtime loader merges base Resource-derived data with JSON override/addition packs.
 
+Current JSON content supports freeform `tags` on ancestries, items, jobs, tactics, loadouts, and units. Tactics also support an optional `display_name`, which is used in setup and combat log text when present. Ancestries support base-stat ranges, baseline growth, and one always-on feature. Jobs support nested skill, passive, reaction, default-tactic, growth, equipment-forbid, and unlock-level payloads. Units support ancestry references, physical/magic damage, and per-job progress. Loadouts can optionally equip learned skill/passive/reaction payloads that override the current job defaults, plus weapon, armor, helmet, and trinket item ids. Equipment is allowed by default unless a job explicitly sets a `forbid_*` field. Items support declarative `effects` arrays for the first version of data-authored item behavior. See `clockwork-company/modding/reference/base_content.options.md` for the supported triggers, conditions, targets, effect types, and currently implemented combinations.
+
 ## Active Mod Folder
 
 - Active mod JSON files: `clockwork-company/mods/*.json`

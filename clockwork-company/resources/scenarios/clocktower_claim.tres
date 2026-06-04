@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="ScenarioDefinition" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/scenario_definition.gd" id="1_scenario"]
+[ext_resource type="Resource" path="res://resources/encounters/phase7_fight_04_vault_annex.tres" id="2_encounter_a"]
+[ext_resource type="Resource" path="res://resources/encounters/catalog_test_debt_office.tres" id="3_encounter_b"]
+[ext_resource type="Resource" path="res://resources/encounters/phase7_fight_05_clocktower.tres" id="4_encounter_c"]
+[ext_resource type="Resource" path="res://resources/rewards/catalog_reward_bellhammer.tres" id="5_reward"]
+[ext_resource type="Resource" path="res://resources/rewards/catalog_reward_brass_lung.tres" id="6_reward"]
+
+[resource]
+script = ExtResource("1_scenario")
+scenario_id = "clocktower_claim"
+display_name = "Clocktower Claim"
+description = "A fourth sample scenario that proves campaign chaining continues after the first finale-shaped contract."
+story_intro = "With the tollgate broken, a ledger crew retreats into the clocktower to claim the company's contract as collateral."
+story_outro = "The clocktower keeps ticking, but its books no longer name the company as debt."
+party_size = 3
+encounters = [ExtResource("2_encounter_a"), ExtResource("3_encounter_b"), ExtResource("4_encounter_c")]
+recommended_level_min = 3
+recommended_level_max = 5
+tags = ["clocktower", "debt", "campaign-chain"]
+rewards = [ExtResource("5_reward"), ExtResource("6_reward")]
+content_unlocks = ["clocktower_claim_ledger"]

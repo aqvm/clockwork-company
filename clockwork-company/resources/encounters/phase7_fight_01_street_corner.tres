@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="EncounterDefinition" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/encounter_definition.gd" id="1_encounter"]
+[ext_resource type="Resource" path="res://resources/units/training_brute.tres" id="2_brute"]
+[ext_resource type="Resource" path="res://resources/units/lane_knifer.tres" id="3_knifer"]
+[ext_resource type="Resource" path="res://resources/units/backroom_mender.tres" id="4_mender"]
+
+[resource]
+script = ExtResource("1_encounter")
+display_name = "Street-Corner Shakedown"
+scout_text = "A soft opening fight: one frontliner, one fast knife, one fragile support."
+enemy_units = [ExtResource("2_brute"), ExtResource("3_knifer"), ExtResource("4_mender")]

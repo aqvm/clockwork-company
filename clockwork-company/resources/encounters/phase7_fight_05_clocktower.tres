@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="EncounterDefinition" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/encounter_definition.gd" id="1_encounter"]
+[ext_resource type="Resource" path="res://resources/units/vault_bulwark.tres" id="2_bulwark"]
+[ext_resource type="Resource" path="res://resources/units/roofline_duelist.tres" id="3_duelist"]
+[ext_resource type="Resource" path="res://resources/units/mercy_engine.tres" id="4_engine"]
+
+[resource]
+script = ExtResource("1_encounter")
+display_name = "Clocktower Lockdown"
+scout_text = "The capstone fight: durable front, dangerous knife, and a real healer."
+enemy_units = [ExtResource("2_bulwark"), ExtResource("3_duelist"), ExtResource("4_engine")]

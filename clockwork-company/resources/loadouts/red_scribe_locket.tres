@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="UnitLoadoutDefinition" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/unit_loadout_definition.gd" id="1_loadout"]
+[ext_resource type="Resource" path="res://resources/jobs/red_scribe.tres" id="2_job"]
+[ext_resource type="Resource" path="res://resources/items/namesake_locket.tres" id="3_trinket"]
+[ext_resource type="Resource" path="res://resources/items/typhon_circlet.tres" id="helmet_item"]
+[ext_resource type="Resource" path="res://resources/tactics/triage_then_strike.tres" id="4_tactic"]
+[ext_resource type="Resource" path="res://resources/tactics/steady_strike.tres" id="5_tactic"]
+
+[resource]
+script = ExtResource("1_loadout")
+display_name = "Red Scribe Locket"
+current_job = ExtResource("2_job")
+trinket = ExtResource("3_trinket")
+tactics = [ExtResource("4_tactic"), ExtResource("5_tactic")]
+

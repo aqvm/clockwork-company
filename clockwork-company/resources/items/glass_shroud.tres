@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="ItemDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_definition.gd" id="1_item"]
+[ext_resource type="Script" path="res://scripts/data/effect_definition.gd" id="2_effect"]
+
+[sub_resource type="Resource" id="Resource_glass_shroud_shatter"]
+script = ExtResource("2_effect")
+display_name = "Glass Shroud Shatter"
+tags = ["death", "backlash"]
+trigger = "Death"
+target_selector = "Killer"
+effect_type = "Damage Killer"
+amount = 4
+
+[resource]
+script = ExtResource("1_item")
+display_name = "Glass Shroud"
+tags = ["armor", "fragile", "death_backlash"]
+slot = "Armor"
+max_hp_modifier = -4
+action_interval_modifier = -1
+effects = [SubResource("Resource_glass_shroud_shatter")]

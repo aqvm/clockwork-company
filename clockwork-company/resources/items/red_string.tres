@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="ItemDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_definition.gd" id="1_item"]
+[ext_resource type="Script" path="res://scripts/data/effect_definition.gd" id="2_effect"]
+
+[sub_resource type="Resource" id="Resource_red_string_snap"]
+script = ExtResource("2_effect")
+display_name = "Red String Snap"
+tags = ["death", "backlash"]
+trigger = "Death"
+target_selector = "Killer"
+effect_type = "Damage Killer"
+amount = 2
+
+[resource]
+script = ExtResource("1_item")
+display_name = "Red String"
+tags = ["trinket", "death_backlash", "fragile"]
+slot = "Trinket"
+physical_damage_modifier = 1
+effects = [SubResource("Resource_red_string_snap")]

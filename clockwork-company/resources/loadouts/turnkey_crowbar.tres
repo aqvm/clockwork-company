@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="UnitLoadoutDefinition" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/unit_loadout_definition.gd" id="1_loadout"]
+[ext_resource type="Resource" path="res://resources/jobs/turnkey.tres" id="2_job"]
+[ext_resource type="Resource" path="res://resources/items/crowbar_prayer.tres" id="3_weapon"]
+[ext_resource type="Resource" path="res://resources/items/clocktower_greaves.tres" id="4_armor"]
+[ext_resource type="Resource" path="res://resources/items/brass_cap.tres" id="helmet_item"]
+[ext_resource type="Resource" path="res://resources/tactics/hold_the_line.tres" id="5_tactic"]
+[ext_resource type="Resource" path="res://resources/tactics/steady_strike.tres" id="6_tactic"]
+
+[resource]
+script = ExtResource("1_loadout")
+display_name = "Turnkey Crowbar"
+current_job = ExtResource("2_job")
+weapon = ExtResource("3_weapon")
+armor = ExtResource("4_armor")
+helmet = ExtResource("helmet_item")
+tactics = [ExtResource("5_tactic"), ExtResource("6_tactic")]
+

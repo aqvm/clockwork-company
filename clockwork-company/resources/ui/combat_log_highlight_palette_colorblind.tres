@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CombatLogHighlightPalette" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/combat_log_highlight_palette.gd" id="1_palette_script"]
+
+[resource]
+script = ExtResource("1_palette_script")
+timestamp_color = Color(0.62, 0.64, 0.68, 1)
+attack_color = Color(0.9, 0.62, 0, 1)
+damage_color = Color(0.84, 0.37, 0, 1)
+heal_color = Color(0, 0.62, 0.45, 1)
+guard_color = Color(0, 0.45, 0.7, 1)
+tactic_color = Color(0.94, 0.89, 0.26, 1)
+job_effect_color = Color(0.8, 0.47, 0.65, 1)
+item_trigger_color = Color(0.34, 0.71, 0.91, 1)
+defeat_color = Color(0.53, 0.13, 0.33, 1)
+result_color = Color(0.95, 0.95, 0.88, 1)

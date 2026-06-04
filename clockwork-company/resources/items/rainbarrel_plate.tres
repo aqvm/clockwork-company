@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="ItemDefinition" format=3 uid="uid://bvf7g7pyachl4"]
+
+[ext_resource type="Script" uid="uid://h21mlqiqe25f" path="res://scripts/data/item_definition.gd" id="1_item"]
+[ext_resource type="Script" uid="uid://bq86vbaajvphi" path="res://scripts/data/effect_definition.gd" id="2_effect"]
+
+[sub_resource type="Resource" id="Resource_rainbarrel_slosh"]
+script = ExtResource("2_effect")
+display_name = "Rainbarrel Slosh"
+tags = Array[String](["armor", "battle_start"])
+amount = 1
+
+[resource]
+script = ExtResource("1_item")
+display_name = "Rainbarrel Plate"
+tags = Array[String](["armor", "heavy", "armored"])
+slot = "Armor"
+max_hp_modifier = 8
+armor_modifier = 3
+action_interval_modifier = 3
+effects = Array[ExtResource("2_effect")]([SubResource("Resource_rainbarrel_slosh")])

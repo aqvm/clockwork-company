@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="ItemDefinition" format=3 uid="uid://duge2ajibioa2"]
+
+[ext_resource type="Script" uid="uid://h21mlqiqe25f" path="res://scripts/data/item_definition.gd" id="1_item"]
+[ext_resource type="Script" uid="uid://bq86vbaajvphi" path="res://scripts/data/effect_definition.gd" id="2_effect"]
+
+[sub_resource type="Resource" id="Resource_mosquito_lunge"]
+script = ExtResource("2_effect")
+display_name = "Mosquito Lunge"
+tags = Array[String](["damage", "swift"])
+trigger = "Attack"
+target_selector = "Attack Target"
+effect_type = "Bonus Damage"
+amount = 1
+
+[resource]
+script = ExtResource("1_item")
+display_name = "Mosquito Rapier"
+tags = Array[String](["weapon", "blade", "swift"])
+physical_damage_modifier = 1
+armor_modifier = -1
+action_interval_modifier = -2
+effects = Array[ExtResource("2_effect")]([SubResource("Resource_mosquito_lunge")])

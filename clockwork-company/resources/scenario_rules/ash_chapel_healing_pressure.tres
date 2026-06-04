@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ScenarioRuleDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/scenario_rule_definition.gd" id="1_rule"]
+
+[resource]
+script = ExtResource("1_rule")
+rule_id = "ash_chapel_healing_pressure"
+display_name = "Ash Chapel Pressure"
+description = "Data-only placeholder: this scenario is meant to pressure healing and recovery decisions later."
+tags = ["status", "healing", "placeholder"]

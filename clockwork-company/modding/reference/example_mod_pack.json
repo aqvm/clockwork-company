@@ -7,12 +7,10 @@
 	  "display_name": "Tower Shield",
 	  "slot": "Armor",
 	  "max_hp_modifier": 8,
-	  "damage_modifier": -1,
 	  "armor_modifier": 3,
 	  "action_interval_modifier": 2,
-	  "trigger": "None",
-	  "effect": "None",
-	  "effect_amount": 0
+	  "physical_damage_modifier": 0,
+	  "magic_damage_modifier": 0
 	}
   ],
   "loadouts": [
@@ -24,7 +22,10 @@
   "units": [
 	{
 	  "id": "mira_scout",
-	  "action_interval": 7
+	  "action_interval": 7,
+	  "physical_damage": 1,
+	  "magic_damage": 0,
+	  "ancestry_id": "brassbound"
 	}
   ]
 }

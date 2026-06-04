@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="ItemDefinition" format=3 uid="uid://cocxj4sad3xg7"]
+
+[ext_resource type="Script" uid="uid://h21mlqiqe25f" path="res://scripts/data/item_definition.gd" id="1_item"]
+[ext_resource type="Script" uid="uid://bq86vbaajvphi" path="res://scripts/data/effect_definition.gd" id="2_effect"]
+
+[sub_resource type="Resource" id="Resource_boilermark_pressure"]
+script = ExtResource("2_effect")
+display_name = "Boilermark Pressure"
+tags = Array[String](["machine", "magic"])
+trigger = "Attack"
+condition = "Target Has Tag"
+target_selector = "Attack Target"
+effect_type = "Bonus Damage"
+amount = 2
+
+[resource]
+script = ExtResource("1_item")
+display_name = "Boilermark"
+tags = Array[String](["trinket", "machine", "damage"])
+slot = "Trinket"
+magic_damage_modifier = 2
+action_interval_modifier = 1
+effects = Array[ExtResource("2_effect")]([SubResource("Resource_boilermark_pressure")])

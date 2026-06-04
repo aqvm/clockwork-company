@@ -1,11 +1,20 @@
 [gd_resource type="Resource" script_class="ItemDefinition" format=3 uid="uid://c8n2w7jla6pxt"]
 
 [ext_resource type="Script" uid="uid://h21mlqiqe25f" path="res://scripts/data/item_definition.gd" id="1_shortblade"]
+[ext_resource type="Script" uid="uid://bq86vbaajvphi" path="res://scripts/data/effect_definition.gd" id="2_effect"]
+
+[sub_resource type="Resource" id="Resource_shortblade_hit"]
+script = ExtResource("2_effect")
+display_name = "Shortblade Notch"
+tags = Array[String](["armor_break", "blade"])
+trigger = "Hit"
+target_selector = "Attack Target"
+effect_type = "Reduce Target Armor"
+amount = 1
 
 [resource]
 script = ExtResource("1_shortblade")
 display_name = "Shortblade"
-damage_modifier = 2
-trigger = "Hit"
-effect = "Reduce Target Armor"
-effect_amount = 1
+tags = Array[String](["weapon", "blade"])
+physical_damage_modifier = 2
+effects = Array[ExtResource("2_effect")]([SubResource("Resource_shortblade_hit")])

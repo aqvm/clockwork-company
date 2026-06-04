@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="AncestryDefinition" format=3 uid="uid://csahldl8u8r8g"]
+
+[ext_resource type="Script" uid="uid://cd1dshturnux8" path="res://scripts/data/ancestry_definition.gd" id="1_ancestry"]
+[ext_resource type="Script" uid="uid://ejchwjlwm2mx" path="res://scripts/data/ancestry_feature_definition.gd" id="2_feature"]
+
+[sub_resource type="Resource" id="Feature_gore"]
+resource_name = "Goring Charge"
+script = ExtResource("2_feature")
+display_name = "Goring Charge"
+tags = Array[String](["physical", "charge"])
+trigger = "Attack"
+feature_type = "Bonus Damage"
+amount = 3
+cooldown_turns = 3
+notes = "A front-loaded body check. Strong, memorable, and intentionally cooldown-gated."
+
+[resource]
+resource_name = "Minotaur"
+script = ExtResource("1_ancestry")
+display_name = "Minotaur"
+tags = Array[String](["ancestry", "large", "horned"])
+min_max_hp = 22
+max_max_hp = 28
+min_physical_damage = 6
+max_physical_damage = 8
+max_magic_damage = 1
+min_armor = 1
+max_armor = 3
+max_action_interval = 13
+max_hp_growth = 2
+physical_damage_growth = 1
+armor_growth = 1
+feature = SubResource("Feature_gore")
+notes = "Big bodies, short tempers, and excellent door-opening arguments."

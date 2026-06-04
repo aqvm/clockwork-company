@@ -1,13 +1,17 @@
-[gd_resource type="Resource" script_class="UnitDefinition" load_steps=3 format=3 uid="uid://jfidqdgtjybf"]
+[gd_resource type="Resource" script_class="UnitDefinition" load_steps=4 format=3 uid="uid://jfidqdgtjybf"]
 
 [ext_resource type="Script" uid="uid://dyw5fadftvlju" path="res://scripts/data/unit_definition.gd" id="1_alden"]
 [ext_resource type="Resource" path="res://resources/loadouts/guard_buckler.tres" id="2_loadout"]
 
+[ext_resource type="Resource" path="res://resources/ancestries/stonekin.tres" id="3_ancestry"]
 [resource]
 script = ExtResource("1_alden")
 display_name = "Alden Guard"
+ancestry = ExtResource("3_ancestry")
 max_hp = 34
-damage = 6
+physical_damage = 6
+magic_damage = 0
 armor = 2
 action_interval = 12
 loadout = ExtResource("2_loadout")
+

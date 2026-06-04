@@ -1,0 +1,39 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/planning_workbench_panel.gd" id="1_planning_workbench_panel"]
+[ext_resource type="PackedScene" path="res://scenes/scenario_list_panel.tscn" id="2_scenario_list_panel"]
+[ext_resource type="PackedScene" path="res://scenes/scenario_detail_panel.tscn" id="3_scenario_detail_panel"]
+[ext_resource type="PackedScene" path="res://scenes/party_panel.tscn" id="4_party_panel"]
+[ext_resource type="PackedScene" path="res://scenes/unit_detail_panel.tscn" id="5_unit_detail_panel"]
+[ext_resource type="PackedScene" path="res://scenes/unit_action_panel.tscn" id="6_unit_action_panel"]
+
+[node name="PlanningWorkbenchPanel" type="PanelContainer"]
+custom_minimum_size = Vector2(0, 220)
+size_flags_horizontal = 3
+script = ExtResource("1_planning_workbench_panel")
+
+[node name="PlanningRow" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="ScenarioListPanel" parent="PlanningRow" instance=ExtResource("2_scenario_list_panel")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="ScenarioDetailPanel" parent="PlanningRow" instance=ExtResource("3_scenario_detail_panel")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="PartyPanel" parent="PlanningRow" instance=ExtResource("4_party_panel")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="UnitDetailPanel" parent="PlanningRow" instance=ExtResource("5_unit_detail_panel")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="UnitActionPanel" parent="PlanningRow" instance=ExtResource("6_unit_action_panel")]
+unique_name_in_owner = true
+layout_mode = 2

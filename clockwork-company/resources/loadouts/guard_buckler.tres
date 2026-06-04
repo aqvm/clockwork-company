@@ -1,8 +1,9 @@
-[gd_resource type="Resource" script_class="UnitLoadoutDefinition" load_steps=6 format=3]
+[gd_resource type="Resource" script_class="UnitLoadoutDefinition" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/unit_loadout_definition.gd" id="1_loadout"]
 [ext_resource type="Resource" path="res://resources/jobs/guard.tres" id="2_job"]
 [ext_resource type="Resource" path="res://resources/items/reinforced_buckler.tres" id="3_armor"]
+[ext_resource type="Resource" path="res://resources/items/horncap.tres" id="helmet_item"]
 [ext_resource type="Resource" path="res://resources/tactics/guard_when_enemy_alive.tres" id="4_guard"]
 [ext_resource type="Resource" path="res://resources/tactics/attack_frontmost.tres" id="5_attack"]
 
@@ -11,4 +12,6 @@ script = ExtResource("1_loadout")
 display_name = "Guard Buckler"
 current_job = ExtResource("2_job")
 armor = ExtResource("3_armor")
+helmet = ExtResource("helmet_item")
 tactics = [ExtResource("4_guard"), ExtResource("5_attack")]
+

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="RewardDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/reward_definition.gd" id="1_reward"]
+[ext_resource type="Resource" path="res://resources/items/run_focus_lens.tres" id="2_item"]
+
+[resource]
+script = ExtResource("1_reward")
+display_name = "Focus Lens for Sol"
+description = "Equip Sol with a stronger trinket: -1 HP, +2 damage."
+target_unit_name = "Sol Apprentice"
+item = ExtResource("2_item")

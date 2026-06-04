@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="AncestryDefinition" format=3 uid="uid://rrw1m5ry3f7r"]
+
+[ext_resource type="Script" uid="uid://cd1dshturnux8" path="res://scripts/data/ancestry_definition.gd" id="1_ancestry"]
+[ext_resource type="Script" uid="uid://ejchwjlwm2mx" path="res://scripts/data/ancestry_feature_definition.gd" id="2_feature"]
+
+[sub_resource type="Resource" id="Feature_ember"]
+resource_name = "Ember Vein"
+script = ExtResource("2_feature")
+display_name = "Ember Vein"
+tags = Array[String](["magic", "fire"])
+trigger = "Attack"
+feature_type = "Bonus Damage"
+amount = 2
+cooldown_turns = 2
+notes = "A periodic magic-damage rider that rewards magic tags and ignores armor."
+
+[resource]
+resource_name = "Emberkin"
+script = ExtResource("1_ancestry")
+display_name = "Emberkin"
+tags = Array[String](["ancestry", "ember", "magic"])
+min_max_hp = 13
+max_max_hp = 18
+min_physical_damage = 2
+max_physical_damage = 4
+min_magic_damage = 4
+max_magic_damage = 7
+max_armor = 1
+min_action_interval = 8
+magic_damage_growth = 1
+feature = SubResource("Feature_ember")
+notes = "Glassier ancestry for characters who want their blood to be a bad idea."

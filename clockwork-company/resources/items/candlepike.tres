@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="ItemDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_definition.gd" id="1_item"]
+[ext_resource type="Script" path="res://scripts/data/effect_definition.gd" id="2_effect"]
+
+[sub_resource type="Resource" id="Resource_candlepike_wick"]
+script = ExtResource("2_effect")
+display_name = "Candlepike Wick"
+tags = ["heal", "kill"]
+trigger = "Kill"
+target_selector = "Self"
+effect_type = "Heal Self"
+amount = 3
+
+[resource]
+script = ExtResource("1_item")
+display_name = "Candlepike"
+tags = ["weapon", "spear", "sustain"]
+slot = "Weapon"
+physical_damage_modifier = 3
+action_interval_modifier = 1
+effects = [SubResource("Resource_candlepike_wick")]

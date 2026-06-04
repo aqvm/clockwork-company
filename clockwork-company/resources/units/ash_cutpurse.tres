@@ -1,14 +1,18 @@
-[gd_resource type="Resource" script_class="UnitDefinition" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="UnitDefinition" load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/unit_definition.gd" id="1_ash"]
 [ext_resource type="Resource" path="res://resources/loadouts/scout_shortblade.tres" id="2_loadout"]
 
+[ext_resource type="Resource" path="res://resources/ancestries/redcap.tres" id="3_ancestry"]
 [resource]
 script = ExtResource("1_ash")
 display_name = "Ash Cutpurse"
 team = "Enemies"
+ancestry = ExtResource("3_ancestry")
 max_hp = 20
-damage = 6
+physical_damage = 6
+magic_damage = 0
 armor = 1
 action_interval = 9
 loadout = ExtResource("2_loadout")
+

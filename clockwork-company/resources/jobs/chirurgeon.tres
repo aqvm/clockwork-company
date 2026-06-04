@@ -1,0 +1,55 @@
+[gd_resource type="Resource" script_class="JobDefinition" format=3 uid="uid://twt6jqpyujf3"]
+
+[ext_resource type="Script" uid="uid://8cikor8oh0rp" path="res://scripts/data/job_definition.gd" id="1_job"]
+[ext_resource type="Script" uid="uid://dt86e2l5m6yo4" path="res://scripts/data/skill_definition.gd" id="2_skill"]
+[ext_resource type="Script" uid="uid://bw4e1gp6l02uv" path="res://scripts/data/passive_definition.gd" id="3_passive"]
+[ext_resource type="Script" uid="uid://c3ugwbjpivem3" path="res://scripts/data/reaction_definition.gd" id="4_reaction"]
+[ext_resource type="Script" uid="uid://cl3b7aebl31vg" path="res://scripts/data/tactic_definition.gd" id="5_tactic"]
+
+[sub_resource type="Resource" id="Resource_chirurgeon_default_tactic"]
+script = ExtResource("5_tactic")
+display_name = "Field Stitch Triage"
+tags = Array[String](["job_default"])
+condition = "Ally HP Below Half"
+action = "Job Skill"
+target = "Lowest HP Ally"
+
+[sub_resource type="Resource" id="Resource_chirurgeon_passive"]
+resource_name = "Clean Hands"
+script = ExtResource("3_passive")
+display_name = "Clean Hands"
+tags = Array[String](["healer"])
+passive_type = "Heal Bonus"
+amount = 2
+cooldown_turns = 1
+
+[sub_resource type="Resource" id="Resource_chirurgeon_reaction"]
+resource_name = "Reflex Splint"
+script = ExtResource("4_reaction")
+display_name = "Reflex Splint"
+tags = Array[String](["low_hp", "reaction"])
+trigger = "HP Below Threshold"
+condition = "Self HP Below Percent"
+amount = 3
+cooldown_turns = 4
+
+[sub_resource type="Resource" id="Resource_chirurgeon_skill"]
+resource_name = "Field Stitch"
+script = ExtResource("2_skill")
+display_name = "Field Stitch"
+tags = Array[String](["healer", "heal", "magic"])
+action = "Heal"
+default_target = "Lowest HP Ally"
+amount_modifier = 2
+
+[resource]
+script = ExtResource("1_job")
+display_name = "Chirurgeon"
+tags = Array[String](["job", "healer", "armor"])
+max_hp_growth = 1
+magic_damage_growth = 1
+armor_growth = 1
+skill = SubResource("Resource_chirurgeon_skill")
+passive = SubResource("Resource_chirurgeon_passive")
+reaction = SubResource("Resource_chirurgeon_reaction")
+default_tactic = SubResource("Resource_chirurgeon_default_tactic")

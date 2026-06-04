@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_tactic")
+display_name = "Attack Frontmost"
 condition = "Always"
 action = "Attack"
 target = "Frontmost Enemy"

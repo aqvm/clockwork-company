@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="RewardDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/reward_definition.gd" id="1_reward"]
+[ext_resource type="Resource" path="res://resources/items/mercy_coin.tres" id="2_item"]
+
+[resource]
+script = ExtResource("1_reward")
+display_name = "Catalog Reward: Mercy Coin"
+description = "A kill-sustain trinket for a unit that can finish targets without needing more base damage."
+target_unit_name = "Mira Scout"
+item = ExtResource("2_item")

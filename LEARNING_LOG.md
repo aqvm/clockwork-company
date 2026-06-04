@@ -13,6 +13,1062 @@ Each entry should include:
 - Manual exercise
 - Open questions
 
+## 2026-06-04 - Campaign graph content validation
+
+Feature worked on:
+
+- Tightened `tools/check_content.ps1` so the content check validates campaign identity and campaign graph links.
+- Campaigns now fail validation if they have an empty id/name, start from a scenario outside the campaign, or unlock a scenario outside the campaign graph.
+
+Godot concepts introduced:
+
+- `Resource` validation can use exported fields such as ids and arrays without instantiating UI or combat scenes.
+
+Game architecture concepts introduced:
+
+- Authoring checks are a lightweight safety net for `.tres` content.
+- Campaign unlock links should point to nodes in the campaign graph, not merely to any scenario file in the repository.
+
+Files touched:
+
+- `clockwork-company/scripts/tools/content_validation_check.gd`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why campaign validation needs to collect all node ids before checking unlock links.
+- Why checking graph membership is different from checking that a scenario Resource exists.
+
+Manual exercise:
+
+- Temporarily change one campaign unlock id in `first_road_campaign.tres` to a valid scenario id that is not in `scenario_nodes`, run `tools/check_content.ps1`, then revert the edit.
+
+Open questions:
+
+- Should future validation also enforce reachability from starting nodes once branching content exists?
+
+## 2026-06-04 - Reference JSON export decision
+
+Feature worked on:
+
+- Decided not to auto-export base `.tres` content into reference JSON yet.
+- Removed the open TODO asking whether automatic export should be added now.
+- Recorded that hand-authored reference JSON remains the current modding/teaching artifact.
+
+Godot concepts introduced:
+
+- No new Godot API; this was a data-pipeline design decision.
+
+Game architecture concepts introduced:
+
+- Automatic exporters are useful when schemas are stable, but can hide learning value while data shapes are still changing.
+- A hand-authored reference pack can teach mod authors more clearly than generated output during prototype phases.
+- Loader validation still keeps the hand-authored JSON honest enough for now.
+
+Files touched:
+
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why `.tres` remains the base authoring surface.
+- Why reference JSON is validated but not generated.
+
+Manual exercise:
+
+- Open `base_content.json` and one matching `.tres` Resource, then identify one field where hand-authored documentation is more useful than generated output.
+
+Open questions:
+
+- At what point will schema churn be low enough that an exporter becomes worth building?
+
+## 2026-06-04 - Scenario reward and rule validation
+
+Feature worked on:
+
+- Extended the content validation script to inspect scenario rule and reward references more deeply.
+- Scenario rules now need a `rule_id` and `display_name`.
+- Scenario rewards now need a `display_name` and item reference.
+
+Godot concepts introduced:
+
+- Tool scripts can inspect typed Resource fields after loading `.tres` content.
+- Validation helpers keep one check script readable as content rules grow.
+
+Game architecture concepts introduced:
+
+- Scenario authoring should fail fast when a referenced rule or reward is incomplete.
+- Content validation can protect small handcrafted content without adding editor tooling.
+
+Files touched:
+
+- `clockwork-company/scripts/tools/content_validation_check.gd`
+- `ARCHITECTURE.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why a non-null Resource reference is not enough for scenario content.
+- Why reward validation checks the item reference instead of reward balance.
+
+Manual exercise:
+
+- Open one scenario `.tres`, follow a reward reference, and identify the fields `tools/check_content.ps1` now validates.
+
+Open questions:
+
+- Should future validation also require scenario rewards to match scenario tags, or is that too subjective for an automated check?
+
+## 2026-06-04 - Curated scenario reward choices
+
+Feature worked on:
+
+- Added a second existing reward option to each authored scenario.
+- Reused catalog rewards instead of adding new reward content.
+- Kept scenario rewards as normal `RewardDefinition` Resources pointing to normal item Resources.
+
+Godot concepts introduced:
+
+- `.tres` scenario Resources can reference multiple reward Resources through exported arrays.
+- Increasing a `.tres` file's `load_steps` reflects adding another external Resource reference.
+
+Game architecture concepts introduced:
+
+- Content curation can make an existing catalog playable without expanding the catalog.
+- Reward choice should stay scenario-facing and concrete, not become a large random pool.
+
+Files touched:
+
+- `clockwork-company/resources/scenarios/roadside_ambush.tres`
+- `clockwork-company/resources/scenarios/burned_chapel.tres`
+- `clockwork-company/resources/scenarios/iron_tollgate.tres`
+- `clockwork-company/resources/scenarios/clocktower_claim.tres`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why this pass reused catalog rewards instead of creating new items.
+- Why scenario reward lists are still authored, deterministic content.
+
+Manual exercise:
+
+- Start any scenario, win the first encounter, and compare the two reward choices before selecting one.
+
+Open questions:
+
+- Should each scenario eventually have a unique reward identity, or is shared catalog reuse better while the system vocabulary is still small?
+
+## 2026-06-04 - Replay cooldown shimmer
+
+Feature worked on:
+
+- Added a subtle shimmer band to replay cooldown bars.
+- Removed the completed cooldown-shimmer replay TODO item.
+
+Godot concepts introduced:
+
+- Custom drawing can layer a small animated highlight by deriving position from existing replay time.
+- `fmod(...)` is useful for looping a presentation-only phase value.
+
+Game architecture concepts introduced:
+
+- A shimmer can clarify timing without adding a new combat mechanic.
+- Presentation effects should reuse existing replay state before asking the simulator for new rules data.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/unit_status_dot.gd`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why cooldown shimmer belongs in `UnitStatusDot`.
+- Why shimmer uses `display_time` rather than real wall-clock time.
+
+Manual exercise:
+
+- Run a fight at `0.5x` and watch the cooldown bars; explain why the shimmer moves even though combat has already been simulated.
+
+Open questions:
+
+- Should future cooldown visuals expose actual ability cooldown counters once abilities become more visible?
+
+## 2026-06-04 - Collapsed debug harness controls
+
+Feature worked on:
+
+- Moved the old Phase 7 run and loss-test buttons behind a small Debug toggle.
+- Kept both debug paths available while making the main scenario flow less visually crowded.
+
+Godot concepts introduced:
+
+- `Button.toggle_mode` and the `toggled` signal can show or hide a small group of controls.
+- A panel can track child controls in an array when it owns their presentation state.
+
+Game architecture concepts introduced:
+
+- Debug harnesses are useful while replacing old flows, but they should be visually subordinate to the current primary workflow.
+- Hiding a debug path is different from deleting it; `RunState` still supports both scenario-backed and legacy Phase 7 runs.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/run_flow_controls_panel.gd`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why the old Phase 7 run remains available.
+- Why the Debug toggle belongs in `RunFlowControlsPanel` instead of `RunState`.
+
+Manual exercise:
+
+- Open the scene, click `Debug`, confirm `Loss Test` and `Phase 7 Run` appear, then hide them again without starting a run.
+
+Open questions:
+
+- At what point is the legacy Phase 7 path no longer useful enough to keep?
+
+## 2026-06-04 - JSON sidecar validation
+
+Feature worked on:
+
+- Extended the content validation script to require an adjacent `*.options.md` sidecar for every discovered JSON pack.
+- Kept JSON schema/prose completeness as a human documentation responsibility, while making sidecar presence automatic.
+
+Godot concepts introduced:
+
+- Tool scripts can use `FileAccess.file_exists(...)` to validate project files during headless checks.
+- Existing loader descriptors can be reused by validation code instead of rediscovering JSON files separately.
+
+Game architecture concepts introduced:
+
+- Modding documentation is part of the data pipeline, not just prose outside the project.
+- Automated checks are best at enforcing objective rules like file presence; they should not pretend to judge documentation quality.
+
+Files touched:
+
+- `clockwork-company/scripts/tools/content_validation_check.gd`
+- `ARCHITECTURE.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why sidecar presence belongs in `tools/check_content.ps1`.
+- Why sidecar prose completeness still needs review when schema or enum rules change.
+
+Manual exercise:
+
+- Temporarily rename one `*.options.md` file in `clockwork-company/modding/reference/`, run `tools/check_content.ps1`, then restore it and confirm the check passes again.
+
+Open questions:
+
+- Should future validation also check that sidecar filenames mention every top-level JSON section, or would that create brittle documentation tests?
+
+## 2026-06-04 - Replay ready and defeated badges
+
+Feature worked on:
+
+- Added a `READY` badge to replay unit dots when their cooldown bar reaches empty.
+- Added a clearer defeated overlay with a crossed marker and `DEFEATED` label.
+- Removed the completed replay TODO item for clearer defeat/readiness states.
+
+Godot concepts introduced:
+
+- Custom `Control._draw()` can layer simple shapes and text to clarify state without adding new scene nodes.
+- A visual can derive presentation-only badges from existing snapshot fields such as HP, alive state, and next action time.
+
+Game architecture concepts introduced:
+
+- Replay readability can improve without changing combat rules or simulator timing.
+- Cooldown readiness is presentation state computed from `next_action_time`, `display_time`, and `action_interval`.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/unit_status_dot.gd`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why `READY` appears when cooldown reaches empty rather than when the simulator changes turn order.
+- Why defeated units remain visible instead of being removed from the replay row.
+
+Manual exercise:
+
+- Run a fight at `0.5x`, watch a cooldown bar drain to `READY`, then confirm a defeated unit keeps its slot but is visually marked.
+
+Open questions:
+
+- Should future replay visuals show temporary armor or status badges next, or wait until those systems need visual support?
+
+## 2026-06-04 - Structured replay unit snapshots
+
+Feature worked on:
+
+- Added `replay_snapshots` to combat battle reports.
+- The simulator now records unit HP, max HP, action interval, next action time, alive state, and defeated state after battle start, each turn, and the result event.
+- The replay panel now prefers simulator-authored snapshots for current unit state while still using structured events for log grouping, turn pulses, and floating HP text.
+
+Godot concepts introduced:
+
+- Optional method parameters let a panel accept a new report field while keeping older call shapes easy to preserve.
+- Dictionaries can act as a lightweight report contract while the prototype is still evolving.
+
+Game architecture concepts introduced:
+
+- Authoritative replay state should come from the simulator instead of being reconstructed entirely by UI code.
+- Structured events and snapshots have different jobs: events explain what happened, snapshots describe what state exists afterward.
+- The replay remains presentation-only even when the simulator gives it richer state.
+
+Files touched:
+
+- `clockwork-company/scripts/combat/combat_simulator.gd`
+- `clockwork-company/scripts/ui/combat_replay_panel.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why replay snapshots are keyed to root combat log event IDs.
+- Why the replay panel still applies structured events before applying a snapshot.
+- Why this does not make combat frame-dependent.
+
+Manual exercise:
+
+- Run a fight, hover a replay unit dot after a few turns, and compare its HP/timing tooltip to the visible combat event that just played.
+
+Open questions:
+
+- Should future snapshots include statuses, cast bars, temporary armor, or active cooldown counters once those visuals become useful?
+
+## 2026-06-04 - Pinned nested Resource tooltips
+
+Feature worked on:
+
+- Added nested Resource traversal to pinned tooltips.
+- Pinned Resource tooltips now show related Resource buttons, such as loadout, job, gear, tactics, encounters, scenario rules, and rewards.
+- Added Back navigation inside the pinned tooltip.
+- Added a visible pinned header and Close button so locked tooltip state is clearer.
+- Added specific tooltip text for scenario, scenario rule, campaign, and campaign scenario node Resources.
+
+Godot concepts introduced:
+
+- A custom tooltip can be a small scene-like control tree with a `RichTextLabel`, buttons, and a generated related-resource list.
+- Dynamic buttons can bind Resource references and call back into the same presenter.
+- A UI presenter can keep a navigation stack without mutating game Resources.
+
+Game architecture concepts introduced:
+
+- Tooltip text and Resource relationship discovery are separate responsibilities inside `ResourceTooltipBuilder`.
+- Nested inspection should read authored data; it should not become an editor, inventory system, or rules resolver.
+- Pinned mode is the right place for traversal because normal hover tooltips should stay quick and noncommittal.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/tooltip_presenter.gd`
+- `clockwork-company/scripts/ui/resource_tooltip_builder.gd`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why related Resource links live in `ResourceTooltipBuilder` instead of every panel script.
+- Why nested traversal appears after pinning, not during normal hover.
+- How the tooltip Back button uses a simple Resource history stack.
+- Why an explicit Close button is enough for the current click-based traversal model.
+
+Manual exercise:
+
+- Hover a unit, click to pin the tooltip, open its loadout, then open the current job or weapon, use Back to return, and use Close to dismiss it.
+
+Open questions:
+
+- Should pinned tooltips later get stronger visual affordances, such as a pinned header or hover corridor, once nested traversal is used more heavily?
+
+## 2026-06-04 - Planning equipment browser
+
+Feature worked on:
+
+- Replaced selected-unit planning equipment cycle buttons with explicit item dropdowns grouped by slot.
+- Added `planning_item_requested(slot, item)` as the unit action panel signal for explicit pre-scenario equipment choices.
+- Kept between-fight run equipment options separate from pre-scenario planning equipment.
+
+Godot concepts introduced:
+
+- A dynamically built panel can still present grouped choices by creating labels and option buttons from option dictionaries.
+- Child panels can forward Resource tooltip requests so new dynamic controls still use the shared tooltip presenter.
+- Signals can carry Resource references when the parent remains responsible for mutating state.
+
+Game architecture concepts introduced:
+
+- A small equipment browser can improve readability without becoming a full inventory model.
+- Planning equipment changes mutate the selected planning-party Resource copy; active run reward/equipment choices still flow through `RunState`.
+- Equipment validity remains job-owned through the existing forbid checks.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/unit_action_panel.gd`
+- `clockwork-company/scripts/ui/planning_workbench_panel.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why explicit item dropdowns are easier to reason about than cycling through hidden candidates.
+- Why `UnitActionPanel` emits the chosen `ItemDefinition` instead of editing the unit directly.
+- Why this is not the same thing as persistent inventory save/load.
+
+Manual exercise:
+
+- Select a unit before starting a scenario, choose a different weapon from the Planning Equipment dropdown, and predict which computed stat or gear line should change.
+
+Open questions:
+
+- Should the browser later filter by unlocked content IDs, or wait until content unlocks have a documented consuming system?
+
+## 2026-06-04 - Run flow control panel extraction
+
+Feature worked on:
+
+- Extracted top-row run-flow button presentation into `RunFlowControlsPanel`.
+- Moved palette, campaign save/load, debug run, reward, continue, and top-row equipment button rendering out of `combat_test_scene.gd`.
+- Kept campaign/run decisions in the main scene and used panel signals for user requests.
+
+Godot concepts introduced:
+
+- A scene node such as an `HBoxContainer` can have its own script and still keep existing child nodes like `%RunButton`.
+- Custom signals let a UI component report user intent without owning the game-state model.
+- Parent scripts can keep direct method calls to a scripted child node when the scene owns that child, but compile checks may require avoiding premature custom type annotations if Godot has not registered the class name yet.
+
+Game architecture concepts introduced:
+
+- Presentation ownership is different from state ownership: the panel renders buttons, while the main scene decides what starting, saving, loading, or equipping means.
+- Extracting a component is worthwhile when it removes button bookkeeping from a coordinator without creating a new rules object.
+
+Files touched:
+
+- `clockwork-company/scenes/combat_test_scene.tscn`
+- `clockwork-company/scripts/ui/run_flow_controls_panel.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why `RunFlowControlsPanel` emits `reward_requested(index)` instead of directly calling `RunState.apply_reward(...)`.
+- Why `combat_test_scene.gd` still owns campaign save/load behavior.
+- How reward button tooltips still reach the shared tooltip presenter after the extraction.
+
+Manual exercise:
+
+- Open `combat_test_scene.tscn`, select `ControlsRow`, and follow how pressing `Loss Test` reaches `_on_loss_test_button_pressed()` in `combat_test_scene.gd`.
+
+Open questions:
+
+- Should the mod dropdown itself eventually become a panel component, or is the current top-row split enough until mod controls grow?
+
+## 2026-06-02 - Ancestries, helmets, and legacy damage cleanup
+
+Feature worked on:
+
+- Added `AncestryDefinition` and `AncestryFeatureDefinition` Resources.
+- Added always-on ancestry feature resolution for battle-start, attack, damaged/low-HP, and kill hooks.
+- Added a helmet equipment slot to loadouts, runtime equipment checks, run equipment replacement, and JSON content.
+- Removed the old single `damage` / `damage_modifier` data path in favor of explicit physical and magic damage fields.
+- Added seven ancestry Resources: Minotaur, Redcap, Typhon-born, Stonekin, Emberkin, Hollow, and Brassbound.
+- Added five helmet items and assigned ancestry references across the existing unit catalog.
+
+Godot concepts introduced:
+
+- Custom `Resource` scripts can reference other custom Resources, such as a `UnitDefinition` exporting an `AncestryDefinition`.
+- `.tres` files can embed subresources, which is how ancestry features live inside ancestry Resources.
+- Exported enum strings make the Godot inspector constrain authoring choices without needing editor plugins.
+
+Game architecture concepts introduced:
+
+- Ancestry is now the always-on body/origin layer, while jobs remain the trained-role layer.
+- Ancestry baseline growth stacks with job-specific growth when a unit has job levels.
+- Helmet equipment is a normal loadout slot; shields are still represented as bundled weapon/armor concepts.
+
+Files touched:
+
+- `clockwork-company/scripts/data/ancestry_definition.gd`
+- `clockwork-company/scripts/data/ancestry_feature_definition.gd`
+- `clockwork-company/scripts/combat/rules/ancestry_feature_resolver.gd`
+- `clockwork-company/scripts/combat/runtime/unit_state.gd`
+- `clockwork-company/scripts/run/run_state.gd`
+- `clockwork-company/modding/reference/base_content.options.md`
+- `clockwork-company/resources/ancestries/typhon_born.tres`
+
+What I should now be able to explain:
+
+- Why ancestry features are separate from job passives/reactions.
+- Why units still have explicit stats even though ancestries now define stat ranges.
+- Why the old single `damage` field was removed instead of kept as compatibility glue.
+
+Manual exercise:
+
+- Open `clockwork-company/resources/ancestries/typhon_born.tres` and explain why its notes describe two helmets even though the current implemented feature is battle-start armor.
+
+Open questions:
+
+- Should ancestry features eventually be equipped/locked like job features, or should they always remain immutable?
+- When slot capacity is added, should Typhon-born's second helmet be its whole feature or one part of a broader many-headed identity?
+
+## 2026-06-02 - Job leveling and physical/magic damage split
+
+Feature worked on:
+
+- Added per-unit, per-job progress with XP, levels, unlock flags, and future choice scaffolding.
+- Added a five-total-job-level cap per unit.
+- Added per-level job growth fields for HP, physical damage, magic damage, armor, and action interval.
+- Changed runtime combat stats from one damage number to physical and magic damage.
+- Updated combat damage resolution so `magic`-tagged damage sources use magic damage; other damage sources use physical damage.
+- Added run-loop job XP awards after won fights: each ally gains current-job XP, and one XP currently becomes one job level.
+
+Godot concepts introduced:
+
+- `JobProgressDefinition` is a small Resource used as an inspectable record inside a unit.
+- Removing compatibility fields can be cleaner than preserving them when the project is still early and the old model obscures the new rules.
+- Resource arrays are useful for editor-visible lists of structured records, such as one unit's job history.
+
+Game architecture concepts introduced:
+
+- Current job, learned abilities, and job history are now separate concepts.
+- Permanent stat growth is computed from job progress at combat-state creation time.
+- Predetermined unlock tracks are represented with booleans now, while `pending_unlock_choice` leaves a place for future choice UI.
+- Physical damage is reduced by armor; magic damage currently ignores armor because no magic-resistance stat exists yet.
+
+Files touched:
+
+- `clockwork-company/scripts/data/job_progress_definition.gd`
+- `clockwork-company/scripts/data/unit_definition.gd`
+- `clockwork-company/scripts/data/item_definition.gd`
+- `clockwork-company/scripts/data/job_definition.gd`
+- `clockwork-company/scripts/combat/runtime/unit_state.gd`
+- `clockwork-company/scripts/combat/combat_simulator.gd`
+- `clockwork-company/scripts/combat/rules/item_effect_resolver.gd`
+- `clockwork-company/scripts/combat/logging/combat_text_formatter.gd`
+- `clockwork-company/scripts/modding/json_content_loader.gd`
+- `clockwork-company/scripts/run/run_state.gd`
+- `clockwork-company/resources/jobs/*.tres`
+- `clockwork-company/resources/units/*.tres`
+- `clockwork-company/resources/items/*.tres`
+- `clockwork-company/modding/reference/base_content.json`
+- `clockwork-company/modding/reference/base_content.options.md`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `MODDING.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why job levels are per unit/per job rather than a single global unit level.
+- Why `action_interval_growth = -1` means a job makes the unit faster.
+- Why a skill or effect with the `magic` tag uses magic damage.
+- Why `pending_unlock_choice` exists even though unlocks are automatic right now.
+
+Manual exercise:
+
+- Win one run fight, inspect the run status text, and confirm each ally gained one level in their current job. Then predict which stat growth should apply to that ally's next fight.
+
+Open questions:
+
+- Should job XP eventually depend on survival, actions taken, or fight participation instead of awarding all allies after a win?
+- Should magic eventually have a separate resistance/ward stat, or should armor remain the only defense for a while?
+- Should unlock choice happen immediately on level-up, between fights, or in a dedicated career screen later?
+
+## 2026-06-02 - Learned ability loadout slots
+
+Feature worked on:
+
+- Added optional equipped skill, passive, and reaction slots to `UnitLoadoutDefinition`.
+- Updated combat runtime so a loadout can override the current job's granted skill/passive/reaction.
+- Added `Roger Spellsword` and `Cast Sparkblade` as a small authored example of current-job frame plus learned ability overrides.
+- Updated JSON loading, run-state cloning, and docs for the new loadout ability fields.
+- Synced ability `display_name` values into `resource_name` so the Godot Inspector can show useful names for equipped skill/passive/reaction Resources.
+
+Godot concepts introduced:
+
+- A Resource can hold optional typed references that act as overrides only when assigned.
+- A `.tres` loadout can contain inline subresources for learned abilities without needing a separate global ability file yet.
+- `resource_name` is the editor-facing Resource label; syncing it from `display_name` makes nested Resources easier to read in the Inspector.
+
+Game architecture concepts introduced:
+
+- Current job and learned abilities are now separate ideas in the data model.
+- Loadouts are the first build-level place where a unit biography can be assembled.
+- The current implementation still avoids progression UI: it directly authors the equipped ability combination for testing.
+
+Files touched:
+
+- `clockwork-company/scripts/data/unit_loadout_definition.gd`
+- `clockwork-company/scripts/data/skill_definition.gd`
+- `clockwork-company/scripts/data/passive_definition.gd`
+- `clockwork-company/scripts/data/reaction_definition.gd`
+- `clockwork-company/scripts/combat/runtime/unit_state.gd`
+- `clockwork-company/scripts/modding/json_content_loader.gd`
+- `clockwork-company/scripts/run/run_state.gd`
+- `clockwork-company/resources/loadouts/roger_spellsword.tres`
+- `clockwork-company/resources/tactics/cast_sparkblade.tres`
+- `clockwork-company/resources/units/roger_spellsword.tres`
+- `clockwork-company/modding/reference/base_content.options.md`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `MODDING.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- How a loadout can equip a skill/passive/reaction that differs from the current job.
+- Why the current job still provides fallback abilities when the loadout override slots are empty.
+- Why a hybrid loadout should usually author an explicit `Job Skill` tactic with a target that fits the equipped skill.
+- Why file-backed tactic Resources fit the current JSON bridge better than inline tactic subresources inside loadouts.
+- Why `resource_name` and `display_name` are related but not the same thing.
+
+Manual exercise:
+
+- Open `clockwork-company/resources/loadouts/roger_spellsword.tres` and identify which parts come from the current Guard job versus which parts are equipped learned ability overrides.
+
+Open questions:
+
+- Should learned abilities eventually be referenced by id from a global ability library, or remain embedded in jobs/loadouts as subresources?
+- Should loadouts allow multiple learned skills with tactics choosing among them, or keep one equipped skill for now?
+
+## 2026-06-01 - FFT-shaped job ability foundation
+
+Feature worked on:
+
+- Moved jobs from mostly stat/proficiency packages toward a skill/passive/reaction model.
+- Added `SkillDefinition`, `PassiveDefinition`, and `ReactionDefinition` Resources.
+- Updated jobs so each current job grants one skill, one passive, one reaction, and one appended default tactic.
+- Changed equipment rules so weapon/armor/trinket slots are allowed by default, with optional `forbid_weapon`, `forbid_armor`, and `forbid_trinket` flags for special jobs.
+- Added passive and reaction cooldown tracking as combat-only unit-turn counters.
+
+Godot concepts introduced:
+
+- A Resource can contain other Resource subresources, which keeps a job inspectable while still making it richer than a few strings.
+- Exported Resource references such as `skill: SkillDefinition` give the Inspector a typed authoring slot.
+- JSON mod data can mirror nested Resource data by converting dictionaries into Resource objects at load time.
+
+Game architecture concepts introduced:
+
+- Jobs can grant active, passive, and reaction vocabulary without owning simulator code.
+- `Job Skill` is a tactic action that asks the simulator to resolve the current job's active skill.
+- Passives and reactions are runtime effects on `UnitState`; they do not mutate source job or unit Resources.
+- Cooldowns live in runtime state, not in the data Resources, because cooldowns are per combat copy.
+- Equipment forbids are now exceptions, not the central identity of a job.
+
+Files touched:
+
+- `clockwork-company/scripts/data/skill_definition.gd`
+- `clockwork-company/scripts/data/passive_definition.gd`
+- `clockwork-company/scripts/data/reaction_definition.gd`
+- `clockwork-company/scripts/data/job_definition.gd`
+- `clockwork-company/scripts/data/tactic_definition.gd`
+- `clockwork-company/scripts/combat/runtime/unit_state.gd`
+- `clockwork-company/scripts/combat/rules/job_effect_resolver.gd`
+- `clockwork-company/scripts/combat/combat_constants.gd`
+- `clockwork-company/scripts/combat/combat_simulator.gd`
+- `clockwork-company/scripts/modding/json_content_loader.gd`
+- `clockwork-company/scripts/run/run_state.gd`
+- `clockwork-company/resources/jobs/*.tres`
+- `clockwork-company/modding/reference/base_content.json`
+- `clockwork-company/modding/reference/base_content.options.md`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `MODDING.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why a job skill is different from a tactic: the skill defines what can be done, while the tactic defines when and who to target.
+- Why a job's default tactic is appended after loadout tactics, so explicit loadout behavior can override the generic job behavior.
+- Why passive/reaction cooldown counters belong on `UnitState`.
+- Why forbidding equipment is now a special job rule instead of the default way jobs are differentiated.
+
+Manual exercise:
+
+- Open `clockwork-company/resources/jobs/debt_knight.tres`, inspect its skill, passive, reaction, and default tactic subresources, then predict how `Payment Due` behaves when the unit drops below half HP after being attacked.
+
+Open questions:
+
+- Should learned/equipped skill/passive/reaction slots live on `UnitLoadoutDefinition`, a future progression Resource, or a separate unit-history Resource?
+- Should cooldowns count owner turns, global actions, or simulation ticks once more timing systems exist?
+
+## 2026-06-01 - Phase 8 content catalog slice
+
+Feature worked on:
+
+- Added a broad first content catalog slice for future run-loop/reward pulls: 32 items, 12 jobs, 9 named tactics, 18 loadouts, 18 units, 3 optional catalog encounters, and 3 optional catalog rewards.
+- Added `display_name` to `TacticDefinition` so tactics can be recognizable in setup and combat logs.
+- Kept the new catalog declarative and did not wire it into the current five-fight run.
+
+Godot concepts introduced:
+
+- `.tres` Resources can reference other Resources to form inspectable content graphs: units point to loadouts, loadouts point to jobs/items/tactics, and encounters/rewards point back to normal units/items.
+- Exported fields added to a Resource script become editable fields in the Inspector and can be mirrored through JSON mod loading.
+
+Game architecture concepts introduced:
+
+- A content library can be larger than the active run loop as long as the active selector stays explicit.
+- Tags are useful authoring vocabulary for future filters and for current item conditions such as `Target Has Tag`.
+- Content expansion is safest when it stays inside currently implemented simulator behavior instead of relying on reserved effect combinations.
+
+Files touched:
+
+- `clockwork-company/scripts/data/tactic_definition.gd`
+- `clockwork-company/scripts/combat/logging/combat_text_formatter.gd`
+- `clockwork-company/scripts/combat/rules/tactic_resolver.gd`
+- `clockwork-company/scripts/modding/json_content_loader.gd`
+- `clockwork-company/resources/items/*.tres`
+- `clockwork-company/resources/jobs/*.tres`
+- `clockwork-company/resources/tactics/*.tres`
+- `clockwork-company/resources/loadouts/*.tres`
+- `clockwork-company/resources/units/*.tres`
+- `clockwork-company/resources/encounters/catalog_test_*.tres`
+- `clockwork-company/resources/rewards/catalog_reward_*.tres`
+- `clockwork-company/modding/reference/base_content.json`
+- `clockwork-company/modding/reference/base_content.options.md`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `MODDING.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- How an item effect stays declarative even when it has trigger, condition, target, and amount fields.
+- Why a loadout is the reusable build package between a unit body and combat runtime state.
+- Why the catalog can contain enemy builds without creating enemy-only mechanics.
+- Why tactic display names improve authoring without changing tactic logic.
+
+Manual exercise:
+
+- Open `clockwork-company/resources/loadouts/debt_knight_tollhook.tres`, follow each Resource reference in the Inspector, and predict which item effects should appear if that build fights an `armored` target.
+
+Open questions:
+
+- Which catalog units should become player recruit candidates versus enemy-only encounter examples later?
+- Should the next content pass add new tactic conditions/actions, or should balance exploration happen first using the current small tactic grammar?
+
+## 2026-06-01 - Phase 8-ish Godot verification cleanup
+
+Feature worked on:
+
+- Ran the required headless Godot script check after the Phase 7/8 handoff.
+- Fixed compile errors caused by a missing script UID for the new effect Resource and a few ambiguous inferred locals.
+
+Godot concepts introduced:
+
+- Custom `class_name` Resource scripts need their `.gd.uid` sidecar kept with the script so Godot can reliably resolve typed exported properties.
+- `:=` asks Godot to infer a type; when a helper returns an untyped value, an explicit `var name: String` or plain `var encounter = ...` can be clearer and compile reliably.
+
+Game architecture concepts introduced:
+
+- The item-effect authoring model should keep a strict `Array[EffectDefinition]` boundary so the Inspector prevents authors from putting the wrong Resource type into an item effect list.
+- Parser fixes should avoid changing combat behavior when the failure is at the type-boundary level.
+
+Files touched:
+
+- `clockwork-company/scripts/data/item_definition.gd`
+- `clockwork-company/scripts/data/effect_definition.gd.uid`
+- `clockwork-company/scripts/modding/json_content_loader.gd`
+- `clockwork-company/scripts/combat/rules/item_effect_resolver.gd`
+- `clockwork-company/scripts/run/run_state.gd`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why `ItemDefinition.effects` should be typed as `Array[EffectDefinition]` for safer authoring.
+- Why the JSON loader still creates `EffectDefinitionScript.new()` objects.
+- Why Godot sometimes needs explicit local typing instead of relying on `:=`.
+
+Manual exercise:
+
+- Open `run_focus_lens.tres` or another item with authored effects and confirm the Inspector only accepts `EffectDefinition` subresources under the `effects` array.
+
+Open questions:
+
+- Should any future effect-like data types share a base Resource class, or should item effects stay pinned directly to `EffectDefinition`?
+
+## 2026-06-01 - Phase 7 short run-loop kickoff
+
+Feature worked on:
+
+- Added a tiny five-fight roguelite run loop on top of the existing deterministic combat simulator.
+- Added reward buttons between fights that immediately equip a selected reward item onto a named ally.
+- Added visible run terminal states: normal five-fight win and a `Start Loss Test` path for checking loss.
+
+Godot concepts introduced:
+
+- A `RefCounted` model (`RunState`) can hold non-visual game flow state outside the scene tree.
+- UI buttons can be created dynamically from script and connected with `pressed.connect(...)`.
+- Resource instances can be cloned at runtime so run rewards can mutate this run's party without rewriting source `.tres` files.
+
+Game architecture concepts introduced:
+
+- Run flow is separate from combat rules: `RunState` decides which roster to fight and what reward was applied, while `CombatSimulator` still decides how a battle resolves.
+- A battle report can include machine-readable summary fields like `winner` and `actions_taken` without changing the human-readable combat log.
+- A first inventory/equipment slice can be button-driven and immediate while still preserving the later option to build a fuller equipment screen.
+
+Files touched:
+
+- `clockwork-company/scripts/run/run_state.gd`
+- `clockwork-company/scripts/combat/combat_simulator.gd`
+- `clockwork-company/scripts/combat/scenarios/demo_battle_factory.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why `RunState` owns fight index, reward state, and cloned party definitions instead of putting those rules inside `CombatSimulator`.
+- Why rewards clone and replace runtime loadout items rather than editing the original `.tres` Resources.
+- How the UI knows whether to show `Run Fight`, reward choices, `Run Won`, or `Run Lost`.
+- Why the loss-test button is useful while the normal run path is tuned to be winnable.
+
+Manual exercise:
+
+- Change one reward in `run_state.gd` by 1 stat point, then predict which later fight roster summary line should change before pressing Play.
+
+Open questions:
+
+- Should the next run-loop pass add a true inventory screen, or first add authored encounter definitions as Resources?
+- Should rewards eventually be random from a seeded table, fixed by fight number, or selected from encounter-specific pools?
+
+## 2026-06-01 - Phase 7.1 data-driven encounters
+
+Feature worked on:
+
+- Added an `EncounterDefinition` Resource for authored enemy-party fights.
+- Added five Phase 7 encounter `.tres` files.
+- Added a small set of enemy unit variants that still use normal unit/loadout/job/item/tactic building blocks.
+- Updated `RunState` to load the fixed encounter sequence instead of scaling cloned demo enemies in code.
+
+Godot concepts introduced:
+
+- Resource arrays can reference other Resources, such as an encounter pointing to multiple unit definitions.
+- New data Resources can unlock content authoring without adding new combat rules.
+
+Game architecture concepts introduced:
+
+- Encounters are opposing party compositions, not bespoke monster scripts.
+- This keeps the eventual async-multiplayer path cleaner because enemies and players remain expressible through the same build vocabulary.
+
+Files touched:
+
+- `clockwork-company/scripts/data/encounter_definition.gd`
+- `clockwork-company/scripts/run/run_state.gd`
+- `clockwork-company/resources/encounters/*.tres`
+- `clockwork-company/resources/units/training_brute.tres`
+- `clockwork-company/resources/units/lane_knifer.tres`
+- `clockwork-company/resources/units/backroom_mender.tres`
+- `clockwork-company/resources/units/union_shield.tres`
+- `clockwork-company/resources/units/roofline_duelist.tres`
+- `clockwork-company/resources/units/glass_adept.tres`
+- `clockwork-company/resources/units/vault_bulwark.tres`
+- `clockwork-company/resources/units/clockwork_runner.tres`
+- `clockwork-company/resources/units/mercy_engine.tres`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why an encounter is an array of enemy `UnitDefinition` Resources.
+- Why enemy variants should use the same jobs, items, loadouts, and tactics as player units.
+- Why `RunState` still owns the fixed encounter order while each encounter owns its enemy party content.
+
+Manual exercise:
+
+- Open one `phase7_fight_*.tres` encounter and swap one enemy reference for another enemy `UnitDefinition`, then predict how the fight setup summary should change.
+
+Open questions:
+
+- Should encounter order eventually live in a `RunDefinition` Resource instead of a constant list in `RunState`?
+- Should encounter Resources later own reward pools, scout notes, and difficulty labels?
+
+## 2026-06-01 - Phase 7.2 data-driven rewards
+
+Feature worked on:
+
+- Added a `RewardDefinition` Resource for run reward offers.
+- Added three reward item Resources.
+- Added three reward Resources for Alden, Mira, and Sol.
+- Updated `RunState` to load reward choices from `.tres` files instead of hardcoded stat dictionaries.
+
+Godot concepts introduced:
+
+- A Resource can reference another Resource as its payload.
+- Content files can separate an offer (`RewardDefinition`) from the item it grants (`ItemDefinition`).
+
+Game architecture concepts introduced:
+
+- Rewards now produce normal items, which keeps build rewards aligned with the same equipment system used by loadouts.
+- Immediate equip is still a temporary run-loop shortcut; the next step is a small inventory/equipment UI that can hold these item rewards before equipping.
+
+Files touched:
+
+- `clockwork-company/scripts/data/reward_definition.gd`
+- `clockwork-company/scripts/run/run_state.gd`
+- `clockwork-company/resources/items/run_guardplate.tres`
+- `clockwork-company/resources/items/run_honed_blade.tres`
+- `clockwork-company/resources/items/run_focus_lens.tres`
+- `clockwork-company/resources/rewards/guardplate_for_alden.tres`
+- `clockwork-company/resources/rewards/honed_blade_for_mira.tres`
+- `clockwork-company/resources/rewards/focus_lens_for_sol.tres`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why a reward references an item Resource instead of duplicating item stat fields.
+- Why the reward still has a suggested target unit while the item itself stays target-agnostic.
+- Why cloning the item before equipping prevents the run from mutating the source `.tres` item.
+
+Manual exercise:
+
+- Open `run_honed_blade.tres`, change its damage modifier by 1, then predict which setup line should change after picking Honed Blade.
+
+Open questions:
+
+- Should reward offers later be encounter-specific, generated from a pool, or fixed by run position?
+- Should rewards target a suggested unit, or should the player always choose the recipient from inventory?
+
+## 2026-06-01 - Phase 7.3 minimal inventory/equipment decisions
+
+Feature worked on:
+
+- Added a between-fight `equipment` run state.
+- Changed reward choice so it adds the reward item to inventory instead of immediately equipping it.
+- Added valid equip-option generation based on each ally's current job permissions.
+- Added dynamic equipment buttons and a `Continue to Next Fight` button to the combat test scene.
+- Returning replaced gear to inventory prevents silent item loss.
+
+Godot concepts introduced:
+
+- Dynamic UI can mirror game state without requiring a new scene file for every prototype screen.
+- Resource references can move through runtime inventory and equipment slots as normal objects.
+
+Game architecture concepts introduced:
+
+- Inventory is run state, not combat state.
+- Equipment permission checks can be shared conceptually with combat setup so the player cannot equip illegal gear between fights.
+- A crude button list is enough to validate the loop before building a polished party management screen.
+
+Files touched:
+
+- `clockwork-company/scripts/run/run_state.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why reward choice and equipment choice are separate states.
+- Why replaced items return to inventory.
+- Why the UI asks `RunState` for valid equip options instead of deciding equipment legality itself.
+
+Manual exercise:
+
+- Pick a reward after fight 1, equip it on the suggested unit, then equip the returned old item somewhere legal if an option appears. Predict which unit's setup stats should change.
+
+Open questions:
+
+- Should the inventory eventually become a dedicated scene/panel instead of temporary buttons in the combat test scene?
+- Should equipment changes be reversible with an explicit undo, or is returned-to-inventory enough for now?
+
+## 2026-06-01 - Phase 8-ish declarative item effect foundation
+
+Feature worked on:
+
+- Added `EffectDefinition` as a declarative effect Resource.
+- Added freeform `tags` to units, items, jobs, tactics, and effects.
+- Added `effects: Array[EffectDefinition]` to items while keeping legacy `trigger/effect/effect_amount` fallback fields.
+- Updated item effect resolution to read authored effect Resources for current supported item triggers.
+- Added damaged/low-HP effect handling for item effects such as once-per-battle max HP increases.
+- Added `Stubborn Heart Charm` as an authoring example for low-HP max HP growth.
+- Updated the JSON/modding bridge and schema docs for tags and item effects.
+
+Godot concepts introduced:
+
+- Resource arrays can hold typed effect Resources.
+- Subresources inside `.tres` files can define item-specific effects without requiring separate files for every effect.
+- Exported `Array[String]` fields are a lightweight tag authoring surface.
+
+Game architecture concepts introduced:
+
+- Declarative effects keep content deterministic and inspectable, which is important for eventual async multiplayer.
+- The simulator still interprets a known vocabulary; items do not run arbitrary scripts.
+- Reserved vocabulary can point toward future systems, but docs must distinguish implemented behavior from future hooks.
+
+Files touched:
+
+- `clockwork-company/scripts/data/effect_definition.gd`
+- `clockwork-company/scripts/data/item_definition.gd`
+- `clockwork-company/scripts/data/unit_definition.gd`
+- `clockwork-company/scripts/data/job_definition.gd`
+- `clockwork-company/scripts/data/tactic_definition.gd`
+- `clockwork-company/scripts/combat/rules/item_effect_resolver.gd`
+- `clockwork-company/scripts/combat/runtime/unit_state.gd`
+- `clockwork-company/scripts/combat/combat_simulator.gd`
+- `clockwork-company/scripts/modding/json_content_loader.gd`
+- `clockwork-company/resources/items/*.tres`
+- `MODDING.md`
+- `clockwork-company/modding/reference/base_content.json`
+- `clockwork-company/modding/reference/base_content.options.md`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why item effects are now Resources instead of only three flat fields on `ItemDefinition`.
+- Why legacy item effect fields still exist during the transition.
+- Which effect trigger/type combinations are actually implemented today.
+- Why periodic and adjacency effects need scheduler/formation support before they can be honest content tools.
+
+Manual exercise:
+
+- Equip `Stubborn Heart Charm` on a unit that can use trinkets, then predict when its once-per-battle max HP effect should trigger.
+
+Open questions:
+
+- Should the next pass add periodic scheduler hooks or formation/adjacency first?
+- Should jobs move from hardcoded job effect labels to `EffectDefinition` arrays next?
+- Should actions/skills become Resources that contain effects, so tactics choose authored actions instead of fixed strings?
+
 ## 2026-05-31 - Interstitial Phase 6.5.5.5 combat replay visualization effects pass
 
 ## 2026-06-01 - Interstitial Phase 6.5.5.5 mod-pack toggle UI pass
@@ -824,7 +1880,7 @@ What I should now be able to explain:
 
 Manual exercise:
 
-- In `clockwork-company/resources/jobs/apprentice.tres`, temporarily set `can_equip_trinket` to `false`, run the fight, and explain why Sol's Glass Focus no longer changes stats or triggers on attack.
+- In `clockwork-company/resources/jobs/apprentice.tres`, temporarily set `forbid_trinket` to `true`, run the fight, and explain why Sol's Glass Focus no longer changes stats or triggers on attack.
 
 Open questions:
 
@@ -996,7 +2052,7 @@ What I should now be able to explain:
 
 Manual exercise:
 
-- Open `clockwork-company/resources/items/glass_focus.tres`, change `effect_amount` from `2` to `0`, run the combat scene, and predict how Sol Apprentice's attack log lines and damage totals change.
+- Open `clockwork-company/resources/items/glass_focus.tres`, change the `Glass Focus Attack Burst` effect `amount` from `2` to `0`, run the combat scene, and predict how Sol Apprentice's attack log lines and damage totals change.
 
 Open questions:
 
@@ -1243,3 +2299,1633 @@ Open questions:
 
 - Should the Godot project folder eventually be renamed or moved so `project.godot` sits at the repository root?
 - Should early docs live at the repository root, inside `clockwork-company/docs/`, or both?
+## 2026-06-03 - Scenario and campaign vertical slice
+
+## What changed
+
+- Added data Resources for scenarios, scenario rules, campaigns, and campaign scenario nodes.
+- Added in-memory progress wrappers for scenario and campaign state.
+- Updated `RunState` so it can run either the existing Phase 7 five-fight sequence or a scenario-provided encounter list.
+- Added `The First Road`, a tiny three-scenario sample campaign.
+- Updated the combat test scene so available campaign scenarios can be started from the existing UI.
+
+## Godot concepts involved
+
+- A Resource/data definition is inspectable source data. `ScenarioDefinition` says what a scenario is supposed to contain.
+- Runtime progress is mutable state. `ScenarioProgress` and `CampaignProgress` say where this playthrough currently is.
+- Resource references let a scenario point to normal encounter and reward Resources instead of duplicating enemy or item data.
+
+## Why campaign wraps scenarios
+
+The campaign layer should decide which scenarios are available and complete. It should not decide combat rules. Real battles still go through `CombatSimulator`, while `RunState` still owns between-fight reward, equipment, and job XP state.
+
+## Manual test
+
+- Open the Godot project in `clockwork-company/`.
+- Press Play.
+- Start `Roadside Ambush`.
+- Complete its three encounters.
+- Confirm `Burned Chapel` unlocks, then complete it.
+- Confirm `Iron Tollgate` unlocks, then complete it.
+- Confirm the campaign summary marks the campaign complete.
+
+## Files to inspect
+
+- `clockwork-company/scripts/data/scenario_definition.gd`
+- `clockwork-company/scripts/campaign/campaign_manager.gd`
+- `clockwork-company/resources/campaigns/first_road_campaign.tres`
+
+## Exercise
+
+Add a fourth scenario Resource and make `Iron Tollgate` unlock it instead of completing the campaign. Predict which campaign node field needs to change before editing.
+
+## Tradeoffs and risks
+
+- Scenario rules are data-only placeholders for now. That is intentional, but the UI must keep making that clear.
+- Campaign progress is in-memory only. Save/load should wait until roster persistence is better defined.
+- `RunState` now supports two sources of encounter order, so future changes should keep the default Phase 7 path and scenario-backed path both checked.
+
+## 2026-06-03 - Scenario planning UI and item effect cleanup
+
+What changed:
+
+- The scene now opens on authored scenario and party planning data instead of pre-running a combat report.
+- Added a planning panel with scenario buttons, selected scenario details, party summaries, selected-unit details, and simple equipment editing before a scenario starts.
+- `RunState` can start a scenario from the edited planning party.
+- Removed legacy top-level item effect fields: `trigger`, `effect`, and `effect_amount`.
+- JSON modding examples now use `effects[]` for item effects.
+
+Godot concepts introduced:
+
+- Dynamic UI containers can be built in script with normal `Control` nodes when a prototype layout is changing quickly.
+- A planning UI can edit Resource instances created for this run without mutating the source `.tres` files.
+- `EffectDefinition` subresources are now the single item-effect authoring path.
+
+What I should now be able to explain:
+
+- Why scenario selection should not run the combat simulator.
+- How selected planning-party Resources flow into `RunState.start_scenario(...)`.
+- Why item effects live in `effects[]` instead of duplicated one-effect fields.
+- Why physical damage uses armor and magic damage does not.
+
+Manual exercise:
+
+- Select `Roadside Ambush`, pick Mira, choose a different weapon, then start the scenario. Before pressing `Run Fight`, predict which gear line should differ in the static fight setup.
+
+Tradeoffs and risks:
+
+- Equipment editing is still a compact planning prototype, not a persistent inventory system yet.
+- The old Phase 7 run path remains available as a debug fallback, so future UI work should avoid letting it dominate the main scenario flow again.
+
+## 2026-06-03 - Scenario list and replay cleanup follow-up
+
+What changed:
+
+- Scenario list buttons now select scenarios by name instead of pretending to start them.
+- The list shows all campaign scenarios, with locked and completed states labeled.
+- The separate start button starts only the selected unlocked scenario.
+- The old `Combat Conditions` pane is hidden because the planning UI now owns scenario, party, and unit context.
+- Combat replay now filters structured events so setup/context lines do not replay as combat.
+- The game window no longer forces itself to a scripted size on startup, so normal resizing is left to the user/window manager.
+
+What I should now be able to explain:
+
+- Why selection and starting are separate UI actions.
+- Why locked scenarios can still be inspectable.
+- Why structured replay should filter by timed combat roots and the final result.
+
+Manual exercise:
+
+- Select each scenario in the list and compare its encounters, rules, tags, rewards, and unlocks. Then start only the available one and confirm the replay begins with actual combat events.
+
+## 2026-06-03 - Resource tooltip foundation
+
+What changed:
+
+- Added a shared custom tooltip presenter that follows the mouse and clamps to the window.
+- Added a Resource tooltip builder that formats units, loadouts, items, effects, jobs, skills, passives, reactions, tactics, encounters, rewards, and generic Resources.
+- Wired scenario list entries, scenario detail Resources, party units, unit detail Resources, reward choices, and replay unit dots into the tooltip system.
+
+Godot concepts introduced:
+
+- A single overlay `Control` can present tooltip content for many different hovered controls.
+- Hover signals can store the hovered Resource in control metadata so refreshable UI controls do not accumulate duplicate signal connections.
+- Custom tooltips are more work than native `tooltip_text`, but they give the project a path toward locked/nested tooltips later.
+
+Manual exercise:
+
+- Hover a scenario, an encounter, a unit, an item, an item effect, and a replay unit dot. For each one, explain whether the tooltip is showing source Resource data or runtime combat state.
+
+## 2026-06-03 - Godot Best Practices Audit
+
+We added `GODOT_BEST_PRACTICES_AUDIT.md`, a research-backed audit of Godot practices against the current project. The point is not to obey every guideline immediately; it is to make our decisions visible.
+
+Key lesson: best practices are context tools. Godot's guidance strongly supports our use of Resources for authored data and our separation of combat simulation from UI. It also points at the next cleanup pressure: `combat_test_scene.gd` is now doing too much and should be split into focused Control scenes/scripts.
+
+Godot concepts involved:
+
+- Resources as inspectable data containers.
+- Control scenes, Containers, anchors, and size flags for UI.
+- Signals for panel-to-parent communication.
+- Autoloads as broad-scope services that should be used sparingly.
+- Static typing as a readability and editor-support tool.
+
+Manual test:
+
+1. Read `GODOT_BEST_PRACTICES_AUDIT.md`.
+2. Open `clockwork-company/scripts/ui/combat_test_scene.gd`.
+3. Pick one UI responsibility and decide whether it matches one of the proposed future panels.
+
+Small exercise: sketch the public methods and signals for a future `ScenarioListPanel` without implementing it.
+
+Tradeoff: adding an audit document creates one more doc to maintain, but it should prevent best-practice conversations from becoming vague or repetitive.
+
+## 2026-06-04 - Scenario workbench panel extraction
+
+Feature worked on:
+
+- Extracted the scenario list, scenario detail, party list, and unit detail areas out of `combat_test_scene.gd`.
+- Added small Control scenes/scripts for those panels.
+- Kept `combat_test_scene.gd` as the coordinator for campaign/run state, selected scenario/unit state, equipment mutation, tooltips, and combat replay.
+
+Godot concepts introduced:
+
+- A `.tscn` scene can wrap one focused `Control` script and be instantiated by a parent scene.
+- Child UI panels can emit custom signals such as `scenario_selected` and `unit_selected` instead of directly changing parent state.
+- The parent can pass current Resource/runtime data into child panels through public render methods.
+- A shared tooltip presenter can stay parent-owned while children request tooltip display through signals.
+
+Game architecture concepts introduced:
+
+- UI ownership can be split without changing combat authority.
+- Read-only panels are a lower-risk extraction target than panels that mutate run state.
+- Scenario/campaign managers remain thin: they still decide availability and completion, not UI rendering details or combat rules.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `clockwork-company/scripts/ui/scenario_list_panel.gd`
+- `clockwork-company/scripts/ui/scenario_detail_panel.gd`
+- `clockwork-company/scripts/ui/party_panel.gd`
+- `clockwork-company/scripts/ui/unit_detail_panel.gd`
+- `clockwork-company/scenes/scenario_list_panel.tscn`
+- `clockwork-company/scenes/scenario_detail_panel.tscn`
+- `clockwork-company/scenes/party_panel.tscn`
+- `clockwork-company/scenes/unit_detail_panel.tscn`
+- `ARCHITECTURE.md`
+- `TODO.md`
+- `GODOT_BEST_PRACTICES_AUDIT.md`
+
+What I should now be able to explain:
+
+- Which panel owns scenario list rendering versus selected scenario detail rendering.
+- Why `combat_test_scene.gd` still owns starting scenarios and planning equipment changes.
+- How a child signal reaches the parent without the child knowing about `CampaignManager` or `RunState`.
+
+Manual exercise:
+
+- Open `scenario_list_panel.gd` and trace what happens after pressing a scenario button: identify the signal it emits, then find the parent callback that updates `selected_scenario`.
+
+Open questions:
+
+- Should the next extraction be the unit action/equipment controls or the combat replay panel?
+- Should repeated tooltip signal wiring eventually move into a tiny helper, or is the current duplication clearer for learning?
+
+## 2026-06-04 - Unit action panel extraction
+
+Feature worked on:
+
+- Extracted the selected-unit action area from `combat_test_scene.gd` into `UnitActionPanel`.
+- The panel now renders start-scenario, pre-scenario planning equipment, and between-fight equipment option buttons.
+- The parent scene still owns the actual state changes: starting scenarios, mutating planning loadouts, and applying run equipment.
+
+Godot concepts introduced:
+
+- A child `Control` can emit request signals for actions it should not perform itself.
+- The parent can keep authority over game state while a child scene owns button layout.
+- Passing booleans and option dictionaries into a panel is a simple bridge before a fuller view model exists.
+
+Game architecture concepts introduced:
+
+- Rendering a button and executing the game command behind that button are separate responsibilities.
+- Equipment changes still flow through `RunState` or planning-party Resource copies; the UI panel is not inventory authority.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `clockwork-company/scripts/ui/unit_action_panel.gd`
+- `clockwork-company/scenes/unit_action_panel.tscn`
+- `ARCHITECTURE.md`
+- `TODO.md`
+- `GODOT_BEST_PRACTICES_AUDIT.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why `UnitActionPanel` emits an equipment request signal instead of changing a loadout directly.
+- Why `combat_test_scene.gd` still owns planning equipment mutation and `_on_planning_equip_pressed`.
+- How the panel knows which buttons to show without knowing what `RunState` is.
+
+Manual exercise:
+
+- Select a unit before starting a scenario, choose a weapon from the Planning Equipment list, and trace the signal from `UnitActionPanel` to the parent callback that changes the planning loadout.
+
+Open questions:
+
+- Should combat replay be extracted as one panel next, or should replay text and replay visualization become separate child panels?
+
+## 2026-06-04 - Combat replay panel extraction
+
+Feature worked on:
+
+- Extracted combat replay behavior from `combat_test_scene.gd` into `CombatReplayPanel`.
+- The replay panel now owns timed replay playback, combat replay text autoscroll, structured event grouping, visual unit dot state, and runtime unit tooltip requests.
+- The parent scene still owns combat report generation, run completion, campaign scenario completion, and summary/status panel refreshes.
+
+Godot concepts introduced:
+
+- A script can be attached to an existing scene node to give an already-authored UI subtree focused behavior.
+- A child panel can own a `Timer` connection and emit `replay_finished` when its presentation work is complete.
+- Signals can keep presentation completion separate from game-state advancement.
+
+Game architecture concepts introduced:
+
+- Combat simulation still finishes before replay starts; replay is presentation, not combat authority.
+- Structured combat events are now consumed by a replay panel instead of being managed by the scenario workbench parent.
+- Runtime unit snapshots shown in tooltips are presentation state derived from simulator reports, not mutable combat rules.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/combat_replay_panel.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `clockwork-company/scenes/combat_test_scene.tscn`
+- `ARCHITECTURE.md`
+- `TODO.md`
+- `GODOT_BEST_PRACTICES_AUDIT.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why `CombatReplayPanel` emits `replay_finished` instead of calling `RunState.complete_fight(...)`.
+- Why replay can update unit dots from structured event payloads without changing combat rules.
+- Why the existing replay UI subtree stayed in `combat_test_scene.tscn` while behavior moved into a focused script.
+
+Manual exercise:
+
+- Start a fight and watch for the moment replay ends. Then find `_on_replay_finished` in `combat_test_scene.gd` and explain why campaign completion happens there rather than inside `CombatReplayPanel`.
+
+Open questions:
+
+- Should future replay work split text replay and unit-dot visualization into separate child panels, or is one replay panel still the clearest ownership boundary?
+
+## 2026-06-04 - Shared combat log rich text formatter
+
+Feature worked on:
+
+- Moved duplicated BBCode escaping and combat-line color highlighting out of `combat_test_scene.gd` and `CombatReplayPanel`.
+- Added `CombatLogRichTextFormatter` as the shared UI helper for setup/status text and replay text.
+
+Godot concepts introduced:
+
+- A `RefCounted` script with static functions is useful for shared formatting logic that does not need to be a scene node.
+- `RichTextLabel` display rules can stay in UI code while combat simulation continues to emit plain readable lines and structured events.
+
+Game architecture concepts introduced:
+
+- Formatting is presentation logic, not combat logic.
+- A small helper is justified when two UI owners need exactly the same escaping and highlighting behavior.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/combat_log_rich_text_formatter.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `clockwork-company/scripts/ui/combat_replay_panel.gd`
+- `ARCHITECTURE.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why setup/status text and replay text should share highlighting rules.
+- Why the formatter does not know about `RunState`, `CampaignManager`, or replay timing.
+
+Manual exercise:
+
+- Change one highlight color in `combat_log_highlight_palette_default.tres`, run a fight, and confirm both setup/status lines and replay lines use the same palette rule where applicable.
+
+Open questions:
+
+- Should highlighting remain whole-line, or should a later pass highlight only keywords and values inside each line?
+
+## 2026-06-04 - Replay cache cleanup and architecture wording
+
+Feature worked on:
+
+- Removed the old cached replay-line array from `combat_test_scene.gd`.
+- Renamed the log split helper so it now describes its actual job: collecting static setup/context lines before `Combat log:`.
+- Updated architecture wording so replay timing and visualization are documented as `CombatReplayPanel` responsibilities.
+
+Godot concepts introduced:
+
+- After moving behavior into a child panel, old parent caches should be removed if they no longer feed UI state.
+- A helper name should describe the current data flow, not the older implementation it replaced.
+
+Game architecture concepts introduced:
+
+- The parent workbench now keeps only static setup/context lines from simulator output.
+- Timed replay uses structured combat events, which keeps replay presentation separate from plain setup text.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `ARCHITECTURE.md`
+- `GODOT_BEST_PRACTICES_AUDIT.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why `CombatReplayPanel` does not need the old plain replay-line cache.
+- Why `combat_test_scene.gd` still splits simulator output at `Combat log:` for the setup pane.
+
+Manual exercise:
+
+- Find `_collect_static_log_lines` and explain why it stops collecting after `Combat log:` appears.
+
+Open questions:
+
+- Should the setup/context summary eventually become its own `FightSummaryPanel`, or is it small enough to stay parent-owned for now?
+
+## 2026-06-04 - Named item effect Resources in the Inspector
+
+Feature worked on:
+
+- Synced `EffectDefinition.display_name` into `resource_name` so item effect subresources can show their authored names in the Godot Inspector.
+- Added a `_to_string()` fallback for effect Resources, matching the existing skill/passive/reaction data Resource pattern.
+
+Godot concepts introduced:
+
+- `@tool` lets a Resource script run setter logic while edited in the editor.
+- `resource_name` is the editor-facing label Godot can use for nested Resource entries.
+- `_to_string()` gives Resources a readable fallback when Godot or debug output asks for their string form.
+
+Game architecture concepts introduced:
+
+- This is an authoring ergonomics change, not combat behavior. Effects still resolve through `EffectDefinition` data and `ItemEffectResolver`.
+- Better Resource labels make data-driven content easier to inspect without adding editor plugins.
+
+Files touched:
+
+- `clockwork-company/scripts/data/effect_definition.gd`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why syncing `display_name` to `resource_name` helps nested item effects in the Inspector.
+- Why the effect still needs explicit fields such as trigger, condition, target selector, and effect type even when it has a readable name.
+
+Manual exercise:
+
+- Open `clockwork-company/resources/items/glass_focus.tres`, expand its `effects` array, and confirm the subresource presents as `Glass Focus Attack Burst` instead of only `EffectDefinition`.
+
+Open questions:
+
+- Should other older data Resources without `resource_name` setters get the same Inspector-label treatment during a future authoring cleanup pass?
+
+## 2026-06-04 - Fourth sample campaign scenario
+
+Feature worked on:
+
+- Added `Clocktower Claim` as a fourth sample scenario Resource.
+- Updated `The First Road` campaign so `Iron Tollgate` unlocks `Clocktower Claim`, and `Clocktower Claim` is now the campaign-completing node.
+- Removed the completed fourth-scenario TODO and updated roadmap/design wording.
+
+Godot concepts introduced:
+
+- A `.tres` Resource can reuse existing encounter and reward Resources to create new authored content without new code.
+- A campaign node Resource controls unlock chaining by naming scenario ids to unlock on completion.
+
+Game architecture concepts introduced:
+
+- Scenario content can validate campaign flow before new mechanics exist.
+- Campaign completion belongs to the campaign node, not the scenario itself, so the same scenario could theoretically sit in a different campaign position later.
+
+Files touched:
+
+- `clockwork-company/resources/scenarios/clocktower_claim.tres`
+- `clockwork-company/resources/campaigns/first_road_campaign.tres`
+- `TODO.md`
+- `ROADMAP.md`
+- `DESIGN_NOTES.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why `Iron Tollgate` now unlocks `clocktower_claim` instead of setting `completes_campaign`.
+- Why the new scenario reuses existing encounters and rewards instead of adding a new content set.
+
+Manual exercise:
+
+- Complete `Roadside Ambush`, `Burned Chapel`, and `Iron Tollgate`, then confirm `Clocktower Claim` unlocks and only completing it marks the campaign complete.
+
+Open questions:
+
+- Should the next campaign content pass make later scenarios mechanically distinct through implemented scenario rules, or keep using content composition until the UI explains rules better?
+
+## 2026-06-04 - Planning computed stat preview
+
+Feature worked on:
+
+- Added a planning stat preview helper that builds `UnitState` objects from the current planning party without running combat turns.
+- Updated the party panel to show computed planning combat stats instead of raw authored base stats.
+- Updated the unit detail panel to show base stats, computed stats, battle-start preview stats when they differ, and skipped equipment.
+
+Godot concepts introduced:
+
+- A `RefCounted` helper can hold shared UI calculations without becoming a scene node.
+- UI panels can render derived runtime previews while still leaving combat authority in the simulator.
+
+Game architecture concepts introduced:
+
+- `UnitDefinition` is source data; `UnitState` is the runtime combat copy that applies growth, equipment permissions, and stat modifiers.
+- Battle-start hooks can be previewed by using resolver functions on temporary `UnitState` copies without advancing the turn scheduler.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/planning_stat_preview.gd`
+- `clockwork-company/scripts/ui/party_panel.gd`
+- `clockwork-company/scripts/ui/unit_detail_panel.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why base stats and computed combat stats can differ.
+- Why the preview uses temporary `UnitState` objects instead of running a battle report.
+- Why skipped equipment belongs in the planning view before a fight starts.
+
+Manual exercise:
+
+- Select a unit, choose one Planning Equipment item, and predict which computed stat should change before pressing `Start Selected Scenario`.
+
+Open questions:
+
+- Should future scenario enemy previews use the same helper, or wait for a dedicated fight-preview panel?
+
+## 2026-06-04 - Clearer scenario selection states
+
+Feature worked on:
+
+- Scenario list entries now label scenarios as available, locked, complete, or active.
+- The scenario list remains visible while a scenario is active so the active state can be inspected.
+- Scenario detail text now explains what each status means, including that completed-scenario replay is not implemented yet.
+- The start button now changes its label for locked, complete, and active scenarios instead of only disabling itself.
+
+Godot concepts introduced:
+
+- UI state can be expressed through button labels and disabled states without changing underlying game rules.
+- Child panels can receive a plain status string from the parent rather than depending directly on `CampaignManager`.
+
+Game architecture concepts introduced:
+
+- Selection, starting, active play, completion, and replay are separate states.
+- Completed campaign scenarios are inspectable but not replayable until standalone/replay mode is deliberately implemented.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/scenario_list_panel.gd`
+- `clockwork-company/scripts/ui/scenario_detail_panel.gd`
+- `clockwork-company/scripts/ui/unit_action_panel.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `clockwork-company/scripts/ui/scenario_list_panel.gd`
+- `clockwork-company/scripts/ui/scenario_detail_panel.gd`
+- `ARCHITECTURE.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why locked scenarios are still selectable for inspection.
+- Why a completed scenario being visible is not the same thing as being replayable.
+- Why `combat_test_scene.gd` still computes status while child panels only render it.
+
+Manual exercise:
+
+- Start `Roadside Ambush`, then select each scenario in the list and explain why its start button label is enabled or disabled.
+
+Open questions:
+
+- Should completed scenarios eventually launch a standalone replay run, or should replay wait until campaign save/load exists?
+
+## 2026-06-04 - Subordinate debug harness controls
+
+Feature worked on:
+
+- Labeled the old Phase 7/loss-test controls as a debug harness.
+- Shortened and visually softened the debug buttons so the main scenario flow remains the primary UI path.
+- Kept the debug paths available for testing instead of deleting them.
+
+Godot concepts introduced:
+
+- Buttons can be made flatter and quieter with `flat`, `modulate`, and font-size overrides.
+- Prototype controls can remain in the scene while being visually deprioritized.
+
+Game architecture concepts introduced:
+
+- A debug harness is useful while the scenario flow matures, but it should not look like the main player path.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why the Phase 7 run path still exists.
+- Why visual hierarchy matters even in a prototype UI.
+
+Manual exercise:
+
+- Open the scene and identify which controls belong to the main scenario flow versus the debug harness before pressing any buttons.
+
+Open questions:
+
+- Should the debug harness eventually move behind a collapsible advanced section, or is the small subdued label enough for now?
+
+## 2026-06-04 - Richer unit detail presentation
+
+Feature worked on:
+
+- Added ancestry feature display to the unit detail panel.
+- Labeled skill, passive, and reaction sources as current-job abilities or equipped learned overrides.
+- Numbered tactic order and included the current job's appended default tactic.
+- Removed the completed unit-detail presentation TODO.
+
+Godot concepts introduced:
+
+- A UI panel can show Resource relationships directly by rendering hoverable rows for nested Resource references.
+- Ordered arrays such as tactics can be displayed as priority lists without changing the underlying data.
+
+Game architecture concepts introduced:
+
+- Current-job abilities and equipped learned overrides are different sources even when combat only sees the resolved ability.
+- Job default tactics are appended after loadout tactics, so explicit loadout tactics keep priority.
+- An ancestry feature is part of the unit's body/origin layer, not its job or gear.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/unit_detail_panel.gd`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- How a unit's selected skill/passive/reaction is resolved from loadout override versus current job fallback.
+- Why tactic order matters before combat starts.
+- Why ancestry feature appears near ancestry instead of under equipment or jobs.
+
+Manual exercise:
+
+- Open Roger Spellsword in the party detail panel and identify which ability line comes from an equipped learned override rather than the current job.
+
+Open questions:
+
+- Should future unit detail UI group this information into collapsible sections once the panel becomes visually dense?
+
+## 2026-06-04 - Godot check helper script
+
+Feature worked on:
+
+- Added `tools/check_godot.ps1` as a small wrapper around the repeated headless Godot `--check-only` command.
+- Kept the project-local `--log-file godot-check.log` behavior so sandboxed checks avoid Godot's normal per-user log directory.
+- Removed the completed helper-script TODO.
+
+Godot concepts introduced:
+
+- Godot can run script checks from the command line with `--headless`, `--path`, `--check-only`, and `--script`.
+- `--log-file` can redirect Godot logs into the project folder.
+
+Game architecture concepts introduced:
+
+- A project helper script is not game architecture, but it protects the learning loop by making checks easy and consistent.
+
+Files touched:
+
+- `tools/check_godot.ps1`
+- `TODO.md`
+- `GODOT_BEST_PRACTICES_AUDIT.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why the helper writes `godot-check.log` into the Godot project folder.
+- How to point the helper at a different script with the `-Script` argument.
+
+Manual exercise:
+
+- Run `powershell -ExecutionPolicy Bypass -File tools/check_godot.ps1` from the repository root and confirm it prints the Godot version without script errors.
+
+Open questions:
+
+- Should future validation scripts live in `tools/` too, or inside the Godot project if they need `res://` paths?
+
+## 2026-06-04 - Tooltip visual polish
+
+Feature worked on:
+
+- Improved custom tooltip spacing, border color, text color, width, and font sizing.
+- Enabled BBCode in `TooltipPresenter` and added presenter-owned formatting for title lines, section headings, and bullet rows.
+- Kept tooltip content builders plain-text so Resource-specific tooltip logic does not need to know presentation markup.
+
+Godot concepts introduced:
+
+- `RichTextLabel` can use BBCode for lightweight text hierarchy.
+- User-provided or data-provided text should be escaped before it is inserted into BBCode.
+- `StyleBoxFlat` controls panel padding, background, border, and corner radius.
+
+Game architecture concepts introduced:
+
+- Tooltip content and tooltip presentation are separate responsibilities.
+- Visual polish can improve inspectability without changing Resource data or combat rules.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/tooltip_presenter.gd`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why the tooltip builder still returns plain text.
+- Why `TooltipPresenter` escapes text before applying BBCode.
+
+Manual exercise:
+
+- Hover a unit, item, effect, and encounter, then identify the title line and any section-style lines in the tooltip.
+
+Open questions:
+
+- Should locked/nested tooltips keep using this one presenter, or split pinned tooltip windows into a separate scene?
+
+## 2026-06-04 - Tooltip source notes
+
+Feature worked on:
+
+- Resource tooltips now end with a source note that marks them as authored Resource data.
+- Runtime unit tooltips now mark themselves as runtime combat state.
+- Removed the completed tooltip-source TODO.
+
+Godot concepts introduced:
+
+- Tooltip text can carry small teaching notes without changing the controls that request tooltips.
+
+Game architecture concepts introduced:
+
+- Source definitions and runtime combat state are intentionally different layers.
+- The same visible unit can have authored Resource data in planning and mutable runtime state during replay.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/resource_tooltip_builder.gd`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why a unit tooltip during planning is not the same kind of data as a replay unit-dot tooltip.
+- Why the source note belongs in the tooltip builder instead of every panel.
+
+Manual exercise:
+
+- Hover a party unit before combat, then hover that unit's replay dot during combat, and compare the source note at the bottom.
+
+Open questions:
+
+- Should future glossary tooltips have a third source label such as `Source: rules glossary`?
+
+## 2026-06-04 - Replay speed control
+
+Feature worked on:
+
+- Added 0.5x, 1x, 2x, and 4x replay speed buttons to `CombatReplayPanel`.
+- Replay speed now changes the timer delay between subsequent replay events.
+- Removed the completed replay speed TODO.
+
+Godot concepts introduced:
+
+- UI controls can be created dynamically by a focused panel script when the scene structure is still evolving.
+- Toggle buttons can act like a segmented control when the panel keeps their pressed states synchronized.
+- A `Timer` can pace presentation without becoming combat authority.
+
+Game architecture concepts introduced:
+
+- Replay speed changes how quickly already-generated events are revealed; it does not rerun or alter combat simulation.
+- Presentation timing belongs to `CombatReplayPanel`, not `CombatSimulator`.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/combat_replay_panel.gd`
+- `ARCHITECTURE.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why changing replay speed cannot change the fight winner.
+- Why the speed control lives in the replay panel instead of the parent scene.
+
+Manual exercise:
+
+- Start a fight, switch to 4x for a few events, then switch to 0.5x and confirm only reveal pacing changes.
+
+Open questions:
+
+- Should speed changes reschedule the currently waiting event immediately, or is applying the speed to subsequent events enough for this prototype?
+
+## 2026-06-04 - Standalone scenario practice mode
+
+Feature worked on:
+
+- Added a `Practice Scenario` action for unlocked scenarios.
+- Practice starts a scenario through `RunState` without marking campaign progress current, complete, or unlocked.
+- Campaign scenario starts still use `CampaignManager.start_scenario(...)` and still mutate campaign progress on completion.
+- Removed the completed standalone scenario mode TODO.
+
+Godot concepts introduced:
+
+- A child panel can emit a second action signal for a similar button while the parent decides which game-state path to run.
+- Optional function parameters can keep one start helper shared while preserving the important campaign/practice distinction.
+
+Game architecture concepts introduced:
+
+- A scenario definition can be played in different contexts: campaign progression or standalone practice.
+- Campaign mutation belongs to `CampaignManager`; a practice run should not touch it.
+- `RunState` can run scenario encounters without being the owner of campaign unlock logic.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/unit_action_panel.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `ARCHITECTURE.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why `Practice Scenario` does not call `CampaignManager.start_scenario(...)`.
+- Why campaign completion still happens only when `active_campaign_scenario_id` is set.
+- Why `RunState` is enough to run scenario encounters but not enough to unlock campaign nodes.
+
+Manual exercise:
+
+- Select an unlocked scenario, click `Practice`, finish it, and confirm the campaign completed/unlocked scenario lists did not change.
+
+Open questions:
+
+- Should locked scenarios ever be practice-playable for testing, or should practice stay limited to unlocked scenarios?
+
+## 2026-06-04 - Lightweight content validation check
+
+Feature worked on:
+
+- Added a Godot-driven content validation script for scenario and campaign references.
+- Added `tools/check_content.ps1` as a wrapper for running that validation from the repository root.
+- The validator checks scenario ids, display names, encounters, rewards, campaign starting ids, duplicate campaign nodes, and unlock references.
+- Removed the completed lightweight content validation TODO.
+
+Godot concepts introduced:
+
+- A command-line script can extend `SceneTree`, run project-aware `res://` loading, print results, and quit with a process code.
+- `DirAccess` can scan Resource folders from inside Godot.
+
+Game architecture concepts introduced:
+
+- Content validation is a safety net for authored data, not a replacement for combat tests.
+- Campaign unlock ids should be checked against actual scenario ids before a player discovers a broken chain.
+
+Files touched:
+
+- `clockwork-company/scripts/tools/content_validation_check.gd`
+- `tools/check_content.ps1`
+- `TODO.md`
+- `GODOT_BEST_PRACTICES_AUDIT.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why validating scenario references is useful now that the campaign has four nodes.
+- Why this script uses Godot loading instead of parsing `.tres` text manually.
+
+Manual exercise:
+
+- Run `powershell -ExecutionPolicy Bypass -File tools/check_content.ps1`, then temporarily typo one unlock id in `first_road_campaign.tres` and predict the validation error before reverting your typo.
+
+Open questions:
+
+- Should the validator eventually include item/loadout/unit reference checks, or stay scenario/campaign focused until content authoring expands again?
+
+## 2026-06-04 - Timed battle-start replay event
+
+Feature worked on:
+
+- Added a structured `battle_start` event type.
+- Moved battle-start item and ancestry effect log lines under a timed `t=000` battle-start event in combat reports.
+- Kept planning stat preview compatibility by letting battle-start resolvers create their old root entry when no parent id is supplied.
+- Removed the completed battle-start log TODO.
+
+Godot concepts introduced:
+
+- Optional function parameters can preserve existing call sites while adding a richer call path.
+
+Game architecture concepts introduced:
+
+- Setup summaries and timed replay events are different layers of the combat report.
+- Battle-start effects are still deterministic combat rules, but grouping them under `t=000` makes their timing visible.
+- Structured event schemas need explicit event types before replay/UI code can rely on them.
+
+Files touched:
+
+- `clockwork-company/scripts/combat/logging/combat_event_schema.gd`
+- `clockwork-company/scripts/combat/logging/combat_events.gd`
+- `clockwork-company/scripts/combat/combat_simulator.gd`
+- `clockwork-company/scripts/combat/rules/item_effect_resolver.gd`
+- `clockwork-company/scripts/combat/rules/ancestry_feature_resolver.gd`
+- `ARCHITECTURE.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why battle-start effects appear after `Combat log:` but before the first unit turn.
+- Why the replay can group child lines under a parent event without changing combat outcomes.
+- Why the planning stat preview still does not need a timed event.
+
+Manual exercise:
+
+- Run a fight and confirm the replay begins with `t=000 | Battle starts.` before the first turn.
+
+Open questions:
+
+- Should future battle-start roster snapshots also become structured event payloads, or is the current roster summary enough for now?
+
+## 2026-06-04 - Small combat rule decisions
+
+Feature worked on:
+
+- Recorded decisions for future fully blocked hit effects, armor-buff vocabulary, and deterministic tie-breaks.
+- Removed the resolved decision TODOs.
+
+Godot concepts introduced:
+
+- No new Godot concepts; this was a design documentation pass.
+
+Game architecture concepts introduced:
+
+- Future zero-damage blocks should not trigger normal hit effects unless an effect explicitly says it triggers on contact.
+- Armor buffs should use base battle armor or temporary guard armor until a real status system exists.
+- Roster order remains the deterministic tie-break until a visible tiebreak stat is worth the extra surface area.
+
+Files touched:
+
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why future zero-damage blocks are different from current minimum-1-damage hits.
+- Why named armor statuses are deferred.
+- Why roster order is still acceptable for deterministic ties.
+
+Manual exercise:
+
+- Read the new combat-rule notes in `DESIGN_NOTES.md`, then explain one future mechanic that would force revisiting each decision.
+
+Open questions:
+
+- What specific item or scenario would justify adding a contact-triggered hit effect?
+
+## 2026-06-04 - Item effect tooltip support notes
+
+Feature worked on:
+
+- Effect tooltips now say whether the current trigger/effect pair is supported by the item resolver.
+- Unsupported combinations explicitly warn that combat logs will call them out if triggered.
+- Removed the completed unsupported-effect tooltip TODO.
+
+Godot concepts introduced:
+
+- No new Godot concepts; this reused the existing Resource tooltip builder.
+
+Game architecture concepts introduced:
+
+- Declarative effect data can exist before every combination has resolver behavior.
+- Authoring UI should make unsupported combinations obvious before they surprise the player in combat.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/resource_tooltip_builder.gd`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Which item trigger/effect combinations are currently supported.
+- Why unsupported combinations are still allowed as readable placeholders.
+
+Manual exercise:
+
+- Hover an item effect Resource and explain whether its resolver note says supported or not implemented.
+
+Open questions:
+
+- Should the content validator eventually fail live scenario-facing items that use unsupported effect combinations?
+
+## 2026-06-04 - Gear and project-structure deferral decisions
+
+Feature worked on:
+
+- Recorded that shields stay bundled into weapon/armor concepts until offhand choices create real player decisions.
+- Reaffirmed that procedural items do not belong in the current learning-first prototype.
+- Recorded that `project.godot` should remain nested in `clockwork-company/` during active feature work.
+- Removed the resolved decision TODOs.
+
+Godot concepts introduced:
+
+- `project.godot` marks the project root; moving it is a project-structure migration, not a gameplay feature.
+
+Game architecture concepts introduced:
+
+- Avoiding a handedness system keeps gear tradeoffs understandable until content needs the extra slot model.
+- Hand-authored items are better than procedural items while the combat vocabulary is still being taught.
+
+Files touched:
+
+- `DESIGN_NOTES.md`
+- `GODOT_BEST_PRACTICES_AUDIT.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why shields are currently item flavor plus stat/effect data, not a separate offhand rules layer.
+- Why procedural items would fight the current learning goal.
+- Why the Godot project root stays nested for now.
+
+Manual exercise:
+
+- Pick one existing shield-like item and explain whether it is currently acting more like a weapon concept or an armor concept.
+
+Open questions:
+
+- What future item design would make offhand/handedness worth implementing?
+
+## 2026-06-04 - Branching campaign representation decision
+
+Feature worked on:
+
+- Recorded that branching campaigns should continue using campaign node unlock id arrays for now.
+- Removed the resolved branching-scenario TODO.
+
+Godot concepts introduced:
+
+- No new Godot concepts; this was a scenario/campaign design note.
+
+Game architecture concepts introduced:
+
+- A campaign node can already unlock multiple scenario ids, so the current Resource shape can represent the first simple branch.
+- A separate graph format should wait until authoring with unlock arrays becomes genuinely awkward.
+
+Files touched:
+
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- How the current campaign node Resource can make a branch.
+- Why the project is delaying a more complex campaign graph.
+
+Manual exercise:
+
+- Open `first_road_campaign.tres` and identify which array you would edit if `Burned Chapel` should unlock two follow-up scenarios.
+
+Open questions:
+
+- What UI would be needed before a multi-branch campaign feels readable instead of merely valid data?
+
+## 2026-06-04 - Job/loadout ownership decisions
+
+Feature worked on:
+
+- Recorded that job unlock dependencies stay deferred until the job set is large enough to need them.
+- Recorded that equipment permissions remain job-owned for now.
+- Recorded that tactics continue to live on loadouts until a party/unit/encounter use case creates real duplication pressure.
+- Removed the resolved ownership-decision TODOs.
+
+Godot concepts introduced:
+
+- No new Godot concepts; this was a data ownership decision pass.
+
+Game architecture concepts introduced:
+
+- Ownership should stay where the current data model is simplest and most inspectable.
+- Dependencies, item requirements, and tactic relocation are extra rules surfaces that need content pressure before they pay rent.
+
+Files touched:
+
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why job unlock dependencies are not useful yet.
+- Why equipment forbids live on jobs right now.
+- Why loadout-owned tactics still fit the prototype.
+
+Manual exercise:
+
+- Open one loadout Resource and explain which parts would become duplicated if a future party-level doctrine system existed.
+
+Open questions:
+
+- Which future feature would create the strongest reason to move tactics out of loadouts?
+
+## 2026-06-04 - TODO guardrail cleanup
+
+Feature worked on:
+
+- Removed principle-style TODOs that are already captured in design or architecture docs.
+- Kept actionable follow-up work in `TODO.md`.
+
+Godot concepts introduced:
+
+- No new Godot concepts; this was backlog hygiene.
+
+Game architecture concepts introduced:
+
+- Determinism, magic ignoring armor, replay presentation authority, and avoiding management-sim systems remain project guardrails even when they are not TODO items.
+
+Files touched:
+
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why a living TODO should distinguish actionable work from standing design principles.
+
+Manual exercise:
+
+- Pick one remaining TODO and one removed guardrail, then explain why only the first belongs in an implementation backlog.
+
+Open questions:
+
+- Should long-lived guardrails get their own short checklist in `DESIGN_NOTES.md`, or are the current sections enough?
+
+## 2026-06-04 - Glossary term tooltips
+
+Feature worked on:
+
+- Added glossary tooltip text for HP, armor, action interval, physical damage, magic damage, guard, and cooldown.
+- Added a glossary tooltip route through `TooltipPresenter`.
+- Exposed stat glossary rows in the unit detail panel.
+- Removed the completed non-Resource glossary tooltip TODO.
+
+Godot concepts introduced:
+
+- Signals can carry plain strings as well as Resource references.
+- One tooltip presenter can serve Resource, runtime, and glossary tooltip content.
+
+Game architecture concepts introduced:
+
+- Rules glossary text is a third tooltip source, separate from authored Resource data and runtime combat state.
+- Glossary definitions should describe current implemented rules, not future aspirations.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/resource_tooltip_builder.gd`
+- `clockwork-company/scripts/ui/tooltip_presenter.gd`
+- `clockwork-company/scripts/ui/unit_detail_panel.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why HP/armor/action interval are glossary terms instead of Resources.
+- How a glossary hover signal reaches the shared tooltip presenter.
+
+Manual exercise:
+
+- Open a unit detail panel and hover each stat glossary term, then explain which definition describes a current rule versus a future placeholder.
+
+Open questions:
+
+- Should combat log glossary terms use the same dictionary, or include event-specific examples?
+
+## 2026-06-04 - Colorblind highlight palette toggle
+
+Feature worked on:
+
+- Added a colorblind-friendly combat log highlight palette Resource.
+- Added a toolbar palette toggle for default versus colorblind highlighting.
+- Wired `CombatReplayPanel` so future replay lines use the selected palette.
+- Removed the completed accessibility/color palette TODO.
+
+Godot concepts introduced:
+
+- Swapping Resource references at runtime is a small way to expose presentation options.
+- A button can re-render cached RichTextLabel content with a new formatter palette.
+
+Game architecture concepts introduced:
+
+- Color highlighting is presentation logic; changing palettes does not change combat logs or simulation outcomes.
+- Keeping palettes as Resources preserves editor-visible tuning.
+
+Files touched:
+
+- `clockwork-company/resources/ui/combat_log_highlight_palette_colorblind.tres`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `clockwork-company/scripts/ui/combat_replay_panel.gd`
+- `ARCHITECTURE.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why palette data lives in `.tres` Resources.
+- Why the toggle changes formatting but not simulator output.
+
+Manual exercise:
+
+- Toggle `Palette: Colorblind`, run a fight, and compare attack/damage/heal/guard line colors against the default palette.
+
+Open questions:
+
+- Should the palette choice be persisted next to mod settings, or remain a session-only presentation toggle for now?
+
+## 2026-06-04 - Highlighting scope decision
+
+Feature worked on:
+
+- Recorded that combat log highlighting should remain whole-line for now.
+- Removed the resolved phrase-level highlighting TODO.
+
+Godot concepts introduced:
+
+- No new Godot concepts; this was a replay presentation design decision.
+
+Game architecture concepts introduced:
+
+- Whole-line categories keep the formatter simple while combat log wording is still evolving.
+- Phrase-level emphasis should wait until it solves a concrete readability problem.
+
+Files touched:
+
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why simple category highlighting is enough for the current combat log.
+
+Manual exercise:
+
+- Run a fight and identify one line where phrase-level highlighting might eventually help, then decide whether it is worth the added formatter complexity today.
+
+Open questions:
+
+- Which exact combat values, if any, should become phrase-highlighted first?
+
+## 2026-06-04 - Background/palette exposure decision
+
+Feature worked on:
+
+- Recorded that the combat-test background stays fixed while highlight palettes are still being tuned.
+- Removed the resolved background/palette exposure TODO.
+
+Godot concepts introduced:
+
+- No new Godot concepts; this was a presentation design decision.
+
+Game architecture concepts introduced:
+
+- Presentation options should become user-facing controls when they represent coherent themes, not isolated color tweaks.
+
+Files touched:
+
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why the palette toggle exists now but background choices stay deferred.
+
+Manual exercise:
+
+- Toggle the default/colorblind palette and decide whether the current fixed dark background preserves contrast for both.
+
+Open questions:
+
+- What future theme preset would justify exposing background and palette as one user-facing choice?
+
+## 2026-06-04 - Clearer encounter transition text
+
+Feature worked on:
+
+- Run summaries now name the encounter a scenario is ready to enter.
+- Reward and continue summaries now point toward the next named encounter.
+- The main run button and continue button now include encounter number and encounter name.
+- Removed the completed clearer encounter transition TODO.
+
+Godot concepts introduced:
+
+- Button text can be dynamic presentation state derived from a separate run model.
+
+Game architecture concepts introduced:
+
+- `RunState` owns progression facts such as current encounter number/name.
+- The UI can make transitions clearer without changing combat simulation or scenario data.
+
+Files touched:
+
+- `clockwork-company/scripts/run/run_state.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `ARCHITECTURE.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why encounter transition wording belongs in run flow, not combat simulation.
+- How the UI gets the current encounter name without loading scenario data itself.
+
+Manual exercise:
+
+- Start a scenario, clear the first encounter, choose a reward, and confirm the summary/button name the second encounter before you continue.
+
+Open questions:
+
+- Should a future fight-preview panel show enemy units and scenario rules during this transition?
+
+## 2026-06-04 - Structured replay event payload tooltips
+
+Feature worked on:
+
+- Added an `Event Data` hover target to the replay controls.
+- The hover target shows the currently displayed structured event group and payload fields in the shared tooltip presenter.
+- Removed the completed combat-log/event-payload tooltip TODO.
+
+Godot concepts introduced:
+
+- Signals can pass typed arrays of dictionaries between a child panel and parent tooltip host.
+- A disabled button can become a hover target once replay data exists.
+
+Game architecture concepts introduced:
+
+- Structured combat events are the machine-readable companion to readable combat log prose.
+- Payload tooltips help inspect replay data without making the replay UI parse prose.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/combat_replay_panel.gd`
+- `clockwork-company/scripts/ui/resource_tooltip_builder.gd`
+- `clockwork-company/scripts/ui/tooltip_presenter.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `ARCHITECTURE.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why replay event payloads are useful even when the combat log text is readable.
+- Why this tooltip is tied to the current replay event group instead of individual RichTextLabel lines.
+
+Manual exercise:
+
+- Run a fight, hover `Event Data` after a turn appears, and compare the payload fields to the visible combat log line.
+
+Open questions:
+
+- Should future replay text lines become individually hoverable once the log display moves away from one monolithic `RichTextLabel`?
+
+## 2026-06-04 - Visible scenario scouting reports
+
+Feature worked on:
+
+- Scenario detail now shows encounter scouting reports when encounter Resources provide `scout_text`.
+- Removed the completed scouting report TODO.
+
+Godot concepts introduced:
+
+- A UI panel can render optional Resource fields only when authored content exists.
+
+Game architecture concepts introduced:
+
+- Scouting reports are scenario-facing presentation of normal encounter data.
+- Enemies remain normal unit/loadout/job/item/tactic builds; scout text explains them without a separate monster ruleset.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/scenario_detail_panel.gd`
+- `ARCHITECTURE.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Where encounter scout text is authored.
+- Why scenario detail shows scout text without changing combat rules.
+
+Manual exercise:
+
+- Select each scenario and read its scouting reports, then hover the same encounter names to compare the tooltip text.
+
+Open questions:
+
+- Should future scouting reports summarize enemy tags mechanically, or stay authored prose?
+
+## 2026-06-04 - JSON pack validation in content check
+
+Feature worked on:
+
+- Extended `content_validation_check.gd` so it loads every discoverable JSON pack through `JsonContentLoader`.
+- The existing loader assertions now run during `tools/check_content.ps1`, catching bad JSON references and unsupported enum values through the normal validation command.
+- Removed the completed mod validation TODO.
+
+Godot concepts introduced:
+
+- Tool scripts can reuse normal project loader code instead of duplicating validation logic.
+
+Game architecture concepts introduced:
+
+- JSON mod packs and `.tres` base content should be validated through the same reconstruction path where practical.
+- A content check can cover multiple authoring surfaces without becoming a full test framework.
+
+Files touched:
+
+- `clockwork-company/scripts/tools/content_validation_check.gd`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why validating JSON packs through `JsonContentLoader` is stronger than only checking scenario Resources.
+- Which command catches invalid enum values in mod JSON.
+
+Manual exercise:
+
+- Run `tools/check_content.ps1`, then inspect `example_mod_pack.json` and identify one enum field that would fail if misspelled.
+
+Open questions:
+
+- Should future validation collect all JSON errors in one run instead of stopping at the first assertion?
+
+## 2026-06-04 - Fight Preview pane decision
+
+Feature worked on:
+
+- Replaced the obsolete hidden `Combat Conditions` label with a visible `Fight Preview` pane.
+- Kept the existing static summary target instead of deleting it, because run status and setup text still need a home.
+- Removed the resolved hidden-pane TODO.
+
+Godot concepts introduced:
+
+- Existing scene nodes can be repurposed when their layout role still makes sense but their label no longer does.
+
+Game architecture concepts introduced:
+
+- Fight preview/status text is UI presentation, not combat simulation authority.
+- Reusing the existing summary pane avoids a larger layout refactor while making current behavior visible.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `ARCHITECTURE.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why the old `Combat Conditions` pane became `Fight Preview`.
+- Why deleting the pane would lose useful run/setup context.
+
+Manual exercise:
+
+- Start the scene, select a scenario, and confirm the preview/status pane is visible before running combat.
+
+Open questions:
+
+- Should `Fight Preview` eventually become its own extracted panel scene?
+
+## 2026-06-04 - Planning workbench scene wrapper
+
+Feature worked on:
+
+- Moved the stable scenario planning row out of `combat_test_scene.gd` and into `planning_workbench_panel.tscn`.
+- Added `PlanningWorkbenchPanel` as a thin wrapper that forwards child panel signals and tooltip requests upward.
+- Kept campaign/run state in the main scene instead of teaching the layout wrapper about game progression.
+
+Godot concepts introduced:
+
+- Instanced child scenes can be arranged inside a parent `.tscn` so stable UI layout is visible in the editor.
+- A wrapper scene can re-emit child signals to keep parent code from reaching into every nested node.
+
+Game architecture concepts introduced:
+
+- Layout ownership and state ownership are separate responsibilities.
+- A UI wrapper can reduce scene assembly code without becoming a campaign or combat rules object.
+
+Files touched:
+
+- `clockwork-company/scenes/planning_workbench_panel.tscn`
+- `clockwork-company/scripts/ui/planning_workbench_panel.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `ARCHITECTURE.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why the planning row belongs in a scene file.
+- Why `combat_test_scene.gd` still owns selected scenario, selected unit, and run state.
+
+Manual exercise:
+
+- Open `planning_workbench_panel.tscn` in Godot and identify which child panel emits each planning signal.
+
+Open questions:
+
+- Should reward/debug controls get their own panel next, or should tooltip hosting be extracted first?
+
+## 2026-06-04 - First locked tooltip behavior
+
+Feature worked on:
+
+- Added pinned tooltip behavior to the shared `TooltipPresenter`.
+- Hover still opens normal following tooltips.
+- Left click pins the visible tooltip; Escape or an outside click closes it.
+- Removed the open TODO about choosing a tooltip locking input model.
+
+Godot concepts introduced:
+
+- A Control can receive input events through the parent scene and decide whether it handled them.
+- `mouse_filter` controls whether a custom panel ignores or receives mouse interaction.
+
+Game architecture concepts introduced:
+
+- Tooltip locking is UI behavior only; it does not change Resource data, combat state, or simulator rules.
+- Pinning the shared presenter first creates a base for later nested tooltips without committing to the nested traversal design yet.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/tooltip_presenter.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why the presenter ignores normal hide requests while pinned.
+- Why nested tooltip traversal is still separate from locked tooltip behavior.
+
+Manual exercise:
+
+- Hover a scenario, click while its tooltip is visible, move the mouse away, then press Escape to close the pinned tooltip.
+
+Open questions:
+
+- Should pinned tooltips later show a small visual locked state once nested traversal exists?
+
+## 2026-06-04 - First mechanical scenario rule
+
+Feature worked on:
+
+- Made `iron_tollgate_armored_enemies` affect play instead of remaining a placeholder.
+- The rule gives each enemy +2 armor during the Iron Tollgate scenario.
+- Added a run-status rule-effect line so the scenario explains the modifier before combat starts.
+- Updated the rule Resource text and TODO/design docs.
+
+Godot concepts introduced:
+
+- Resource data can name a rule while runtime code decides how that specific rule is enforced.
+
+Game architecture concepts introduced:
+
+- A narrow hardcoded resolver can be better than a premature generic rule engine.
+- Scenario rules modify fight definitions before `CombatSimulator` creates runtime combat state, keeping the simulator focused on combat rules.
+
+Files touched:
+
+- `clockwork-company/scripts/run/run_state.gd`
+- `clockwork-company/resources/scenario_rules/iron_tollgate_armored_enemies.tres`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why Iron Tollgate armor is applied in `RunState` before the simulator runs.
+- Why the project is not adding a broad scenario-rule DSL yet.
+
+Manual exercise:
+
+- Start or practice Iron Tollgate, run the first encounter preview, and compare enemy armor in the roster against the same enemies outside that scenario.
+
+Open questions:
+
+- What should be the second mechanical scenario rule once a scenario genuinely needs a different rule shape?
+
+## 2026-06-04 - Visible content unlock state
+
+Feature worked on:
+
+- Scenario list buttons now annotate scenarios that grant content unlock IDs.
+- Scenario details now split each scenario's content unlocks into unlocked and pending groups when campaign progress is available.
+- Revised the TODO so content unlocks are no longer invisible, while still noting that content IDs do not mechanically gate later options yet.
+
+Godot concepts introduced:
+
+- UI panels can accept optional context, such as campaign progress, without owning or mutating that state.
+
+Game architecture concepts introduced:
+
+- Visibility can come before mechanics: content unlock IDs are now legible in the campaign UI before they drive rules or gates.
+- Scenario detail panels should read campaign progress but leave progression mutations to `CampaignManager`.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/scenario_list_panel.gd`
+- `clockwork-company/scripts/ui/scenario_detail_panel.gd`
+- `clockwork-company/scripts/ui/planning_workbench_panel.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `ARCHITECTURE.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why the scenario detail panel receives campaign progress as read-only context.
+- Why content unlocks are visible but not yet used as mechanical gates.
+
+Manual exercise:
+
+- Complete Roadside Ambush, then select it again and confirm its content unlock appears as unlocked while later scenarios still show their unlocks as pending.
+
+Open questions:
+
+- Which future system should consume content unlock IDs first: gear availability, scenario branches, or lore/intel panels?
+
+## 2026-06-04 - First campaign save/load slice
+
+Feature worked on:
+
+- Added JSON save/load for stable campaign progress.
+- The save stores campaign id/version, completed scenarios, unlocked scenario IDs, unlocked content IDs, and campaign completion.
+- Added Save Campaign and Load Campaign buttons to the scenario workbench controls.
+- Kept active runs, roster state, inventory, gear, and job progress out of the save file for now.
+
+Godot concepts introduced:
+
+- `FileAccess` can read/write user-scoped files through `user://`.
+- `JSON.stringify` and `JSON.parse_string` are enough for a small inspectable prototype save file.
+
+Game architecture concepts introduced:
+
+- Save files should start with stable state, not half-modeled runtime details.
+- Campaign progress owns persistence data; UI buttons only request save/load and refresh presentation.
+
+Files touched:
+
+- `clockwork-company/scripts/campaign/campaign_progress.gd`
+- `clockwork-company/scripts/campaign/campaign_manager.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why the save file does not restore an active scenario run yet.
+- Why the save includes a version and campaign id.
+
+Manual exercise:
+
+- Complete Roadside Ambush, click Save Campaign, restart the project, click Load Campaign, and confirm Burned Chapel plus the Roadside content unlock are restored.
+
+Open questions:
+
+- What exact roster state should be persisted before gear/job progress are added to the save?
