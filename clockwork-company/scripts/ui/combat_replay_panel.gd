@@ -6,6 +6,7 @@ signal runtime_tooltip_requested(source: Control, snapshot: Dictionary)
 signal tooltip_cleared
 
 const UnitStatusDotScript := preload("res://scripts/ui/unit_status_dot.gd")
+const CombatLogRichTextFormatterScript := preload("res://scripts/ui/combat_log_rich_text_formatter.gd")
 const COMBAT_LOG_HEADER := "Combat log:"
 const SECONDS_PER_SIM_SECOND := 0.2
 const MIN_SECONDS_BETWEEN_REPLAY_ACTIONS := 0.1
@@ -199,54 +200,8 @@ func _on_combat_log_scroll_value_changed(_value: float) -> void:
 
 
 func _append_log_line(line: String) -> void:
-	_append_rich_text_line(combat_log, line)
+	CombatLogRichTextFormatterScript.append_line(combat_log, line, log_highlight_palette)
 	_scroll_combat_log_to_bottom()
-
-
-func _append_rich_text_line(target_log: RichTextLabel, line: String) -> void:
-	target_log.append_text("%s\n" % _format_log_line_with_highlighting(line))
-
-
-func _escape_bbcode_text(text: String) -> String:
-	return text.replace("[", "[lb]")
-
-
-func _format_log_line_with_highlighting(line: String) -> String:
-	var safe_text := _escape_bbcode_text(line)
-	var color_text := _log_highlight_color_for_line(line)
-	if color_text.is_empty():
-		return safe_text
-	return "[color=%s]%s[/color]" % [color_text, safe_text]
-
-
-func _log_highlight_color_for_line(line: String) -> String:
-	if log_highlight_palette == null:
-		return ""
-	if line.begins_with("Result:"):
-		return _bbcode_color_text(log_highlight_palette.result_color)
-	if line.begins_with("t="):
-		return _bbcode_color_text(log_highlight_palette.timestamp_color)
-	if "Damage dealt:" in line:
-		return _bbcode_color_text(log_highlight_palette.damage_color)
-	if " attacks " in line:
-		return _bbcode_color_text(log_highlight_palette.attack_color)
-	if " heals " in line:
-		return _bbcode_color_text(log_highlight_palette.heal_color)
-	if " guards:" in line or "guard expires:" in line:
-		return _bbcode_color_text(log_highlight_palette.guard_color)
-	if line.begins_with("Tactic selected:") or line.begins_with("No tactic matched;") or line.begins_with("Tactic skipped:"):
-		return _bbcode_color_text(log_highlight_palette.tactic_color)
-	if line.begins_with("Job effect ") or line.begins_with("Ancestry feature "):
-		return _bbcode_color_text(log_highlight_palette.job_effect_color)
-	if " triggers " in line:
-		return _bbcode_color_text(log_highlight_palette.item_trigger_color)
-	if " is defeated" in line:
-		return _bbcode_color_text(log_highlight_palette.defeat_color)
-	return ""
-
-
-func _bbcode_color_text(color: Color) -> String:
-	return "#" + color.to_html(false)
 
 
 func _scroll_combat_log_to_bottom() -> void:

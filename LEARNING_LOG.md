@@ -2095,3 +2095,42 @@ Manual exercise:
 Open questions:
 
 - Should future replay work split text replay and unit-dot visualization into separate child panels, or is one replay panel still the clearest ownership boundary?
+
+## 2026-06-04 - Shared combat log rich text formatter
+
+Feature worked on:
+
+- Moved duplicated BBCode escaping and combat-line color highlighting out of `combat_test_scene.gd` and `CombatReplayPanel`.
+- Added `CombatLogRichTextFormatter` as the shared UI helper for setup/status text and replay text.
+
+Godot concepts introduced:
+
+- A `RefCounted` script with static functions is useful for shared formatting logic that does not need to be a scene node.
+- `RichTextLabel` display rules can stay in UI code while combat simulation continues to emit plain readable lines and structured events.
+
+Game architecture concepts introduced:
+
+- Formatting is presentation logic, not combat logic.
+- A small helper is justified when two UI owners need exactly the same escaping and highlighting behavior.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/combat_log_rich_text_formatter.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `clockwork-company/scripts/ui/combat_replay_panel.gd`
+- `ARCHITECTURE.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why setup/status text and replay text should share highlighting rules.
+- Why the formatter does not know about `RunState`, `CampaignManager`, or replay timing.
+
+Manual exercise:
+
+- Change one highlight color in `combat_log_highlight_palette_default.tres`, run a fight, and confirm both setup/status lines and replay lines use the same palette rule where applicable.
+
+Open questions:
+
+- Should highlighting remain whole-line, or should a later pass highlight only keywords and values inside each line?

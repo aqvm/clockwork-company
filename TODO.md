@@ -75,6 +75,7 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 - Decide whether keyword highlighting should remain whole-line or add phrase-level emphasis.
 - Consider exposing background and highlight palette choices together.
 - Keep replay presentation separate from combat simulation authority.
+- Keep `CombatLogRichTextFormatter` shared between setup/status text and replay text if highlighting rules change.
 
 ## Units, Jobs, Progression, and Roster
 
