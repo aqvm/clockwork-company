@@ -124,6 +124,7 @@ Adopted:
 - Split combat replay timing, replay text display, visual unit dots, and runtime replay tooltips into a focused `CombatReplayPanel` script.
 - Sync nested `EffectDefinition` names into `resource_name` so item effects stay readable in the Inspector without an editor plugin.
 - Add `tools/check_godot.ps1` as the standard wrapper for the project-local headless Godot script check.
+- Add a lightweight Godot content validation script for scenario/campaign references now that sample content has expanded.
 
 Adopt soon:
 

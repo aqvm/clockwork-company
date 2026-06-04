@@ -2604,3 +2604,43 @@ Manual exercise:
 Open questions:
 
 - Should locked scenarios ever be practice-playable for testing, or should practice stay limited to unlocked scenarios?
+
+## 2026-06-04 - Lightweight content validation check
+
+Feature worked on:
+
+- Added a Godot-driven content validation script for scenario and campaign references.
+- Added `tools/check_content.ps1` as a wrapper for running that validation from the repository root.
+- The validator checks scenario ids, display names, encounters, rewards, campaign starting ids, duplicate campaign nodes, and unlock references.
+- Removed the completed lightweight content validation TODO.
+
+Godot concepts introduced:
+
+- A command-line script can extend `SceneTree`, run project-aware `res://` loading, print results, and quit with a process code.
+- `DirAccess` can scan Resource folders from inside Godot.
+
+Game architecture concepts introduced:
+
+- Content validation is a safety net for authored data, not a replacement for combat tests.
+- Campaign unlock ids should be checked against actual scenario ids before a player discovers a broken chain.
+
+Files touched:
+
+- `clockwork-company/scripts/tools/content_validation_check.gd`
+- `tools/check_content.ps1`
+- `TODO.md`
+- `GODOT_BEST_PRACTICES_AUDIT.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why validating scenario references is useful now that the campaign has four nodes.
+- Why this script uses Godot loading instead of parsing `.tres` text manually.
+
+Manual exercise:
+
+- Run `powershell -ExecutionPolicy Bypass -File tools/check_content.ps1`, then temporarily typo one unlock id in `first_road_campaign.tres` and predict the validation error before reverting your typo.
+
+Open questions:
+
+- Should the validator eventually include item/loadout/unit reference checks, or stay scenario/campaign focused until content authoring expands again?
