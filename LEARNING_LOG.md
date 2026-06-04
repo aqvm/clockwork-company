@@ -13,6 +13,49 @@ Each entry should include:
 - Manual exercise
 - Open questions
 
+## 2026-06-04 - Structured replay unit snapshots
+
+Feature worked on:
+
+- Added `replay_snapshots` to combat battle reports.
+- The simulator now records unit HP, max HP, action interval, next action time, alive state, and defeated state after battle start, each turn, and the result event.
+- The replay panel now prefers simulator-authored snapshots for current unit state while still using structured events for log grouping, turn pulses, and floating HP text.
+
+Godot concepts introduced:
+
+- Optional method parameters let a panel accept a new report field while keeping older call shapes easy to preserve.
+- Dictionaries can act as a lightweight report contract while the prototype is still evolving.
+
+Game architecture concepts introduced:
+
+- Authoritative replay state should come from the simulator instead of being reconstructed entirely by UI code.
+- Structured events and snapshots have different jobs: events explain what happened, snapshots describe what state exists afterward.
+- The replay remains presentation-only even when the simulator gives it richer state.
+
+Files touched:
+
+- `clockwork-company/scripts/combat/combat_simulator.gd`
+- `clockwork-company/scripts/ui/combat_replay_panel.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why replay snapshots are keyed to root combat log event IDs.
+- Why the replay panel still applies structured events before applying a snapshot.
+- Why this does not make combat frame-dependent.
+
+Manual exercise:
+
+- Run a fight, hover a replay unit dot after a few turns, and compare its HP/timing tooltip to the visible combat event that just played.
+
+Open questions:
+
+- Should future snapshots include statuses, cast bars, temporary armor, or active cooldown counters once those visuals become useful?
+
 ## 2026-06-04 - Pinned nested Resource tooltips
 
 Feature worked on:

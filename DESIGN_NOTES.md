@@ -82,7 +82,7 @@ Current combat log design rules:
 - the combat test scene background should be an intentional dark neutral so highlight colors retain readable contrast
 - background color should stay fixed while highlight palettes are still being tuned; expose background and palette choices together only when the project has real theme presets instead of one-off color toggles
 - replay text and replay visualization can coexist in the same pane, with a clear divider so readability stays primary
-- a first-pass replay visualization can be reconstructed from deterministic log text if it stays explicitly presentation-only
+- replay visualization should prefer simulator-authored unit snapshots for authoritative unit state, while structured events remain useful for grouping text and triggering lightweight visual emphasis
 - once replay effects expand, UI systems should consume structured combat events (`event_type` + payload) rather than parsing prose line phrasing
 - structured event types should be validated at write-time so missing payload fields fail early during development
 - event payloads should carry stable unit IDs in addition to display names so rename-friendly UI features remain safe

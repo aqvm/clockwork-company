@@ -32,6 +32,7 @@ func run_battle_report(definitions: Array[UnitDefinition], battle_title := "Run 
 func run_battle_report_from_units(units: Array, battle_title := "Run battle") -> Dictionary:
 	var log = CombatLogScript.new()
 	var actions_taken := 0
+	var replay_snapshots: Array[Dictionary] = []
 
 	log.add(battle_title)
 	log.add("Random seed: none yet. This fight is deterministic because there are no random rolls.")
@@ -52,6 +53,7 @@ func run_battle_report_from_units(units: Array, battle_title := "Run battle") ->
 	var battle_start_entry_id: int = log.add_event("Battle starts.", battle_start_event["event_type"], 0, CombatLogScript.NO_PARENT, battle_start_event["payload"], battle_start_event["tags"])
 	ItemEffectResolverScript.apply_battle_start_item_effects(log, units, battle_start_entry_id)
 	AncestryFeatureResolverScript.apply_battle_start_features(log, units, battle_start_entry_id)
+	replay_snapshots.append(_build_replay_snapshot(battle_start_entry_id, 0, units))
 	log.add("")
 	_append_roster(log, units)
 	log.add("")
@@ -73,16 +75,19 @@ func run_battle_report_from_units(units: Array, battle_title := "Run battle") ->
 		actions_taken += 1
 		if actor.is_alive():
 			TurnSchedulerScript.schedule_next_turn(actor)
+		replay_snapshots.append(_build_replay_snapshot(turn_entry_id, current_time, units))
 
 	log.add("")
 	var result_text := CombatTextFormatterScript.build_result_line(units, actions_taken)
 	var result_event := CombatEventsScript.result(result_text)
-	log.add_event(result_text, result_event["event_type"], CombatLogScript.NO_TIME, CombatLogScript.NO_PARENT, result_event["payload"], result_event["tags"])
+	var result_entry_id: int = log.add_event(result_text, result_event["event_type"], CombatLogScript.NO_TIME, CombatLogScript.NO_PARENT, result_event["payload"], result_event["tags"])
+	replay_snapshots.append(_build_replay_snapshot(result_entry_id, CombatLogScript.NO_TIME, units))
 	return {
 		"log_version": LOG_VERSION,
 		"lines": log.to_lines(),
 		"events": log.to_event_objects(),
 		"roster_units": _build_roster_units(units),
+		"replay_snapshots": replay_snapshots,
 		"winner": _winner_for_units(units),
 		"actions_taken": actions_taken,
 	}
@@ -244,6 +249,27 @@ func _build_roster_units(units: Array) -> Array[Dictionary]:
 			"action_interval": unit.action_interval,
 		})
 	return roster_units
+
+
+func _build_replay_snapshot(root_event_id: int, time: int, units: Array) -> Dictionary:
+	var unit_snapshots: Array[Dictionary] = []
+	for unit in units:
+		unit_snapshots.append({
+			"id": unit.unit_id,
+			"name": unit.unit_name,
+			"team": unit.team,
+			"max_hp": unit.max_hp,
+			"hp": unit.hp,
+			"action_interval": unit.action_interval,
+			"next_action_time": unit.next_action_time,
+			"is_alive": unit.is_alive(),
+			"is_defeated": not unit.is_alive(),
+		})
+	return {
+		"root_event_id": root_event_id,
+		"time": time,
+		"units": unit_snapshots,
+	}
 
 
 func _winner_for_units(units: Array) -> String:

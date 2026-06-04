@@ -178,7 +178,7 @@ The first playable test now opens as a scenario workbench with the older combat 
 - `scripts/combat/logging/combat_event_schema.gd` defines known event types and required payload keys as the structured logging contract.
 - `scripts/combat/logging/combat_events.gd` provides typed event-construction helpers so simulator/rule code does not handcraft payload dictionaries ad hoc.
 - `combat_simulator.gd` now orchestrates a battle by delegating logging, targeting, tactic selection, effect resolution, scheduling, and demo roster setup to dedicated scripts.
-- `combat_simulator.gd` now also provides structured battle report APIs (`run_demo_battle_report` and `run_battle_report`) that return rendered lines, structured events, roster snapshots, winner, and action count.
+- `combat_simulator.gd` now also provides structured battle report APIs (`run_demo_battle_report` and `run_battle_report`) that return rendered lines, structured events, initial roster snapshots, replay unit-state snapshots, winner, and action count.
 - Base game content remains authored in `.tres` Resources; the loader derives JSON-like dictionaries from those Resources, then applies mod JSON overrides from `res://mods/*.json` before constructing runtime Resources.
 - Structured report payloads now include a `log_version` field for format evolution safety.
 - `clockwork-company/scripts/data/unit_definition.gd` defines the editable unit data Resource type, including ancestry, base physical/magic damage, and per-job progress.
@@ -304,7 +304,8 @@ Combat log responsibility split:
 - The combat test scene sizes the game window to roughly three quarters of the current monitor's usable area and stacks setup above replay in a vertical split. The setup pane is resized after each run to use the smaller of its content height or half the available log area.
 - The replay and setup panes now apply UI-layer keyword highlighting to plain simulator lines by wrapping BBCode-safe text in color tags by category (timestamp, attacks, damage, healing, guard, tactics, job effects, item triggers, defeats, and result).
 - The replay pane now has a left/right split: left is the existing text replay, right is a lightweight unit visualization panel separated by a vertical rule.
-- The visualization panel is still presentation-only: it reads roster snapshots and structured replay events from the simulator report, then draws unit circles, health arcs, cooldown bars, and lightweight VFX without changing simulator rules.
+- The visualization panel is still presentation-only: it reads initial roster snapshots, simulator-authored replay unit-state snapshots, and structured replay events from the simulator report, then draws unit circles, health arcs, cooldown bars, and lightweight VFX without changing simulator rules.
+- Structured replay events still drive text grouping, turn pulses, and floating HP changes; replay snapshots are the authoritative source for current unit HP, timing, and defeated state when present.
 - Highlight colors are configured in a dedicated `CombatLogHighlightPalette` Resource so color tuning stays editor-visible and does not require editing code constants.
 - The scenario workbench includes a default/colorblind highlight palette toggle using separate `CombatLogHighlightPalette` Resources.
 - This is presentation only: `run_demo_battle()` still finishes the deterministic simulation before replay starts.

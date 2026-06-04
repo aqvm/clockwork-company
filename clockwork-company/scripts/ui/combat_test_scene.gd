@@ -35,6 +35,7 @@ var tooltip_presenter = null
 var cached_static_lines: Array[String] = []
 var cached_structured_events: Array[Dictionary] = []
 var cached_roster_units: Array[Dictionary] = []
+var cached_replay_snapshots: Array[Dictionary] = []
 var replay_is_active := false
 var available_mod_packs: Array[Dictionary] = []
 var enabled_mod_pack_ids := {}
@@ -95,7 +96,7 @@ func _on_run_button_pressed() -> void:
 
 	run_controls.show_run_button(RUN_BUTTON_REPLAYING_TEXT, true)
 	replay_is_active = true
-	replay_panel.call("start_replay", cached_roster_units, cached_structured_events)
+	replay_panel.call("start_replay", cached_roster_units, cached_structured_events, cached_replay_snapshots)
 
 
 func _on_viewport_size_changed() -> void:
@@ -122,10 +123,11 @@ func _load_combat_preview() -> void:
 	cached_static_lines.clear()
 	cached_structured_events = report.get("events", []).duplicate(true)
 	cached_roster_units = report.get("roster_units", []).duplicate(true)
+	cached_replay_snapshots = report.get("replay_snapshots", []).duplicate(true)
 	_collect_static_log_lines(log_lines, static_lines)
 	cached_static_lines = _build_run_static_lines(static_lines)
 	_append_lines(combat_summary, cached_static_lines)
-	replay_panel.call("load_preview", cached_roster_units, cached_structured_events)
+	replay_panel.call("load_preview", cached_roster_units, cached_structured_events, cached_replay_snapshots)
 	_update_run_controls()
 	call_deferred("_resize_conditions_pane")
 
@@ -136,6 +138,7 @@ func _show_run_state_without_combat_preview() -> void:
 	cached_static_lines.clear()
 	cached_structured_events.clear()
 	cached_roster_units.clear()
+	cached_replay_snapshots.clear()
 	_clear_replay_log()
 	if run_state == null:
 		return

@@ -26,6 +26,8 @@ var replay_events: Array[Dictionary] = []
 var structured_events: Array[Dictionary] = []
 var current_grouped_events: Array[Dictionary] = []
 var roster_units: Array[Dictionary] = []
+var replay_snapshots: Array[Dictionary] = []
+var snapshots_by_root_id := {}
 var units_by_name := {}
 var units_by_id := {}
 var unit_widgets_by_name := {}
@@ -65,19 +67,22 @@ func tick(delta: float) -> void:
 		_update_visual_replay_widgets()
 
 
-func load_preview(new_roster_units: Array, new_structured_events: Array) -> void:
+func load_preview(new_roster_units: Array, new_structured_events: Array, new_replay_snapshots: Array = []) -> void:
 	roster_units = _typed_dictionary_array(new_roster_units)
 	structured_events = _typed_dictionary_array(new_structured_events)
+	replay_snapshots = _typed_dictionary_array(new_replay_snapshots)
+	_index_replay_snapshots()
 	_build_visual_replay_model()
 	_build_visual_replay_widgets()
 	displayed_sim_time = 0.0
 	active_event_actor_name = ""
+	_apply_snapshot_for_root_event(0)
 	_update_visual_replay_widgets()
 
 
-func start_replay(new_roster_units: Array, new_structured_events: Array) -> void:
+func start_replay(new_roster_units: Array, new_structured_events: Array, new_replay_snapshots: Array = []) -> void:
 	clear_replay()
-	load_preview(new_roster_units, new_structured_events)
+	load_preview(new_roster_units, new_structured_events, new_replay_snapshots)
 	_prepare_replay_events()
 
 	replay_is_active = true
@@ -111,6 +116,7 @@ func clear_replay() -> void:
 	_update_event_data_button()
 	units_by_name.clear()
 	units_by_id.clear()
+	snapshots_by_root_id.clear()
 	unit_widgets_by_name.clear()
 	for child in allies_row.get_children():
 		child.queue_free()
@@ -161,6 +167,7 @@ func _prepare_replay_events() -> void:
 			last_timed_event = float(timed_value)
 		var replay_time := last_timed_event if timed_value < 0 else float(timed_value)
 		replay_events.append({
+			"root_event_id": root_id,
 			"time": replay_time,
 			"lines": grouped_lines,
 			"events": grouped_events,
@@ -177,7 +184,9 @@ func _show_next_replay_event() -> void:
 	displayed_sim_time = current_event_time
 	current_grouped_events = _typed_dictionary_array(event.get("events", []))
 	_update_event_data_button()
+	var root_event_id := int(event.get("root_event_id", -1))
 	_apply_structured_events_to_visual_model(current_grouped_events)
+	_apply_snapshot_for_root_event(root_event_id)
 	_update_visual_replay_widgets()
 
 	var event_lines: Array = event["lines"]
@@ -337,6 +346,49 @@ func _build_visual_replay_widgets() -> void:
 		unit_widgets_by_name[name] = dot
 
 	_update_visual_replay_widgets()
+
+
+func _index_replay_snapshots() -> void:
+	snapshots_by_root_id.clear()
+	for snapshot: Dictionary in replay_snapshots:
+		var root_event_id := int(snapshot.get("root_event_id", -1))
+		if root_event_id >= 0:
+			snapshots_by_root_id[root_event_id] = snapshot
+
+
+func _apply_snapshot_for_root_event(root_event_id: int) -> bool:
+	if not snapshots_by_root_id.has(root_event_id):
+		return false
+	var snapshot: Dictionary = snapshots_by_root_id[root_event_id]
+	var units: Array = snapshot.get("units", [])
+	var actor_name := active_event_actor_name
+	for raw_unit in units:
+		if not (raw_unit is Dictionary):
+			continue
+		var unit_snapshot: Dictionary = raw_unit
+		var state := _find_unit_state_from_snapshot(unit_snapshot)
+		if state.is_empty():
+			continue
+		state["max_hp"] = max(1, int(unit_snapshot.get("max_hp", state.get("max_hp", 1))))
+		state["hp"] = clamp(int(unit_snapshot.get("hp", state.get("hp", state["max_hp"]))), 0, int(state["max_hp"]))
+		state["action_interval"] = max(1, int(unit_snapshot.get("action_interval", state.get("action_interval", 1))))
+		state["next_action_time"] = float(unit_snapshot.get("next_action_time", state.get("next_action_time", 0.0)))
+		state["is_alive"] = bool(unit_snapshot.get("is_alive", state.get("is_alive", true)))
+		state["is_defeated"] = bool(unit_snapshot.get("is_defeated", not bool(state["is_alive"])))
+		if bool(state["is_defeated"]):
+			state["defeat_time"] = displayed_sim_time
+	active_event_actor_name = actor_name
+	return true
+
+
+func _find_unit_state_from_snapshot(snapshot: Dictionary) -> Dictionary:
+	var unit_id := String(snapshot.get("id", ""))
+	if not unit_id.is_empty() and units_by_id.has(unit_id):
+		return units_by_id[unit_id]
+	var unit_name := String(snapshot.get("name", ""))
+	if not unit_name.is_empty() and units_by_name.has(unit_name):
+		return units_by_name[unit_name]
+	return {}
 
 
 func _apply_structured_events_to_visual_model(events: Array) -> void:

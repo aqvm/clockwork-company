@@ -29,7 +29,7 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 
 ## Replay and Presentation
 
-- Move visual replay toward structured simulator snapshots instead of reconstructing from log/event payloads where useful.
+- Keep moving visual replay toward structured simulator snapshots where richer visuals need more state. The replay now consumes simulator-authored unit snapshots after battle start and each root event, while structured events still drive text grouping and lightweight effects.
 - Add richer replay visuals only when they clarify combat:
   - portraits
   - statuses
