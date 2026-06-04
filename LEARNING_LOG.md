@@ -3405,3 +3405,45 @@ Manual exercise:
 Open questions:
 
 - Which future system should consume content unlock IDs first: gear availability, scenario branches, or lore/intel panels?
+
+## 2026-06-04 - First campaign save/load slice
+
+Feature worked on:
+
+- Added JSON save/load for stable campaign progress.
+- The save stores campaign id/version, completed scenarios, unlocked scenario IDs, unlocked content IDs, and campaign completion.
+- Added Save Campaign and Load Campaign buttons to the scenario workbench controls.
+- Kept active runs, roster state, inventory, gear, and job progress out of the save file for now.
+
+Godot concepts introduced:
+
+- `FileAccess` can read/write user-scoped files through `user://`.
+- `JSON.stringify` and `JSON.parse_string` are enough for a small inspectable prototype save file.
+
+Game architecture concepts introduced:
+
+- Save files should start with stable state, not half-modeled runtime details.
+- Campaign progress owns persistence data; UI buttons only request save/load and refresh presentation.
+
+Files touched:
+
+- `clockwork-company/scripts/campaign/campaign_progress.gd`
+- `clockwork-company/scripts/campaign/campaign_manager.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why the save file does not restore an active scenario run yet.
+- Why the save includes a version and campaign id.
+
+Manual exercise:
+
+- Complete Roadside Ambush, click Save Campaign, restart the project, click Load Campaign, and confirm Burned Chapel plus the Roadside content unlock are restored.
+
+Open questions:
+
+- What exact roster state should be persisted before gear/job progress are added to the save?

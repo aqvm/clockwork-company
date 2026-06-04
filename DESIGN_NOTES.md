@@ -242,6 +242,8 @@ Content unlock IDs should be visible before they become gates. The scenario list
 
 Campaign persistence should stay light at first: completed scenarios, unlocked content, and eventually roster/job/gear state. Do not add injury, rest, fatigue, base-building, calendars, or management-sim systems without an explicit design pass.
 
+The first campaign save/load slice should restore only stable campaign progress: completed scenarios, unlocked scenario IDs, unlocked content IDs, and campaign completion. Active scenario runs, roster careers, inventory, gear, and job progress need their own model before being serialized.
+
 Rotation pressure should eventually come from XP caps, scenario constraints, enemy mechanics, content unlocks, and optional mastery goals rather than punishment systems.
 
 ### Tooltip input

@@ -2,6 +2,7 @@ extends RefCounted
 class_name CampaignManager
 
 const CampaignProgressScript := preload("res://scripts/campaign/campaign_progress.gd")
+const SAVE_VERSION := 1
 
 var campaign: Resource = null
 var progress = CampaignProgressScript.new()
@@ -77,6 +78,48 @@ func status_lines() -> Array[String]:
 	return lines
 
 
+func save_to_path(path: String) -> int:
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	if file == null:
+		return FileAccess.get_open_error()
+	file.store_string(JSON.stringify(to_save_data(), "\t"))
+	return OK
+
+
+func load_from_path(path: String) -> bool:
+	if not FileAccess.file_exists(path):
+		return false
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return false
+	var parsed = JSON.parse_string(file.get_as_text())
+	if not (parsed is Dictionary):
+		return false
+	return apply_save_data(parsed)
+
+
+func to_save_data() -> Dictionary:
+	return {
+		"save_version": SAVE_VERSION,
+		"campaign_id": campaign.campaign_id if campaign != null else "",
+		"progress": progress.to_save_data(),
+	}
+
+
+func apply_save_data(data: Dictionary) -> bool:
+	if campaign == null:
+		return false
+	if int(data.get("save_version", 0)) != SAVE_VERSION:
+		return false
+	if String(data.get("campaign_id", "")) != campaign.campaign_id:
+		return false
+	var progress_data = data.get("progress", {})
+	if not (progress_data is Dictionary):
+		return false
+	progress.apply_save_data(progress_data, _scenario_ids())
+	return true
+
+
 func _find_node(scenario_id: String):
 	if campaign == null:
 		return null
@@ -84,6 +127,16 @@ func _find_node(scenario_id: String):
 		if node != null and node.scenario != null and node.scenario.scenario_id == scenario_id:
 			return node
 	return null
+
+
+func _scenario_ids() -> Array[String]:
+	var ids: Array[String] = []
+	if campaign == null:
+		return ids
+	for node in campaign.scenario_nodes:
+		if node != null and node.scenario != null:
+			ids.append(String(node.scenario.scenario_id))
+	return ids
 
 
 func _join_or_none(values: Array[String]) -> String:

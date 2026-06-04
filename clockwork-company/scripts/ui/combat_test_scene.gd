@@ -15,6 +15,7 @@ const MODS_BUTTON_BASE_TEXT := "Mods"
 const MOD_SETTINGS_PATH := "user://mod_settings.cfg"
 const MOD_SETTINGS_SECTION := "mods"
 const MOD_SETTINGS_KEY_ENABLED_IDS := "enabled_pack_ids"
+const CAMPAIGN_SAVE_PATH := "user://first_road_campaign_save.json"
 const MIN_CONDITIONS_HEIGHT := 120
 const MAX_EQUIPMENT_BUTTONS := 12
 const DEBUG_CONTROL_FONT_SIZE := 12
@@ -49,6 +50,8 @@ var continue_button: Button = null
 var loss_test_button: Button = null
 var phase7_run_button: Button = null
 var palette_button: Button = null
+var save_campaign_button: Button = null
+var load_campaign_button: Button = null
 var colorblind_palette_enabled := false
 var campaign_manager = null
 var active_campaign_scenario_id := ""
@@ -172,6 +175,16 @@ func _setup_run_controls() -> void:
 	palette_button.pressed.connect(_on_palette_button_pressed)
 	run_button.get_parent().add_child(palette_button)
 
+	save_campaign_button = Button.new()
+	save_campaign_button.text = "Save Campaign"
+	save_campaign_button.pressed.connect(_on_save_campaign_pressed)
+	run_button.get_parent().add_child(save_campaign_button)
+
+	load_campaign_button = Button.new()
+	load_campaign_button.text = "Load Campaign"
+	load_campaign_button.pressed.connect(_on_load_campaign_pressed)
+	run_button.get_parent().add_child(load_campaign_button)
+
 	var debug_label := Label.new()
 	debug_label.text = "Debug harness"
 	debug_label.modulate = Color(0.65, 0.65, 0.65)
@@ -226,6 +239,30 @@ func _on_palette_button_pressed() -> void:
 		combat_summary.clear()
 		_append_lines(combat_summary, cached_static_lines)
 		call_deferred("_resize_conditions_pane")
+
+
+func _on_save_campaign_pressed() -> void:
+	if campaign_manager == null:
+		return
+	var err: int = campaign_manager.save_to_path(CAMPAIGN_SAVE_PATH)
+	if err == OK:
+		_show_campaign_message("Campaign saved to %s." % CAMPAIGN_SAVE_PATH)
+	else:
+		_show_campaign_message("Campaign save failed with error %d." % err)
+
+
+func _on_load_campaign_pressed() -> void:
+	if campaign_manager == null:
+		return
+	if campaign_manager.load_from_path(CAMPAIGN_SAVE_PATH):
+		run_state = null
+		active_campaign_scenario_id = ""
+		selected_scenario = null
+		selected_unit_name = ""
+		_load_planning_party()
+		_show_campaign_message("Campaign loaded from %s." % CAMPAIGN_SAVE_PATH)
+	else:
+		_show_campaign_message("No compatible campaign save found at %s." % CAMPAIGN_SAVE_PATH)
 
 
 func _setup_planning_panel() -> void:
@@ -360,11 +397,15 @@ func _update_run_controls() -> void:
 	if run_state == null:
 		run_button.disabled = true
 		run_button.text = "Choose Scenario"
+		save_campaign_button.disabled = campaign_manager == null
+		load_campaign_button.disabled = campaign_manager == null
 		loss_test_button.disabled = replay_is_active
 		phase7_run_button.disabled = replay_is_active
 		_update_campaign_controls()
 		return
 
+	save_campaign_button.disabled = campaign_manager == null or replay_is_active
+	load_campaign_button.disabled = campaign_manager == null or replay_is_active
 	loss_test_button.disabled = replay_is_active
 	phase7_run_button.disabled = replay_is_active
 	if replay_is_active:
@@ -712,6 +753,14 @@ func _show_campaign_landing() -> void:
 	_refresh_planning_panel()
 	_update_run_controls()
 	call_deferred("_resize_conditions_pane")
+
+
+func _show_campaign_message(message: String) -> void:
+	_show_campaign_landing()
+	if not message.is_empty():
+		CombatLogRichTextFormatterScript.append_line(combat_summary, "", log_highlight_palette)
+		CombatLogRichTextFormatterScript.append_line(combat_summary, message, log_highlight_palette)
+		call_deferred("_resize_conditions_pane")
 
 
 func _rebuild_mod_menu() -> void:

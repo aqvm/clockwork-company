@@ -40,3 +40,43 @@ func unlock_content(content_id: String) -> void:
 	if content_id.is_empty() or unlocked_content_ids.has(content_id):
 		return
 	unlocked_content_ids.append(content_id)
+
+
+func to_save_data() -> Dictionary:
+	return {
+		"current_scenario_id": "",
+		"completed_scenario_ids": completed_scenario_ids.duplicate(),
+		"unlocked_scenario_ids": unlocked_scenario_ids.duplicate(),
+		"unlocked_content_ids": unlocked_content_ids.duplicate(),
+		"campaign_completed": campaign_completed,
+	}
+
+
+func apply_save_data(data: Dictionary, valid_scenario_ids: Array[String]) -> void:
+	current_scenario_id = ""
+	completed_scenario_ids = _valid_scenario_id_array(data.get("completed_scenario_ids", []), valid_scenario_ids)
+	unlocked_scenario_ids = _valid_scenario_id_array(data.get("unlocked_scenario_ids", []), valid_scenario_ids)
+	unlocked_content_ids = _string_array(data.get("unlocked_content_ids", []))
+	campaign_completed = bool(data.get("campaign_completed", false))
+
+
+func _valid_scenario_id_array(values: Variant, valid_scenario_ids: Array[String]) -> Array[String]:
+	var results: Array[String] = []
+	if not (values is Array):
+		return results
+	for value in values:
+		var id_text := String(value)
+		if valid_scenario_ids.has(id_text) and not results.has(id_text):
+			results.append(id_text)
+	return results
+
+
+func _string_array(values: Variant) -> Array[String]:
+	var results: Array[String] = []
+	if not (values is Array):
+		return results
+	for value in values:
+		var text := String(value)
+		if not text.is_empty() and not results.has(text):
+			results.append(text)
+	return results

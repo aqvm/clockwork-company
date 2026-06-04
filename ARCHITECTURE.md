@@ -97,9 +97,11 @@ The scenario workbench can also start an unlocked scenario as a practice run. Pr
 
 The campaign layer does not change combat rules. Real fights still run through `CombatSimulator`; runtime combat state still lives in combat runtime classes; between-fight roster/reward/equipment choices still live in `RunState`.
 
+Campaign progress can be saved to and loaded from `user://first_road_campaign_save.json` as small JSON. This first save slice stores campaign id/version, completed scenarios, unlocked scenarios, unlocked content ids, and campaign completion. It deliberately does not restore an active scenario run, roster state, inventory, gear, or job progress yet.
+
 Intentionally not implemented here:
 
-- save/load
+- active-run, roster, inventory, gear, or job-progress save/load
 - persistent roster import/export
 - injuries, fatigue, rest, or base management
 - procedural generation

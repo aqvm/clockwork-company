@@ -20,11 +20,7 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 
 - Add more scenario rule resolvers only when a scenario needs them. `iron_tollgate_armored_enemies` is the first mechanical rule and gives enemies +2 armor.
 - Make scenario rewards and content unlocks mechanically change later options after the campaign progression model is broader. Current UI shows scenario unlock state and content unlock state, but content IDs are still informational.
-- Add campaign save/load for:
-  - completed scenarios
-  - unlocked scenario IDs
-  - unlocked content IDs
-  - active roster state
+- Add campaign save/load for active roster state after roster persistence is designed. Completed scenarios, unlocked scenario IDs, unlocked content IDs, campaign completion, and campaign ID/version validation now save/load as small JSON.
 - Add persistent roster/job/gear integration across scenarios.
 - Decide how roster/job/gear state moves from one scenario to the next.
 - Add optional mastery goals later, if they help create rotation pressure without punishment systems.
@@ -74,8 +70,8 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 
 ## Save/Load and Persistence
 
-- Add campaign save/load only after the campaign state shape is stable.
-- Persist unlocked/completed scenarios before adding broader roster persistence.
+- Add broader campaign save/load only after the campaign state shape is stable.
+- Persisted unlocked/completed scenarios now exist as the first save slice; add roster persistence separately.
 - Persist roster/job/gear state after the roster model is clear.
 - Keep save data small and inspectable while the project is still learning-first.
 
