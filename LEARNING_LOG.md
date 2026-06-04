@@ -2291,3 +2291,46 @@ Manual exercise:
 Open questions:
 
 - Should future scenario enemy previews use the same helper, or wait for a dedicated fight-preview panel?
+
+## 2026-06-04 - Clearer scenario selection states
+
+Feature worked on:
+
+- Scenario list entries now label scenarios as available, locked, complete, or active.
+- The scenario list remains visible while a scenario is active so the active state can be inspected.
+- Scenario detail text now explains what each status means, including that completed-scenario replay is not implemented yet.
+- The start button now changes its label for locked, complete, and active scenarios instead of only disabling itself.
+
+Godot concepts introduced:
+
+- UI state can be expressed through button labels and disabled states without changing underlying game rules.
+- Child panels can receive a plain status string from the parent rather than depending directly on `CampaignManager`.
+
+Game architecture concepts introduced:
+
+- Selection, starting, active play, completion, and replay are separate states.
+- Completed campaign scenarios are inspectable but not replayable until standalone/replay mode is deliberately implemented.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/scenario_list_panel.gd`
+- `clockwork-company/scripts/ui/scenario_detail_panel.gd`
+- `clockwork-company/scripts/ui/unit_action_panel.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `ARCHITECTURE.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why locked scenarios are still selectable for inspection.
+- Why a completed scenario being visible is not the same thing as being replayable.
+- Why `combat_test_scene.gd` still computes status while child panels only render it.
+
+Manual exercise:
+
+- Start `Roadside Ambush`, then select each scenario in the list and explain why its start button label is enabled or disabled.
+
+Open questions:
+
+- Should completed scenarios eventually launch a standalone replay run, or should replay wait until campaign save/load exists?

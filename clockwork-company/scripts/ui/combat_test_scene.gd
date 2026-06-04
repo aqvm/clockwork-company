@@ -411,7 +411,7 @@ func _update_run_controls() -> void:
 
 func _update_campaign_controls() -> void:
 	var scenarios: Array = []
-	if campaign_manager != null and active_campaign_scenario_id.is_empty() and not replay_is_active:
+	if campaign_manager != null and not replay_is_active:
 		scenarios = campaign_manager.all_scenarios()
 	if scenario_list_panel != null:
 		var progress = campaign_manager.progress if campaign_manager != null else null
@@ -487,6 +487,7 @@ func _render_unit_actions() -> void:
 			selected_scenario,
 			selected_unit,
 			selected_unit_name,
+			_scenario_campaign_status(selected_scenario),
 			_selected_scenario_can_start(),
 			not active_campaign_scenario_id.is_empty(),
 			replay_is_active,
@@ -508,6 +509,8 @@ func _selected_scenario_can_start() -> bool:
 func _scenario_campaign_status(scenario: Resource) -> String:
 	if scenario == null or campaign_manager == null:
 		return "unknown"
+	if active_campaign_scenario_id == scenario.scenario_id:
+		return "active"
 	if campaign_manager.progress.completed_scenario_ids.has(scenario.scenario_id):
 		return "complete"
 	if campaign_manager.progress.is_scenario_unlocked(scenario.scenario_id):

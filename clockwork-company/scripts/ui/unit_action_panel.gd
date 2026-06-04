@@ -10,6 +10,7 @@ func show_actions(
 	selected_scenario: Resource,
 	selected_unit: UnitDefinition,
 	selected_unit_name: String,
+	selected_scenario_status: String,
 	can_start_scenario: bool,
 	has_active_campaign_scenario: bool,
 	is_replay_active: bool,
@@ -17,7 +18,7 @@ func show_actions(
 	equip_options: Array
 ) -> void:
 	_clear_children()
-	_add_start_button(selected_scenario, can_start_scenario, has_active_campaign_scenario, is_replay_active)
+	_add_start_button(selected_scenario, selected_scenario_status, can_start_scenario, has_active_campaign_scenario, is_replay_active)
 
 	if selected_unit == null:
 		return
@@ -35,15 +36,28 @@ func show_actions(
 
 func _add_start_button(
 	selected_scenario: Resource,
+	selected_scenario_status: String,
 	can_start_scenario: bool,
 	has_active_campaign_scenario: bool,
 	is_replay_active: bool
 ) -> void:
 	var button := Button.new()
-	button.text = "Start %s" % selected_scenario.display_name if selected_scenario != null else "Start Selected Scenario"
+	button.text = _start_button_text(selected_scenario, selected_scenario_status)
 	button.disabled = selected_scenario == null or has_active_campaign_scenario or is_replay_active or not can_start_scenario
 	button.pressed.connect(_on_start_button_pressed)
 	add_child(button)
+
+
+func _start_button_text(selected_scenario: Resource, selected_scenario_status: String) -> String:
+	if selected_scenario == null:
+		return "Start Selected Scenario"
+	if selected_scenario_status == "locked":
+		return "Locked: %s" % selected_scenario.display_name
+	if selected_scenario_status == "complete":
+		return "Complete: %s" % selected_scenario.display_name
+	if selected_scenario_status == "active":
+		return "Active: %s" % selected_scenario.display_name
+	return "Start %s" % selected_scenario.display_name
 
 
 func _show_planning_or_locked_actions(has_active_campaign_scenario: bool) -> void:

@@ -31,7 +31,7 @@ func show_scenario(scenario: Resource, status_text: String) -> void:
 			_add_resource_text(encounter, "- %s" % encounter.display_name)
 	_add_plain_text("Party size: %d" % scenario.party_size)
 	_add_plain_text("Recommended level: %d-%d" % [scenario.recommended_level_min, scenario.recommended_level_max])
-	_add_plain_text("Status: %s" % status_text)
+	_add_plain_text("Status: %s" % _status_summary(status_text))
 	_add_plain_text("Tags: %s" % _join_values(scenario.tags, ", "))
 	_add_plain_text("Content unlocks: %s" % _join_values(scenario.content_unlocks, ", "))
 	if not scenario.story_outro.is_empty():
@@ -98,3 +98,15 @@ func _join_values(values: Array, separator: String) -> String:
 			text += separator
 		text += String(value)
 	return text
+
+
+func _status_summary(status_text: String) -> String:
+	if status_text == "active":
+		return "active - finish the current scenario before starting another"
+	if status_text == "available":
+		return "available - ready to start"
+	if status_text == "complete":
+		return "complete - campaign replay is not implemented yet"
+	if status_text == "locked":
+		return "locked - complete prerequisite scenarios first"
+	return status_text
