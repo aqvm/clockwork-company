@@ -2987,3 +2987,37 @@ Manual exercise:
 Open questions:
 
 - Should the palette choice be persisted next to mod settings, or remain a session-only presentation toggle for now?
+
+## 2026-06-04 - Highlighting scope decision
+
+Feature worked on:
+
+- Recorded that combat log highlighting should remain whole-line for now.
+- Removed the resolved phrase-level highlighting TODO.
+
+Godot concepts introduced:
+
+- No new Godot concepts; this was a replay presentation design decision.
+
+Game architecture concepts introduced:
+
+- Whole-line categories keep the formatter simple while combat log wording is still evolving.
+- Phrase-level emphasis should wait until it solves a concrete readability problem.
+
+Files touched:
+
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why simple category highlighting is enough for the current combat log.
+
+Manual exercise:
+
+- Run a fight and identify one line where phrase-level highlighting might eventually help, then decide whether it is worth the added formatter complexity today.
+
+Open questions:
+
+- Which exact combat values, if any, should become phrase-highlighted first?
