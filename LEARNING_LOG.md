@@ -3243,3 +3243,43 @@ Manual exercise:
 Open questions:
 
 - Should `Fight Preview` eventually become its own extracted panel scene?
+
+## 2026-06-04 - Planning workbench scene wrapper
+
+Feature worked on:
+
+- Moved the stable scenario planning row out of `combat_test_scene.gd` and into `planning_workbench_panel.tscn`.
+- Added `PlanningWorkbenchPanel` as a thin wrapper that forwards child panel signals and tooltip requests upward.
+- Kept campaign/run state in the main scene instead of teaching the layout wrapper about game progression.
+
+Godot concepts introduced:
+
+- Instanced child scenes can be arranged inside a parent `.tscn` so stable UI layout is visible in the editor.
+- A wrapper scene can re-emit child signals to keep parent code from reaching into every nested node.
+
+Game architecture concepts introduced:
+
+- Layout ownership and state ownership are separate responsibilities.
+- A UI wrapper can reduce scene assembly code without becoming a campaign or combat rules object.
+
+Files touched:
+
+- `clockwork-company/scenes/planning_workbench_panel.tscn`
+- `clockwork-company/scripts/ui/planning_workbench_panel.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `ARCHITECTURE.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why the planning row belongs in a scene file.
+- Why `combat_test_scene.gd` still owns selected scenario, selected unit, and run state.
+
+Manual exercise:
+
+- Open `planning_workbench_panel.tscn` in Godot and identify which child panel emits each planning signal.
+
+Open questions:
+
+- Should reward/debug controls get their own panel next, or should tooltip hosting be extracted first?

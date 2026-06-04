@@ -8,11 +8,7 @@ const RunStateScript := preload("res://scripts/run/run_state.gd")
 const CampaignManagerScript := preload("res://scripts/campaign/campaign_manager.gd")
 const UnitLoadoutDefinitionScript := preload("res://scripts/data/unit_loadout_definition.gd")
 const TooltipPresenterScript := preload("res://scripts/ui/tooltip_presenter.gd")
-const ScenarioListPanelScene := preload("res://scenes/scenario_list_panel.tscn")
-const ScenarioDetailPanelScene := preload("res://scenes/scenario_detail_panel.tscn")
-const PartyPanelScene := preload("res://scenes/party_panel.tscn")
-const UnitDetailPanelScene := preload("res://scenes/unit_detail_panel.tscn")
-const UnitActionPanelScene := preload("res://scenes/unit_action_panel.tscn")
+const PlanningWorkbenchPanelScene := preload("res://scenes/planning_workbench_panel.tscn")
 const COMBAT_LOG_HEADER := "Combat log:"
 const RUN_BUTTON_REPLAYING_TEXT := "Replaying..."
 const MODS_BUTTON_BASE_TEXT := "Mods"
@@ -37,7 +33,7 @@ const COLORBLIND_LOG_HIGHLIGHT_PALETTE := preload("res://resources/ui/combat_log
 @onready var replay_timer: Timer = %ReplayTimer
 @export var log_highlight_palette: CombatLogHighlightPaletteScript = DEFAULT_LOG_HIGHLIGHT_PALETTE
 
-var planning_panel: PanelContainer = null
+var planning_panel: Control = null
 var tooltip_presenter = null
 var cached_static_lines: Array[String] = []
 var cached_structured_events: Array[Dictionary] = []
@@ -60,11 +56,6 @@ var selected_scenario: Resource = null
 var selected_unit_name := ""
 var planning_party: Array[UnitDefinition] = []
 var available_items: Array[ItemDefinition] = []
-var scenario_list_panel: Control = null
-var scenario_detail_panel: Control = null
-var party_panel: Control = null
-var unit_detail_panel: Control = null
-var unit_action_panel: Control = null
 
 
 func _ready() -> void:
@@ -239,42 +230,16 @@ func _on_palette_button_pressed() -> void:
 
 func _setup_planning_panel() -> void:
 	var parent_vbox := log_split.get_parent()
-	planning_panel = PanelContainer.new()
-	planning_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	planning_panel.custom_minimum_size = Vector2(0, 220)
+	planning_panel = PlanningWorkbenchPanelScene.instantiate()
+	planning_panel.connect("scenario_selected", _on_scenario_selected)
+	planning_panel.connect("start_scenario_requested", _on_start_selected_scenario_pressed)
+	planning_panel.connect("practice_scenario_requested", _on_practice_selected_scenario_pressed)
+	planning_panel.connect("unit_selected", _on_party_unit_pressed)
+	planning_panel.connect("cycle_equipment_requested", _on_cycle_equipment_pressed)
+	planning_panel.connect("equip_option_requested", _on_planning_equip_pressed)
+	_connect_panel_tooltips(planning_panel)
 	parent_vbox.add_child(planning_panel)
 	parent_vbox.move_child(planning_panel, log_split.get_index())
-
-	var planning_row := HBoxContainer.new()
-	planning_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	planning_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	planning_row.add_theme_constant_override("separation", 10)
-	planning_panel.add_child(planning_row)
-
-	scenario_list_panel = ScenarioListPanelScene.instantiate()
-	scenario_list_panel.connect("scenario_selected", _on_scenario_selected)
-	_connect_panel_tooltips(scenario_list_panel)
-	planning_row.add_child(scenario_list_panel)
-
-	scenario_detail_panel = ScenarioDetailPanelScene.instantiate()
-	_connect_panel_tooltips(scenario_detail_panel)
-	planning_row.add_child(scenario_detail_panel)
-
-	party_panel = PartyPanelScene.instantiate()
-	party_panel.connect("unit_selected", _on_party_unit_pressed)
-	_connect_panel_tooltips(party_panel)
-	planning_row.add_child(party_panel)
-
-	unit_detail_panel = UnitDetailPanelScene.instantiate()
-	_connect_panel_tooltips(unit_detail_panel)
-	planning_row.add_child(unit_detail_panel)
-
-	unit_action_panel = UnitActionPanelScene.instantiate()
-	unit_action_panel.connect("start_scenario_requested", _on_start_selected_scenario_pressed)
-	unit_action_panel.connect("practice_scenario_requested", _on_practice_selected_scenario_pressed)
-	unit_action_panel.connect("cycle_equipment_requested", _on_cycle_equipment_pressed)
-	unit_action_panel.connect("equip_option_requested", _on_planning_equip_pressed)
-	planning_row.add_child(unit_action_panel)
 	conditions_label.text = "Fight Preview"
 	conditions_label.get_parent().visible = true
 
@@ -458,9 +423,9 @@ func _update_campaign_controls() -> void:
 	var scenarios: Array = []
 	if campaign_manager != null and not replay_is_active:
 		scenarios = campaign_manager.all_scenarios()
-	if scenario_list_panel != null:
+	if planning_panel != null:
 		var progress = campaign_manager.progress if campaign_manager != null else null
-		scenario_list_panel.call("show_scenarios", scenarios, progress, selected_scenario, _active_scenario_id())
+		planning_panel.call("show_scenarios", scenarios, progress, selected_scenario, _active_scenario_id())
 
 
 func _select_scenario(scenario: Resource) -> void:
@@ -513,12 +478,9 @@ func _refresh_planning_panel() -> void:
 	if planning_panel == null:
 		return
 	_update_campaign_controls()
-	if scenario_detail_panel != null:
-		scenario_detail_panel.call("show_scenario", selected_scenario, _scenario_campaign_status(selected_scenario))
-	if party_panel != null:
-		party_panel.call("show_party", planning_party, selected_unit_name)
-	if unit_detail_panel != null:
-		unit_detail_panel.call("show_unit", _find_planning_unit(selected_unit_name), planning_party)
+	planning_panel.call("show_scenario", selected_scenario, _scenario_campaign_status(selected_scenario))
+	planning_panel.call("show_party", planning_party, selected_unit_name)
+	planning_panel.call("show_unit", _find_planning_unit(selected_unit_name), planning_party)
 	_render_unit_actions()
 
 
@@ -526,20 +488,19 @@ func _render_unit_actions() -> void:
 	var selected_unit := _find_planning_unit(selected_unit_name)
 	var is_equipment_state: bool = run_state != null and run_state.status == RunStateScript.STATUS_EQUIPMENT
 	var equip_options: Array = run_state.equip_options() if is_equipment_state else []
-	if unit_action_panel != null:
-		unit_action_panel.call(
-			"show_actions",
-			selected_scenario,
-			selected_unit,
-			selected_unit_name,
-			_scenario_campaign_status(selected_scenario),
-			_selected_scenario_can_start(),
-			_selected_scenario_can_practice(),
-			_has_active_scenario_run(),
-			replay_is_active,
-			is_equipment_state,
-			equip_options
-		)
+	planning_panel.call(
+		"show_actions",
+		selected_scenario,
+		selected_unit,
+		selected_unit_name,
+		_scenario_campaign_status(selected_scenario),
+		_selected_scenario_can_start(),
+		_selected_scenario_can_practice(),
+		_has_active_scenario_run(),
+		replay_is_active,
+		is_equipment_state,
+		equip_options
+	)
 
 
 func _selected_scenario_can_start() -> bool:
