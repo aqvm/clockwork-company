@@ -13,6 +13,43 @@ Each entry should include:
 - Manual exercise
 - Open questions
 
+## 2026-06-04 - JSON sidecar validation
+
+Feature worked on:
+
+- Extended the content validation script to require an adjacent `*.options.md` sidecar for every discovered JSON pack.
+- Kept JSON schema/prose completeness as a human documentation responsibility, while making sidecar presence automatic.
+
+Godot concepts introduced:
+
+- Tool scripts can use `FileAccess.file_exists(...)` to validate project files during headless checks.
+- Existing loader descriptors can be reused by validation code instead of rediscovering JSON files separately.
+
+Game architecture concepts introduced:
+
+- Modding documentation is part of the data pipeline, not just prose outside the project.
+- Automated checks are best at enforcing objective rules like file presence; they should not pretend to judge documentation quality.
+
+Files touched:
+
+- `clockwork-company/scripts/tools/content_validation_check.gd`
+- `ARCHITECTURE.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why sidecar presence belongs in `tools/check_content.ps1`.
+- Why sidecar prose completeness still needs review when schema or enum rules change.
+
+Manual exercise:
+
+- Temporarily rename one `*.options.md` file in `clockwork-company/modding/reference/`, run `tools/check_content.ps1`, then restore it and confirm the check passes again.
+
+Open questions:
+
+- Should future validation also check that sidecar filenames mention every top-level JSON section, or would that create brittle documentation tests?
+
 ## 2026-06-04 - Replay ready and defeated badges
 
 Feature worked on:

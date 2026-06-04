@@ -9,7 +9,7 @@ func _init() -> void:
 	var errors: Array[String] = []
 	var scenarios_by_id := _load_scenarios_by_id(errors)
 	_validate_campaign(scenarios_by_id, errors)
-	var pack_count := _validate_json_packs()
+	var pack_count := _validate_json_packs(errors)
 
 	if errors.is_empty():
 		print("Content validation passed: %d scenarios and %d JSON packs checked." % [scenarios_by_id.size(), pack_count])
@@ -92,11 +92,22 @@ func _validate_campaign(scenarios_by_id: Dictionary, errors: Array[String]) -> v
 			errors.append("Campaign starts with unknown scenario_id '%s'." % starting_id)
 
 
-func _validate_json_packs() -> int:
+func _validate_json_packs(errors: Array[String]) -> int:
 	var descriptors: Array[Dictionary] = JsonContentLoaderScript.list_available_mod_packs()
 	for descriptor: Dictionary in descriptors:
+		_validate_json_pack_sidecar(descriptor, errors)
 		var pack_id := String(descriptor.get("id", ""))
 		if pack_id.is_empty():
 			continue
 		JsonContentLoaderScript.load_demo_unit_definitions([pack_id])
 	return descriptors.size()
+
+
+func _validate_json_pack_sidecar(descriptor: Dictionary, errors: Array[String]) -> void:
+	var json_path := String(descriptor.get("path", ""))
+	if json_path.is_empty():
+		errors.append("JSON pack descriptor is missing a path for pack '%s'." % String(descriptor.get("id", "")))
+		return
+	var sidecar_path := "%s.options.md" % json_path.trim_suffix(".json")
+	if not FileAccess.file_exists(sidecar_path):
+		errors.append("JSON pack '%s' is missing sidecar docs: %s" % [String(descriptor.get("id", json_path)), sidecar_path])

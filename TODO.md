@@ -56,12 +56,12 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 - Add more handcrafted scenarios only when the framework and UI can make them understandable.
 - Keep enemies as normal unit/loadout/job/item/tactic builds, not a separate monster-only ruleset.
 - Use tags for filtering/conditions/content tools when an actual tool or rule needs them.
-- Keep JSON sidecar docs next to every JSON content/modding file.
+- Keep JSON sidecar docs next to every JSON content/modding file. `tools/check_content.ps1` now validates that discovered JSON packs have adjacent `*.options.md` files.
 
 ## Modding and Data Pipeline
 
 - Keep `.tres` Resources and JSON mod packs equivalent where practical.
-- Update sidecar `*.options.md` files whenever JSON schema, enums, keywords, or reference rules change.
+- Update sidecar `*.options.md` files whenever JSON schema, enums, keywords, or reference rules change; the content check enforces sidecar presence, not prose completeness.
 - Decide whether base `.tres` content should eventually be exported to reference JSON automatically.
 
 ## Save/Load and Persistence
