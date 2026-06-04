@@ -61,10 +61,7 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 
 - Replace loadout-level ability overrides with real learned ability unlock/equip rules when progression UI exists.
 - Implement player choice for `pending_unlock_choice`.
-- Decide whether job unlock dependencies should exist, and if so how small they can stay.
 - Add persistent unit careers across scenarios.
-- Decide whether equipment permissions should live only on jobs or also include unit/item-specific requirements.
-- Decide whether tactics should live on unit, party, loadout, or encounter Resources long-term.
 - Decide how roster rotation pressure should work through XP caps, scenario constraints, enemy mechanics, unlocks, and mastery goals.
 - Avoid injury, fatigue, rest, base-building, calendars, and management-sim systems unless explicitly requested.
 

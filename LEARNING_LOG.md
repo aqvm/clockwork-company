@@ -2835,3 +2835,41 @@ Manual exercise:
 Open questions:
 
 - What UI would be needed before a multi-branch campaign feels readable instead of merely valid data?
+
+## 2026-06-04 - Job/loadout ownership decisions
+
+Feature worked on:
+
+- Recorded that job unlock dependencies stay deferred until the job set is large enough to need them.
+- Recorded that equipment permissions remain job-owned for now.
+- Recorded that tactics continue to live on loadouts until a party/unit/encounter use case creates real duplication pressure.
+- Removed the resolved ownership-decision TODOs.
+
+Godot concepts introduced:
+
+- No new Godot concepts; this was a data ownership decision pass.
+
+Game architecture concepts introduced:
+
+- Ownership should stay where the current data model is simplest and most inspectable.
+- Dependencies, item requirements, and tactic relocation are extra rules surfaces that need content pressure before they pay rent.
+
+Files touched:
+
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why job unlock dependencies are not useful yet.
+- Why equipment forbids live on jobs right now.
+- Why loadout-owned tactics still fit the prototype.
+
+Manual exercise:
+
+- Open one loadout Resource and explain which parts would become duplicated if a future party-level doctrine system existed.
+
+Open questions:
+
+- Which future feature would create the strongest reason to move tactics out of loadouts?

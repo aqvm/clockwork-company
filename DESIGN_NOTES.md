@@ -131,7 +131,7 @@ Current job leveling rules:
 - job levels permanently apply that job's growth spread to runtime stats
 - unlocks are currently predetermined tracks: skill, passive, and reaction unlock at configured job levels
 - `pending_unlock_choice` exists as scaffolding for future player choice, but this pass auto-unlocks by track
-- job unlock dependency trees are intentionally deferred
+- job unlock dependency trees are intentionally deferred; do not add dependencies until there are enough jobs that dependency rules clarify choices instead of obscuring them
 
 Current job growth rules:
 
@@ -143,6 +143,8 @@ Current job growth rules:
 Damage is now split into physical and magic damage. A damage source with the `magic` tag uses magic damage; otherwise it uses physical damage. Physical damage is reduced by armor. Magic damage currently ignores armor because there is no magic resistance stat yet.
 
 Loadouts are the current composability layer. A `UnitDefinition` stores ancestry, base stats, and a pointer to a `UnitLoadoutDefinition`; the loadout stores current job, weapon, armor, helmet, trinket, and tactics. This lets the same build archetype move between units with different base bodies without changing combat code.
+
+Equipment permissions should remain job-owned for now. Unit-specific or item-specific requirements can wait until a concrete item, ancestry, or scenario needs them.
 
 ### Ancestry as body
 
@@ -180,6 +182,7 @@ Current tactic design rules:
 - every selected tactic must explain itself in the combat log
 - tactic Resources live in loadouts so behavior can be edited in Godot without changing simulator code
 - tactics should have human-readable names because a library of behaviors needs to be recognizable in setup and combat logs, not only by filename or raw rule triplet
+- tactics should continue to live on loadouts until a party-level doctrine, unit career, or encounter override creates real duplication pressure
 
 Armor reduction should stay readable when temporary armor exists. Base battle armor cannot go below zero. Effects such as Shortblade reduce base armor first; if a target has no base armor left, the same reduction can reduce temporary guard armor instead.
 
