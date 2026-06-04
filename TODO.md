@@ -100,7 +100,6 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 - Keep `.tres` Resources and JSON mod packs equivalent where practical.
 - Update sidecar `*.options.md` files whenever JSON schema, enums, keywords, or reference rules change.
 - Add better validation/errors for bad mod references and unsupported enum values.
-- Consider a small helper script for the repeated Godot command-line check.
 - Add a lightweight content validation/check script once scenario and campaign content expands.
 - Decide whether base `.tres` content should eventually be exported to reference JSON automatically.
 - Decide whether `project.godot` should eventually live at the repository root or remain nested.

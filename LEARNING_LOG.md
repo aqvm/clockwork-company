@@ -2410,3 +2410,40 @@ Manual exercise:
 Open questions:
 
 - Should future unit detail UI group this information into collapsible sections once the panel becomes visually dense?
+
+## 2026-06-04 - Godot check helper script
+
+Feature worked on:
+
+- Added `tools/check_godot.ps1` as a small wrapper around the repeated headless Godot `--check-only` command.
+- Kept the project-local `--log-file godot-check.log` behavior so sandboxed checks avoid Godot's normal per-user log directory.
+- Removed the completed helper-script TODO.
+
+Godot concepts introduced:
+
+- Godot can run script checks from the command line with `--headless`, `--path`, `--check-only`, and `--script`.
+- `--log-file` can redirect Godot logs into the project folder.
+
+Game architecture concepts introduced:
+
+- A project helper script is not game architecture, but it protects the learning loop by making checks easy and consistent.
+
+Files touched:
+
+- `tools/check_godot.ps1`
+- `TODO.md`
+- `GODOT_BEST_PRACTICES_AUDIT.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why the helper writes `godot-check.log` into the Godot project folder.
+- How to point the helper at a different script with the `-Script` argument.
+
+Manual exercise:
+
+- Run `powershell -ExecutionPolicy Bypass -File tools/check_godot.ps1` from the repository root and confirm it prints the Godot version without script errors.
+
+Open questions:
+
+- Should future validation scripts live in `tools/` too, or inside the Godot project if they need `res://` paths?
