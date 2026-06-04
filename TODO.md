@@ -20,7 +20,6 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 - Add tooltip support for non-Resource glossary terms such as HP, armor, action interval, physical damage, magic damage, guard, and cooldown.
 - Add tooltip support for combat log terms and structured event payloads.
 - Add tooltip support for status effects once statuses exist.
-- Ensure tooltip content distinguishes source Resource data from runtime combat state.
 
 ## Scenario and Campaign
 

@@ -2485,3 +2485,39 @@ Manual exercise:
 Open questions:
 
 - Should locked/nested tooltips keep using this one presenter, or split pinned tooltip windows into a separate scene?
+
+## 2026-06-04 - Tooltip source notes
+
+Feature worked on:
+
+- Resource tooltips now end with a source note that marks them as authored Resource data.
+- Runtime unit tooltips now mark themselves as runtime combat state.
+- Removed the completed tooltip-source TODO.
+
+Godot concepts introduced:
+
+- Tooltip text can carry small teaching notes without changing the controls that request tooltips.
+
+Game architecture concepts introduced:
+
+- Source definitions and runtime combat state are intentionally different layers.
+- The same visible unit can have authored Resource data in planning and mutable runtime state during replay.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/resource_tooltip_builder.gd`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why a unit tooltip during planning is not the same kind of data as a replay unit-dot tooltip.
+- Why the source note belongs in the tooltip builder instead of every panel.
+
+Manual exercise:
+
+- Hover a party unit before combat, then hover that unit's replay dot during combat, and compare the source note at the bottom.
+
+Open questions:
+
+- Should future glossary tooltips have a third source label such as `Source: rules glossary`?

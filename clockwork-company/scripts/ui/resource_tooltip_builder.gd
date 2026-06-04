@@ -5,29 +5,32 @@ class_name ResourceTooltipBuilder
 static func text_for_resource(resource) -> String:
 	if resource == null:
 		return ""
+	var text := ""
 	if resource is UnitDefinition:
-		return _unit_text(resource)
-	if resource is UnitLoadoutDefinition:
-		return _loadout_text(resource)
-	if resource is ItemDefinition:
-		return _item_text(resource)
-	if resource is JobDefinition:
-		return _job_text(resource)
-	if resource is SkillDefinition:
-		return _skill_text(resource)
-	if resource is PassiveDefinition:
-		return _passive_text(resource)
-	if resource is ReactionDefinition:
-		return _reaction_text(resource)
-	if resource is TacticDefinition:
-		return _tactic_text(resource)
-	if resource is EffectDefinition:
-		return _effect_text(resource)
-	if resource is EncounterDefinition:
-		return _encounter_text(resource)
-	if resource is RewardDefinition:
-		return _reward_text(resource)
-	return _generic_resource_text(resource)
+		text = _unit_text(resource)
+	elif resource is UnitLoadoutDefinition:
+		text = _loadout_text(resource)
+	elif resource is ItemDefinition:
+		text = _item_text(resource)
+	elif resource is JobDefinition:
+		text = _job_text(resource)
+	elif resource is SkillDefinition:
+		text = _skill_text(resource)
+	elif resource is PassiveDefinition:
+		text = _passive_text(resource)
+	elif resource is ReactionDefinition:
+		text = _reaction_text(resource)
+	elif resource is TacticDefinition:
+		text = _tactic_text(resource)
+	elif resource is EffectDefinition:
+		text = _effect_text(resource)
+	elif resource is EncounterDefinition:
+		text = _encounter_text(resource)
+	elif resource is RewardDefinition:
+		text = _reward_text(resource)
+	else:
+		text = _generic_resource_text(resource)
+	return _with_source_note(text, "Source: authored Resource data")
 
 
 static func text_for_runtime_unit(snapshot: Dictionary) -> String:
@@ -39,7 +42,7 @@ static func text_for_runtime_unit(snapshot: Dictionary) -> String:
 	var next_action_time: float = float(snapshot.get("next_action_time", 0.0))
 	var display_time: float = float(snapshot.get("display_time", 0.0))
 	var remaining: float = max(0.0, next_action_time - display_time)
-	return "%s\nTeam: %s\nHP: %d/%d\nAction interval: %d\nNext action in: %.1f" % [name, team, hp, max_hp, action_interval, remaining]
+	return _with_source_note("%s\nTeam: %s\nHP: %d/%d\nAction interval: %d\nNext action in: %.1f" % [name, team, hp, max_hp, action_interval, remaining], "Source: runtime combat state")
 
 
 static func _unit_text(unit: UnitDefinition) -> String:
@@ -222,3 +225,9 @@ static func _join(values: Array, separator := ", ") -> String:
 			text += separator
 		text += value_text
 	return "none" if text.is_empty() else text
+
+
+static func _with_source_note(text: String, note: String) -> String:
+	if text.is_empty():
+		return note
+	return "%s\n\n%s" % [text, note]
