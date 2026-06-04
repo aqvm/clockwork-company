@@ -13,6 +13,43 @@ Each entry should include:
 - Manual exercise
 - Open questions
 
+## 2026-06-04 - Reference JSON export decision
+
+Feature worked on:
+
+- Decided not to auto-export base `.tres` content into reference JSON yet.
+- Removed the open TODO asking whether automatic export should be added now.
+- Recorded that hand-authored reference JSON remains the current modding/teaching artifact.
+
+Godot concepts introduced:
+
+- No new Godot API; this was a data-pipeline design decision.
+
+Game architecture concepts introduced:
+
+- Automatic exporters are useful when schemas are stable, but can hide learning value while data shapes are still changing.
+- A hand-authored reference pack can teach mod authors more clearly than generated output during prototype phases.
+- Loader validation still keeps the hand-authored JSON honest enough for now.
+
+Files touched:
+
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why `.tres` remains the base authoring surface.
+- Why reference JSON is validated but not generated.
+
+Manual exercise:
+
+- Open `base_content.json` and one matching `.tres` Resource, then identify one field where hand-authored documentation is more useful than generated output.
+
+Open questions:
+
+- At what point will schema churn be low enough that an exporter becomes worth building?
+
 ## 2026-06-04 - Scenario reward and rule validation
 
 Feature worked on:

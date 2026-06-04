@@ -88,6 +88,7 @@ Current combat log design rules:
 - structured event types should be validated at write-time so missing payload fields fail early during development
 - event payloads should carry stable unit IDs in addition to display names so rename-friendly UI features remain safe
 - core authoring can stay `.tres`-first for editor ergonomics while modding uses JSON packs with equivalent fields/enums
+- automatic export from base `.tres` content to reference JSON should wait until the schema is calmer; for now, hand-authored reference JSON is a better teaching/modding artifact and is validated through the loader
 - every modding JSON file should have an adjacent options/keywords markdown so schema expectations stay explicit for non-programmer modders
 - mod-pack enable/disable controls should live in UI presentation and never alter simulator rules directly; they only change which validated content packs are loaded before simulation
 - cooldown visualization should map to simulation time so a unit acts when its cooldown bar reaches empty

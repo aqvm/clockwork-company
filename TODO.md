@@ -62,7 +62,6 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 
 - Keep `.tres` Resources and JSON mod packs equivalent where practical.
 - Update sidecar `*.options.md` files whenever JSON schema, enums, keywords, or reference rules change; the content check enforces sidecar presence, not prose completeness.
-- Decide whether base `.tres` content should eventually be exported to reference JSON automatically.
 
 ## Save/Load and Persistence
 
