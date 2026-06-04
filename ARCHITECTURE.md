@@ -214,6 +214,7 @@ Current run-loop rules:
 - reward choices are `RewardDefinition` Resources that point to normal item Resources
 - winning fights 1-4 moves the run to reward choice
 - choosing one reward adds that reward's item to run inventory and moves the run to equipment decisions for the next fight
+- scenario run status and buttons name the next encounter so multi-fight scenarios have an explicit transition before combat starts
 - equipment buttons show valid item/unit pairings based on current job equipment forbids
 - equipping an inventory item replaces that unit's existing item in the matching slot and returns the replaced item to inventory
 - `Continue to Next Fight` leaves the equipment state and starts the next active fight

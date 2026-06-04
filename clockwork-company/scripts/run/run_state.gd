@@ -57,6 +57,7 @@ func start_scenario(enabled_mod_pack_ids: Array[String], scenario: Resource, sho
 	reward_definitions = scenario.rewards.duplicate() if scenario != null else []
 	if reward_definitions.is_empty():
 		reward_definitions = _load_reward_definitions()
+	last_result_summary = "Ready to enter encounter %d: %s." % [current_fight_number(), current_encounter_name()]
 
 
 func _start_common(enabled_mod_pack_ids: Array[String], should_force_loss := false, starting_allies: Array = []) -> void:
@@ -147,7 +148,7 @@ func complete_fight(report: Dictionary) -> void:
 
 	_award_current_job_levels()
 	status = STATUS_REWARD
-	last_result_summary = "Fight %d won. Choose one reward before fight %d." % [current_fight_number(), current_fight_number() + 1]
+	last_result_summary = "Encounter %d cleared. Choose one reward before encounter %d: %s." % [current_fight_number(), current_fight_number() + 1, _next_encounter_name()]
 
 
 func reward_options() -> Array[Dictionary]:
@@ -179,7 +180,7 @@ func apply_reward(reward_index: int) -> void:
 	if scenario_runner != null:
 		scenario_runner.progress.current_encounter_index = fight_index
 	status = STATUS_EQUIPMENT
-	last_result_summary = "Reward gained: %s. Equip inventory before fight %d, or continue as-is." % [String(reward["label"]), current_fight_number()]
+	last_result_summary = "Reward gained: %s. Equip inventory before encounter %d: %s, or continue as-is." % [String(reward["label"]), current_fight_number(), current_encounter_name()]
 
 
 func continue_to_next_fight() -> void:
@@ -187,7 +188,7 @@ func continue_to_next_fight() -> void:
 		return
 
 	status = STATUS_ACTIVE
-	last_result_summary = "Fight %d is ready." % current_fight_number()
+	last_result_summary = "Ready to enter encounter %d: %s." % [current_fight_number(), current_encounter_name()]
 
 
 func equip_options() -> Array[Dictionary]:
@@ -300,6 +301,16 @@ func _current_encounter():
 		return null
 	var safe_index: int = clamp(fight_index, 0, encounter_definitions.size() - 1)
 	return encounter_definitions[safe_index]
+
+
+func _next_encounter_name() -> String:
+	if encounter_definitions.is_empty():
+		return "Missing Encounter"
+	var safe_index: int = clamp(fight_index + 1, 0, encounter_definitions.size() - 1)
+	var encounter = encounter_definitions[safe_index]
+	if encounter == null:
+		return "Missing Encounter"
+	return encounter.display_name
 
 
 func _apply_loss_test_enemy_pressure(enemy: UnitDefinition) -> void:

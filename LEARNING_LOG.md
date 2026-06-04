@@ -3054,3 +3054,42 @@ Manual exercise:
 Open questions:
 
 - What future theme preset would justify exposing background and palette as one user-facing choice?
+
+## 2026-06-04 - Clearer encounter transition text
+
+Feature worked on:
+
+- Run summaries now name the encounter a scenario is ready to enter.
+- Reward and continue summaries now point toward the next named encounter.
+- The main run button and continue button now include encounter number and encounter name.
+- Removed the completed clearer encounter transition TODO.
+
+Godot concepts introduced:
+
+- Button text can be dynamic presentation state derived from a separate run model.
+
+Game architecture concepts introduced:
+
+- `RunState` owns progression facts such as current encounter number/name.
+- The UI can make transitions clearer without changing combat simulation or scenario data.
+
+Files touched:
+
+- `clockwork-company/scripts/run/run_state.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `ARCHITECTURE.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why encounter transition wording belongs in run flow, not combat simulation.
+- How the UI gets the current encounter name without loading scenario data itself.
+
+Manual exercise:
+
+- Start a scenario, clear the first encounter, choose a reward, and confirm the summary/button name the second encounter before you continue.
+
+Open questions:
+
+- Should a future fight-preview panel show enemy units and scenario rules during this transition?

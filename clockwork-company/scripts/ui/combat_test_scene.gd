@@ -405,7 +405,7 @@ func _update_run_controls() -> void:
 		run_button.text = RUN_BUTTON_REPLAYING_TEXT
 	elif run_state.status == RunStateScript.STATUS_ACTIVE:
 		run_button.disabled = false
-		run_button.text = "Run Fight %d/%d" % [run_state.current_fight_number(), run_state.current_fight_count()]
+		run_button.text = "Run Encounter %d/%d: %s" % [run_state.current_fight_number(), run_state.current_fight_count(), run_state.current_encounter_name()]
 	elif run_state.status == RunStateScript.STATUS_REWARD:
 		run_button.disabled = true
 		run_button.text = "Choose Reward"
@@ -436,6 +436,8 @@ func _update_run_controls() -> void:
 
 	continue_button.visible = run_state.status == RunStateScript.STATUS_EQUIPMENT
 	continue_button.disabled = replay_is_active
+	if continue_button.visible:
+		continue_button.text = "Continue to Encounter %d: %s" % [run_state.current_fight_number(), run_state.current_encounter_name()]
 
 	var equip_options: Array[Dictionary] = []
 	if run_state.status == RunStateScript.STATUS_EQUIPMENT:
