@@ -2447,3 +2447,41 @@ Manual exercise:
 Open questions:
 
 - Should future validation scripts live in `tools/` too, or inside the Godot project if they need `res://` paths?
+
+## 2026-06-04 - Tooltip visual polish
+
+Feature worked on:
+
+- Improved custom tooltip spacing, border color, text color, width, and font sizing.
+- Enabled BBCode in `TooltipPresenter` and added presenter-owned formatting for title lines, section headings, and bullet rows.
+- Kept tooltip content builders plain-text so Resource-specific tooltip logic does not need to know presentation markup.
+
+Godot concepts introduced:
+
+- `RichTextLabel` can use BBCode for lightweight text hierarchy.
+- User-provided or data-provided text should be escaped before it is inserted into BBCode.
+- `StyleBoxFlat` controls panel padding, background, border, and corner radius.
+
+Game architecture concepts introduced:
+
+- Tooltip content and tooltip presentation are separate responsibilities.
+- Visual polish can improve inspectability without changing Resource data or combat rules.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/tooltip_presenter.gd`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why the tooltip builder still returns plain text.
+- Why `TooltipPresenter` escapes text before applying BBCode.
+
+Manual exercise:
+
+- Hover a unit, item, effect, and encounter, then identify the title line and any section-style lines in the tooltip.
+
+Open questions:
+
+- Should locked/nested tooltips keep using this one presenter, or split pinned tooltip windows into a separate scene?

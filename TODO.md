@@ -14,7 +14,6 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 
 ## Tooltips
 
-- Polish the first custom tooltip visuals: spacing, headings, color, width, and typography.
 - Add CK3-style locked tooltips that stay open when hovered intentionally.
 - Add nested tooltip traversal from one Resource mention to another.
 - Decide input behavior for locking/unlocking tooltips: hover delay, click, modifier key, or pinned mode.
