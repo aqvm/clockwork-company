@@ -49,9 +49,7 @@ static func _describe_item_effect(item: ItemDefinition) -> String:
 			parts.append("%s -> %s %d%s" % [effect.trigger, effect.effect_type, effect.amount, limit_text])
 		if not parts.is_empty():
 			return join_text_parts(parts, "; ")
-	if item.trigger == CombatConstantsScript.TRIGGER_NONE or item.effect == CombatConstantsScript.EFFECT_NONE or item.effect_amount == 0:
-		return "no triggered effect"
-	return "%s -> %s %d" % [item.trigger, item.effect, item.effect_amount]
+	return "no triggered effect"
 
 static func _append_modifier_text(parts: Array[String], label: String, amount: int) -> void:
 	if amount == 0:

@@ -5,17 +5,24 @@ const CombatLogHighlightPaletteScript := preload("res://scripts/ui/combat_log_hi
 const UnitStatusDotScript := preload("res://scripts/ui/unit_status_dot.gd")
 const JsonContentLoaderScript := preload("res://scripts/modding/json_content_loader.gd")
 const RunStateScript := preload("res://scripts/run/run_state.gd")
+const CampaignManagerScript := preload("res://scripts/campaign/campaign_manager.gd")
+const UnitLoadoutDefinitionScript := preload("res://scripts/data/unit_loadout_definition.gd")
+const TooltipPresenterScript := preload("res://scripts/ui/tooltip_presenter.gd")
+const ScenarioListPanelScene := preload("res://scenes/scenario_list_panel.tscn")
+const ScenarioDetailPanelScene := preload("res://scenes/scenario_detail_panel.tscn")
+const PartyPanelScene := preload("res://scenes/party_panel.tscn")
+const UnitDetailPanelScene := preload("res://scenes/unit_detail_panel.tscn")
 const COMBAT_LOG_HEADER := "Combat log:"
 const RUN_BUTTON_REPLAYING_TEXT := "Replaying..."
 const MODS_BUTTON_BASE_TEXT := "Mods"
 const MOD_SETTINGS_PATH := "user://mod_settings.cfg"
 const MOD_SETTINGS_SECTION := "mods"
 const MOD_SETTINGS_KEY_ENABLED_IDS := "enabled_pack_ids"
-const DEFAULT_WINDOW_AREA_FRACTION := 0.75
 const MIN_CONDITIONS_HEIGHT := 120
 const SECONDS_PER_SIM_SECOND := 0.2
 const MIN_SECONDS_BETWEEN_REPLAY_ACTIONS := 0.1
 const MAX_EQUIPMENT_BUTTONS := 12
+const FIRST_ROAD_CAMPAIGN := preload("res://resources/campaigns/first_road_campaign.tres")
 const DEFAULT_LOG_HIGHLIGHT_PALETTE := preload("res://resources/ui/combat_log_highlight_palette_default.tres")
 
 @onready var run_button: Button = %RunButton
@@ -31,6 +38,10 @@ const DEFAULT_LOG_HIGHLIGHT_PALETTE := preload("res://resources/ui/combat_log_hi
 @onready var replay_timer: Timer = %ReplayTimer
 @export var log_highlight_palette: CombatLogHighlightPaletteScript = DEFAULT_LOG_HIGHLIGHT_PALETTE
 
+var planning_panel: PanelContainer = null
+var unit_action_vbox: VBoxContainer = null
+var start_scenario_button: Button = null
+var tooltip_presenter = null
 var cached_replay_lines: Array[String] = []
 var cached_static_lines: Array[String] = []
 var cached_fight_static_lines: Array[String] = []
@@ -57,10 +68,20 @@ var reward_buttons: Array[Button] = []
 var equipment_buttons: Array[Button] = []
 var continue_button: Button = null
 var loss_test_button: Button = null
+var phase7_run_button: Button = null
+var campaign_manager = null
+var active_campaign_scenario_id := ""
+var selected_scenario: Resource = null
+var selected_unit_name := ""
+var planning_party: Array[UnitDefinition] = []
+var available_items: Array[ItemDefinition] = []
+var scenario_list_panel: Control = null
+var scenario_detail_panel: Control = null
+var party_panel: Control = null
+var unit_detail_panel: Control = null
 
 
 func _ready() -> void:
-	_size_window_to_half_screen()
 	run_button.pressed.connect(_on_run_button_pressed)
 	mods_menu_button.pressed.connect(_on_mods_button_pressed)
 	replay_timer.timeout.connect(_on_replay_timer_timeout)
@@ -69,7 +90,10 @@ func _ready() -> void:
 	get_viewport().size_changed.connect(_on_viewport_size_changed)
 	_setup_mod_menu()
 	_setup_run_controls()
-	_start_new_run(false)
+	_setup_planning_panel()
+	_setup_tooltip_presenter()
+	_load_item_catalog()
+	_start_first_road_campaign()
 
 
 func _process(delta: float) -> void:
@@ -94,6 +118,7 @@ func _on_run_button_pressed() -> void:
 		return
 
 	_stop_log_replay()
+	_load_combat_preview()
 	_clear_replay_log()
 
 	_build_visual_replay_model()
@@ -164,6 +189,24 @@ func _load_combat_preview() -> void:
 	call_deferred("_resize_conditions_pane")
 
 
+func _show_run_state_without_combat_preview() -> void:
+	_clear_logs()
+	cached_battle_report.clear()
+	cached_replay_lines.clear()
+	cached_static_lines.clear()
+	cached_fight_static_lines.clear()
+	cached_structured_events.clear()
+	cached_roster_units.clear()
+	_clear_replay_log()
+	if run_state == null:
+		return
+	var lines: Array[String] = _build_run_static_lines([])
+	_append_lines(combat_summary, lines)
+	_update_run_controls()
+	_refresh_planning_panel()
+	call_deferred("_resize_conditions_pane")
+
+
 func _setup_mod_menu() -> void:
 	available_mod_packs = JsonContentLoaderScript.list_available_mod_packs()
 	enabled_mod_pack_ids.clear()
@@ -189,6 +232,11 @@ func _setup_run_controls() -> void:
 	loss_test_button.pressed.connect(_on_loss_test_button_pressed)
 	run_button.get_parent().add_child(loss_test_button)
 
+	phase7_run_button = Button.new()
+	phase7_run_button.text = "Start Phase 7 Run"
+	phase7_run_button.pressed.connect(_on_phase7_run_button_pressed)
+	run_button.get_parent().add_child(phase7_run_button)
+
 	for index in 3:
 		var reward_button := Button.new()
 		reward_button.visible = false
@@ -210,15 +258,107 @@ func _setup_run_controls() -> void:
 		equipment_buttons.append(equipment_button)
 
 
+func _setup_planning_panel() -> void:
+	var parent_vbox := log_split.get_parent()
+	planning_panel = PanelContainer.new()
+	planning_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	planning_panel.custom_minimum_size = Vector2(0, 220)
+	parent_vbox.add_child(planning_panel)
+	parent_vbox.move_child(planning_panel, log_split.get_index())
+
+	var planning_row := HBoxContainer.new()
+	planning_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	planning_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	planning_row.add_theme_constant_override("separation", 10)
+	planning_panel.add_child(planning_row)
+
+	scenario_list_panel = ScenarioListPanelScene.instantiate()
+	scenario_list_panel.connect("scenario_selected", _on_scenario_selected)
+	_connect_panel_tooltips(scenario_list_panel)
+	planning_row.add_child(scenario_list_panel)
+
+	scenario_detail_panel = ScenarioDetailPanelScene.instantiate()
+	_connect_panel_tooltips(scenario_detail_panel)
+	planning_row.add_child(scenario_detail_panel)
+
+	party_panel = PartyPanelScene.instantiate()
+	party_panel.connect("unit_selected", _on_party_unit_pressed)
+	_connect_panel_tooltips(party_panel)
+	planning_row.add_child(party_panel)
+
+	unit_detail_panel = UnitDetailPanelScene.instantiate()
+	_connect_panel_tooltips(unit_detail_panel)
+	planning_row.add_child(unit_detail_panel)
+
+	unit_action_vbox = VBoxContainer.new()
+	unit_action_vbox.custom_minimum_size = Vector2(220, 0)
+	unit_action_vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	planning_row.add_child(unit_action_vbox)
+
+	start_scenario_button = Button.new()
+	start_scenario_button.text = "Start Selected Scenario"
+	start_scenario_button.pressed.connect(_on_start_selected_scenario_pressed)
+	unit_action_vbox.add_child(start_scenario_button)
+	conditions_label.get_parent().visible = false
+
+
+func _setup_tooltip_presenter() -> void:
+	tooltip_presenter = TooltipPresenterScript.new()
+	add_child(tooltip_presenter)
+
+
 func _start_new_run(should_force_loss: bool) -> void:
 	_stop_log_replay()
+	active_campaign_scenario_id = ""
+	selected_scenario = null
 	run_state = RunStateScript.new()
 	run_state.start(_enabled_mod_pack_ids_array(), should_force_loss)
-	_load_combat_preview()
+	_refresh_planning_panel()
+	_show_run_state_without_combat_preview()
+
+
+func _start_first_road_campaign() -> void:
+	_stop_log_replay()
+	campaign_manager = CampaignManagerScript.new()
+	campaign_manager.start(FIRST_ROAD_CAMPAIGN)
+	active_campaign_scenario_id = ""
+	run_state = null
+	selected_scenario = null
+	selected_unit_name = ""
+	_load_planning_party()
+	_show_campaign_landing()
+
+
+func _start_scenario_run(scenario: Resource) -> void:
+	_stop_log_replay()
+	run_state = RunStateScript.new()
+	active_campaign_scenario_id = scenario.scenario_id
+	run_state.start_scenario(_enabled_mod_pack_ids_array(), scenario, false, planning_party)
+	_load_planning_party_from_run()
+	_refresh_planning_panel()
+	_show_run_state_without_combat_preview()
 
 
 func _on_loss_test_button_pressed() -> void:
 	_start_new_run(true)
+
+
+func _on_phase7_run_button_pressed() -> void:
+	_start_new_run(false)
+
+
+func _on_start_selected_scenario_pressed() -> void:
+	if campaign_manager == null or selected_scenario == null:
+		return
+	if not campaign_manager.progress.is_scenario_unlocked(selected_scenario.scenario_id):
+		return
+	if campaign_manager.progress.completed_scenario_ids.has(selected_scenario.scenario_id):
+		return
+	var scenario = campaign_manager.start_scenario(selected_scenario.scenario_id)
+	if scenario == null:
+		return
+	selected_scenario = scenario
+	_start_scenario_run(scenario)
 
 
 func _on_reward_button_pressed(index: int) -> void:
@@ -226,7 +366,8 @@ func _on_reward_button_pressed(index: int) -> void:
 		return
 
 	run_state.apply_reward(index)
-	_load_combat_preview()
+	_load_planning_party_from_run()
+	_show_run_state_without_combat_preview()
 
 
 func _on_continue_button_pressed() -> void:
@@ -234,7 +375,8 @@ func _on_continue_button_pressed() -> void:
 		return
 
 	run_state.continue_to_next_fight()
-	_load_combat_preview()
+	_load_planning_party_from_run()
+	_show_run_state_without_combat_preview()
 
 
 func _on_equipment_button_pressed(index: int) -> void:
@@ -247,11 +389,19 @@ func _on_equipment_button_pressed(index: int) -> void:
 
 	var option: Dictionary = options[index]
 	run_state.equip_inventory_item(int(option["item_index"]), String(option["unit_name"]))
-	_load_combat_preview()
+	_load_planning_party_from_run()
+	_show_run_state_without_combat_preview()
 
 
 func _build_run_static_lines(fight_static_lines: Array[String]) -> Array[String]:
-	var lines: Array[String] = run_state.status_lines()
+	var lines: Array[String] = []
+	if campaign_manager != null:
+		for campaign_line in campaign_manager.status_lines():
+			lines.append(campaign_line)
+		lines.append("")
+	if run_state != null:
+		for run_line in run_state.status_lines():
+			lines.append(run_line)
 	lines.append("")
 	for line in fight_static_lines:
 		lines.append(line)
@@ -260,17 +410,21 @@ func _build_run_static_lines(fight_static_lines: Array[String]) -> Array[String]
 
 func _update_run_controls() -> void:
 	if run_state == null:
-		run_button.disabled = false
-		run_button.text = "Start Run"
+		run_button.disabled = true
+		run_button.text = "Choose Scenario"
+		loss_test_button.disabled = replay_is_active
+		phase7_run_button.disabled = replay_is_active
+		_update_campaign_controls()
 		return
 
 	loss_test_button.disabled = replay_is_active
+	phase7_run_button.disabled = replay_is_active
 	if replay_is_active:
 		run_button.disabled = true
 		run_button.text = RUN_BUTTON_REPLAYING_TEXT
 	elif run_state.status == RunStateScript.STATUS_ACTIVE:
 		run_button.disabled = false
-		run_button.text = "Run Fight %d/%d" % [run_state.current_fight_number(), RunStateScript.FIGHT_COUNT]
+		run_button.text = "Run Fight %d/%d" % [run_state.current_fight_number(), run_state.current_fight_count()]
 	elif run_state.status == RunStateScript.STATUS_REWARD:
 		run_button.disabled = true
 		run_button.text = "Choose Reward"
@@ -284,6 +438,8 @@ func _update_run_controls() -> void:
 		run_button.disabled = false
 		run_button.text = "Run Lost - Start New Run"
 
+	_update_campaign_controls()
+
 	var options: Array[Dictionary] = []
 	if run_state.status == RunStateScript.STATUS_REWARD:
 		options = run_state.reward_options()
@@ -295,7 +451,7 @@ func _update_run_controls() -> void:
 		if has_option:
 			var option: Dictionary = options[index]
 			reward_button.text = String(option["label"])
-			reward_button.tooltip_text = String(option["description"])
+			_bind_resource_tooltip(reward_button, option.get("resource", null))
 
 	continue_button.visible = run_state.status == RunStateScript.STATUS_EQUIPMENT
 	continue_button.disabled = replay_is_active
@@ -311,6 +467,306 @@ func _update_run_controls() -> void:
 		if has_equip_option:
 			var equip_option: Dictionary = equip_options[index]
 			equipment_button.text = String(equip_option["label"])
+
+
+func _update_campaign_controls() -> void:
+	var scenarios: Array = []
+	if campaign_manager != null and active_campaign_scenario_id.is_empty() and not replay_is_active:
+		scenarios = campaign_manager.all_scenarios()
+	if scenario_list_panel != null:
+		var progress = campaign_manager.progress if campaign_manager != null else null
+		scenario_list_panel.call("show_scenarios", scenarios, progress, selected_scenario)
+
+
+func _select_scenario(scenario: Resource) -> void:
+	selected_scenario = scenario
+	_refresh_planning_panel()
+
+
+func _on_scenario_selected(scenario: Resource) -> void:
+	_select_scenario(scenario)
+
+
+func _load_planning_party() -> void:
+	planning_party.clear()
+	for definition: UnitDefinition in JsonContentLoaderScript.load_demo_unit_definitions(_enabled_mod_pack_ids_array()):
+		if definition.team == "Allies":
+			planning_party.append(definition)
+	if selected_unit_name.is_empty() and not planning_party.is_empty():
+		selected_unit_name = planning_party[0].display_name
+
+
+func _load_item_catalog() -> void:
+	available_items.clear()
+	var directory := DirAccess.open("res://resources/items")
+	if directory == null:
+		return
+	directory.list_dir_begin()
+	var file_name := directory.get_next()
+	while not file_name.is_empty():
+		if not directory.current_is_dir() and file_name.ends_with(".tres"):
+			var item = load("res://resources/items/%s" % file_name)
+			if item is ItemDefinition:
+				available_items.append(item)
+		file_name = directory.get_next()
+	directory.list_dir_end()
+	available_items.sort_custom(func(a, b): return a.display_name < b.display_name)
+
+
+func _load_planning_party_from_run() -> void:
+	planning_party.clear()
+	if run_state == null:
+		_load_planning_party()
+		return
+	for ally: UnitDefinition in run_state.ally_definitions:
+		planning_party.append(ally)
+	if selected_unit_name.is_empty() and not planning_party.is_empty():
+		selected_unit_name = planning_party[0].display_name
+
+
+func _refresh_planning_panel() -> void:
+	if planning_panel == null:
+		return
+	_update_campaign_controls()
+	if scenario_detail_panel != null:
+		scenario_detail_panel.call("show_scenario", selected_scenario, _scenario_campaign_status(selected_scenario))
+	if party_panel != null:
+		party_panel.call("show_party", planning_party, selected_unit_name)
+	if unit_detail_panel != null:
+		unit_detail_panel.call("show_unit", _find_planning_unit(selected_unit_name))
+	_render_unit_actions()
+
+
+func _render_unit_actions() -> void:
+	for child in unit_action_vbox.get_children():
+		child.queue_free()
+	start_scenario_button = Button.new()
+	start_scenario_button.text = "Start %s" % selected_scenario.display_name if selected_scenario != null else "Start Selected Scenario"
+	start_scenario_button.disabled = selected_scenario == null or not active_campaign_scenario_id.is_empty() or replay_is_active or not _selected_scenario_can_start()
+	start_scenario_button.pressed.connect(_on_start_selected_scenario_pressed)
+	unit_action_vbox.add_child(start_scenario_button)
+
+	var selected_unit := _find_planning_unit(selected_unit_name)
+	if selected_unit == null:
+		return
+	var unit_label := Label.new()
+	unit_label.text = "Unit Actions"
+	unit_action_vbox.add_child(unit_label)
+
+	if run_state == null or run_state.status != RunStateScript.STATUS_EQUIPMENT:
+		if run_state == null and active_campaign_scenario_id.is_empty():
+			for slot in ["Weapon", "Armor", "Helmet", "Trinket"]:
+				var button := Button.new()
+				button.text = "Cycle %s" % slot
+				button.pressed.connect(_on_cycle_equipment_pressed.bind(slot))
+				unit_action_vbox.add_child(button)
+		else:
+			var hint := Label.new()
+			hint.text = "Equipment changes unlock between fights."
+			hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			unit_action_vbox.add_child(hint)
+		return
+
+	var options: Array[Dictionary] = run_state.equip_options()
+	var added_option := false
+	for index in options.size():
+		var option: Dictionary = options[index]
+		if String(option["unit_name"]) != selected_unit_name:
+			continue
+		added_option = true
+		var button := Button.new()
+		button.text = String(option["label"])
+		button.pressed.connect(_on_planning_equip_pressed.bind(index))
+		unit_action_vbox.add_child(button)
+	if not added_option:
+		var no_options := Label.new()
+		no_options.text = "No valid equipment changes for this unit."
+		no_options.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		unit_action_vbox.add_child(no_options)
+
+
+func _selected_scenario_can_start() -> bool:
+	if selected_scenario == null or campaign_manager == null:
+		return false
+	if active_campaign_scenario_id != "":
+		return false
+	if campaign_manager.progress.completed_scenario_ids.has(selected_scenario.scenario_id):
+		return false
+	return campaign_manager.progress.is_scenario_unlocked(selected_scenario.scenario_id)
+
+
+func _scenario_campaign_status(scenario: Resource) -> String:
+	if scenario == null or campaign_manager == null:
+		return "unknown"
+	if campaign_manager.progress.completed_scenario_ids.has(scenario.scenario_id):
+		return "complete"
+	if campaign_manager.progress.is_scenario_unlocked(scenario.scenario_id):
+		return "available"
+	return "locked"
+
+
+func _on_party_unit_pressed(unit_name: String) -> void:
+	selected_unit_name = unit_name
+	_refresh_planning_panel()
+
+
+func _on_planning_equip_pressed(index: int) -> void:
+	if run_state == null or run_state.status != RunStateScript.STATUS_EQUIPMENT:
+		return
+	var options: Array[Dictionary] = run_state.equip_options()
+	if index < 0 or index >= options.size():
+		return
+	var option: Dictionary = options[index]
+	run_state.equip_inventory_item(int(option["item_index"]), String(option["unit_name"]))
+	_load_planning_party_from_run()
+	_show_run_state_without_combat_preview()
+
+
+func _connect_panel_tooltips(panel: Control) -> void:
+	if panel.has_signal("resource_tooltip_requested"):
+		panel.connect("resource_tooltip_requested", _on_panel_resource_tooltip_requested)
+	if panel.has_signal("tooltip_cleared"):
+		panel.connect("tooltip_cleared", _on_tooltip_exited)
+
+
+func _on_panel_resource_tooltip_requested(_source: Control, resource: Resource) -> void:
+	if tooltip_presenter != null:
+		tooltip_presenter.show_resource(resource)
+
+
+func _bind_resource_tooltip(control: Control, resource) -> void:
+	control.set_meta("tooltip_resource", resource)
+	if control.has_meta("resource_tooltip_bound"):
+		return
+	control.set_meta("resource_tooltip_bound", true)
+	control.mouse_entered.connect(_on_resource_tooltip_entered.bind(control))
+	control.mouse_exited.connect(_on_tooltip_exited)
+
+
+func _bind_runtime_tooltip(control: Control, snapshot: Dictionary) -> void:
+	control.set_meta("tooltip_snapshot", snapshot)
+	if control.has_meta("runtime_tooltip_bound"):
+		return
+	control.set_meta("runtime_tooltip_bound", true)
+	control.mouse_entered.connect(_on_runtime_tooltip_entered.bind(control))
+	control.mouse_exited.connect(_on_tooltip_exited)
+
+
+func _on_resource_tooltip_entered(source: Control) -> void:
+	if tooltip_presenter != null:
+		var resource = source.get_meta("tooltip_resource", null)
+		tooltip_presenter.show_resource(resource)
+
+
+func _on_runtime_tooltip_entered(source: Control) -> void:
+	if tooltip_presenter != null:
+		var snapshot: Dictionary = source.get_meta("tooltip_snapshot", {})
+		tooltip_presenter.show_runtime_unit(snapshot)
+
+
+func _on_tooltip_exited() -> void:
+	if tooltip_presenter != null:
+		tooltip_presenter.hide_tooltip()
+
+
+func _on_cycle_equipment_pressed(slot: String) -> void:
+	var unit := _find_planning_unit(selected_unit_name)
+	if unit == null:
+		return
+	_equip_next_planning_item(unit, slot)
+	_refresh_planning_panel()
+
+
+func _equip_next_planning_item(unit: UnitDefinition, slot: String) -> void:
+	var loadout = _ensure_planning_loadout(unit)
+	var candidates: Array[ItemDefinition] = []
+	for item: ItemDefinition in available_items:
+		if item.slot == slot and _item_allowed_for_planning_unit(unit, item):
+			candidates.append(item)
+	if candidates.is_empty():
+		return
+	var current_item = _current_slot_item(loadout, slot)
+	var next_index := 0
+	for index in candidates.size():
+		if candidates[index] == current_item:
+			next_index = (index + 1) % candidates.size()
+			break
+	_set_slot_item(loadout, slot, candidates[next_index])
+
+
+func _ensure_planning_loadout(unit: UnitDefinition):
+	if unit.loadout == null:
+		unit.loadout = UnitLoadoutDefinitionScript.new()
+		unit.loadout.display_name = "%s Planning Loadout" % unit.display_name
+	return unit.loadout
+
+
+func _current_slot_item(loadout, slot: String):
+	if slot == "Weapon":
+		return loadout.weapon
+	if slot == "Armor":
+		return loadout.armor
+	if slot == "Helmet":
+		return loadout.helmet
+	if slot == "Trinket":
+		return loadout.trinket
+	return null
+
+
+func _set_slot_item(loadout, slot: String, item: ItemDefinition) -> void:
+	if slot == "Weapon":
+		loadout.weapon = item
+	elif slot == "Armor":
+		loadout.armor = item
+	elif slot == "Helmet":
+		loadout.helmet = item
+	elif slot == "Trinket":
+		loadout.trinket = item
+
+
+func _item_allowed_for_planning_unit(unit: UnitDefinition, item: ItemDefinition) -> bool:
+	if item == null or unit.loadout == null or unit.loadout.current_job == null:
+		return true
+	var job := unit.loadout.current_job
+	if item.slot == "Weapon":
+		return not job.forbid_weapon
+	if item.slot == "Armor":
+		return not job.forbid_armor
+	if item.slot == "Helmet":
+		return not job.forbid_helmet
+	if item.slot == "Trinket":
+		return not job.forbid_trinket
+	return false
+
+
+func _find_planning_unit(unit_name: String) -> UnitDefinition:
+	for unit: UnitDefinition in planning_party:
+		if unit.display_name == unit_name:
+			return unit
+	return null
+
+
+func _show_campaign_landing() -> void:
+	_clear_logs()
+	var lines: Array[String] = []
+	if campaign_manager != null:
+		lines = campaign_manager.status_lines()
+		lines.append("")
+		lines.append("Available scenarios:")
+		var scenarios: Array = campaign_manager.available_scenarios()
+		if scenarios.is_empty():
+			lines.append("- none")
+		else:
+			for scenario in scenarios:
+				lines.append("- %s: %s" % [scenario.display_name, scenario.story_intro])
+	_append_lines(combat_summary, lines)
+	if selected_scenario == null and campaign_manager != null:
+		var scenarios: Array = campaign_manager.all_scenarios()
+		if not scenarios.is_empty():
+			selected_scenario = scenarios[0]
+	_refresh_planning_panel()
+	_update_run_controls()
+	call_deferred("_resize_conditions_pane")
 
 
 func _rebuild_mod_menu() -> void:
@@ -350,7 +806,12 @@ func _on_mod_checkbox_toggled(pressed: bool, pack_id: String) -> void:
 		enabled_mod_pack_ids.erase(pack_id)
 
 	_save_enabled_mod_pack_ids(_enabled_mod_pack_ids_array())
-	_start_new_run(false)
+	if run_state != null and run_state.active_scenario != null and not active_campaign_scenario_id.is_empty():
+		_start_scenario_run(run_state.active_scenario)
+	elif campaign_manager != null:
+		_show_campaign_landing()
+	else:
+		_start_new_run(false)
 
 
 func _position_mods_panel() -> void:
@@ -432,6 +893,10 @@ func _prepare_replay_events(_replay_lines: Array[String]) -> void:
 		if not event_by_id.has(root_id):
 			continue
 		var entry: Dictionary = event_by_id[root_id]
+		var event_type := String(entry.get("event_type", "text"))
+		var timed_value := int(entry.get("time", -1))
+		if timed_value < 0 and event_type != "result":
+			continue
 		var grouped_lines: Array[String] = []
 		var grouped_events: Array[Dictionary] = []
 		for nested: Dictionary in cached_structured_events:
@@ -440,7 +905,6 @@ func _prepare_replay_events(_replay_lines: Array[String]) -> void:
 				grouped_events.append(nested)
 				grouped_lines.append(String(nested.get("rendered_line", nested.get("text", ""))))
 
-		var timed_value := int(entry.get("time", -1))
 		if timed_value >= 0:
 			last_timed_event = float(timed_value)
 		var replay_time := last_timed_event if timed_value < 0 else float(timed_value)
@@ -573,23 +1037,6 @@ func _resize_conditions_pane() -> void:
 	log_split.split_offset = clamp(desired_conditions_height, MIN_CONDITIONS_HEIGHT, max_conditions_height)
 
 
-func _size_window_to_half_screen() -> void:
-	var screen := DisplayServer.window_get_current_screen()
-	var usable_rect := DisplayServer.screen_get_usable_rect(screen)
-	var side_scale := sqrt(DEFAULT_WINDOW_AREA_FRACTION)
-	var target_size := Vector2i(
-		int(usable_rect.size.x * side_scale),
-		int(usable_rect.size.y * side_scale)
-	)
-	var target_position := Vector2i(
-		usable_rect.position.x + int((usable_rect.size.x - target_size.x) * 0.5),
-		usable_rect.position.y + int((usable_rect.size.y - target_size.y) * 0.5)
-	)
-
-	DisplayServer.window_set_size(target_size)
-	DisplayServer.window_set_position(target_position)
-
-
 func _clear_logs() -> void:
 	combat_summary.clear()
 	_clear_replay_log()
@@ -622,11 +1069,17 @@ func _finish_log_replay() -> void:
 	replay_is_active = false
 	if run_state != null and run_state.status == RunStateScript.STATUS_ACTIVE:
 		run_state.complete_fight(cached_battle_report)
+		if run_state.status == RunStateScript.STATUS_WON and campaign_manager != null and not active_campaign_scenario_id.is_empty():
+			campaign_manager.complete_scenario(active_campaign_scenario_id)
+			active_campaign_scenario_id = ""
+			selected_scenario = null
+		_load_planning_party_from_run()
 		combat_summary.clear()
-		cached_static_lines = _build_run_static_lines(cached_fight_static_lines)
+		cached_static_lines = _build_run_static_lines([])
 		_append_lines(combat_summary, cached_static_lines)
 		call_deferred("_resize_conditions_pane")
 	_update_run_controls()
+	_refresh_planning_panel()
 
 
 func _build_visual_replay_model() -> void:
@@ -678,6 +1131,7 @@ func _build_visual_replay_widgets() -> void:
 			allies_row.add_child(dot)
 		else:
 			enemies_row.add_child(dot)
+		_bind_runtime_tooltip(dot, unit_data)
 		replay_unit_widgets_by_name[name] = dot
 
 	_update_visual_replay_widgets()

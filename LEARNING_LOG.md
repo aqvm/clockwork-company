@@ -1570,7 +1570,7 @@ What I should now be able to explain:
 
 Manual exercise:
 
-- Open `clockwork-company/resources/items/glass_focus.tres`, change `effect_amount` from `2` to `0`, run the combat scene, and predict how Sol Apprentice's attack log lines and damage totals change.
+- Open `clockwork-company/resources/items/glass_focus.tres`, change the `Glass Focus Attack Burst` effect `amount` from `2` to `0`, run the combat scene, and predict how Sol Apprentice's attack log lines and damage totals change.
 
 Open questions:
 
@@ -1817,3 +1817,194 @@ Open questions:
 
 - Should the Godot project folder eventually be renamed or moved so `project.godot` sits at the repository root?
 - Should early docs live at the repository root, inside `clockwork-company/docs/`, or both?
+## 2026-06-03 - Scenario and campaign vertical slice
+
+## What changed
+
+- Added data Resources for scenarios, scenario rules, campaigns, and campaign scenario nodes.
+- Added in-memory progress wrappers for scenario and campaign state.
+- Updated `RunState` so it can run either the existing Phase 7 five-fight sequence or a scenario-provided encounter list.
+- Added `The First Road`, a tiny three-scenario sample campaign.
+- Updated the combat test scene so available campaign scenarios can be started from the existing UI.
+
+## Godot concepts involved
+
+- A Resource/data definition is inspectable source data. `ScenarioDefinition` says what a scenario is supposed to contain.
+- Runtime progress is mutable state. `ScenarioProgress` and `CampaignProgress` say where this playthrough currently is.
+- Resource references let a scenario point to normal encounter and reward Resources instead of duplicating enemy or item data.
+
+## Why campaign wraps scenarios
+
+The campaign layer should decide which scenarios are available and complete. It should not decide combat rules. Real battles still go through `CombatSimulator`, while `RunState` still owns between-fight reward, equipment, and job XP state.
+
+## Manual test
+
+- Open the Godot project in `clockwork-company/`.
+- Press Play.
+- Start `Roadside Ambush`.
+- Complete its three encounters.
+- Confirm `Burned Chapel` unlocks, then complete it.
+- Confirm `Iron Tollgate` unlocks, then complete it.
+- Confirm the campaign summary marks the campaign complete.
+
+## Files to inspect
+
+- `clockwork-company/scripts/data/scenario_definition.gd`
+- `clockwork-company/scripts/campaign/campaign_manager.gd`
+- `clockwork-company/resources/campaigns/first_road_campaign.tres`
+
+## Exercise
+
+Add a fourth scenario Resource and make `Iron Tollgate` unlock it instead of completing the campaign. Predict which campaign node field needs to change before editing.
+
+## Tradeoffs and risks
+
+- Scenario rules are data-only placeholders for now. That is intentional, but the UI must keep making that clear.
+- Campaign progress is in-memory only. Save/load should wait until roster persistence is better defined.
+- `RunState` now supports two sources of encounter order, so future changes should keep the default Phase 7 path and scenario-backed path both checked.
+
+## 2026-06-03 - Scenario planning UI and item effect cleanup
+
+What changed:
+
+- The scene now opens on authored scenario and party planning data instead of pre-running a combat report.
+- Added a planning panel with scenario buttons, selected scenario details, party summaries, selected-unit details, and simple equipment cycling before a scenario starts.
+- `RunState` can start a scenario from the edited planning party.
+- Removed legacy top-level item effect fields: `trigger`, `effect`, and `effect_amount`.
+- JSON modding examples now use `effects[]` for item effects.
+
+Godot concepts introduced:
+
+- Dynamic UI containers can be built in script with normal `Control` nodes when a prototype layout is changing quickly.
+- A planning UI can edit Resource instances created for this run without mutating the source `.tres` files.
+- `EffectDefinition` subresources are now the single item-effect authoring path.
+
+What I should now be able to explain:
+
+- Why scenario selection should not run the combat simulator.
+- How selected planning-party Resources flow into `RunState.start_scenario(...)`.
+- Why item effects live in `effects[]` instead of duplicated one-effect fields.
+- Why physical damage uses armor and magic damage does not.
+
+Manual exercise:
+
+- Select `Roadside Ambush`, pick Mira, cycle her weapon once, then start the scenario. Before pressing `Run Fight`, predict which gear line should differ in the static fight setup.
+
+Tradeoffs and risks:
+
+- Equipment editing is intentionally a simple cycle-button prototype, not a full inventory browser yet.
+- The old Phase 7 run path remains available as a debug fallback, so future UI work should avoid letting it dominate the main scenario flow again.
+
+## 2026-06-03 - Scenario list and replay cleanup follow-up
+
+What changed:
+
+- Scenario list buttons now select scenarios by name instead of pretending to start them.
+- The list shows all campaign scenarios, with locked and completed states labeled.
+- The separate start button starts only the selected unlocked scenario.
+- The old `Combat Conditions` pane is hidden because the planning UI now owns scenario, party, and unit context.
+- Combat replay now filters structured events so setup/context lines do not replay as combat.
+- The game window no longer forces itself to a scripted size on startup, so normal resizing is left to the user/window manager.
+
+What I should now be able to explain:
+
+- Why selection and starting are separate UI actions.
+- Why locked scenarios can still be inspectable.
+- Why structured replay should filter by timed combat roots and the final result.
+
+Manual exercise:
+
+- Select each scenario in the list and compare its encounters, rules, tags, rewards, and unlocks. Then start only the available one and confirm the replay begins with actual combat events.
+
+## 2026-06-03 - Resource tooltip foundation
+
+What changed:
+
+- Added a shared custom tooltip presenter that follows the mouse and clamps to the window.
+- Added a Resource tooltip builder that formats units, loadouts, items, effects, jobs, skills, passives, reactions, tactics, encounters, rewards, and generic Resources.
+- Wired scenario list entries, scenario detail Resources, party units, unit detail Resources, reward choices, and replay unit dots into the tooltip system.
+
+Godot concepts introduced:
+
+- A single overlay `Control` can present tooltip content for many different hovered controls.
+- Hover signals can store the hovered Resource in control metadata so refreshable UI controls do not accumulate duplicate signal connections.
+- Custom tooltips are more work than native `tooltip_text`, but they give the project a path toward locked/nested tooltips later.
+
+Manual exercise:
+
+- Hover a scenario, an encounter, a unit, an item, an item effect, and a replay unit dot. For each one, explain whether the tooltip is showing source Resource data or runtime combat state.
+
+## 2026-06-03 - Godot Best Practices Audit
+
+We added `GODOT_BEST_PRACTICES_AUDIT.md`, a research-backed audit of Godot practices against the current project. The point is not to obey every guideline immediately; it is to make our decisions visible.
+
+Key lesson: best practices are context tools. Godot's guidance strongly supports our use of Resources for authored data and our separation of combat simulation from UI. It also points at the next cleanup pressure: `combat_test_scene.gd` is now doing too much and should be split into focused Control scenes/scripts.
+
+Godot concepts involved:
+
+- Resources as inspectable data containers.
+- Control scenes, Containers, anchors, and size flags for UI.
+- Signals for panel-to-parent communication.
+- Autoloads as broad-scope services that should be used sparingly.
+- Static typing as a readability and editor-support tool.
+
+Manual test:
+
+1. Read `GODOT_BEST_PRACTICES_AUDIT.md`.
+2. Open `clockwork-company/scripts/ui/combat_test_scene.gd`.
+3. Pick one UI responsibility and decide whether it matches one of the proposed future panels.
+
+Small exercise: sketch the public methods and signals for a future `ScenarioListPanel` without implementing it.
+
+Tradeoff: adding an audit document creates one more doc to maintain, but it should prevent best-practice conversations from becoming vague or repetitive.
+
+## 2026-06-04 - Scenario workbench panel extraction
+
+Feature worked on:
+
+- Extracted the scenario list, scenario detail, party list, and unit detail areas out of `combat_test_scene.gd`.
+- Added small Control scenes/scripts for those panels.
+- Kept `combat_test_scene.gd` as the coordinator for campaign/run state, selected scenario/unit state, equipment mutation, tooltips, and combat replay.
+
+Godot concepts introduced:
+
+- A `.tscn` scene can wrap one focused `Control` script and be instantiated by a parent scene.
+- Child UI panels can emit custom signals such as `scenario_selected` and `unit_selected` instead of directly changing parent state.
+- The parent can pass current Resource/runtime data into child panels through public render methods.
+- A shared tooltip presenter can stay parent-owned while children request tooltip display through signals.
+
+Game architecture concepts introduced:
+
+- UI ownership can be split without changing combat authority.
+- Read-only panels are a lower-risk extraction target than panels that mutate run state.
+- Scenario/campaign managers remain thin: they still decide availability and completion, not UI rendering details or combat rules.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `clockwork-company/scripts/ui/scenario_list_panel.gd`
+- `clockwork-company/scripts/ui/scenario_detail_panel.gd`
+- `clockwork-company/scripts/ui/party_panel.gd`
+- `clockwork-company/scripts/ui/unit_detail_panel.gd`
+- `clockwork-company/scenes/scenario_list_panel.tscn`
+- `clockwork-company/scenes/scenario_detail_panel.tscn`
+- `clockwork-company/scenes/party_panel.tscn`
+- `clockwork-company/scenes/unit_detail_panel.tscn`
+- `ARCHITECTURE.md`
+- `TODO.md`
+- `GODOT_BEST_PRACTICES_AUDIT.md`
+
+What I should now be able to explain:
+
+- Which panel owns scenario list rendering versus selected scenario detail rendering.
+- Why `combat_test_scene.gd` still owns starting scenarios and cycling equipment.
+- How a child signal reaches the parent without the child knowing about `CampaignManager` or `RunState`.
+
+Manual exercise:
+
+- Open `scenario_list_panel.gd` and trace what happens after pressing a scenario button: identify the signal it emits, then find the parent callback that updates `selected_scenario`.
+
+Open questions:
+
+- Should the next extraction be the unit action/equipment controls or the combat replay panel?
+- Should repeated tooltip signal wiring eventually move into a tiny helper, or is the current duplication clearer for learning?

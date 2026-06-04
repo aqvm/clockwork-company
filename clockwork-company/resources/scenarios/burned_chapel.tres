@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="ScenarioDefinition" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/scenario_definition.gd" id="1_scenario"]
+[ext_resource type="Resource" path="res://resources/encounters/phase7_fight_01_street_corner.tres" id="2_encounter_a"]
+[ext_resource type="Resource" path="res://resources/encounters/catalog_test_debt_office.tres" id="3_encounter_b"]
+[ext_resource type="Resource" path="res://resources/encounters/phase7_fight_04_vault_annex.tres" id="4_encounter_c"]
+[ext_resource type="Resource" path="res://resources/scenario_rules/ash_chapel_healing_pressure.tres" id="5_rule"]
+[ext_resource type="Resource" path="res://resources/rewards/focus_lens_for_sol.tres" id="6_reward"]
+
+[resource]
+script = ExtResource("1_scenario")
+scenario_id = "burned_chapel"
+display_name = "Burned Chapel"
+description = "A compact mission with a future healing/status pressure theme."
+story_intro = "A ruined chapel still smolders with hostile rites."
+story_outro = "The last cinders gutter out, leaving only ash and questions."
+party_size = 3
+encounters = [ExtResource("2_encounter_a"), ExtResource("3_encounter_b"), ExtResource("4_encounter_c")]
+scenario_rules = [ExtResource("5_rule")]
+recommended_level_min = 1
+recommended_level_max = 3
+tags = ["chapel", "ash", "status"]
+rewards = [ExtResource("6_reward")]
+content_unlocks = ["ash_chapel_rite_notes"]

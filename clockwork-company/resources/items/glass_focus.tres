@@ -20,6 +20,3 @@ slot = "Trinket"
 max_hp_modifier = -2
 magic_damage_modifier = 3
 effects = [SubResource("Resource_focus_attack")]
-trigger = "Attack"
-effect = "Bonus Damage"
-effect_amount = 2

@@ -18,6 +18,3 @@ display_name = "Shortblade"
 tags = ["weapon", "blade"]
 physical_damage_modifier = 2
 effects = [SubResource("Resource_shortblade_hit")]
-trigger = "Hit"
-effect = "Reduce Target Armor"
-effect_amount = 1

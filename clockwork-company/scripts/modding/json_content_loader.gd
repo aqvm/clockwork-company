@@ -34,8 +34,6 @@ const DEFAULT_DEMO_ROSTER_IDS := [
 
 const TEAM_VALUES := {"Allies": true, "Enemies": true}
 const ITEM_SLOT_VALUES := {"Weapon": true, "Armor": true, "Helmet": true, "Trinket": true}
-const ITEM_TRIGGER_VALUES := {"None": true, "Battle Start": true, "Attack": true, "Hit": true, "Kill": true, "Death": true}
-const ITEM_EFFECT_VALUES := {"None": true, "Gain Armor": true, "Bonus Damage": true, "Reduce Target Armor": true, "Heal Self": true, "Damage Killer": true}
 const EFFECT_TRIGGER_VALUES := {"Battle Start": true, "Attack": true, "Hit": true, "Kill": true, "Death": true, "Damaged": true, "HP Below Threshold": true, "Every N Ticks": true}
 const EFFECT_CONDITION_VALUES := {"Always": true, "Self HP Below Percent": true, "Target Has Tag": true, "Target Missing Tag": true}
 const EFFECT_TARGET_VALUES := {"Self": true, "Attack Target": true, "Attacker": true, "Killer": true, "All Allies": true, "All Enemies": true, "Adjacent Allies": true}
@@ -123,9 +121,6 @@ static func _load_base_items() -> Dictionary:
 			"armor_modifier": resource.armor_modifier,
 			"action_interval_modifier": resource.action_interval_modifier,
 			"effects": _effect_resources_to_data(resource.effects),
-			"trigger": resource.trigger,
-			"effect": resource.effect,
-			"effect_amount": resource.effect_amount,
 		}
 	return out
 
@@ -268,8 +263,6 @@ static func _validate_merged_data(data: Dictionary) -> void:
 	for item_id in data["items"].keys():
 		var item: Dictionary = data["items"][item_id]
 		assert(ITEM_SLOT_VALUES.has(item.get("slot", "")), "Invalid item slot for id %s" % item_id)
-		assert(ITEM_TRIGGER_VALUES.has(item.get("trigger", "")), "Invalid item trigger for id %s" % item_id)
-		assert(ITEM_EFFECT_VALUES.has(item.get("effect", "")), "Invalid item effect for id %s" % item_id)
 		for effect in item.get("effects", []):
 			var effect_data: Dictionary = effect
 			assert(EFFECT_TRIGGER_VALUES.has(effect_data.get("trigger", "")), "Invalid authored effect trigger for item id %s" % item_id)
@@ -419,9 +412,6 @@ static func _build_item_resources(items_data: Dictionary) -> Dictionary:
 		item.magic_damage_modifier = int(src.get("magic_damage_modifier", 0))
 		item.armor_modifier = int(src.get("armor_modifier", 0))
 		item.action_interval_modifier = int(src.get("action_interval_modifier", 0))
-		item.trigger = String(src.get("trigger", "None"))
-		item.effect = String(src.get("effect", "None"))
-		item.effect_amount = int(src.get("effect_amount", 0))
 		item.effects = _build_effect_resources(src.get("effects", []))
 		out[id] = item
 	return out

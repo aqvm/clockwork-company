@@ -92,14 +92,8 @@ Optional fields:
 - `armor_modifier` (`int`)
 - `action_interval_modifier` (`int`)
 - `effects` (`Array[Dictionary]`): declarative authored effects. See `items[].effects[]` below.
-- `trigger` (`String enum`): `None`, `Battle Start`, `Attack`, `Hit`, `Kill`, `Death`
-- `effect` (`String enum`): `None`, `Gain Armor`, `Bonus Damage`, `Reduce Target Armor`, `Heal Self`, `Damage Killer`
-- `effect_amount` (`int`)
 
-Compatibility note:
-- `trigger`, `effect`, and `effect_amount` are the legacy one-effect item fields.
-- Prefer `effects` for new content.
-- If an item has matching authored `effects`, the resolver uses those for that trigger. If no authored effect matches a trigger, the legacy fields still work as fallback.
+Item effects must be authored in `effects[]`. The old top-level `trigger`, `effect`, and `effect_amount` item fields have been removed.
 
 ## `items[].effects[]` keys
 

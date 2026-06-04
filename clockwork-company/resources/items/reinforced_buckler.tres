@@ -20,6 +20,3 @@ max_hp_modifier = 6
 armor_modifier = 2
 action_interval_modifier = 1
 effects = [SubResource("Resource_buckler_start")]
-trigger = "Battle Start"
-effect = "Gain Armor"
-effect_amount = 1

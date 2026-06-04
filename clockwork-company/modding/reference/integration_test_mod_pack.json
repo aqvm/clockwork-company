@@ -10,9 +10,20 @@
       "max_hp_modifier": 10,
       "armor_modifier": 4,
       "action_interval_modifier": 3,
-      "trigger": "Battle Start",
-      "effect": "Gain Armor",
-      "effect_amount": 2,
+      "effects": [
+        {
+          "display_name": "Tower Shield IT Brace",
+          "tags": ["armor", "battle_start"],
+          "trigger": "Battle Start",
+          "condition": "Always",
+          "target_selector": "Self",
+          "effect_type": "Gain Armor",
+          "amount": 2,
+          "threshold_percent": 50,
+          "interval_ticks": 0,
+          "once_per_battle": false
+        }
+      ],
       "physical_damage_modifier": 0,
       "magic_damage_modifier": 0
     },
@@ -23,9 +34,20 @@
       "max_hp_modifier": -6,
       "armor_modifier": 0,
       "action_interval_modifier": 1,
-      "trigger": "Attack",
-      "effect": "Bonus Damage",
-      "effect_amount": 4,
+      "effects": [
+        {
+          "display_name": "Glass Focus IT Burst",
+          "tags": ["damage", "focus", "magic"],
+          "trigger": "Attack",
+          "condition": "Always",
+          "target_selector": "Attack Target",
+          "effect_type": "Bonus Damage",
+          "amount": 4,
+          "threshold_percent": 50,
+          "interval_ticks": 0,
+          "once_per_battle": false
+        }
+      ],
       "physical_damage_modifier": 0,
       "magic_damage_modifier": 0
     }

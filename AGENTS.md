@@ -54,6 +54,8 @@ Do not introduce these unless explicitly requested:
 - Avoid frame-dependent real-time logic for combat rules.
 - Make combat explain itself through readable logs.
 - Keep data definitions separate from runtime combat state.
+- Keep scenario and campaign systems as thin wrappers over combat; do not add management-sim systems unless explicitly requested.
+- Prefer data-driven scenario rules that can exist as readable placeholders before mechanics enforce them.
 
 ## Required explanation after code changes
 
@@ -72,6 +74,8 @@ Whenever you change code, include:
 - Update `LEARNING_LOG.md` after meaningful changes.
 - Update `ARCHITECTURE.md` when responsibilities or structure change.
 - Update `DESIGN_NOTES.md` when design decisions are made or revised.
+- Update `TODO.md` when planned work is added, completed, abandoned, or substantially changed.
+- Update `GODOT_BEST_PRACTICES_AUDIT.md` when the project deliberately adopts, rejects, or revises a documented Godot practice.
 - For JSON content/modding files, keep adjacent `*.options.md` docs fully up to date with every field/enum/keyword/reference rule change.
 - If JSON schema/keywords change in loader or data scripts, update both the sidecar docs next to affected JSON files and any repository-level modding docs in the same patch.
 

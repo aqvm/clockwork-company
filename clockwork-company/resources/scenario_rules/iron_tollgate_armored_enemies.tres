@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ScenarioRuleDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/scenario_rule_definition.gd" id="1_rule"]
+
+[resource]
+script = ExtResource("1_rule")
+rule_id = "iron_tollgate_armored_enemies"
+display_name = "Iron Tollgate Armor"
+description = "Data-only placeholder: this scenario is meant to highlight armor and physical mitigation later."
+tags = ["armor", "physical", "placeholder"]

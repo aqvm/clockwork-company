@@ -1,0 +1,100 @@
+extends ScrollContainer
+class_name ScenarioDetailPanel
+
+signal resource_tooltip_requested(source: Control, resource: Resource)
+signal tooltip_cleared
+
+var content: VBoxContainer = null
+
+
+func _ready() -> void:
+	size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_ensure_content()
+
+
+func show_scenario(scenario: Resource, status_text: String) -> void:
+	_ensure_content()
+	_clear_content()
+	if scenario == null:
+		_add_plain_text("Select a scenario to inspect its mission data.")
+		return
+
+	_add_resource_text(scenario, scenario.display_name)
+	_add_plain_text(scenario.description)
+	if not scenario.story_intro.is_empty():
+		_add_plain_text("Intro: %s" % scenario.story_intro)
+	_add_plain_text("")
+	_add_plain_text("Encounters: %d" % scenario.encounters.size())
+	for encounter in scenario.encounters:
+		if encounter != null:
+			_add_resource_text(encounter, "- %s" % encounter.display_name)
+	_add_plain_text("Party size: %d" % scenario.party_size)
+	_add_plain_text("Recommended level: %d-%d" % [scenario.recommended_level_min, scenario.recommended_level_max])
+	_add_plain_text("Status: %s" % status_text)
+	_add_plain_text("Tags: %s" % _join_values(scenario.tags, ", "))
+	_add_plain_text("Content unlocks: %s" % _join_values(scenario.content_unlocks, ", "))
+	if not scenario.story_outro.is_empty():
+		_add_plain_text("Outro: %s" % scenario.story_outro)
+	if not scenario.scenario_rules.is_empty():
+		_add_plain_text("")
+		_add_plain_text("Rules:")
+		for rule in scenario.scenario_rules:
+			if rule != null:
+				_add_resource_text(rule, "- %s: %s" % [rule.display_name, rule.description])
+	if not scenario.rewards.is_empty():
+		_add_plain_text("")
+		_add_plain_text("Scenario rewards:")
+		for reward in scenario.rewards:
+			if reward != null:
+				_add_resource_text(reward, "- %s: %s" % [reward.display_name, reward.description])
+
+
+func _add_plain_text(text: String) -> Label:
+	var label := Label.new()
+	label.text = text
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content.add_child(label)
+	return label
+
+
+func _add_resource_text(resource: Resource, text: String) -> Label:
+	var label := _add_plain_text(text)
+	label.mouse_filter = Control.MOUSE_FILTER_STOP
+	label.mouse_entered.connect(_on_resource_mouse_entered.bind(label, resource))
+	label.mouse_exited.connect(_on_resource_mouse_exited)
+	return label
+
+
+func _on_resource_mouse_entered(source: Control, resource: Resource) -> void:
+	resource_tooltip_requested.emit(source, resource)
+
+
+func _on_resource_mouse_exited() -> void:
+	tooltip_cleared.emit()
+
+
+func _clear_content() -> void:
+	_ensure_content()
+	for child in content.get_children():
+		child.queue_free()
+
+
+func _ensure_content() -> void:
+	if content != null:
+		return
+	content = VBoxContainer.new()
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	add_child(content)
+
+
+func _join_values(values: Array, separator: String) -> String:
+	if values.is_empty():
+		return "none"
+	var text := ""
+	for value in values:
+		if not text.is_empty():
+			text += separator
+		text += String(value)
+	return text

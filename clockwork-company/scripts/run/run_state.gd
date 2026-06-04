@@ -7,6 +7,7 @@ const UnitDefinitionScript := preload("res://scripts/data/unit_definition.gd")
 const UnitLoadoutDefinitionScript := preload("res://scripts/data/unit_loadout_definition.gd")
 const ItemDefinitionScript := preload("res://scripts/data/item_definition.gd")
 const JobProgressDefinitionScript := preload("res://scripts/data/job_progress_definition.gd")
+const ScenarioRunnerScript := preload("res://scripts/scenario/scenario_runner.gd")
 const STATUS_ACTIVE := "active"
 const STATUS_REWARD := "reward"
 const STATUS_EQUIPMENT := "equipment"
@@ -37,22 +38,47 @@ var inventory_items: Array[ItemDefinition] = []
 var reward_history: Array[String] = []
 var last_result_summary := ""
 var loss_test_mode := false
+var active_scenario: Resource = null
+var scenario_runner = null
 
 
 func start(enabled_mod_pack_ids: Array[String], should_force_loss := false) -> void:
+	_start_common(enabled_mod_pack_ids, should_force_loss, [])
+	encounter_definitions = _load_encounter_definitions()
+	reward_definitions = _load_reward_definitions()
+
+
+func start_scenario(enabled_mod_pack_ids: Array[String], scenario: Resource, should_force_loss := false, starting_allies: Array = []) -> void:
+	_start_common(enabled_mod_pack_ids, should_force_loss, starting_allies)
+	active_scenario = scenario
+	scenario_runner = ScenarioRunnerScript.new()
+	scenario_runner.start(scenario)
+	encounter_definitions = scenario.encounters.duplicate() if scenario != null else []
+	reward_definitions = scenario.rewards.duplicate() if scenario != null else []
+	if reward_definitions.is_empty():
+		reward_definitions = _load_reward_definitions()
+
+
+func _start_common(enabled_mod_pack_ids: Array[String], should_force_loss := false, starting_allies: Array = []) -> void:
 	fight_index = 0
 	status = STATUS_ACTIVE
 	inventory_items.clear()
 	reward_history.clear()
 	last_result_summary = ""
 	loss_test_mode = should_force_loss
+	active_scenario = null
+	scenario_runner = null
 
 	ally_definitions.clear()
-	encounter_definitions = _load_encounter_definitions()
-	reward_definitions = _load_reward_definitions()
-	for definition: UnitDefinition in JsonContentLoaderScript.load_demo_unit_definitions(enabled_mod_pack_ids):
-		var copy := _clone_unit_definition(definition)
-		if copy.team == CombatConstantsScript.TEAM_ALLY:
+	if starting_allies.is_empty():
+		for definition: UnitDefinition in JsonContentLoaderScript.load_demo_unit_definitions(enabled_mod_pack_ids):
+			var copy := _clone_unit_definition(definition)
+			if copy.team == CombatConstantsScript.TEAM_ALLY:
+				ally_definitions.append(copy)
+	else:
+		for definition: UnitDefinition in starting_allies:
+			var copy := _clone_unit_definition(definition)
+			copy.team = CombatConstantsScript.TEAM_ALLY
 			ally_definitions.append(copy)
 
 	if loss_test_mode:
@@ -69,7 +95,15 @@ func current_fight_number() -> int:
 
 func current_fight_title() -> String:
 	var suffix := " (loss test)" if loss_test_mode else ""
-	return "Phase 7 run fight %d of %d: %s%s" % [current_fight_number(), FIGHT_COUNT, current_encounter_name(), suffix]
+	if active_scenario != null:
+		return "%s encounter %d of %d: %s%s" % [active_scenario.display_name, current_fight_number(), current_fight_count(), current_encounter_name(), suffix]
+	return "Phase 7 run fight %d of %d: %s%s" % [current_fight_number(), current_fight_count(), current_encounter_name(), suffix]
+
+
+func current_fight_count() -> int:
+	if not encounter_definitions.is_empty():
+		return encounter_definitions.size()
+	return FIGHT_COUNT
 
 
 func current_encounter_name() -> String:
@@ -100,10 +134,15 @@ func complete_fight(report: Dictionary) -> void:
 		last_result_summary = "Run lost on fight %d. The enemy team survived the battle." % current_fight_number()
 		return
 
-	if fight_index >= FIGHT_COUNT - 1:
+	if fight_index >= current_fight_count() - 1:
 		_award_current_job_levels()
+		if scenario_runner != null:
+			scenario_runner.complete_current_encounter()
 		status = STATUS_WON
-		last_result_summary = "Run won after fight %d. The party cleared the five-fight slice." % current_fight_number()
+		if active_scenario != null:
+			last_result_summary = "Scenario complete: %s. %s" % [active_scenario.display_name, active_scenario.story_outro]
+		else:
+			last_result_summary = "Run won after fight %d. The party cleared the five-fight slice." % current_fight_number()
 		return
 
 	_award_current_job_levels()
@@ -122,6 +161,7 @@ func reward_options() -> Array[Dictionary]:
 			"unit_name": reward.target_unit_name,
 			"item": reward.item,
 			"item_name": reward.item.display_name,
+			"resource": reward,
 		})
 	return options
 
@@ -136,6 +176,8 @@ func apply_reward(reward_index: int) -> void:
 	inventory_items.append(item)
 	reward_history.append("%s gained after fight %d" % [item.display_name, current_fight_number()])
 	fight_index += 1
+	if scenario_runner != null:
+		scenario_runner.progress.current_encounter_index = fight_index
 	status = STATUS_EQUIPMENT
 	last_result_summary = "Reward gained: %s. Equip inventory before fight %d, or continue as-is." % [String(reward["label"]), current_fight_number()]
 
@@ -201,8 +243,11 @@ func equip_inventory_item(item_index: int, unit_name: String) -> void:
 
 func status_lines() -> Array[String]:
 	var lines: Array[String] = []
+	if scenario_runner != null:
+		for scenario_line in scenario_runner.status_lines():
+			lines.append(scenario_line)
 	lines.append("Run status: %s" % status.capitalize())
-	lines.append("Current fight: %d/%d" % [current_fight_number(), FIGHT_COUNT])
+	lines.append("Current fight: %d/%d" % [current_fight_number(), current_fight_count()])
 	lines.append("Encounter: %s" % current_encounter_name())
 	var encounter = _current_encounter()
 	if encounter != null and not encounter.scout_text.is_empty():
@@ -424,9 +469,6 @@ func _clone_item_definition(source: ItemDefinition) -> ItemDefinition:
 	copy.magic_damage_modifier = source.magic_damage_modifier
 	copy.armor_modifier = source.armor_modifier
 	copy.action_interval_modifier = source.action_interval_modifier
-	copy.trigger = source.trigger
-	copy.effect = source.effect
-	copy.effect_amount = source.effect_amount
 	copy.effects = source.effects.duplicate()
 	return copy
 

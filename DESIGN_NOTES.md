@@ -58,14 +58,19 @@ Current combat log design rules:
 - only parent action entries need visible timestamps
 - child entries inherit the parent moment in the player's reading of the log
 - indentation should clarify causality, not hide important outcomes
-- static setup information and timed combat events should be visually separated
-- the static combat conditions should be visible when the scene opens
+- scenario/party planning information, static fight setup information, and timed combat events should be visually separated
+- scenario list buttons select scenarios for inspection; a separate main action starts the selected available scenario
+- the scene should open on scenario planning data, not a precomputed combat report
+- the old combat conditions pane should not compete with the planning UI once scenario, party, and unit details are visible
 - the combat test should wait for an explicit run click before replaying combat events
 - setup should sit above replay and use only the height it needs, capped at half the visible log area
 - the UI can reveal the already-generated combat events over time to make the fight easier to follow
 - replay pacing should be readable rather than literal; one parent combat event per second is the current default
 - manual scrolling during replay should stop forced autoscroll so the player can inspect earlier events
 - live log replay is presentation-only and must not make combat rules frame-dependent or real-time
+- replay should reveal only combat events, not static setup/context lines
+- visible game Resources should be hoverable and explain themselves through immediate custom tooltips
+- tooltip content should be centralized by Resource type so later locked/nested tooltips do not require rewriting every UI panel
 - a `RichTextLabel` is preferred for the visible log so future keyword coloration can live in the UI layer
 - keyword highlighting should stay a small UI categorization pass over plain log lines, not a combat-system rewrite
 - highlight category colors should be exposed as inspectable `Color` fields on a Resource so tuning can happen with Godot color pickers
@@ -206,6 +211,18 @@ Current run-loop design rules:
 - both win and loss states should be easy to reach during testing
 - enemy progression is authored as fixed encounter Resources, not procedural generation or adaptive difficulty
 - enemies in encounters should remain normal unit/loadout/job/item/tactic builds, not a separate monster-only ruleset
+
+### Scenario and Campaign Structure
+
+Short handcrafted scenarios are the primary content unit. A scenario is a fixed sequence of encounters with story text, optional rule ids, rewards, tags, and unlock ids. This keeps content inspectable while leaving room for scenario-specific constraints later.
+
+Campaigns are chains or trees of scenarios, not a base-management game. The first campaign layer tracks only available scenarios, active/completed scenarios, unlocked content ids, and campaign completion.
+
+Scenario rules should be data-first. A rule such as `ash_chapel_healing_pressure` may exist as a readable Resource before the combat simulator knows how to enforce it.
+
+Campaign persistence should stay light at first: completed scenarios, unlocked content, and eventually roster/job/gear state. Do not add injury, rest, fatigue, base-building, calendars, or management-sim systems without an explicit design pass.
+
+Rotation pressure should eventually come from XP caps, scenario constraints, enemy mechanics, content unlocks, and optional mastery goals rather than punishment systems.
 
 ### Enemy doctrine later
 

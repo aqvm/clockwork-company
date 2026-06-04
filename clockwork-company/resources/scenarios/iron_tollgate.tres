@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="ScenarioDefinition" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/scenario_definition.gd" id="1_scenario"]
+[ext_resource type="Resource" path="res://resources/encounters/phase7_fight_02_toll_gate.tres" id="2_encounter_a"]
+[ext_resource type="Resource" path="res://resources/encounters/catalog_test_foundry_bells.tres" id="3_encounter_b"]
+[ext_resource type="Resource" path="res://resources/encounters/phase7_fight_05_clocktower.tres" id="4_encounter_c"]
+[ext_resource type="Resource" path="res://resources/scenario_rules/iron_tollgate_armored_enemies.tres" id="5_rule"]
+[ext_resource type="Resource" path="res://resources/rewards/guardplate_for_alden.tres" id="6_reward"]
+
+[resource]
+script = ExtResource("1_scenario")
+scenario_id = "iron_tollgate"
+display_name = "Iron Tollgate"
+description = "A final sample scenario that points toward armor and mitigation checks."
+story_intro = "A mercenary checkpoint blocks the company's passage."
+story_outro = "The tollgate stands open, its iron logic answered in kind."
+party_size = 3
+encounters = [ExtResource("2_encounter_a"), ExtResource("3_encounter_b"), ExtResource("4_encounter_c")]
+scenario_rules = [ExtResource("5_rule")]
+recommended_level_min = 2
+recommended_level_max = 4
+tags = ["tollgate", "armor", "mercenary"]
+rewards = [ExtResource("6_reward")]
+content_unlocks = ["iron_tollgate_contracts"]

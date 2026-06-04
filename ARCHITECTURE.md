@@ -81,6 +81,27 @@ Responsible for:
 - inventory/equipment between fights
 - run start/end conditions
 
+### Skirmish, scenario, and campaign
+
+The project now has three tactical content layers:
+
+- Skirmish: one combat test or single fight, handled by `CombatSimulator` and the existing combat test scene.
+- Scenario: a short handcrafted sequence of encounters, defined by `ScenarioDefinition` Resources and advanced through `RunState` plus `ScenarioRunner`.
+- Campaign: a thin wrapper over scenarios, defined by `CampaignDefinition` and tracked by `CampaignManager`/`CampaignProgress`.
+
+Scenarios own authored mission data: story text, party size, encounter Resources, data-only scenario rules, rewards, tags, and content unlock ids. Campaigns own availability and completion: which scenarios start unlocked, which scenarios unlock after completion, which content ids are unlocked, and whether the campaign is complete.
+
+The campaign layer does not change combat rules. Real fights still run through `CombatSimulator`; runtime combat state still lives in combat runtime classes; between-fight roster/reward/equipment choices still live in `RunState`.
+
+Intentionally not implemented here:
+
+- save/load
+- persistent roster import/export
+- injuries, fatigue, rest, or base management
+- procedural generation
+- async multiplayer or ghost snapshots
+- adaptive enemy doctrine
+
 ## Initial combat model
 
 Use a discrete-event model:
@@ -110,12 +131,18 @@ Current damage formula:
 
 This is intentionally crude and replaceable. There is no magic resistance stat yet.
 
-## Current Phase 7 implementation
+## Current scenario workbench implementation
 
-The first playable test is a text-only combat scene:
+The first playable test now opens as a scenario workbench with the older combat replay harness below it. The planning area is now split into small child UI scenes so the main scene can coordinate state without owning every rendering detail:
 
 - `clockwork-company/scenes/combat_test_scene.tscn` owns the visible test scene.
-- `clockwork-company/scripts/ui/combat_test_scene.gd` owns the run/fight/reward buttons, static combat setup display, and live replay timing for already-generated combat event lines.
+- `clockwork-company/scripts/ui/combat_test_scene.gd` owns campaign/run coordination, selected scenario/unit state, simple planning equipment cycling, run/fight/reward buttons, static combat setup display after a fight starts, tooltip hosting, and live replay timing for generated combat event lines.
+- `clockwork-company/scenes/scenario_list_panel.tscn` and `scripts/ui/scenario_list_panel.gd` own scenario list button rendering and emit `scenario_selected`.
+- `clockwork-company/scenes/scenario_detail_panel.tscn` and `scripts/ui/scenario_detail_panel.gd` own read-only selected scenario detail rendering.
+- `clockwork-company/scenes/party_panel.tscn` and `scripts/ui/party_panel.gd` own party summary button rendering and emit `unit_selected`.
+- `clockwork-company/scenes/unit_detail_panel.tscn` and `scripts/ui/unit_detail_panel.gd` own read-only selected unit detail rendering.
+- `clockwork-company/scripts/ui/resource_tooltip_builder.gd` converts known game Resources into readable tooltip text.
+- `clockwork-company/scripts/ui/tooltip_presenter.gd` owns the shared floating tooltip panel used by hoverable Resource rows/buttons.
 - `clockwork-company/scripts/ui/combat_test_scene.gd` now also owns the local mod-pack toggle UI state (checkbox dropdown), including enabled-pack persistence and preview refresh behavior.
 - `clockwork-company/scripts/ui/unit_status_dot.gd` owns drawing one unit's circular replay marker, health arc, and cooldown bar.
 - `clockwork-company/scripts/combat/combat_simulator.gd` owns the combat rules.
@@ -131,6 +158,8 @@ The first playable test is a text-only combat scene:
 - `clockwork-company/scripts/combat/rules/item_effect_resolver.gd` owns triggered item effect resolution.
 - `clockwork-company/scripts/combat/scenarios/demo_battle_factory.gd` owns current fixed demo roster construction.
 - `clockwork-company/scripts/run/run_state.gd` owns short-run progression state: current fight index, active/reward/equipment/won/lost status, cloned party definitions, run inventory, fixed encounter order, and reward/equipment application.
+- `clockwork-company/scripts/scenario/scenario_runner.gd` owns the current scenario progress wrapper: active scenario id, encounter index, completion, and scenario summary lines.
+- `clockwork-company/scripts/campaign/campaign_manager.gd` owns campaign unlock progression: available scenarios, completed scenarios, unlocked content ids, and campaign completion.
 - `clockwork-company/scripts/modding/json_content_loader.gd` owns JSON pack loading/merging/validation and runtime Resource reconstruction for ancestries, items, jobs, tactics, loadouts, and units.
 - `CombatLog` and `CombatLogEntry` are dedicated helper classes in `scripts/combat/logging/combat_log.gd` that build readable text logs and structured event metadata.
 - `scripts/combat/logging/combat_event_schema.gd` defines known event types and required payload keys as the structured logging contract.
@@ -153,16 +182,22 @@ The first playable test is a text-only combat scene:
 - `clockwork-company/scripts/data/tactic_definition.gd` defines the small tactic rule Resource type.
 - `clockwork-company/scripts/data/encounter_definition.gd` defines a run encounter as a named enemy party made from normal `UnitDefinition` Resources.
 - `clockwork-company/scripts/data/reward_definition.gd` defines a run reward as a named offer with a suggested recipient and a normal `ItemDefinition` payload.
+- `clockwork-company/scripts/data/scenario_definition.gd` defines a handcrafted mission as story text, ordered encounter references, optional data-only scenario rules, rewards, tags, and unlock ids.
+- `clockwork-company/scripts/data/scenario_rule_definition.gd` defines a named scenario rule placeholder that can exist as data before combat mechanics implement it.
+- `clockwork-company/scripts/data/campaign_definition.gd` and `campaign_scenario_node_definition.gd` define a lightweight scenario chain.
 - `clockwork-company/resources/ancestries/*.tres` stores the current ancestry catalog.
 - `clockwork-company/resources/units/*.tres` stores the current demo unit definitions and a wider catalog of future ally/enemy build bodies.
 - `clockwork-company/resources/items/*.tres` stores the current demo item definitions and a wider catalog of build-enabling gear.
 - `clockwork-company/resources/jobs/*.tres` stores the current demo job definitions and a wider catalog of job identities.
 - `clockwork-company/resources/loadouts/*.tres` stores reusable demo and catalog build archetypes.
 - `clockwork-company/resources/tactics/*.tres` stores reusable named tactic rule definitions.
-- `clockwork-company/resources/encounters/*.tres` stores the current fixed Phase 7 encounter sequence.
+- `clockwork-company/resources/encounters/*.tres` stores fixed authored encounters used by the old Phase 7 run and the new sample scenarios.
 - `clockwork-company/resources/rewards/*.tres` stores the current fixed Phase 7 reward choices.
+- `clockwork-company/resources/scenarios/*.tres` stores sample scenario definitions.
+- `clockwork-company/resources/scenario_rules/*.tres` stores data-only scenario rule definitions.
+- `clockwork-company/resources/campaigns/first_road_campaign.tres` stores the first sample campaign.
 
-The scene is set as the main scene in `clockwork-company/project.godot`, so pressing Play in Godot should open the Phase 7 run-loop test.
+The scene is set as the main scene in `clockwork-company/project.godot`, so pressing Play in Godot should open the scenario workbench. The simulator should not run merely because a scenario is selected; combat reports are generated when the player starts or runs a fight.
 
 Current run-loop rules:
 
@@ -192,7 +227,7 @@ Current combat rules:
 - a loadout owns the unit's priority-ordered tactic Resource list
 - each item has one slot label and flat modifiers for max HP, physical damage, magic damage, armor, and action interval
 - each item can also define declarative authored effects through `Array[EffectDefinition]`
-- legacy one-effect item fields (`trigger`, `effect`, `effect_amount`) remain as a compatibility fallback
+- item effects are authored through `effects: Array[EffectDefinition]`; the old top-level item `trigger`, `effect`, and `effect_amount` fields have been removed
 - ancestries, items, jobs, tactics, and units can carry freeform tags for future filtering/conditions/content tools
 - each job has small per-level growth values for HP, physical damage, magic damage, armor, and action interval
 - each unit can gain at most five total job levels across all jobs
@@ -210,7 +245,7 @@ Current combat rules:
 - current job passives are deterministic combat hooks such as attack damage, healing, or guard armor bonuses
 - current job reactions are deterministic damaged/low-HP hooks such as temporary armor, self-healing, or damaging the attacker
 - passive and reaction cooldowns are tracked as combat-only unit-turn counters
-- physical damage is reduced by armor; magic-tagged damage uses magic damage and currently ignores armor
+- physical damage is reduced by armor; magic-tagged damage uses magic damage and ignores armor
 - every unit starts with `next_action_time = action_interval`
 - the living unit with the lowest `next_action_time` acts next
 - ties use roster order, which keeps the result deterministic
@@ -246,7 +281,8 @@ Combat log responsibility split:
 - `combat_test_scene.gd` still renders plain lines for readable logs, but replay visualization now consumes structured event metadata instead of parsing combat prose.
 - Replay identity now prefers stable `unit_id` references from event payloads and only falls back to display names when needed.
 - The combat test UI splits those plain lines at `Combat log:`. Setup, roster, loadout, gear, and tactic information appears immediately in a static `RichTextLabel`; timestamped combat events appear in a separate replay `RichTextLabel`.
-- The static setup pane is populated when the scene opens by running the deterministic simulator once and caching the combat-event lines for later replay.
+- Scenario selection shows authored scenario and party data without running combat. The static setup pane is populated after a fight report is generated for the active encounter.
+- Resource tooltips are custom UI, not Godot native `tooltip_text`, so the project can later grow CK3-style locked/nested tooltips from one presenter path.
 - The replay does not start when the scene opens. The UI waits for the run button, then clears and starts the timed replay pane from the cached combat-event lines.
 - The replay shows one timestamped parent combat event per second. Child explanation lines without their own timestamp appear with the most recent parent event.
 - The combat test scene sizes the game window to roughly three quarters of the current monitor's usable area and stacks setup above replay in a vertical split. The setup pane is resized after each run to use the smaller of its content height or half the available log area.
@@ -285,7 +321,10 @@ Manual test:
 
 - Open the Godot project in `clockwork-company/`.
 - Press Play.
-- Click `Run Jobs 3v3 Fight`.
+- Select an available scenario in the top-left scenario list.
+- Inspect the scenario details and party/unit details.
+- Use the selected unit's cycle buttons to try alternate equipment before the scenario starts.
+- Click `Start Selected Scenario`, then click `Run Fight`.
 - Confirm the text log shows loadouts, current jobs, job skills/passives/reactions, equipped or skipped gear, loadout tactics, battle-start item effects, final roster stats, action times, selected tactics, damage, healing or guarding, defeats, and final result.
 - Confirm Sol Apprentice uses the `Apprentice Focus` loadout and that Glass Focus still triggers on attack.
 - Confirm Glass Wisp uses the `Apprentice Support` loadout and that the Apprentice job's `First Aid` effect appears when that job heals.

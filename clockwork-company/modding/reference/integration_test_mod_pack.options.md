@@ -68,7 +68,7 @@ Purpose: exercise as many modding code paths as possible in one toggleable pack.
 1. Open Mods dropdown in the combat scene.
 2. Enable `Integration Test Mod Pack [ref]`.
 3. Optionally disable other packs for isolation.
-4. Click `Run Jobs 3v3 Fight`.
+4. Start a scenario or the Phase 7 debug run, then click `Run Fight`.
 
 ## Failure Clues
 

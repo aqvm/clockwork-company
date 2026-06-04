@@ -28,9 +28,6 @@ Demonstrates three common mod actions:
   - `magic_damage_modifier`
   - `armor_modifier`
   - `action_interval_modifier`
-  - `trigger`
-  - `effect`
-  - `effect_amount`
 
 - `loadouts[]`:
   - `id`

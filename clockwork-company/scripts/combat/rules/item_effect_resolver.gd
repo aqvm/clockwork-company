@@ -3,8 +3,6 @@ class_name ItemEffectResolver
 
 const CombatConstantsScript := preload("res://scripts/combat/combat_constants.gd")
 const CombatEventsScript := preload("res://scripts/combat/logging/combat_events.gd")
-const EffectDefinitionScript := preload("res://scripts/data/effect_definition.gd")
-
 const TRIGGER_DAMAGED := "Damaged"
 const TRIGGER_HP_BELOW_THRESHOLD := "HP Below Threshold"
 const EFFECT_HEAL := "Heal"
@@ -146,26 +144,7 @@ static func _effects_for_trigger(item: ItemDefinition, trigger: String) -> Array
 	for effect in item.effects:
 		if effect != null and effect.trigger == trigger and effect.amount != 0:
 			effects.append(effect)
-	if effects.is_empty() and _legacy_item_has_trigger(item, trigger):
-		effects.append(_legacy_effect_for_item(item))
 	return effects
-
-static func _legacy_effect_for_item(item: ItemDefinition):
-	var effect = EffectDefinitionScript.new()
-	effect.display_name = item.effect
-	effect.trigger = item.trigger
-	effect.condition = "Always"
-	effect.target_selector = _legacy_target_selector(item.effect)
-	effect.effect_type = item.effect
-	effect.amount = item.effect_amount
-	return effect
-
-static func _legacy_target_selector(effect_type: String) -> String:
-	if effect_type == CombatConstantsScript.EFFECT_REDUCE_TARGET_ARMOR:
-		return TARGET_ATTACK_TARGET
-	if effect_type == CombatConstantsScript.EFFECT_DAMAGE_KILLER:
-		return TARGET_KILLER
-	return TARGET_SELF
 
 static func _effect_can_fire(owner, effect, context_target) -> bool:
 	if effect == null:
@@ -200,9 +179,6 @@ static func _effect_key(effect) -> String:
 	if name.is_empty():
 		name = effect.effect_type
 	return "%s|%s|%s" % [effect.trigger, effect.effect_type, name]
-
-static func _legacy_item_has_trigger(item: ItemDefinition, trigger: String) -> bool:
-	return item != null and item.trigger == trigger and item.effect != CombatConstantsScript.EFFECT_NONE and item.effect_amount != 0
 
 static func _unsupported_effect_text(unit, item: ItemDefinition, effect) -> String:
 	return "%s triggers %s on %s, but %s is not implemented for that trigger yet." % [unit.unit_name, item.display_name, effect.trigger.to_lower(), effect.effect_type]

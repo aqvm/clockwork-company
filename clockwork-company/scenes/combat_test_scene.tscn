@@ -55,7 +55,7 @@ theme_override_constants/separation = 8
 
 [node name="TitleLabel" type="Label" parent="MarginContainer/VBoxContainer" unique_id=1742556195]
 layout_mode = 2
-text = "Phase 6 Combat Simulator"
+text = "Clockwork Company Scenario Workbench"
 
 [node name="ControlsRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer" unique_id=213141313]
 layout_mode = 2
@@ -64,7 +64,7 @@ theme_override_constants/separation = 8
 [node name="RunButton" type="Button" parent="MarginContainer/VBoxContainer/ControlsRow" unique_id=1860827549]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Run Jobs 3v3 Fight"
+text = "Run Fight"
 
 [node name="ModsMenuButton" type="Button" parent="MarginContainer/VBoxContainer/ControlsRow" unique_id=787878787]
 unique_name_in_owner = true
