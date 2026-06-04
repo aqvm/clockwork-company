@@ -105,7 +105,6 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 - Add scouting reports when enemy mechanics become more varied.
 - Use tags for filtering/conditions/content tools when an actual tool or rule needs them.
 - Keep JSON sidecar docs next to every JSON content/modding file.
-- In the Godot resource editor for items, the effects are just called EffectDefinition in the UI. Instead, they should have the effect's name displayed there. Investigate if that is possible, and if it is, fix it.
 
 ## Modding and Data Pipeline
 

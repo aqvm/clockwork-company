@@ -2172,3 +2172,40 @@ Manual exercise:
 Open questions:
 
 - Should the setup/context summary eventually become its own `FightSummaryPanel`, or is it small enough to stay parent-owned for now?
+
+## 2026-06-04 - Named item effect Resources in the Inspector
+
+Feature worked on:
+
+- Synced `EffectDefinition.display_name` into `resource_name` so item effect subresources can show their authored names in the Godot Inspector.
+- Added a `_to_string()` fallback for effect Resources, matching the existing skill/passive/reaction data Resource pattern.
+
+Godot concepts introduced:
+
+- `@tool` lets a Resource script run setter logic while edited in the editor.
+- `resource_name` is the editor-facing label Godot can use for nested Resource entries.
+- `_to_string()` gives Resources a readable fallback when Godot or debug output asks for their string form.
+
+Game architecture concepts introduced:
+
+- This is an authoring ergonomics change, not combat behavior. Effects still resolve through `EffectDefinition` data and `ItemEffectResolver`.
+- Better Resource labels make data-driven content easier to inspect without adding editor plugins.
+
+Files touched:
+
+- `clockwork-company/scripts/data/effect_definition.gd`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why syncing `display_name` to `resource_name` helps nested item effects in the Inspector.
+- Why the effect still needs explicit fields such as trigger, condition, target selector, and effect type even when it has a readable name.
+
+Manual exercise:
+
+- Open `clockwork-company/resources/items/glass_focus.tres`, expand its `effects` array, and confirm the subresource presents as `Glass Focus Attack Burst` instead of only `EffectDefinition`.
+
+Open questions:
+
+- Should other older data Resources without `resource_name` setters get the same Inspector-label treatment during a future authoring cleanup pass?

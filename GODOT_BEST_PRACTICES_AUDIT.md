@@ -122,6 +122,7 @@ Adopted:
 - Use custom child-panel signals for scenario and unit selection.
 - Split unit action button rendering into a component scene/script that emits start and equipment-change request signals.
 - Split combat replay timing, replay text display, visual unit dots, and runtime replay tooltips into a focused `CombatReplayPanel` script.
+- Sync nested `EffectDefinition` names into `resource_name` so item effects stay readable in the Inspector without an editor plugin.
 
 Adopt soon:
 
