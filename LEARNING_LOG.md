@@ -2317,6 +2317,8 @@ Files touched:
 - `clockwork-company/scripts/ui/scenario_detail_panel.gd`
 - `clockwork-company/scripts/ui/unit_action_panel.gd`
 - `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `clockwork-company/scripts/ui/scenario_list_panel.gd`
+- `clockwork-company/scripts/ui/scenario_detail_panel.gd`
 - `ARCHITECTURE.md`
 - `TODO.md`
 - `LEARNING_LOG.md`
@@ -2560,3 +2562,45 @@ Manual exercise:
 Open questions:
 
 - Should speed changes reschedule the currently waiting event immediately, or is applying the speed to subsequent events enough for this prototype?
+
+## 2026-06-04 - Standalone scenario practice mode
+
+Feature worked on:
+
+- Added a `Practice Scenario` action for unlocked scenarios.
+- Practice starts a scenario through `RunState` without marking campaign progress current, complete, or unlocked.
+- Campaign scenario starts still use `CampaignManager.start_scenario(...)` and still mutate campaign progress on completion.
+- Removed the completed standalone scenario mode TODO.
+
+Godot concepts introduced:
+
+- A child panel can emit a second action signal for a similar button while the parent decides which game-state path to run.
+- Optional function parameters can keep one start helper shared while preserving the important campaign/practice distinction.
+
+Game architecture concepts introduced:
+
+- A scenario definition can be played in different contexts: campaign progression or standalone practice.
+- Campaign mutation belongs to `CampaignManager`; a practice run should not touch it.
+- `RunState` can run scenario encounters without being the owner of campaign unlock logic.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/unit_action_panel.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `ARCHITECTURE.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why `Practice Scenario` does not call `CampaignManager.start_scenario(...)`.
+- Why campaign completion still happens only when `active_campaign_scenario_id` is set.
+- Why `RunState` is enough to run scenario encounters but not enough to unlock campaign nodes.
+
+Manual exercise:
+
+- Select an unlocked scenario, click `Practice`, finish it, and confirm the campaign completed/unlocked scenario lists did not change.
+
+Open questions:
+
+- Should locked scenarios ever be practice-playable for testing, or should practice stay limited to unlocked scenarios?

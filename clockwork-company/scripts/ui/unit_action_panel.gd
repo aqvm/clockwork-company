@@ -2,6 +2,7 @@ extends VBoxContainer
 class_name UnitActionPanel
 
 signal start_scenario_requested
+signal practice_scenario_requested
 signal cycle_equipment_requested(slot: String)
 signal equip_option_requested(option_index: int)
 
@@ -12,6 +13,7 @@ func show_actions(
 	selected_unit_name: String,
 	selected_scenario_status: String,
 	can_start_scenario: bool,
+	can_practice_scenario: bool,
 	has_active_campaign_scenario: bool,
 	is_replay_active: bool,
 	is_equipment_state: bool,
@@ -19,6 +21,7 @@ func show_actions(
 ) -> void:
 	_clear_children()
 	_add_start_button(selected_scenario, selected_scenario_status, can_start_scenario, has_active_campaign_scenario, is_replay_active)
+	_add_practice_button(selected_scenario, can_practice_scenario, has_active_campaign_scenario, is_replay_active)
 
 	if selected_unit == null:
 		return
@@ -45,6 +48,21 @@ func _add_start_button(
 	button.text = _start_button_text(selected_scenario, selected_scenario_status)
 	button.disabled = selected_scenario == null or has_active_campaign_scenario or is_replay_active or not can_start_scenario
 	button.pressed.connect(_on_start_button_pressed)
+	add_child(button)
+
+
+func _add_practice_button(
+	selected_scenario: Resource,
+	can_practice_scenario: bool,
+	has_active_campaign_scenario: bool,
+	is_replay_active: bool
+) -> void:
+	if selected_scenario == null:
+		return
+	var button := Button.new()
+	button.text = "Practice %s" % selected_scenario.display_name
+	button.disabled = has_active_campaign_scenario or is_replay_active or not can_practice_scenario
+	button.pressed.connect(_on_practice_button_pressed)
 	add_child(button)
 
 
@@ -95,6 +113,10 @@ func _show_equipment_options(selected_unit_name: String, equip_options: Array) -
 
 func _on_start_button_pressed() -> void:
 	start_scenario_requested.emit()
+
+
+func _on_practice_button_pressed() -> void:
+	practice_scenario_requested.emit()
 
 
 func _on_cycle_button_pressed(slot: String) -> void:

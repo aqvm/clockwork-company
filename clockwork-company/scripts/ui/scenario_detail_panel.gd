@@ -103,6 +103,8 @@ func _join_values(values: Array, separator: String) -> String:
 func _status_summary(status_text: String) -> String:
 	if status_text == "active":
 		return "active - finish the current scenario before starting another"
+	if status_text == "practice":
+		return "practice - standalone run active, campaign progress will not change"
 	if status_text == "available":
 		return "available - ready to start"
 	if status_text == "complete":

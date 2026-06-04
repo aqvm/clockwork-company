@@ -251,6 +251,7 @@ func _setup_planning_panel() -> void:
 
 	unit_action_panel = UnitActionPanelScene.instantiate()
 	unit_action_panel.connect("start_scenario_requested", _on_start_selected_scenario_pressed)
+	unit_action_panel.connect("practice_scenario_requested", _on_practice_selected_scenario_pressed)
 	unit_action_panel.connect("cycle_equipment_requested", _on_cycle_equipment_pressed)
 	unit_action_panel.connect("equip_option_requested", _on_planning_equip_pressed)
 	planning_row.add_child(unit_action_panel)
@@ -284,10 +285,10 @@ func _start_first_road_campaign() -> void:
 	_show_campaign_landing()
 
 
-func _start_scenario_run(scenario: Resource) -> void:
+func _start_scenario_run(scenario: Resource, should_mutate_campaign := true) -> void:
 	_stop_log_replay()
 	run_state = RunStateScript.new()
-	active_campaign_scenario_id = scenario.scenario_id
+	active_campaign_scenario_id = scenario.scenario_id if should_mutate_campaign else ""
 	run_state.start_scenario(_enabled_mod_pack_ids_array(), scenario, false, planning_party)
 	_load_planning_party_from_run()
 	_refresh_planning_panel()
@@ -313,7 +314,13 @@ func _on_start_selected_scenario_pressed() -> void:
 	if scenario == null:
 		return
 	selected_scenario = scenario
-	_start_scenario_run(scenario)
+	_start_scenario_run(scenario, true)
+
+
+func _on_practice_selected_scenario_pressed() -> void:
+	if selected_scenario == null or not _selected_scenario_can_practice():
+		return
+	_start_scenario_run(selected_scenario, false)
 
 
 func _on_reward_button_pressed(index: int) -> void:
@@ -430,7 +437,7 @@ func _update_campaign_controls() -> void:
 		scenarios = campaign_manager.all_scenarios()
 	if scenario_list_panel != null:
 		var progress = campaign_manager.progress if campaign_manager != null else null
-		scenario_list_panel.call("show_scenarios", scenarios, progress, selected_scenario)
+		scenario_list_panel.call("show_scenarios", scenarios, progress, selected_scenario, _active_scenario_id())
 
 
 func _select_scenario(scenario: Resource) -> void:
@@ -504,7 +511,8 @@ func _render_unit_actions() -> void:
 			selected_unit_name,
 			_scenario_campaign_status(selected_scenario),
 			_selected_scenario_can_start(),
-			not active_campaign_scenario_id.is_empty(),
+			_selected_scenario_can_practice(),
+			_has_active_scenario_run(),
 			replay_is_active,
 			is_equipment_state,
 			equip_options
@@ -514,11 +522,31 @@ func _render_unit_actions() -> void:
 func _selected_scenario_can_start() -> bool:
 	if selected_scenario == null or campaign_manager == null:
 		return false
-	if active_campaign_scenario_id != "":
+	if _has_active_scenario_run():
 		return false
 	if campaign_manager.progress.completed_scenario_ids.has(selected_scenario.scenario_id):
 		return false
 	return campaign_manager.progress.is_scenario_unlocked(selected_scenario.scenario_id)
+
+
+func _selected_scenario_can_practice() -> bool:
+	if selected_scenario == null or campaign_manager == null:
+		return false
+	if _has_active_scenario_run():
+		return false
+	return campaign_manager.progress.is_scenario_unlocked(selected_scenario.scenario_id)
+
+
+func _has_active_scenario_run() -> bool:
+	if run_state == null or run_state.active_scenario == null:
+		return false
+	return run_state.status != RunStateScript.STATUS_WON and run_state.status != RunStateScript.STATUS_LOST
+
+
+func _active_scenario_id() -> String:
+	if _has_active_scenario_run() and run_state.active_scenario != null:
+		return String(run_state.active_scenario.scenario_id)
+	return ""
 
 
 func _scenario_campaign_status(scenario: Resource) -> String:
@@ -526,6 +554,8 @@ func _scenario_campaign_status(scenario: Resource) -> String:
 		return "unknown"
 	if active_campaign_scenario_id == scenario.scenario_id:
 		return "active"
+	if _has_active_scenario_run() and run_state.active_scenario != null and run_state.active_scenario.scenario_id == scenario.scenario_id:
+		return "practice"
 	if campaign_manager.progress.completed_scenario_ids.has(scenario.scenario_id):
 		return "complete"
 	if campaign_manager.progress.is_scenario_unlocked(scenario.scenario_id):
@@ -724,8 +754,8 @@ func _on_mod_checkbox_toggled(pressed: bool, pack_id: String) -> void:
 		enabled_mod_pack_ids.erase(pack_id)
 
 	_save_enabled_mod_pack_ids(_enabled_mod_pack_ids_array())
-	if run_state != null and run_state.active_scenario != null and not active_campaign_scenario_id.is_empty():
-		_start_scenario_run(run_state.active_scenario)
+	if _has_active_scenario_run() and run_state.active_scenario != null:
+		_start_scenario_run(run_state.active_scenario, not active_campaign_scenario_id.is_empty())
 	elif campaign_manager != null:
 		_show_campaign_landing()
 	else:

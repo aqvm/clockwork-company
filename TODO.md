@@ -26,7 +26,6 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 - Implement mechanical scenario rules instead of data-only placeholders.
 - Make at least one scenario rule affect play and explain itself clearly.
 - Make scenario rewards and content unlocks visibly change later options.
-- Add standalone scenario mode that does not mutate campaign progress.
 - Add campaign save/load for:
   - completed scenarios
   - unlocked scenario IDs

@@ -6,7 +6,7 @@ signal resource_tooltip_requested(source: Control, resource: Resource)
 signal tooltip_cleared
 
 
-func show_scenarios(scenarios: Array, campaign_progress, selected_scenario: Resource) -> void:
+func show_scenarios(scenarios: Array, campaign_progress, selected_scenario: Resource, active_scenario_id := "") -> void:
 	_clear_children()
 
 	var title := Label.new()
@@ -17,7 +17,7 @@ func show_scenarios(scenarios: Array, campaign_progress, selected_scenario: Reso
 		if scenario == null:
 			continue
 		var button := Button.new()
-		button.text = "%s [%s]" % [scenario.display_name, _state_label(scenario, campaign_progress)]
+		button.text = "%s [%s]" % [scenario.display_name, _state_label(scenario, campaign_progress, active_scenario_id)]
 		button.toggle_mode = true
 		button.button_pressed = selected_scenario != null and selected_scenario.scenario_id == scenario.scenario_id
 		button.pressed.connect(_on_scenario_button_pressed.bind(scenario))
@@ -29,10 +29,10 @@ func _on_scenario_button_pressed(scenario: Resource) -> void:
 	scenario_selected.emit(scenario)
 
 
-func _state_label(scenario: Resource, campaign_progress) -> String:
+func _state_label(scenario: Resource, campaign_progress, active_scenario_id: String) -> String:
 	if campaign_progress == null:
 		return "debug"
-	if campaign_progress.current_scenario_id == scenario.scenario_id:
+	if active_scenario_id == scenario.scenario_id or campaign_progress.current_scenario_id == scenario.scenario_id:
 		return "active"
 	if campaign_progress.completed_scenario_ids.has(scenario.scenario_id):
 		return "complete"

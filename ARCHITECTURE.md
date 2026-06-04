@@ -91,6 +91,8 @@ The project now has three tactical content layers:
 
 Scenarios own authored mission data: story text, party size, encounter Resources, data-only scenario rules, rewards, tags, and content unlock ids. Campaigns own availability and completion: which scenarios start unlocked, which scenarios unlock after completion, which content ids are unlocked, and whether the campaign is complete.
 
+The scenario workbench can also start an unlocked scenario as a practice run. Practice runs use `RunState.start_scenario(...)` but do not call `CampaignManager.start_scenario(...)`, and they do not complete or unlock campaign nodes.
+
 The campaign layer does not change combat rules. Real fights still run through `CombatSimulator`; runtime combat state still lives in combat runtime classes; between-fight roster/reward/equipment choices still live in `RunState`.
 
 Intentionally not implemented here:
