@@ -39,8 +39,6 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 
 - Add status effects when a focused scenario or item design actually needs them.
 - Consider collapsible structured combat log groups instead of plain indented text.
-- Add seeded randomness only after the deterministic core remains understandable.
-- Keep magic damage ignoring armor unless a separate magic mitigation stat is deliberately introduced.
 
 ## Replay and Presentation
 
@@ -54,7 +52,6 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 - Add accessibility/color options, including a color-blind-friendly palette.
 - Decide whether keyword highlighting should remain whole-line or add phrase-level emphasis.
 - Consider exposing background and highlight palette choices together.
-- Keep replay presentation separate from combat simulation authority.
 - Keep `CombatLogRichTextFormatter` shared between setup/status text and replay text if highlighting rules change.
 
 ## Units, Jobs, Progression, and Roster
@@ -63,7 +60,6 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 - Implement player choice for `pending_unlock_choice`.
 - Add persistent unit careers across scenarios.
 - Decide how roster rotation pressure should work through XP caps, scenario constraints, enemy mechanics, unlocks, and mastery goals.
-- Avoid injury, fatigue, rest, base-building, calendars, and management-sim systems unless explicitly requested.
 
 ## Gear, Items, and Inventory
 

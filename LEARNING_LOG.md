@@ -2873,3 +2873,35 @@ Manual exercise:
 Open questions:
 
 - Which future feature would create the strongest reason to move tactics out of loadouts?
+
+## 2026-06-04 - TODO guardrail cleanup
+
+Feature worked on:
+
+- Removed principle-style TODOs that are already captured in design or architecture docs.
+- Kept actionable follow-up work in `TODO.md`.
+
+Godot concepts introduced:
+
+- No new Godot concepts; this was backlog hygiene.
+
+Game architecture concepts introduced:
+
+- Determinism, magic ignoring armor, replay presentation authority, and avoiding management-sim systems remain project guardrails even when they are not TODO items.
+
+Files touched:
+
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why a living TODO should distinguish actionable work from standing design principles.
+
+Manual exercise:
+
+- Pick one remaining TODO and one removed guardrail, then explain why only the first belongs in an implementation backlog.
+
+Open questions:
+
+- Should long-lived guardrails get their own short checklist in `DESIGN_NOTES.md`, or are the current sections enough?
