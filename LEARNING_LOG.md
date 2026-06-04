@@ -3170,3 +3170,39 @@ Manual exercise:
 Open questions:
 
 - Should future scouting reports summarize enemy tags mechanically, or stay authored prose?
+
+## 2026-06-04 - JSON pack validation in content check
+
+Feature worked on:
+
+- Extended `content_validation_check.gd` so it loads every discoverable JSON pack through `JsonContentLoader`.
+- The existing loader assertions now run during `tools/check_content.ps1`, catching bad JSON references and unsupported enum values through the normal validation command.
+- Removed the completed mod validation TODO.
+
+Godot concepts introduced:
+
+- Tool scripts can reuse normal project loader code instead of duplicating validation logic.
+
+Game architecture concepts introduced:
+
+- JSON mod packs and `.tres` base content should be validated through the same reconstruction path where practical.
+- A content check can cover multiple authoring surfaces without becoming a full test framework.
+
+Files touched:
+
+- `clockwork-company/scripts/tools/content_validation_check.gd`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why validating JSON packs through `JsonContentLoader` is stronger than only checking scenario Resources.
+- Which command catches invalid enum values in mod JSON.
+
+Manual exercise:
+
+- Run `tools/check_content.ps1`, then inspect `example_mod_pack.json` and identify one enum field that would fail if misspelled.
+
+Open questions:
+
+- Should future validation collect all JSON errors in one run instead of stopping at the first assertion?

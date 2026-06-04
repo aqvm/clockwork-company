@@ -2,15 +2,17 @@ extends SceneTree
 
 const CAMPAIGN_PATH := "res://resources/campaigns/first_road_campaign.tres"
 const SCENARIO_DIR := "res://resources/scenarios"
+const JsonContentLoaderScript := preload("res://scripts/modding/json_content_loader.gd")
 
 
 func _init() -> void:
 	var errors: Array[String] = []
 	var scenarios_by_id := _load_scenarios_by_id(errors)
 	_validate_campaign(scenarios_by_id, errors)
+	var pack_count := _validate_json_packs()
 
 	if errors.is_empty():
-		print("Content validation passed: %d scenarios checked." % scenarios_by_id.size())
+		print("Content validation passed: %d scenarios and %d JSON packs checked." % [scenarios_by_id.size(), pack_count])
 		quit(0)
 		return
 
@@ -88,3 +90,13 @@ func _validate_campaign(scenarios_by_id: Dictionary, errors: Array[String]) -> v
 	for starting_id in campaign.starting_scenario_ids:
 		if not scenarios_by_id.has(starting_id):
 			errors.append("Campaign starts with unknown scenario_id '%s'." % starting_id)
+
+
+func _validate_json_packs() -> int:
+	var descriptors: Array[Dictionary] = JsonContentLoaderScript.list_available_mod_packs()
+	for descriptor: Dictionary in descriptors:
+		var pack_id := String(descriptor.get("id", ""))
+		if pack_id.is_empty():
+			continue
+		JsonContentLoaderScript.load_demo_unit_definitions([pack_id])
+	return descriptors.size()
