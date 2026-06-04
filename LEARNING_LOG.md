@@ -3929,3 +3929,37 @@ Manual exercise:
 Open questions:
 
 - What exact roster state should be persisted before gear/job progress are added to the save?
+
+## 2026-06-04 - Efficient Codex usage guidance
+
+Feature worked on:
+
+- Added durable guidance for prompting and steering Codex efficiently in this repository.
+- Clarified that implementation prompts should include goal, context, constraints, and done criteria.
+- Reinforced using Plan mode or an interview pass for fuzzy, multi-step, or architectural work.
+
+Godot concepts introduced:
+
+- None. This was a repository workflow documentation change.
+
+Game architecture concepts introduced:
+
+- None. The change preserves the current architecture guidance and focuses on collaboration habits.
+
+Files touched:
+
+- `AGENTS.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why durable repo behavior belongs in `AGENTS.md`, while one-off task constraints belong in the prompt.
+- Why one coherent unit of work per chat makes patches easier to review.
+
+Manual exercise:
+
+- For the next feature request, write a prompt with an explicit goal, two relevant files to inspect, one constraint, and a done criterion.
+
+Open questions:
+
+- If Codex usage guidance grows, which workflow details should move into a smaller linked document?
