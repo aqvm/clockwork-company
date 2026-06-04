@@ -17,12 +17,12 @@ const FEATURE_HASTEN_SELF := "Hasten Self"
 const FEATURE_GAIN_PHYSICAL_DAMAGE := "Gain Physical Damage"
 
 
-static func apply_battle_start_features(log, units: Array) -> void:
+static func apply_battle_start_features(log, units: Array, battle_start_entry_id := -1) -> void:
 	for unit in units:
 		var feature = unit.current_ancestry_feature
 		if feature == null or feature.trigger != TRIGGER_BATTLE_START:
 			continue
-		_apply_feature(log, -1, unit, null, feature)
+		_apply_feature(log, battle_start_entry_id, unit, null, feature)
 
 
 static func attack_bonus(log, parent_entry_id: int, actor) -> Dictionary:

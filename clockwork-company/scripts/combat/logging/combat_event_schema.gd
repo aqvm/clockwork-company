@@ -2,6 +2,7 @@ extends RefCounted
 class_name CombatEventSchema
 
 const EVENT_TEXT := "text"
+const EVENT_BATTLE_START := "battle_start"
 const EVENT_TURN_START := "turn_start"
 const EVENT_TACTIC_SELECTED := "tactic_selected"
 const EVENT_TACTIC_SKIPPED := "tactic_skipped"
@@ -19,6 +20,7 @@ const EVENT_RESULT := "result"
 
 const REQUIRED_KEYS := {
 	EVENT_TEXT: [],
+	EVENT_BATTLE_START: [],
 	EVENT_TURN_START: ["actor_id", "actor"],
 	EVENT_TACTIC_SELECTED: ["actor_id", "actor", "action", "target_id", "target"],
 	EVENT_TACTIC_SKIPPED: ["actor_id", "actor", "reason"],

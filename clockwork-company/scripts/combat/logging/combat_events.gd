@@ -4,6 +4,14 @@ class_name CombatEvents
 const Schema := preload("res://scripts/combat/logging/combat_event_schema.gd")
 
 
+static func battle_start() -> Dictionary:
+	return {
+		"event_type": Schema.EVENT_BATTLE_START,
+		"payload": {},
+		"tags": ["replay", "battle_start"],
+	}
+
+
 static func turn_start(actor, next_action_time_before: int) -> Dictionary:
 	return {
 		"event_type": Schema.EVENT_TURN_START,

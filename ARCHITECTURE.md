@@ -291,6 +291,7 @@ Combat log responsibility split:
 - The planning party and unit detail panels show computed combat stats from the runtime stat initialization path before combat starts; battle-start effect changes are previewed separately without running turn simulation.
 - Resource tooltips are custom UI, not Godot native `tooltip_text`, so the project can later grow CK3-style locked/nested tooltips from one presenter path.
 - The replay does not start when the scene opens. The UI waits for the run button, then clears and starts `CombatReplayPanel` from the cached structured combat events.
+- Battle-start item and ancestry effects are grouped under a timed `t=000` battle-start event for replay, while the static setup summary skips that event block and keeps the final roster after battle-start effects.
 - The replay shows one timestamped parent combat event per second. Child explanation lines without their own timestamp appear with the most recent parent event.
 - The combat test scene sizes the game window to roughly three quarters of the current monitor's usable area and stacks setup above replay in a vertical split. The setup pane is resized after each run to use the smaller of its content height or half the available log area.
 - The replay and setup panes now apply UI-layer keyword highlighting to plain simulator lines by wrapping BBCode-safe text in color tags by category (timestamp, attacks, damage, healing, guard, tactics, job effects, item triggers, defeats, and result).

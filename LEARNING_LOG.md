@@ -2644,3 +2644,47 @@ Manual exercise:
 Open questions:
 
 - Should the validator eventually include item/loadout/unit reference checks, or stay scenario/campaign focused until content authoring expands again?
+
+## 2026-06-04 - Timed battle-start replay event
+
+Feature worked on:
+
+- Added a structured `battle_start` event type.
+- Moved battle-start item and ancestry effect log lines under a timed `t=000` battle-start event in combat reports.
+- Kept planning stat preview compatibility by letting battle-start resolvers create their old root entry when no parent id is supplied.
+- Removed the completed battle-start log TODO.
+
+Godot concepts introduced:
+
+- Optional function parameters can preserve existing call sites while adding a richer call path.
+
+Game architecture concepts introduced:
+
+- Setup summaries and timed replay events are different layers of the combat report.
+- Battle-start effects are still deterministic combat rules, but grouping them under `t=000` makes their timing visible.
+- Structured event schemas need explicit event types before replay/UI code can rely on them.
+
+Files touched:
+
+- `clockwork-company/scripts/combat/logging/combat_event_schema.gd`
+- `clockwork-company/scripts/combat/logging/combat_events.gd`
+- `clockwork-company/scripts/combat/combat_simulator.gd`
+- `clockwork-company/scripts/combat/rules/item_effect_resolver.gd`
+- `clockwork-company/scripts/combat/rules/ancestry_feature_resolver.gd`
+- `ARCHITECTURE.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why battle-start effects appear after `Combat log:` but before the first unit turn.
+- Why the replay can group child lines under a parent event without changing combat outcomes.
+- Why the planning stat preview still does not need a timed event.
+
+Manual exercise:
+
+- Run a fight and confirm the replay begins with `t=000 | Battle starts.` before the first turn.
+
+Open questions:
+
+- Should future battle-start roster snapshots also become structured event payloads, or is the current roster summary enough for now?

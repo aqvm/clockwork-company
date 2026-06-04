@@ -815,9 +815,17 @@ func _save_enabled_mod_pack_ids(enabled_ids: Array[String]) -> void:
 
 func _collect_static_log_lines(log_lines: Array[String], static_lines: Array[String]) -> void:
 	var found_combat_log := false
+	var skipping_battle_start_event := false
 	for line in log_lines:
 		if line == COMBAT_LOG_HEADER:
 			found_combat_log = true
+			continue
+		if line.begins_with("t=000 | Battle starts."):
+			skipping_battle_start_event = true
+			continue
+		if skipping_battle_start_event and line == "Roster:":
+			skipping_battle_start_event = false
+		elif skipping_battle_start_event:
 			continue
 
 		if not found_combat_log:

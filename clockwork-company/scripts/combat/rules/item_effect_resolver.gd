@@ -12,8 +12,11 @@ const TARGET_ATTACK_TARGET := "Attack Target"
 const TARGET_ATTACKER := "Attacker"
 const TARGET_KILLER := "Killer"
 
-static func apply_battle_start_item_effects(log, units: Array) -> void:
-	var battle_start_entry_id: int = log.add("Battle start item effects:")
+static func apply_battle_start_item_effects(log, units: Array, battle_start_entry_id := -1) -> void:
+	if battle_start_entry_id < 0:
+		battle_start_entry_id = log.add("Battle start item effects:")
+	else:
+		log.add_child(battle_start_entry_id, "Item effects:")
 	var any_effects := false
 	for unit in units:
 		for item in unit.equipped_items:
