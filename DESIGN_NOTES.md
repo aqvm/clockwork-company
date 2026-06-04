@@ -78,6 +78,7 @@ Current combat log design rules:
 - highlight category colors should be exposed as inspectable `Color` fields on a Resource so tuning can happen with Godot color pickers
 - highlighting should remain whole-line for now; phrase-level emphasis can wait until category colors make important values harder to scan
 - the combat test scene background should be an intentional dark neutral so highlight colors retain readable contrast
+- background color should stay fixed while highlight palettes are still being tuned; expose background and palette choices together only when the project has real theme presets instead of one-off color toggles
 - replay text and replay visualization can coexist in the same pane, with a clear divider so readability stays primary
 - a first-pass replay visualization can be reconstructed from deterministic log text if it stays explicitly presentation-only
 - once replay effects expand, UI systems should consume structured combat events (`event_type` + payload) rather than parsing prose line phrasing

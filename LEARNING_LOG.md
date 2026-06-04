@@ -3021,3 +3021,36 @@ Manual exercise:
 Open questions:
 
 - Which exact combat values, if any, should become phrase-highlighted first?
+
+## 2026-06-04 - Background/palette exposure decision
+
+Feature worked on:
+
+- Recorded that the combat-test background stays fixed while highlight palettes are still being tuned.
+- Removed the resolved background/palette exposure TODO.
+
+Godot concepts introduced:
+
+- No new Godot concepts; this was a presentation design decision.
+
+Game architecture concepts introduced:
+
+- Presentation options should become user-facing controls when they represent coherent themes, not isolated color tweaks.
+
+Files touched:
+
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why the palette toggle exists now but background choices stay deferred.
+
+Manual exercise:
+
+- Toggle the default/colorblind palette and decide whether the current fixed dark background preserves contrast for both.
+
+Open questions:
+
+- What future theme preset would justify exposing background and palette as one user-facing choice?

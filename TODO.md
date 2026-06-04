@@ -48,7 +48,6 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
   - cast bars
   - cooldown shimmer
   - clearer defeat/readiness states
-- Consider exposing background and highlight palette choices together.
 - Keep `CombatLogRichTextFormatter` shared between setup/status text and replay text if highlighting rules change.
 
 ## Units, Jobs, Progression, and Roster
