@@ -90,9 +90,10 @@ Current combat log design rules:
 - every modding JSON file should have an adjacent options/keywords markdown so schema expectations stay explicit for non-programmer modders
 - mod-pack enable/disable controls should live in UI presentation and never alter simulator rules directly; they only change which validated content packs are loaded before simulation
 - cooldown visualization should map to simulation time so a unit acts when its cooldown bar reaches empty
+- ready units should be explicitly labeled once their cooldown reaches empty so timing is readable at a glance
 - turn ownership should be readable at a glance through a short pulse around the acting unit
 - HP changes should be reinforced with brief floating +/− value text on the affected unit
-- defeated units should fade/desaturate so board state remains legible without removing unit slots
+- defeated units should fade/desaturate and show a clear defeated overlay so board state remains legible without removing unit slots
 - combat simulator orchestration should stay thin; scheduling, targeting, effect resolution, and text formatting should live in dedicated scripts with clear names
 
 ### Jobs as identity

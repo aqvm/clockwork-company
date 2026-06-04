@@ -60,6 +60,8 @@ func _draw() -> void:
 	draw_circle(center, body_radius, body_color)
 	draw_arc(center, body_radius, 0.0, TAU, 48, team_color, 2.5)
 	_draw_action_pulse(center, body_radius, team_color)
+	if is_defeated:
+		_draw_defeated_overlay(center, body_radius)
 
 	var health_ratio := float(current_hp) / float(max_hp)
 	var health_start := -PI * 0.8
@@ -81,6 +83,7 @@ func _draw() -> void:
 	var cooldown_width := cooldown_background.size.x * cooldown_ratio
 	if cooldown_width > 0.0:
 		draw_rect(Rect2(cooldown_background.position, Vector2(cooldown_width, cooldown_background.size.y)), team_color, true)
+	_draw_readiness_badge(cooldown_background)
 
 	var text_color := Color(0.9, 0.93, 0.97, 1.0) if is_alive else Color(0.55, 0.57, 0.62, 1.0)
 	draw_string(ThemeDB.fallback_font, Vector2(center.x - 46.0, 14.0), unit_name, HORIZONTAL_ALIGNMENT_LEFT, 92, 13, text_color)
@@ -155,6 +158,40 @@ func _draw_floating_delta_text(center: Vector2) -> void:
 		text_width,
 		text_size,
 		text_color
+	)
+
+
+func _draw_readiness_badge(cooldown_background: Rect2) -> void:
+	if not is_alive or _cooldown_ratio() > 0.02:
+		return
+	var badge_rect := Rect2(cooldown_background.position.x, cooldown_background.position.y + 11.0, cooldown_background.size.x, 17.0)
+	draw_rect(badge_rect, Color(0.08, 0.18, 0.12, 0.92), true)
+	draw_rect(badge_rect, Color(0.34, 0.92, 0.56, 1.0), false, 1.0)
+	draw_string(
+		ThemeDB.fallback_font,
+		badge_rect.position + Vector2(0, 13),
+		"READY",
+		HORIZONTAL_ALIGNMENT_CENTER,
+		badge_rect.size.x,
+		11,
+		Color(0.74, 1.0, 0.8, 1.0)
+	)
+
+
+func _draw_defeated_overlay(center: Vector2, body_radius: float) -> void:
+	var slash_color := Color(0.08, 0.08, 0.1, 0.78)
+	draw_line(center + Vector2(-body_radius * 0.62, -body_radius * 0.62), center + Vector2(body_radius * 0.62, body_radius * 0.62), slash_color, 5.0)
+	draw_line(center + Vector2(-body_radius * 0.62, body_radius * 0.62), center + Vector2(body_radius * 0.62, -body_radius * 0.62), slash_color, 5.0)
+	var text_rect := Rect2(center.x - 36.0, center.y - 7.0, 72.0, 16.0)
+	draw_rect(text_rect, Color(0.05, 0.05, 0.065, 0.82), true)
+	draw_string(
+		ThemeDB.fallback_font,
+		text_rect.position + Vector2(0, 12),
+		"DEFEATED",
+		HORIZONTAL_ALIGNMENT_CENTER,
+		text_rect.size.x,
+		10,
+		Color(0.78, 0.8, 0.86, 1.0)
 	)
 
 

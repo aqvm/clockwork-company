@@ -13,6 +13,45 @@ Each entry should include:
 - Manual exercise
 - Open questions
 
+## 2026-06-04 - Replay ready and defeated badges
+
+Feature worked on:
+
+- Added a `READY` badge to replay unit dots when their cooldown bar reaches empty.
+- Added a clearer defeated overlay with a crossed marker and `DEFEATED` label.
+- Removed the completed replay TODO item for clearer defeat/readiness states.
+
+Godot concepts introduced:
+
+- Custom `Control._draw()` can layer simple shapes and text to clarify state without adding new scene nodes.
+- A visual can derive presentation-only badges from existing snapshot fields such as HP, alive state, and next action time.
+
+Game architecture concepts introduced:
+
+- Replay readability can improve without changing combat rules or simulator timing.
+- Cooldown readiness is presentation state computed from `next_action_time`, `display_time`, and `action_interval`.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/unit_status_dot.gd`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why `READY` appears when cooldown reaches empty rather than when the simulator changes turn order.
+- Why defeated units remain visible instead of being removed from the replay row.
+
+Manual exercise:
+
+- Run a fight at `0.5x`, watch a cooldown bar drain to `READY`, then confirm a defeated unit keeps its slot but is visually marked.
+
+Open questions:
+
+- Should future replay visuals show temporary armor or status badges next, or wait until those systems need visual support?
+
 ## 2026-06-04 - Structured replay unit snapshots
 
 Feature worked on:
