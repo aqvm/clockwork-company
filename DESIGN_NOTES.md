@@ -236,6 +236,8 @@ Branching campaigns should keep using `CampaignScenarioNodeDefinition.unlock_sce
 
 Scenario rules should be data-first. A rule such as `ash_chapel_healing_pressure` may exist as a readable Resource before the combat simulator knows how to enforce it.
 
+The first mechanical scenario rule is intentionally narrow: `iron_tollgate_armored_enemies` gives each enemy +2 armor during the Iron Tollgate scenario. This uses an existing combat stat, appears in run status text, and shows up in the generated roster. Do not generalize this into a broad scenario-rule DSL until at least a few different rules prove the shape is worth it.
+
 Campaign persistence should stay light at first: completed scenarios, unlocked content, and eventually roster/job/gear state. Do not add injury, rest, fatigue, base-building, calendars, or management-sim systems without an explicit design pass.
 
 Rotation pressure should eventually come from XP caps, scenario constraints, enemy mechanics, content unlocks, and optional mastery goals rather than punishment systems.

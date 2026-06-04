@@ -3324,3 +3324,43 @@ Manual exercise:
 Open questions:
 
 - Should pinned tooltips later show a small visual locked state once nested traversal exists?
+
+## 2026-06-04 - First mechanical scenario rule
+
+Feature worked on:
+
+- Made `iron_tollgate_armored_enemies` affect play instead of remaining a placeholder.
+- The rule gives each enemy +2 armor during the Iron Tollgate scenario.
+- Added a run-status rule-effect line so the scenario explains the modifier before combat starts.
+- Updated the rule Resource text and TODO/design docs.
+
+Godot concepts introduced:
+
+- Resource data can name a rule while runtime code decides how that specific rule is enforced.
+
+Game architecture concepts introduced:
+
+- A narrow hardcoded resolver can be better than a premature generic rule engine.
+- Scenario rules modify fight definitions before `CombatSimulator` creates runtime combat state, keeping the simulator focused on combat rules.
+
+Files touched:
+
+- `clockwork-company/scripts/run/run_state.gd`
+- `clockwork-company/resources/scenario_rules/iron_tollgate_armored_enemies.tres`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why Iron Tollgate armor is applied in `RunState` before the simulator runs.
+- Why the project is not adding a broad scenario-rule DSL yet.
+
+Manual exercise:
+
+- Start or practice Iron Tollgate, run the first encounter preview, and compare enemy armor in the roster against the same enemies outside that scenario.
+
+Open questions:
+
+- What should be the second mechanical scenario rule once a scenario genuinely needs a different rule shape?

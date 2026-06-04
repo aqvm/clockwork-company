@@ -18,8 +18,7 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 
 ## Scenario and Campaign
 
-- Implement mechanical scenario rules instead of data-only placeholders.
-- Make at least one scenario rule affect play and explain itself clearly.
+- Add more scenario rule resolvers only when a scenario needs them. `iron_tollgate_armored_enemies` is the first mechanical rule and gives enemies +2 armor.
 - Make scenario rewards and content unlocks visibly change later options.
 - Add campaign save/load for:
   - completed scenarios

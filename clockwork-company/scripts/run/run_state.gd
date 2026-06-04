@@ -28,6 +28,8 @@ const REWARD_PATHS := [
 	"res://resources/rewards/honed_blade_for_mira.tres",
 	"res://resources/rewards/focus_lens_for_sol.tres",
 ]
+const RULE_IRON_TOLLGATE_ARMORED_ENEMIES := "iron_tollgate_armored_enemies"
+const IRON_TOLLGATE_ARMOR_BONUS := 2
 
 var fight_index := 0
 var status := STATUS_ACTIVE
@@ -124,6 +126,7 @@ func build_current_fight_definitions() -> Array[UnitDefinition]:
 	for enemy in encounter.enemy_units:
 		var enemy_copy := _clone_unit_definition(enemy)
 		_apply_loss_test_enemy_pressure(enemy_copy)
+		_apply_scenario_enemy_rules(enemy_copy)
 		definitions.append(enemy_copy)
 	return definitions
 
@@ -255,6 +258,8 @@ func status_lines() -> Array[String]:
 		lines.append("Scout note: %s" % encounter.scout_text)
 	if not last_result_summary.is_empty():
 		lines.append(last_result_summary)
+	for rule_line in _scenario_rule_effect_lines():
+		lines.append(rule_line)
 	if reward_history.is_empty():
 		lines.append("Reward history: none yet")
 	else:
@@ -321,6 +326,27 @@ func _apply_loss_test_enemy_pressure(enemy: UnitDefinition) -> void:
 	enemy.physical_damage += 10
 	enemy.armor += 3
 	enemy.action_interval = max(1, enemy.action_interval - 3)
+
+
+func _apply_scenario_enemy_rules(enemy: UnitDefinition) -> void:
+	if _scenario_has_rule(RULE_IRON_TOLLGATE_ARMORED_ENEMIES):
+		enemy.armor += IRON_TOLLGATE_ARMOR_BONUS
+
+
+func _scenario_rule_effect_lines() -> Array[String]:
+	var lines: Array[String] = []
+	if _scenario_has_rule(RULE_IRON_TOLLGATE_ARMORED_ENEMIES):
+		lines.append("Rule effect: Iron Tollgate Armor gives each enemy +%d armor for this scenario." % IRON_TOLLGATE_ARMOR_BONUS)
+	return lines
+
+
+func _scenario_has_rule(rule_id: String) -> bool:
+	if active_scenario == null:
+		return false
+	for rule in active_scenario.scenario_rules:
+		if rule != null and rule.rule_id == rule_id:
+			return true
+	return false
 
 
 func _award_current_job_levels() -> void:
