@@ -216,7 +216,7 @@ Current run-loop design rules:
 
 Short handcrafted scenarios are the primary content unit. A scenario is a fixed sequence of encounters with story text, optional rule ids, rewards, tags, and unlock ids. This keeps content inspectable while leaving room for scenario-specific constraints later.
 
-Campaigns are chains or trees of scenarios, not a base-management game. The first campaign layer tracks only available scenarios, active/completed scenarios, unlocked content ids, and campaign completion.
+Campaigns are chains or trees of scenarios, not a base-management game. The first campaign layer tracks only available scenarios, active/completed scenarios, unlocked content ids, and campaign completion. The first sample campaign now has four linked scenarios so linear chaining past the initial three-node slice stays visible.
 
 Scenario rules should be data-first. A rule such as `ash_chapel_healing_pressure` may exist as a readable Resource before the combat simulator knows how to enforce it.
 

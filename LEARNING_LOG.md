@@ -2209,3 +2209,43 @@ Manual exercise:
 Open questions:
 
 - Should other older data Resources without `resource_name` setters get the same Inspector-label treatment during a future authoring cleanup pass?
+
+## 2026-06-04 - Fourth sample campaign scenario
+
+Feature worked on:
+
+- Added `Clocktower Claim` as a fourth sample scenario Resource.
+- Updated `The First Road` campaign so `Iron Tollgate` unlocks `Clocktower Claim`, and `Clocktower Claim` is now the campaign-completing node.
+- Removed the completed fourth-scenario TODO and updated roadmap/design wording.
+
+Godot concepts introduced:
+
+- A `.tres` Resource can reuse existing encounter and reward Resources to create new authored content without new code.
+- A campaign node Resource controls unlock chaining by naming scenario ids to unlock on completion.
+
+Game architecture concepts introduced:
+
+- Scenario content can validate campaign flow before new mechanics exist.
+- Campaign completion belongs to the campaign node, not the scenario itself, so the same scenario could theoretically sit in a different campaign position later.
+
+Files touched:
+
+- `clockwork-company/resources/scenarios/clocktower_claim.tres`
+- `clockwork-company/resources/campaigns/first_road_campaign.tres`
+- `TODO.md`
+- `ROADMAP.md`
+- `DESIGN_NOTES.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why `Iron Tollgate` now unlocks `clocktower_claim` instead of setting `completes_campaign`.
+- Why the new scenario reuses existing encounters and rewards instead of adding a new content set.
+
+Manual exercise:
+
+- Complete `Roadside Ambush`, `Burned Chapel`, and `Iron Tollgate`, then confirm `Clocktower Claim` unlocks and only completing it marks the campaign complete.
+
+Open questions:
+
+- Should the next campaign content pass make later scenarios mechanically distinct through implemented scenario rules, or keep using content composition until the UI explains rules better?

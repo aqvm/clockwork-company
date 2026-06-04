@@ -149,12 +149,12 @@ Features:
 - campaign definition
 - scenario unlocks
 - campaign progress
-- first sample campaign with three scenarios
+- first sample campaign with four scenarios
 
 Done when:
 
 - completing one scenario unlocks the next scenario
-- completing the final sample scenario marks the campaign complete
+- completing the fourth sample scenario marks the campaign complete
 
 ## Phase 10: Scenario Rules
 
