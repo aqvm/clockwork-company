@@ -98,6 +98,13 @@ func _validate_campaign(scenarios_by_id: Dictionary, errors: Array[String]) -> v
 	if campaign == null:
 		errors.append("Could not load campaign: %s" % CAMPAIGN_PATH)
 		return
+	if not "campaign_id" in campaign:
+		errors.append("Resource is not a CampaignDefinition: %s" % CAMPAIGN_PATH)
+		return
+	if String(campaign.campaign_id).is_empty():
+		errors.append("Campaign has empty campaign_id: %s" % CAMPAIGN_PATH)
+	if String(campaign.display_name).is_empty():
+		errors.append("Campaign '%s' has empty display_name." % String(campaign.campaign_id))
 
 	var node_scenario_ids: Array[String] = []
 	for node in campaign.scenario_nodes:
@@ -110,13 +117,22 @@ func _validate_campaign(scenarios_by_id: Dictionary, errors: Array[String]) -> v
 		if node_scenario_ids.has(scenario_id):
 			errors.append("Campaign includes duplicate scenario node '%s'." % scenario_id)
 		node_scenario_ids.append(scenario_id)
+
+	for node in campaign.scenario_nodes:
+		if node == null or node.scenario == null:
+			continue
+		var scenario_id: String = node.scenario.scenario_id
 		for unlock_id in node.unlock_scenario_ids_on_completion:
 			if not scenarios_by_id.has(unlock_id):
 				errors.append("Campaign node '%s' unlocks unknown scenario_id '%s'." % [scenario_id, unlock_id])
+			elif not node_scenario_ids.has(unlock_id):
+				errors.append("Campaign node '%s' unlocks scenario_id '%s' that is not part of this campaign." % [scenario_id, unlock_id])
 
 	for starting_id in campaign.starting_scenario_ids:
 		if not scenarios_by_id.has(starting_id):
 			errors.append("Campaign starts with unknown scenario_id '%s'." % starting_id)
+		elif not node_scenario_ids.has(starting_id):
+			errors.append("Campaign starts with scenario_id '%s' that is not part of this campaign." % starting_id)
 
 
 func _validate_json_packs(errors: Array[String]) -> int:

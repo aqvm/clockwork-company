@@ -241,6 +241,8 @@ Campaigns are chains or trees of scenarios, not a base-management game. The firs
 
 Branching campaigns should keep using `CampaignScenarioNodeDefinition.unlock_scenario_ids_on_completion` until that becomes hard to author. A node can already unlock more than one scenario id, so the next branch does not need a separate graph format yet.
 
+Campaign graph validation should stay simple but strict: starting scenarios and unlocked scenarios must be normal authored scenarios and must also be present as nodes in the current campaign.
+
 Scenario rules should be data-first. A rule such as `ash_chapel_healing_pressure` may exist as a readable Resource before the combat simulator knows how to enforce it.
 
 The first mechanical scenario rule is intentionally narrow: `iron_tollgate_armored_enemies` gives each enemy +2 armor during the Iron Tollgate scenario. This uses an existing combat stat, appears in run status text, and shows up in the generated roster. Do not generalize this into a broad scenario-rule DSL until at least a few different rules prove the shape is worth it.

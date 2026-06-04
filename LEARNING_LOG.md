@@ -13,6 +13,43 @@ Each entry should include:
 - Manual exercise
 - Open questions
 
+## 2026-06-04 - Campaign graph content validation
+
+Feature worked on:
+
+- Tightened `tools/check_content.ps1` so the content check validates campaign identity and campaign graph links.
+- Campaigns now fail validation if they have an empty id/name, start from a scenario outside the campaign, or unlock a scenario outside the campaign graph.
+
+Godot concepts introduced:
+
+- `Resource` validation can use exported fields such as ids and arrays without instantiating UI or combat scenes.
+
+Game architecture concepts introduced:
+
+- Authoring checks are a lightweight safety net for `.tres` content.
+- Campaign unlock links should point to nodes in the campaign graph, not merely to any scenario file in the repository.
+
+Files touched:
+
+- `clockwork-company/scripts/tools/content_validation_check.gd`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why campaign validation needs to collect all node ids before checking unlock links.
+- Why checking graph membership is different from checking that a scenario Resource exists.
+
+Manual exercise:
+
+- Temporarily change one campaign unlock id in `first_road_campaign.tres` to a valid scenario id that is not in `scenario_nodes`, run `tools/check_content.ps1`, then revert the edit.
+
+Open questions:
+
+- Should future validation also enforce reachability from starting nodes once branching content exists?
+
 ## 2026-06-04 - Reference JSON export decision
 
 Feature worked on:
