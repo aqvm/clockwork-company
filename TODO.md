@@ -39,10 +39,7 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 ## Combat and Rules
 
 - Add status effects when a focused scenario or item design actually needs them.
-- Decide whether hit effects should trigger only when damage is greater than zero if future armor rules allow fully blocked attacks.
-- Decide whether future armor buffs identify base battle armor, temporary guard armor, or named statuses.
 - Consider collapsible structured combat log groups instead of plain indented text.
-- Decide whether ties should continue using roster order or eventually use a visible speed/tiebreak stat.
 - Add seeded randomness only after the deterministic core remains understandable.
 - Keep magic damage ignoring armor unless a separate magic mitigation stat is deliberately introduced.
 

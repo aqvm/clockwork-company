@@ -2688,3 +2688,40 @@ Manual exercise:
 Open questions:
 
 - Should future battle-start roster snapshots also become structured event payloads, or is the current roster summary enough for now?
+
+## 2026-06-04 - Small combat rule decisions
+
+Feature worked on:
+
+- Recorded decisions for future fully blocked hit effects, armor-buff vocabulary, and deterministic tie-breaks.
+- Removed the resolved decision TODOs.
+
+Godot concepts introduced:
+
+- No new Godot concepts; this was a design documentation pass.
+
+Game architecture concepts introduced:
+
+- Future zero-damage blocks should not trigger normal hit effects unless an effect explicitly says it triggers on contact.
+- Armor buffs should use base battle armor or temporary guard armor until a real status system exists.
+- Roster order remains the deterministic tie-break until a visible tiebreak stat is worth the extra surface area.
+
+Files touched:
+
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why future zero-damage blocks are different from current minimum-1-damage hits.
+- Why named armor statuses are deferred.
+- Why roster order is still acceptable for deterministic ties.
+
+Manual exercise:
+
+- Read the new combat-rule notes in `DESIGN_NOTES.md`, then explain one future mechanic that would force revisiting each decision.
+
+Open questions:
+
+- What specific item or scenario would justify adding a contact-triggered hit effect?

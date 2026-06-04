@@ -181,6 +181,12 @@ Current tactic design rules:
 
 Armor reduction should stay readable when temporary armor exists. Base battle armor cannot go below zero. Effects such as Shortblade reduce base armor first; if a target has no base armor left, the same reduction can reduce temporary guard armor instead.
 
+Future fully-blocked hits should not trigger normal hit effects unless the effect explicitly says it triggers on contact. The current combat formula still deals at least 1 damage, so this is a future-proofing decision for possible zero-damage armor rules.
+
+Armor-buff wording should keep using the existing split for now: base battle armor for persistent battle modifiers, temporary guard armor for guard-like short-lived protection, and named statuses only after the status system exists. Do not introduce a status label only to name armor.
+
+Tie-breaks should continue using roster order while the project is deterministic and small. A visible speed or tiebreak stat should wait until ties become common enough that roster-order resolution feels confusing or unfair.
+
 ### Content catalog rules
 
 The first broad content catalog is a pull-from-later library, not a promise that every Resource is already balanced for the current five-fight run loop.
