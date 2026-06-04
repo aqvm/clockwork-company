@@ -55,6 +55,7 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 - Add more handcrafted scenarios only when the framework and UI can make them understandable.
 - Keep enemies as normal unit/loadout/job/item/tactic builds, not a separate monster-only ruleset.
 - Use tags for filtering/conditions/content tools when an actual tool or rule needs them.
+- Keep scenario rule and reward references complete enough for `tools/check_content.ps1` to validate rule ids, rule names, reward names, and reward items.
 - Keep JSON sidecar docs next to every JSON content/modding file. `tools/check_content.ps1` now validates that discovered JSON packs have adjacent `*.options.md` files.
 
 ## Modding and Data Pipeline

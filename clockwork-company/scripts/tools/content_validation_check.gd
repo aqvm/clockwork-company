@@ -61,9 +61,36 @@ func _validate_scenario(path: String, scenario, scenarios_by_id: Dictionary, err
 	for encounter in scenario.encounters:
 		if encounter == null:
 			errors.append("Scenario '%s' has a missing encounter reference." % scenario.scenario_id)
+	for rule in scenario.scenario_rules:
+		_validate_scenario_rule(scenario.scenario_id, rule, errors)
 	for reward in scenario.rewards:
-		if reward == null:
-			errors.append("Scenario '%s' has a missing reward reference." % scenario.scenario_id)
+		_validate_scenario_reward(scenario.scenario_id, reward, errors)
+
+
+func _validate_scenario_rule(scenario_id: String, rule, errors: Array[String]) -> void:
+	if rule == null:
+		errors.append("Scenario '%s' has a missing rule reference." % scenario_id)
+		return
+	if not "rule_id" in rule:
+		errors.append("Scenario '%s' references a Resource that is not a ScenarioRuleDefinition." % scenario_id)
+		return
+	if String(rule.rule_id).is_empty():
+		errors.append("Scenario '%s' has a scenario rule with empty rule_id." % scenario_id)
+	if String(rule.display_name).is_empty():
+		errors.append("Scenario '%s' has scenario rule '%s' with empty display_name." % [scenario_id, rule.rule_id])
+
+
+func _validate_scenario_reward(scenario_id: String, reward, errors: Array[String]) -> void:
+	if reward == null:
+		errors.append("Scenario '%s' has a missing reward reference." % scenario_id)
+		return
+	if not "item" in reward:
+		errors.append("Scenario '%s' references a Resource that is not a RewardDefinition." % scenario_id)
+		return
+	if String(reward.display_name).is_empty():
+		errors.append("Scenario '%s' has a reward with empty display_name." % scenario_id)
+	if reward.item == null:
+		errors.append("Scenario '%s' reward '%s' has no item." % [scenario_id, reward.display_name])
 
 
 func _validate_campaign(scenarios_by_id: Dictionary, errors: Array[String]) -> void:

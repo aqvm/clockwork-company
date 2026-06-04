@@ -13,6 +13,44 @@ Each entry should include:
 - Manual exercise
 - Open questions
 
+## 2026-06-04 - Scenario reward and rule validation
+
+Feature worked on:
+
+- Extended the content validation script to inspect scenario rule and reward references more deeply.
+- Scenario rules now need a `rule_id` and `display_name`.
+- Scenario rewards now need a `display_name` and item reference.
+
+Godot concepts introduced:
+
+- Tool scripts can inspect typed Resource fields after loading `.tres` content.
+- Validation helpers keep one check script readable as content rules grow.
+
+Game architecture concepts introduced:
+
+- Scenario authoring should fail fast when a referenced rule or reward is incomplete.
+- Content validation can protect small handcrafted content without adding editor tooling.
+
+Files touched:
+
+- `clockwork-company/scripts/tools/content_validation_check.gd`
+- `ARCHITECTURE.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why a non-null Resource reference is not enough for scenario content.
+- Why reward validation checks the item reference instead of reward balance.
+
+Manual exercise:
+
+- Open one scenario `.tres`, follow a reward reference, and identify the fields `tools/check_content.ps1` now validates.
+
+Open questions:
+
+- Should future validation also require scenario rewards to match scenario tags, or is that too subjective for an automated check?
+
 ## 2026-06-04 - Curated scenario reward choices
 
 Feature worked on:
