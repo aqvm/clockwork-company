@@ -583,6 +583,8 @@ func _on_planning_equip_pressed(index: int) -> void:
 func _connect_panel_tooltips(panel: Control) -> void:
 	if panel.has_signal("resource_tooltip_requested"):
 		panel.connect("resource_tooltip_requested", _on_panel_resource_tooltip_requested)
+	if panel.has_signal("glossary_tooltip_requested"):
+		panel.connect("glossary_tooltip_requested", _on_panel_glossary_tooltip_requested)
 	if panel.has_signal("tooltip_cleared"):
 		panel.connect("tooltip_cleared", _on_tooltip_exited)
 
@@ -595,6 +597,11 @@ func _on_panel_resource_tooltip_requested(_source: Control, resource: Resource) 
 func _on_panel_runtime_tooltip_requested(_source: Control, snapshot: Dictionary) -> void:
 	if tooltip_presenter != null:
 		tooltip_presenter.show_runtime_unit(snapshot)
+
+
+func _on_panel_glossary_tooltip_requested(_source: Control, term: String) -> void:
+	if tooltip_presenter != null:
+		tooltip_presenter.show_glossary_term(term)
 
 
 func _bind_resource_tooltip(control: Control, resource) -> void:

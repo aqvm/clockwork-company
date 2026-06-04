@@ -4,6 +4,7 @@ class_name UnitDetailPanel
 const PlanningStatPreviewScript := preload("res://scripts/ui/planning_stat_preview.gd")
 
 signal resource_tooltip_requested(source: Control, resource: Resource)
+signal glossary_tooltip_requested(source: Control, term: String)
 signal tooltip_cleared
 
 var content: VBoxContainer = null
@@ -33,6 +34,7 @@ func show_unit(unit: UnitDefinition, party_units: Array[UnitDefinition] = []) ->
 	var skipped_items: Array = preview.get("skipped_items", [])
 	if not skipped_items.is_empty():
 		_add_plain_text("Skipped equipment: %s" % _join_values(skipped_items, ", "))
+	_add_stat_glossary_rows()
 	_add_plain_text("Tags: %s" % _join_values(unit.tags, ", "))
 	_add_resource_text(unit.ancestry, "Ancestry: %s" % _resource_display_name(unit.ancestry))
 	if unit.ancestry != null:
@@ -99,12 +101,30 @@ func _add_resource_text(resource: Resource, text: String) -> Label:
 	return label
 
 
+func _add_glossary_text(term: String) -> Label:
+	var label := _add_plain_text("- %s" % term)
+	label.mouse_filter = Control.MOUSE_FILTER_STOP
+	label.mouse_entered.connect(_on_glossary_mouse_entered.bind(label, term))
+	label.mouse_exited.connect(_on_resource_mouse_exited)
+	return label
+
+
+func _add_stat_glossary_rows() -> void:
+	_add_plain_text("Stat terms:")
+	for term in ["HP", "Physical Damage", "Magic Damage", "Armor", "Action Interval", "Guard", "Cooldown"]:
+		_add_glossary_text(term)
+
+
 func _on_resource_mouse_entered(source: Control, resource: Resource) -> void:
 	resource_tooltip_requested.emit(source, resource)
 
 
 func _on_resource_mouse_exited() -> void:
 	tooltip_cleared.emit()
+
+
+func _on_glossary_mouse_entered(source: Control, term: String) -> void:
+	glossary_tooltip_requested.emit(source, term)
 
 
 func _clear_content() -> void:

@@ -45,6 +45,20 @@ static func text_for_runtime_unit(snapshot: Dictionary) -> String:
 	return _with_source_note("%s\nTeam: %s\nHP: %d/%d\nAction interval: %d\nNext action in: %.1f" % [name, team, hp, max_hp, action_interval, remaining], "Source: runtime combat state")
 
 
+static func text_for_glossary_term(term: String) -> String:
+	var key := term.to_lower()
+	var definitions := {
+		"hp": "HP\nCurrent and maximum health. A unit is defeated when HP reaches 0.",
+		"armor": "Armor\nReduces physical damage. Temporary guard armor is added on top of base battle armor.",
+		"action interval": "Action Interval\nLower values act sooner. After a unit acts, its next action is scheduled by adding this interval.",
+		"physical damage": "Physical Damage\nThe base damage used by normal attacks and non-magic damage sources. Armor reduces it.",
+		"magic damage": "Magic Damage\nThe base damage used by magic-tagged actions and effects. It currently ignores armor.",
+		"guard": "Guard\nA defensive action that grants temporary armor until the guarding unit's next turn.",
+		"cooldown": "Cooldown\nA runtime wait on an ability or feature before it can trigger again.",
+	}
+	return _with_source_note(String(definitions.get(key, term)), "Source: rules glossary")
+
+
 static func _unit_text(unit: UnitDefinition) -> String:
 	var lines: Array[String] = []
 	lines.append(_title(unit))

@@ -57,6 +57,10 @@ func show_runtime_unit(snapshot: Dictionary) -> void:
 	show_text(ResourceTooltipBuilderScript.text_for_runtime_unit(snapshot))
 
 
+func show_glossary_term(term: String) -> void:
+	show_text(ResourceTooltipBuilderScript.text_for_glossary_term(term))
+
+
 func show_text(text: String) -> void:
 	if text.is_empty():
 		hide_tooltip()

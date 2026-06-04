@@ -2905,3 +2905,44 @@ Manual exercise:
 Open questions:
 
 - Should long-lived guardrails get their own short checklist in `DESIGN_NOTES.md`, or are the current sections enough?
+
+## 2026-06-04 - Glossary term tooltips
+
+Feature worked on:
+
+- Added glossary tooltip text for HP, armor, action interval, physical damage, magic damage, guard, and cooldown.
+- Added a glossary tooltip route through `TooltipPresenter`.
+- Exposed stat glossary rows in the unit detail panel.
+- Removed the completed non-Resource glossary tooltip TODO.
+
+Godot concepts introduced:
+
+- Signals can carry plain strings as well as Resource references.
+- One tooltip presenter can serve Resource, runtime, and glossary tooltip content.
+
+Game architecture concepts introduced:
+
+- Rules glossary text is a third tooltip source, separate from authored Resource data and runtime combat state.
+- Glossary definitions should describe current implemented rules, not future aspirations.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/resource_tooltip_builder.gd`
+- `clockwork-company/scripts/ui/tooltip_presenter.gd`
+- `clockwork-company/scripts/ui/unit_detail_panel.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why HP/armor/action interval are glossary terms instead of Resources.
+- How a glossary hover signal reaches the shared tooltip presenter.
+
+Manual exercise:
+
+- Open a unit detail panel and hover each stat glossary term, then explain which definition describes a current rule versus a future placeholder.
+
+Open questions:
+
+- Should combat log glossary terms use the same dictionary, or include event-specific examples?
