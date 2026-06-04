@@ -2946,3 +2946,44 @@ Manual exercise:
 Open questions:
 
 - Should combat log glossary terms use the same dictionary, or include event-specific examples?
+
+## 2026-06-04 - Colorblind highlight palette toggle
+
+Feature worked on:
+
+- Added a colorblind-friendly combat log highlight palette Resource.
+- Added a toolbar palette toggle for default versus colorblind highlighting.
+- Wired `CombatReplayPanel` so future replay lines use the selected palette.
+- Removed the completed accessibility/color palette TODO.
+
+Godot concepts introduced:
+
+- Swapping Resource references at runtime is a small way to expose presentation options.
+- A button can re-render cached RichTextLabel content with a new formatter palette.
+
+Game architecture concepts introduced:
+
+- Color highlighting is presentation logic; changing palettes does not change combat logs or simulation outcomes.
+- Keeping palettes as Resources preserves editor-visible tuning.
+
+Files touched:
+
+- `clockwork-company/resources/ui/combat_log_highlight_palette_colorblind.tres`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `clockwork-company/scripts/ui/combat_replay_panel.gd`
+- `ARCHITECTURE.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why palette data lives in `.tres` Resources.
+- Why the toggle changes formatting but not simulator output.
+
+Manual exercise:
+
+- Toggle `Palette: Colorblind`, run a fight, and compare attack/damage/heal/guard line colors against the default palette.
+
+Open questions:
+
+- Should the palette choice be persisted next to mod settings, or remain a session-only presentation toggle for now?

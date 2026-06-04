@@ -24,6 +24,7 @@ const MAX_EQUIPMENT_BUTTONS := 12
 const DEBUG_CONTROL_FONT_SIZE := 12
 const FIRST_ROAD_CAMPAIGN := preload("res://resources/campaigns/first_road_campaign.tres")
 const DEFAULT_LOG_HIGHLIGHT_PALETTE := preload("res://resources/ui/combat_log_highlight_palette_default.tres")
+const COLORBLIND_LOG_HIGHLIGHT_PALETTE := preload("res://resources/ui/combat_log_highlight_palette_colorblind.tres")
 
 @onready var run_button: Button = %RunButton
 @onready var mods_menu_button: Button = %ModsMenuButton
@@ -51,6 +52,8 @@ var equipment_buttons: Array[Button] = []
 var continue_button: Button = null
 var loss_test_button: Button = null
 var phase7_run_button: Button = null
+var palette_button: Button = null
+var colorblind_palette_enabled := false
 var campaign_manager = null
 var active_campaign_scenario_id := ""
 var selected_scenario: Resource = null
@@ -172,6 +175,11 @@ func _setup_mod_menu() -> void:
 
 
 func _setup_run_controls() -> void:
+	palette_button = Button.new()
+	palette_button.text = "Palette: Default"
+	palette_button.pressed.connect(_on_palette_button_pressed)
+	run_button.get_parent().add_child(palette_button)
+
 	var debug_label := Label.new()
 	debug_label.text = "Debug harness"
 	debug_label.modulate = Color(0.65, 0.65, 0.65)
@@ -215,6 +223,17 @@ func _style_debug_button(button: Button) -> void:
 	button.flat = true
 	button.modulate = Color(0.75, 0.75, 0.75)
 	button.add_theme_font_size_override("font_size", DEBUG_CONTROL_FONT_SIZE)
+
+
+func _on_palette_button_pressed() -> void:
+	colorblind_palette_enabled = not colorblind_palette_enabled
+	log_highlight_palette = COLORBLIND_LOG_HIGHLIGHT_PALETTE if colorblind_palette_enabled else DEFAULT_LOG_HIGHLIGHT_PALETTE
+	palette_button.text = "Palette: Colorblind" if colorblind_palette_enabled else "Palette: Default"
+	replay_panel.call("set_highlight_palette", log_highlight_palette)
+	if not cached_static_lines.is_empty():
+		combat_summary.clear()
+		_append_lines(combat_summary, cached_static_lines)
+		call_deferred("_resize_conditions_pane")
 
 
 func _setup_planning_panel() -> void:

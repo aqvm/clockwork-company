@@ -48,7 +48,6 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
   - cast bars
   - cooldown shimmer
   - clearer defeat/readiness states
-- Add accessibility/color options, including a color-blind-friendly palette.
 - Decide whether keyword highlighting should remain whole-line or add phrase-level emphasis.
 - Consider exposing background and highlight palette choices together.
 - Keep `CombatLogRichTextFormatter` shared between setup/status text and replay text if highlighting rules change.

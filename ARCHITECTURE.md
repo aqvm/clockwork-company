@@ -298,6 +298,7 @@ Combat log responsibility split:
 - The replay pane now has a left/right split: left is the existing text replay, right is a lightweight unit visualization panel separated by a vertical rule.
 - The visualization panel is still presentation-only: it reads roster snapshots and structured replay events from the simulator report, then draws unit circles, health arcs, cooldown bars, and lightweight VFX without changing simulator rules.
 - Highlight colors are configured in a dedicated `CombatLogHighlightPalette` Resource so color tuning stays editor-visible and does not require editing code constants.
+- The scenario workbench includes a default/colorblind highlight palette toggle using separate `CombatLogHighlightPalette` Resources.
 - This is presentation only: `run_demo_battle()` still finishes the deterministic simulation before replay starts.
 
 Triggered item responsibility split:

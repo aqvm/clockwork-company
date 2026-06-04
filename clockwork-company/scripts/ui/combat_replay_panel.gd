@@ -47,6 +47,10 @@ func setup(replay_timer: Timer, highlight_palette) -> void:
 	_setup_speed_controls()
 
 
+func set_highlight_palette(highlight_palette) -> void:
+	log_highlight_palette = highlight_palette
+
+
 func tick(delta: float) -> void:
 	if not replay_is_active:
 		return
