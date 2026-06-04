@@ -28,9 +28,66 @@ static func text_for_resource(resource) -> String:
 		text = _encounter_text(resource)
 	elif resource is RewardDefinition:
 		text = _reward_text(resource)
+	elif resource is ScenarioDefinition:
+		text = _scenario_text(resource)
+	elif resource is ScenarioRuleDefinition:
+		text = _scenario_rule_text(resource)
+	elif resource is CampaignDefinition:
+		text = _campaign_text(resource)
+	elif resource is CampaignScenarioNodeDefinition:
+		text = _campaign_node_text(resource)
 	else:
 		text = _generic_resource_text(resource)
 	return _with_source_note(text, "Source: authored Resource data")
+
+
+static func related_resources_for_resource(resource) -> Array:
+	var related := []
+	if resource == null:
+		return related
+	if resource is UnitDefinition:
+		_append_related(related, "Ancestry", resource.ancestry)
+		_append_related(related, "Loadout", resource.loadout)
+		for progress in resource.job_progress:
+			if progress != null:
+				_append_related(related, "Job Progress", progress.job)
+	elif resource is UnitLoadoutDefinition:
+		_append_related(related, "Current Job", resource.current_job)
+		_append_related(related, "Skill", resource.equipped_skill if resource.equipped_skill != null else resource.current_job.skill if resource.current_job != null else null)
+		_append_related(related, "Passive", resource.equipped_passive if resource.equipped_passive != null else resource.current_job.passive if resource.current_job != null else null)
+		_append_related(related, "Reaction", resource.equipped_reaction if resource.equipped_reaction != null else resource.current_job.reaction if resource.current_job != null else null)
+		_append_related(related, "Weapon", resource.weapon)
+		_append_related(related, "Armor", resource.armor)
+		_append_related(related, "Helmet", resource.helmet)
+		_append_related(related, "Trinket", resource.trinket)
+		for tactic in resource.tactics:
+			_append_related(related, "Tactic", tactic)
+	elif resource is ItemDefinition:
+		for effect in resource.effects:
+			_append_related(related, "Effect", effect)
+	elif resource is JobDefinition:
+		_append_related(related, "Skill", resource.skill)
+		_append_related(related, "Passive", resource.passive)
+		_append_related(related, "Reaction", resource.reaction)
+		_append_related(related, "Default Tactic", resource.default_tactic)
+	elif resource is EncounterDefinition:
+		for enemy in resource.enemy_units:
+			_append_related(related, "Enemy", enemy)
+	elif resource is RewardDefinition:
+		_append_related(related, "Item", resource.item)
+	elif resource is ScenarioDefinition:
+		for encounter in resource.encounters:
+			_append_related(related, "Encounter", encounter)
+		for rule in resource.scenario_rules:
+			_append_related(related, "Rule", rule)
+		for reward in resource.rewards:
+			_append_related(related, "Reward", reward)
+	elif resource is CampaignDefinition:
+		for node in resource.scenario_nodes:
+			_append_related(related, "Scenario Node", node)
+	elif resource is CampaignScenarioNodeDefinition:
+		_append_related(related, "Scenario", resource.scenario)
+	return related
 
 
 static func text_for_runtime_unit(snapshot: Dictionary) -> String:
@@ -199,6 +256,55 @@ static func _reward_text(reward: RewardDefinition) -> String:
 	return _join(lines, "\n")
 
 
+static func _scenario_text(scenario: ScenarioDefinition) -> String:
+	var lines: Array[String] = []
+	lines.append(_title(scenario))
+	if not scenario.description.is_empty():
+		lines.append(scenario.description)
+	if not scenario.story_intro.is_empty():
+		lines.append("Intro: %s" % scenario.story_intro)
+	lines.append("Party size: %d" % scenario.party_size)
+	lines.append("Recommended level: %d-%d" % [scenario.recommended_level_min, scenario.recommended_level_max])
+	lines.append("Tags: %s" % _join(scenario.tags))
+	lines.append("Encounters: %s" % _join(_resource_names(scenario.encounters)))
+	lines.append("Rules: %s" % _join(_resource_names(scenario.scenario_rules)))
+	lines.append("Rewards: %s" % _join(_resource_names(scenario.rewards)))
+	lines.append("Content unlocks: %s" % _join(scenario.content_unlocks))
+	return _join(lines, "\n")
+
+
+static func _scenario_rule_text(rule: ScenarioRuleDefinition) -> String:
+	var lines: Array[String] = []
+	lines.append(_title(rule))
+	if not rule.description.is_empty():
+		lines.append(rule.description)
+	lines.append("Rule id: %s" % rule.rule_id)
+	lines.append("Tags: %s" % _join(rule.tags))
+	return _join(lines, "\n")
+
+
+static func _campaign_text(campaign: CampaignDefinition) -> String:
+	var lines: Array[String] = []
+	lines.append(_title(campaign))
+	if not campaign.description.is_empty():
+		lines.append(campaign.description)
+	lines.append("Starting scenarios: %s" % _join(campaign.starting_scenario_ids))
+	lines.append("Starting roster ids: %s" % _join(campaign.starting_roster_ids))
+	lines.append("Starting unlocks: %s" % _join(campaign.starting_unlocks))
+	lines.append("Scenario nodes: %s" % _join(_resource_names(campaign.scenario_nodes)))
+	return _join(lines, "\n")
+
+
+static func _campaign_node_text(node: CampaignScenarioNodeDefinition) -> String:
+	var lines: Array[String] = []
+	lines.append(_title(node.scenario) if node.scenario != null else "Campaign Scenario Node")
+	lines.append("Scenario: %s" % _name_or_none(node.scenario))
+	lines.append("Unlocks scenarios: %s" % _join(node.unlock_scenario_ids_on_completion))
+	lines.append("Unlocks content: %s" % _join(node.content_unlocks_on_completion))
+	lines.append("Completes campaign: %s" % str(node.completes_campaign))
+	return _join(lines, "\n")
+
+
 static func _generic_resource_text(resource) -> String:
 	var lines: Array[String] = []
 	lines.append(_title(resource))
@@ -262,6 +368,24 @@ static func _name_or_none(resource) -> String:
 	if "display_name" in resource and not String(resource.display_name).is_empty():
 		return String(resource.display_name)
 	return "Resource"
+
+
+static func _resource_names(resources: Array) -> Array[String]:
+	var names: Array[String] = []
+	for resource in resources:
+		if resource != null:
+			names.append(_name_or_none(resource))
+	return names
+
+
+static func _append_related(out: Array, label: String, resource) -> void:
+	if resource == null:
+		return
+	out.append({
+		"label": label,
+		"resource": resource,
+		"name": _name_or_none(resource),
+	})
 
 
 static func _join(values: Array, separator := ", ") -> String:

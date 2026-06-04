@@ -11,8 +11,7 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 
 ## Tooltips
 
-- Add nested tooltip traversal from one Resource mention to another.
-- Improve locked tooltips after nested traversal exists, if they need hover corridors or delayed closing.
+- Improve locked tooltips if the new pinned related-Resource traversal needs hover corridors, delayed closing, or clearer navigation affordances.
 - Add tooltip support for status effects once statuses exist.
 
 ## Scenario and Campaign

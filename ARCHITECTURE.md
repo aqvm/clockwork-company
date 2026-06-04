@@ -154,8 +154,8 @@ The first playable test now opens as a scenario workbench with the older combat 
 - `clockwork-company/scripts/ui/combat_replay_panel.gd` is attached to the existing replay column in `combat_test_scene.tscn`; it owns replay speed controls, replay text timing, replay log autoscroll, structured event grouping, event payload tooltips, unit replay dots, and runtime unit tooltip requests.
 - `clockwork-company/scripts/ui/combat_log_rich_text_formatter.gd` owns UI-layer BBCode escaping and color highlighting for readable combat/setup lines.
 - `clockwork-company/scripts/ui/planning_stat_preview.gd` builds read-only planning stat summaries from `UnitState` and battle-start resolver hooks without advancing combat turns.
-- `clockwork-company/scripts/ui/resource_tooltip_builder.gd` converts known game Resources into readable tooltip text.
-- `clockwork-company/scripts/ui/tooltip_presenter.gd` owns the shared floating tooltip panel used by hoverable Resource rows/buttons. Hover shows tooltips, left click pins the visible tooltip, and Escape or an outside click closes a pinned tooltip.
+- `clockwork-company/scripts/ui/resource_tooltip_builder.gd` converts known game Resources into readable tooltip text and related-Resource link data for pinned tooltip traversal.
+- `clockwork-company/scripts/ui/tooltip_presenter.gd` owns the shared floating tooltip panel used by hoverable Resource rows/buttons. Hover shows tooltips, left click pins the visible tooltip, pinned Resource tooltips show related Resource buttons with Back navigation, and Escape or an outside click closes a pinned tooltip.
 - `clockwork-company/scripts/ui/combat_test_scene.gd` now also owns the local mod-pack toggle UI state (checkbox dropdown), including enabled-pack persistence and preview refresh behavior.
 - `clockwork-company/scripts/ui/unit_status_dot.gd` owns drawing one unit's circular replay marker, health arc, and cooldown bar.
 - `clockwork-company/scripts/combat/combat_simulator.gd` owns the combat rules.
@@ -297,7 +297,7 @@ Combat log responsibility split:
 - The combat test UI splits simulator lines at `Combat log:`. Setup, roster, loadout, gear, and tactic information appears immediately in a static `RichTextLabel`; timestamped combat events are driven in the replay pane from structured event metadata.
 - Scenario selection shows authored scenario and party data without running combat. The static setup pane is populated after a fight report is generated for the active encounter.
 - The planning party and unit detail panels show computed combat stats from the runtime stat initialization path before combat starts; battle-start effect changes are previewed separately without running turn simulation.
-- Resource tooltips are custom UI, not Godot native `tooltip_text`, so the project can later grow CK3-style locked/nested tooltips from one presenter path.
+- Resource tooltips are custom UI, not Godot native `tooltip_text`, so pinned tooltips can traverse related game Resources from one presenter path.
 - The replay does not start when the scene opens. The UI waits for the run button, then clears and starts `CombatReplayPanel` from the cached structured combat events.
 - Battle-start item and ancestry effects are grouped under a timed `t=000` battle-start event for replay, while the static setup summary skips that event block and keeps the final roster after battle-start effects.
 - The replay shows one timestamped parent combat event per second. Child explanation lines without their own timestamp appear with the most recent parent event.

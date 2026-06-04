@@ -13,6 +13,50 @@ Each entry should include:
 - Manual exercise
 - Open questions
 
+## 2026-06-04 - Pinned nested Resource tooltips
+
+Feature worked on:
+
+- Added nested Resource traversal to pinned tooltips.
+- Pinned Resource tooltips now show related Resource buttons, such as loadout, job, gear, tactics, encounters, scenario rules, and rewards.
+- Added Back navigation inside the pinned tooltip.
+- Added specific tooltip text for scenario, scenario rule, campaign, and campaign scenario node Resources.
+
+Godot concepts introduced:
+
+- A custom tooltip can be a small scene-like control tree with a `RichTextLabel`, buttons, and a generated related-resource list.
+- Dynamic buttons can bind Resource references and call back into the same presenter.
+- A UI presenter can keep a navigation stack without mutating game Resources.
+
+Game architecture concepts introduced:
+
+- Tooltip text and Resource relationship discovery are separate responsibilities inside `ResourceTooltipBuilder`.
+- Nested inspection should read authored data; it should not become an editor, inventory system, or rules resolver.
+- Pinned mode is the right place for traversal because normal hover tooltips should stay quick and noncommittal.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/tooltip_presenter.gd`
+- `clockwork-company/scripts/ui/resource_tooltip_builder.gd`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why related Resource links live in `ResourceTooltipBuilder` instead of every panel script.
+- Why nested traversal appears after pinning, not during normal hover.
+- How the tooltip Back button uses a simple Resource history stack.
+
+Manual exercise:
+
+- Hover a unit, click to pin the tooltip, open its loadout, then open the current job or weapon and use Back to return.
+
+Open questions:
+
+- Should pinned tooltips later get stronger visual affordances, such as a pinned header or hover corridor, once nested traversal is used more heavily?
+
 ## 2026-06-04 - Planning equipment browser
 
 Feature worked on:

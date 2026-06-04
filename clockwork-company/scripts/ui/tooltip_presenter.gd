@@ -8,8 +8,13 @@ const MAX_WIDTH := 380.0
 const PANEL_PADDING := Vector2(28, 22)
 
 var label: RichTextLabel = null
+var related_label: Label = null
+var related_list: VBoxContainer = null
+var back_button: Button = null
 var follow_mouse := false
 var pinned := false
+var current_resource = null
+var resource_history: Array = []
 
 
 func _ready() -> void:
@@ -33,6 +38,10 @@ func _ready() -> void:
 	style.content_margin_bottom = 11
 	add_theme_stylebox_override("panel", style)
 
+	var content := VBoxContainer.new()
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	add_child(content)
+
 	label = RichTextLabel.new()
 	label.bbcode_enabled = true
 	label.fit_content = true
@@ -42,7 +51,24 @@ func _ready() -> void:
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.add_theme_color_override("default_color", Color(0.88, 0.9, 0.94))
 	label.add_theme_font_size_override("normal_font_size", 14)
-	add_child(label)
+	content.add_child(label)
+
+	back_button = Button.new()
+	back_button.text = "Back"
+	back_button.visible = false
+	back_button.pressed.connect(_on_back_pressed)
+	content.add_child(back_button)
+
+	related_label = Label.new()
+	related_label.text = "Related Resources"
+	related_label.visible = false
+	related_label.add_theme_color_override("font_color", Color(0.72, 0.78, 0.86))
+	content.add_child(related_label)
+
+	related_list = VBoxContainer.new()
+	related_list.visible = false
+	related_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content.add_child(related_list)
 
 
 func _process(_delta: float) -> void:
@@ -51,7 +77,11 @@ func _process(_delta: float) -> void:
 
 
 func show_resource(resource) -> void:
-	show_text(ResourceTooltipBuilderScript.text_for_resource(resource))
+	if pinned:
+		return
+	current_resource = resource
+	resource_history.clear()
+	_show_resource_content(resource)
 
 
 func show_runtime_unit(snapshot: Dictionary) -> void:
@@ -69,6 +99,9 @@ func show_structured_events(events: Array[Dictionary]) -> void:
 func show_text(text: String) -> void:
 	if pinned:
 		return
+	current_resource = null
+	resource_history.clear()
+	_clear_related_links()
 	if text.is_empty():
 		hide_tooltip(true)
 		return
@@ -87,6 +120,9 @@ func hide_tooltip(force := false) -> void:
 	visible = false
 	follow_mouse = false
 	pinned = false
+	current_resource = null
+	resource_history.clear()
+	_clear_related_links()
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
@@ -111,6 +147,7 @@ func handle_input(event: InputEvent) -> bool:
 	pinned = true
 	follow_mouse = false
 	mouse_filter = Control.MOUSE_FILTER_STOP
+	_render_related_links()
 	_place_near_mouse()
 	return false
 
@@ -124,6 +161,74 @@ func _place_near_mouse() -> void:
 	var x: float = min(desired.x, viewport_size.x - tooltip_size.x - 8.0)
 	var y: float = min(desired.y, viewport_size.y - tooltip_size.y - 8.0)
 	global_position = Vector2(max(8.0, x), max(8.0, y))
+
+
+func _show_resource_content(resource) -> void:
+	if resource == null:
+		show_text("")
+		return
+	var text: String = ResourceTooltipBuilderScript.text_for_resource(resource)
+	label.clear()
+	label.append_text(_format_tooltip_text(text))
+	current_resource = resource
+	visible = true
+	if pinned:
+		follow_mouse = false
+		mouse_filter = Control.MOUSE_FILTER_STOP
+		_render_related_links()
+	else:
+		follow_mouse = true
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_clear_related_links()
+	await get_tree().process_frame
+	_place_near_mouse()
+
+
+func _render_related_links() -> void:
+	_clear_related_links()
+	if current_resource == null:
+		return
+
+	back_button.visible = not resource_history.is_empty()
+	var related: Array = ResourceTooltipBuilderScript.related_resources_for_resource(current_resource)
+	if related.is_empty():
+		return
+	related_label.visible = true
+	related_list.visible = true
+	for entry in related:
+		var resource = entry.get("resource", null)
+		if resource == null:
+			continue
+		var button := Button.new()
+		button.text = "%s: %s" % [String(entry.get("label", "Resource")), String(entry.get("name", "Resource"))]
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.pressed.connect(_on_related_resource_pressed.bind(resource))
+		related_list.add_child(button)
+
+
+func _clear_related_links() -> void:
+	if back_button != null:
+		back_button.visible = false
+	if related_label != null:
+		related_label.visible = false
+	if related_list == null:
+		return
+	related_list.visible = false
+	for child in related_list.get_children():
+		child.queue_free()
+
+
+func _on_related_resource_pressed(resource) -> void:
+	if current_resource != null:
+		resource_history.append(current_resource)
+	_show_resource_content(resource)
+
+
+func _on_back_pressed() -> void:
+	if resource_history.is_empty():
+		return
+	var previous = resource_history.pop_back()
+	_show_resource_content(previous)
 
 
 func _format_tooltip_text(text: String) -> String:
