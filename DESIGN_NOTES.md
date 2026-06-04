@@ -240,6 +240,12 @@ Campaign persistence should stay light at first: completed scenarios, unlocked c
 
 Rotation pressure should eventually come from XP caps, scenario constraints, enemy mechanics, content unlocks, and optional mastery goals rather than punishment systems.
 
+### Tooltip input
+
+Tooltips use a simple pinned mode before any nested traversal work: hover opens the tooltip, left click pins the currently visible tooltip, Escape closes it, and clicking outside the pinned tooltip also closes it. This keeps normal hover inspection fast while giving longer Resource text somewhere stable to sit.
+
+Nested tooltip traversal is still a separate future feature. It should not force the whole UI to use native Godot tooltip strings, because the custom presenter is the path that can eventually support locked/nested game-data inspection.
+
 ### Enemy doctrine later
 
 Higher difficulties may eventually let enemies infer and exploit player doctrine:

@@ -12,9 +12,8 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 
 ## Tooltips
 
-- Add CK3-style locked tooltips that stay open when hovered intentionally.
 - Add nested tooltip traversal from one Resource mention to another.
-- Decide input behavior for locking/unlocking tooltips: hover delay, click, modifier key, or pinned mode.
+- Improve locked tooltips after nested traversal exists, if they need hover corridors or delayed closing.
 - Add tooltip support for status effects once statuses exist.
 
 ## Scenario and Campaign

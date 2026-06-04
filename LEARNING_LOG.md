@@ -3283,3 +3283,44 @@ Manual exercise:
 Open questions:
 
 - Should reward/debug controls get their own panel next, or should tooltip hosting be extracted first?
+
+## 2026-06-04 - First locked tooltip behavior
+
+Feature worked on:
+
+- Added pinned tooltip behavior to the shared `TooltipPresenter`.
+- Hover still opens normal following tooltips.
+- Left click pins the visible tooltip; Escape or an outside click closes it.
+- Removed the open TODO about choosing a tooltip locking input model.
+
+Godot concepts introduced:
+
+- A Control can receive input events through the parent scene and decide whether it handled them.
+- `mouse_filter` controls whether a custom panel ignores or receives mouse interaction.
+
+Game architecture concepts introduced:
+
+- Tooltip locking is UI behavior only; it does not change Resource data, combat state, or simulator rules.
+- Pinning the shared presenter first creates a base for later nested tooltips without committing to the nested traversal design yet.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/tooltip_presenter.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why the presenter ignores normal hide requests while pinned.
+- Why nested tooltip traversal is still separate from locked tooltip behavior.
+
+Manual exercise:
+
+- Hover a scenario, click while its tooltip is visible, move the mouse away, then press Escape to close the pinned tooltip.
+
+Open questions:
+
+- Should pinned tooltips later show a small visual locked state once nested traversal exists?

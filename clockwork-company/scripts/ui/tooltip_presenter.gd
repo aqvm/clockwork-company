@@ -9,6 +9,7 @@ const PANEL_PADDING := Vector2(28, 22)
 
 var label: RichTextLabel = null
 var follow_mouse := false
+var pinned := false
 
 
 func _ready() -> void:
@@ -66,20 +67,52 @@ func show_structured_events(events: Array[Dictionary]) -> void:
 
 
 func show_text(text: String) -> void:
+	if pinned:
+		return
 	if text.is_empty():
-		hide_tooltip()
+		hide_tooltip(true)
 		return
 	label.clear()
 	label.append_text(_format_tooltip_text(text))
 	visible = true
 	follow_mouse = true
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	await get_tree().process_frame
 	_place_near_mouse()
 
 
-func hide_tooltip() -> void:
+func hide_tooltip(force := false) -> void:
+	if pinned and not force:
+		return
 	visible = false
 	follow_mouse = false
+	pinned = false
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+
+func handle_input(event: InputEvent) -> bool:
+	if not visible:
+		return false
+	if event is InputEventKey:
+		var key_event := event as InputEventKey
+		if key_event.pressed and key_event.keycode == KEY_ESCAPE:
+			hide_tooltip(true)
+			return true
+	if not (event is InputEventMouseButton):
+		return false
+	var mouse_event := event as InputEventMouseButton
+	if not mouse_event.pressed or mouse_event.button_index != MOUSE_BUTTON_LEFT:
+		return false
+	if pinned:
+		if not get_global_rect().has_point(mouse_event.global_position):
+			hide_tooltip(true)
+			return true
+		return false
+	pinned = true
+	follow_mouse = false
+	mouse_filter = Control.MOUSE_FILTER_STOP
+	_place_near_mouse()
+	return false
 
 
 func _place_near_mouse() -> void:

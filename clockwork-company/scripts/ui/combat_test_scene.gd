@@ -769,6 +769,8 @@ func _position_mods_panel() -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if tooltip_presenter != null and tooltip_presenter.handle_input(event):
+		return
 	if not mods_list_panel.visible:
 		return
 	if event is InputEventMouseButton and event.pressed:

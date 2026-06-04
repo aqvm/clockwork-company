@@ -150,7 +150,7 @@ The first playable test now opens as a scenario workbench with the older combat 
 - `clockwork-company/scripts/ui/combat_log_rich_text_formatter.gd` owns UI-layer BBCode escaping and color highlighting for readable combat/setup lines.
 - `clockwork-company/scripts/ui/planning_stat_preview.gd` builds read-only planning stat summaries from `UnitState` and battle-start resolver hooks without advancing combat turns.
 - `clockwork-company/scripts/ui/resource_tooltip_builder.gd` converts known game Resources into readable tooltip text.
-- `clockwork-company/scripts/ui/tooltip_presenter.gd` owns the shared floating tooltip panel used by hoverable Resource rows/buttons.
+- `clockwork-company/scripts/ui/tooltip_presenter.gd` owns the shared floating tooltip panel used by hoverable Resource rows/buttons. Hover shows tooltips, left click pins the visible tooltip, and Escape or an outside click closes a pinned tooltip.
 - `clockwork-company/scripts/ui/combat_test_scene.gd` now also owns the local mod-pack toggle UI state (checkbox dropdown), including enabled-pack persistence and preview refresh behavior.
 - `clockwork-company/scripts/ui/unit_status_dot.gd` owns drawing one unit's circular replay marker, health arc, and cooldown bar.
 - `clockwork-company/scripts/combat/combat_simulator.gd` owns the combat rules.
