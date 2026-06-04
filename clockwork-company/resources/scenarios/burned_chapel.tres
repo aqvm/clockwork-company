@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="ScenarioDefinition" load_steps=7 format=3]
+[gd_resource type="Resource" script_class="ScenarioDefinition" load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/scenario_definition.gd" id="1_scenario"]
 [ext_resource type="Resource" path="res://resources/encounters/phase7_fight_01_street_corner.tres" id="2_encounter_a"]
@@ -6,6 +6,7 @@
 [ext_resource type="Resource" path="res://resources/encounters/phase7_fight_04_vault_annex.tres" id="4_encounter_c"]
 [ext_resource type="Resource" path="res://resources/scenario_rules/ash_chapel_healing_pressure.tres" id="5_rule"]
 [ext_resource type="Resource" path="res://resources/rewards/focus_lens_for_sol.tres" id="6_reward"]
+[ext_resource type="Resource" path="res://resources/rewards/catalog_reward_brass_lung.tres" id="7_reward"]
 
 [resource]
 script = ExtResource("1_scenario")
@@ -20,5 +21,5 @@ scenario_rules = [ExtResource("5_rule")]
 recommended_level_min = 1
 recommended_level_max = 3
 tags = ["chapel", "ash", "status"]
-rewards = [ExtResource("6_reward")]
+rewards = [ExtResource("6_reward"), ExtResource("7_reward")]
 content_unlocks = ["ash_chapel_rite_notes"]

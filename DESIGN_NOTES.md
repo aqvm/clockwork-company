@@ -223,6 +223,7 @@ Current run-loop design rules:
 - the run loop should orchestrate battles, not change combat rules
 - a run should be deterministic and inspectable while the project is still teaching its systems
 - reward choices should be concrete equipment/build decisions, even if the first UI is just buttons
+- scenario reward lists should offer at least a small choice where existing catalog rewards fit the scenario theme, without adding large reward pools
 - a minimal inventory/equipment state should exist before a full inventory screen
 - replacing equipment should return the old item to inventory so the player can reason about tradeoffs rather than losing gear silently
 - reward content should reference normal item Resources rather than inventing reward-only stat blobs

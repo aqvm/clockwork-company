@@ -51,7 +51,7 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 
 ## Content and Authoring
 
-- Turn the broad content catalog into curated scenario-facing content.
+- Turn the broad content catalog into curated scenario-facing content. A first slice now adds existing catalog rewards to the authored scenarios; keep future curation small and scenario-specific.
 - Add more handcrafted scenarios only when the framework and UI can make them understandable.
 - Keep enemies as normal unit/loadout/job/item/tactic builds, not a separate monster-only ruleset.
 - Use tags for filtering/conditions/content tools when an actual tool or rule needs them.

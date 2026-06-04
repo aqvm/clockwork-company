@@ -13,6 +13,48 @@ Each entry should include:
 - Manual exercise
 - Open questions
 
+## 2026-06-04 - Curated scenario reward choices
+
+Feature worked on:
+
+- Added a second existing reward option to each authored scenario.
+- Reused catalog rewards instead of adding new reward content.
+- Kept scenario rewards as normal `RewardDefinition` Resources pointing to normal item Resources.
+
+Godot concepts introduced:
+
+- `.tres` scenario Resources can reference multiple reward Resources through exported arrays.
+- Increasing a `.tres` file's `load_steps` reflects adding another external Resource reference.
+
+Game architecture concepts introduced:
+
+- Content curation can make an existing catalog playable without expanding the catalog.
+- Reward choice should stay scenario-facing and concrete, not become a large random pool.
+
+Files touched:
+
+- `clockwork-company/resources/scenarios/roadside_ambush.tres`
+- `clockwork-company/resources/scenarios/burned_chapel.tres`
+- `clockwork-company/resources/scenarios/iron_tollgate.tres`
+- `clockwork-company/resources/scenarios/clocktower_claim.tres`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why this pass reused catalog rewards instead of creating new items.
+- Why scenario reward lists are still authored, deterministic content.
+
+Manual exercise:
+
+- Start any scenario, win the first encounter, and compare the two reward choices before selecting one.
+
+Open questions:
+
+- Should each scenario eventually have a unique reward identity, or is shared catalog reuse better while the system vocabulary is still small?
+
 ## 2026-06-04 - Replay cooldown shimmer
 
 Feature worked on:

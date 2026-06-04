@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="ScenarioDefinition" load_steps=7 format=3]
+[gd_resource type="Resource" script_class="ScenarioDefinition" load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/scenario_definition.gd" id="1_scenario"]
 [ext_resource type="Resource" path="res://resources/encounters/phase7_fight_02_toll_gate.tres" id="2_encounter_a"]
@@ -6,6 +6,7 @@
 [ext_resource type="Resource" path="res://resources/encounters/phase7_fight_05_clocktower.tres" id="4_encounter_c"]
 [ext_resource type="Resource" path="res://resources/scenario_rules/iron_tollgate_armored_enemies.tres" id="5_rule"]
 [ext_resource type="Resource" path="res://resources/rewards/guardplate_for_alden.tres" id="6_reward"]
+[ext_resource type="Resource" path="res://resources/rewards/catalog_reward_bellhammer.tres" id="7_reward"]
 
 [resource]
 script = ExtResource("1_scenario")
@@ -20,5 +21,5 @@ scenario_rules = [ExtResource("5_rule")]
 recommended_level_min = 2
 recommended_level_max = 4
 tags = ["tollgate", "armor", "mercenary"]
-rewards = [ExtResource("6_reward")]
+rewards = [ExtResource("6_reward"), ExtResource("7_reward")]
 content_unlocks = ["iron_tollgate_contracts"]

@@ -206,7 +206,7 @@ The first playable test now opens as a scenario workbench with the older combat 
 - `clockwork-company/resources/loadouts/*.tres` stores reusable demo and catalog build archetypes.
 - `clockwork-company/resources/tactics/*.tres` stores reusable named tactic rule definitions.
 - `clockwork-company/resources/encounters/*.tres` stores fixed authored encounters used by the old Phase 7 run and the new sample scenarios.
-- `clockwork-company/resources/rewards/*.tres` stores the current fixed Phase 7 reward choices.
+- `clockwork-company/resources/rewards/*.tres` stores reusable reward offers used by the old Phase 7 run and curated scenario reward lists.
 - `clockwork-company/resources/scenarios/*.tres` stores sample scenario definitions.
 - `clockwork-company/resources/scenario_rules/*.tres` stores data-only scenario rule definitions.
 - `clockwork-company/resources/campaigns/first_road_campaign.tres` stores the first sample campaign.
