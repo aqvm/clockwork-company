@@ -1,7 +1,8 @@
-[gd_scene format=3 uid="uid://bwypver014851"]
+[gd_scene load_steps=3 format=3 uid="uid://bwypver014851"]
 
 [ext_resource type="Script" uid="uid://bha8swoxgq5r6" path="res://scripts/ui/combat_test_scene.gd" id="1_combat_ui"]
 [ext_resource type="Script" uid="uid://v41dhcmpn4bs" path="res://scripts/ui/combat_replay_panel.gd" id="2_replay_panel"]
+[ext_resource type="Script" path="res://scripts/ui/run_flow_controls_panel.gd" id="3_run_controls"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mods_panel"]
 content_margin_left = 6.0
@@ -59,8 +60,10 @@ layout_mode = 2
 text = "Clockwork Company Scenario Workbench"
 
 [node name="ControlsRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer" unique_id=213141313]
+unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 8
+script = ExtResource("3_run_controls")
 
 [node name="RunButton" type="Button" parent="MarginContainer/VBoxContainer/ControlsRow" unique_id=1860827549]
 unique_name_in_owner = true

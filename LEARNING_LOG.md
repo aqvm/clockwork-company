@@ -13,6 +13,49 @@ Each entry should include:
 - Manual exercise
 - Open questions
 
+## 2026-06-04 - Run flow control panel extraction
+
+Feature worked on:
+
+- Extracted top-row run-flow button presentation into `RunFlowControlsPanel`.
+- Moved palette, campaign save/load, debug run, reward, continue, and top-row equipment button rendering out of `combat_test_scene.gd`.
+- Kept campaign/run decisions in the main scene and used panel signals for user requests.
+
+Godot concepts introduced:
+
+- A scene node such as an `HBoxContainer` can have its own script and still keep existing child nodes like `%RunButton`.
+- Custom signals let a UI component report user intent without owning the game-state model.
+- Parent scripts can keep direct method calls to a scripted child node when the scene owns that child, but compile checks may require avoiding premature custom type annotations if Godot has not registered the class name yet.
+
+Game architecture concepts introduced:
+
+- Presentation ownership is different from state ownership: the panel renders buttons, while the main scene decides what starting, saving, loading, or equipping means.
+- Extracting a component is worthwhile when it removes button bookkeeping from a coordinator without creating a new rules object.
+
+Files touched:
+
+- `clockwork-company/scenes/combat_test_scene.tscn`
+- `clockwork-company/scripts/ui/run_flow_controls_panel.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why `RunFlowControlsPanel` emits `reward_requested(index)` instead of directly calling `RunState.apply_reward(...)`.
+- Why `combat_test_scene.gd` still owns campaign save/load behavior.
+- How reward button tooltips still reach the shared tooltip presenter after the extraction.
+
+Manual exercise:
+
+- Open `combat_test_scene.tscn`, select `ControlsRow`, and follow how pressing `Loss Test` reaches `_on_loss_test_button_pressed()` in `combat_test_scene.gd`.
+
+Open questions:
+
+- Should the mod dropdown itself eventually become a panel component, or is the current top-row split enough until mod controls grow?
+
 ## 2026-06-02 - Ancestries, helmets, and legacy damage cleanup
 
 Feature worked on:

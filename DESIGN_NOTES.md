@@ -63,6 +63,7 @@ Current combat log design rules:
 - scenario/party planning information, static fight setup information, and timed combat events should be visually separated
 - scenario list buttons select scenarios for inspection; a separate main action starts the selected available scenario
 - the scene should open on scenario planning data, not a precomputed combat report
+- top-row run/debug/reward controls should render in a small panel component, while campaign and run-state decisions stay in the main scene coordinator
 - the old combat conditions pane should not compete with the planning UI once scenario, party, and unit details are visible
 - the combat test should wait for an explicit run click before replaying combat events
 - setup should sit above replay and use only the height it needs, capped at half the visible log area

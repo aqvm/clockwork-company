@@ -11,20 +11,16 @@ const TooltipPresenterScript := preload("res://scripts/ui/tooltip_presenter.gd")
 const PlanningWorkbenchPanelScene := preload("res://scenes/planning_workbench_panel.tscn")
 const COMBAT_LOG_HEADER := "Combat log:"
 const RUN_BUTTON_REPLAYING_TEXT := "Replaying..."
-const MODS_BUTTON_BASE_TEXT := "Mods"
 const MOD_SETTINGS_PATH := "user://mod_settings.cfg"
 const MOD_SETTINGS_SECTION := "mods"
 const MOD_SETTINGS_KEY_ENABLED_IDS := "enabled_pack_ids"
 const CAMPAIGN_SAVE_PATH := "user://first_road_campaign_save.json"
 const MIN_CONDITIONS_HEIGHT := 120
-const MAX_EQUIPMENT_BUTTONS := 12
-const DEBUG_CONTROL_FONT_SIZE := 12
 const FIRST_ROAD_CAMPAIGN := preload("res://resources/campaigns/first_road_campaign.tres")
 const DEFAULT_LOG_HIGHLIGHT_PALETTE := preload("res://resources/ui/combat_log_highlight_palette_default.tres")
 const COLORBLIND_LOG_HIGHLIGHT_PALETTE := preload("res://resources/ui/combat_log_highlight_palette_colorblind.tres")
 
-@onready var run_button: Button = %RunButton
-@onready var mods_menu_button: Button = %ModsMenuButton
+@onready var run_controls = %ControlsRow
 @onready var mods_list_panel: PanelContainer = %ModsListPanel
 @onready var mods_list_vbox: VBoxContainer = %ModsListVBox
 @onready var log_split: VSplitContainer = %LogSplit
@@ -44,14 +40,6 @@ var available_mod_packs: Array[Dictionary] = []
 var enabled_mod_pack_ids := {}
 var run_state = null
 var cached_battle_report := {}
-var reward_buttons: Array[Button] = []
-var equipment_buttons: Array[Button] = []
-var continue_button: Button = null
-var loss_test_button: Button = null
-var phase7_run_button: Button = null
-var palette_button: Button = null
-var save_campaign_button: Button = null
-var load_campaign_button: Button = null
 var colorblind_palette_enabled := false
 var campaign_manager = null
 var active_campaign_scenario_id := ""
@@ -62,8 +50,17 @@ var available_items: Array[ItemDefinition] = []
 
 
 func _ready() -> void:
-	run_button.pressed.connect(_on_run_button_pressed)
-	mods_menu_button.pressed.connect(_on_mods_button_pressed)
+	run_controls.connect("run_requested", _on_run_button_pressed)
+	run_controls.connect("mods_menu_requested", _on_mods_button_pressed)
+	run_controls.connect("palette_requested", _on_palette_button_pressed)
+	run_controls.connect("save_campaign_requested", _on_save_campaign_pressed)
+	run_controls.connect("load_campaign_requested", _on_load_campaign_pressed)
+	run_controls.connect("loss_test_requested", _on_loss_test_button_pressed)
+	run_controls.connect("phase7_run_requested", _on_phase7_run_button_pressed)
+	run_controls.connect("reward_requested", _on_reward_button_pressed)
+	run_controls.connect("continue_requested", _on_continue_button_pressed)
+	run_controls.connect("equipment_requested", _on_equipment_button_pressed)
+	_connect_panel_tooltips(run_controls)
 	replay_panel.call("setup", replay_timer, log_highlight_palette)
 	replay_panel.connect("replay_finished", _on_replay_finished)
 	replay_panel.connect("runtime_tooltip_requested", _on_panel_runtime_tooltip_requested)
@@ -96,8 +93,7 @@ func _on_run_button_pressed() -> void:
 	_load_combat_preview()
 	_clear_replay_log()
 
-	run_button.disabled = true
-	run_button.text = RUN_BUTTON_REPLAYING_TEXT
+	run_controls.show_run_button(RUN_BUTTON_REPLAYING_TEXT, true)
 	replay_is_active = true
 	replay_panel.call("start_replay", cached_roster_units, cached_structured_events)
 
@@ -170,70 +166,13 @@ func _setup_mod_menu() -> void:
 
 
 func _setup_run_controls() -> void:
-	palette_button = Button.new()
-	palette_button.text = "Palette: Default"
-	palette_button.pressed.connect(_on_palette_button_pressed)
-	run_button.get_parent().add_child(palette_button)
-
-	save_campaign_button = Button.new()
-	save_campaign_button.text = "Save Campaign"
-	save_campaign_button.pressed.connect(_on_save_campaign_pressed)
-	run_button.get_parent().add_child(save_campaign_button)
-
-	load_campaign_button = Button.new()
-	load_campaign_button.text = "Load Campaign"
-	load_campaign_button.pressed.connect(_on_load_campaign_pressed)
-	run_button.get_parent().add_child(load_campaign_button)
-
-	var debug_label := Label.new()
-	debug_label.text = "Debug harness"
-	debug_label.modulate = Color(0.65, 0.65, 0.65)
-	debug_label.add_theme_font_size_override("font_size", DEBUG_CONTROL_FONT_SIZE)
-	run_button.get_parent().add_child(debug_label)
-
-	loss_test_button = Button.new()
-	loss_test_button.text = "Loss Test"
-	_style_debug_button(loss_test_button)
-	loss_test_button.pressed.connect(_on_loss_test_button_pressed)
-	run_button.get_parent().add_child(loss_test_button)
-
-	phase7_run_button = Button.new()
-	phase7_run_button.text = "Phase 7 Run"
-	_style_debug_button(phase7_run_button)
-	phase7_run_button.pressed.connect(_on_phase7_run_button_pressed)
-	run_button.get_parent().add_child(phase7_run_button)
-
-	for index in 3:
-		var reward_button := Button.new()
-		reward_button.visible = false
-		reward_button.pressed.connect(_on_reward_button_pressed.bind(index))
-		run_button.get_parent().add_child(reward_button)
-		reward_buttons.append(reward_button)
-
-	continue_button = Button.new()
-	continue_button.text = "Continue to Next Fight"
-	continue_button.visible = false
-	continue_button.pressed.connect(_on_continue_button_pressed)
-	run_button.get_parent().add_child(continue_button)
-
-	for index in MAX_EQUIPMENT_BUTTONS:
-		var equipment_button := Button.new()
-		equipment_button.visible = false
-		equipment_button.pressed.connect(_on_equipment_button_pressed.bind(index))
-		run_button.get_parent().add_child(equipment_button)
-		equipment_buttons.append(equipment_button)
-
-
-func _style_debug_button(button: Button) -> void:
-	button.flat = true
-	button.modulate = Color(0.75, 0.75, 0.75)
-	button.add_theme_font_size_override("font_size", DEBUG_CONTROL_FONT_SIZE)
+	run_controls.show_palette_button(colorblind_palette_enabled)
 
 
 func _on_palette_button_pressed() -> void:
 	colorblind_palette_enabled = not colorblind_palette_enabled
 	log_highlight_palette = COLORBLIND_LOG_HIGHLIGHT_PALETTE if colorblind_palette_enabled else DEFAULT_LOG_HIGHLIGHT_PALETTE
-	palette_button.text = "Palette: Colorblind" if colorblind_palette_enabled else "Palette: Default"
+	run_controls.show_palette_button(colorblind_palette_enabled)
 	replay_panel.call("set_highlight_palette", log_highlight_palette)
 	if not cached_static_lines.is_empty():
 		combat_summary.clear()
@@ -395,69 +334,44 @@ func _build_run_static_lines(fight_static_lines: Array[String]) -> Array[String]
 
 func _update_run_controls() -> void:
 	if run_state == null:
-		run_button.disabled = true
-		run_button.text = "Choose Scenario"
-		save_campaign_button.disabled = campaign_manager == null
-		load_campaign_button.disabled = campaign_manager == null
-		loss_test_button.disabled = replay_is_active
-		phase7_run_button.disabled = replay_is_active
+		run_controls.show_run_button("Choose Scenario", true)
+		run_controls.set_campaign_buttons_disabled(campaign_manager == null)
+		run_controls.set_debug_buttons_disabled(replay_is_active)
+		run_controls.show_reward_options([], replay_is_active)
+		run_controls.show_continue_button(false, "", replay_is_active)
+		run_controls.show_equipment_options([], replay_is_active)
 		_update_campaign_controls()
 		return
 
-	save_campaign_button.disabled = campaign_manager == null or replay_is_active
-	load_campaign_button.disabled = campaign_manager == null or replay_is_active
-	loss_test_button.disabled = replay_is_active
-	phase7_run_button.disabled = replay_is_active
+	run_controls.set_campaign_buttons_disabled(campaign_manager == null or replay_is_active)
+	run_controls.set_debug_buttons_disabled(replay_is_active)
 	if replay_is_active:
-		run_button.disabled = true
-		run_button.text = RUN_BUTTON_REPLAYING_TEXT
+		run_controls.show_run_button(RUN_BUTTON_REPLAYING_TEXT, true)
 	elif run_state.status == RunStateScript.STATUS_ACTIVE:
-		run_button.disabled = false
-		run_button.text = "Run Encounter %d/%d: %s" % [run_state.current_fight_number(), run_state.current_fight_count(), run_state.current_encounter_name()]
+		run_controls.show_run_button("Run Encounter %d/%d: %s" % [run_state.current_fight_number(), run_state.current_fight_count(), run_state.current_encounter_name()], false)
 	elif run_state.status == RunStateScript.STATUS_REWARD:
-		run_button.disabled = true
-		run_button.text = "Choose Reward"
+		run_controls.show_run_button("Choose Reward", true)
 	elif run_state.status == RunStateScript.STATUS_EQUIPMENT:
-		run_button.disabled = true
-		run_button.text = "Equip Or Continue"
+		run_controls.show_run_button("Equip Or Continue", true)
 	elif run_state.status == RunStateScript.STATUS_WON:
-		run_button.disabled = false
-		run_button.text = "Run Won - Start New Run"
+		run_controls.show_run_button("Run Won - Start New Run", false)
 	elif run_state.status == RunStateScript.STATUS_LOST:
-		run_button.disabled = false
-		run_button.text = "Run Lost - Start New Run"
+		run_controls.show_run_button("Run Lost - Start New Run", false)
 
 	_update_campaign_controls()
 
 	var options: Array[Dictionary] = []
 	if run_state.status == RunStateScript.STATUS_REWARD:
 		options = run_state.reward_options()
-	for index in reward_buttons.size():
-		var reward_button := reward_buttons[index]
-		var has_option: bool = index < options.size()
-		reward_button.visible = has_option
-		reward_button.disabled = replay_is_active or not has_option
-		if has_option:
-			var option: Dictionary = options[index]
-			reward_button.text = String(option["label"])
-			_bind_resource_tooltip(reward_button, option.get("resource", null))
+	run_controls.show_reward_options(options, replay_is_active)
 
-	continue_button.visible = run_state.status == RunStateScript.STATUS_EQUIPMENT
-	continue_button.disabled = replay_is_active
-	if continue_button.visible:
-		continue_button.text = "Continue to Encounter %d: %s" % [run_state.current_fight_number(), run_state.current_encounter_name()]
+	var continue_text := "Continue to Encounter %d: %s" % [run_state.current_fight_number(), run_state.current_encounter_name()]
+	run_controls.show_continue_button(run_state.status == RunStateScript.STATUS_EQUIPMENT, continue_text, replay_is_active)
 
 	var equip_options: Array[Dictionary] = []
 	if run_state.status == RunStateScript.STATUS_EQUIPMENT:
 		equip_options = run_state.equip_options()
-	for index in equipment_buttons.size():
-		var equipment_button := equipment_buttons[index]
-		var has_equip_option: bool = index < equip_options.size()
-		equipment_button.visible = has_equip_option
-		equipment_button.disabled = replay_is_active or not has_equip_option
-		if has_equip_option:
-			var equip_option: Dictionary = equip_options[index]
-			equipment_button.text = String(equip_option["label"])
+	run_controls.show_equipment_options(equip_options, replay_is_active)
 
 
 func _update_campaign_controls() -> void:
@@ -635,21 +549,6 @@ func _on_panel_structured_event_tooltip_requested(_source: Control, events: Arra
 		tooltip_presenter.show_structured_events(events)
 
 
-func _bind_resource_tooltip(control: Control, resource) -> void:
-	control.set_meta("tooltip_resource", resource)
-	if control.has_meta("resource_tooltip_bound"):
-		return
-	control.set_meta("resource_tooltip_bound", true)
-	control.mouse_entered.connect(_on_resource_tooltip_entered.bind(control))
-	control.mouse_exited.connect(_on_tooltip_exited)
-
-
-func _on_resource_tooltip_entered(source: Control) -> void:
-	if tooltip_presenter != null:
-		var resource = source.get_meta("tooltip_resource", null)
-		tooltip_presenter.show_resource(resource)
-
-
 func _on_tooltip_exited() -> void:
 	if tooltip_presenter != null:
 		tooltip_presenter.hide_tooltip()
@@ -768,12 +667,10 @@ func _rebuild_mod_menu() -> void:
 		child.queue_free()
 
 	if available_mod_packs.is_empty():
-		mods_menu_button.disabled = true
-		mods_menu_button.text = "%s (none)" % MODS_BUTTON_BASE_TEXT
+		run_controls.show_mod_pack_count(0, 0)
 		mods_list_panel.visible = false
 		return
 
-	mods_menu_button.disabled = false
 	for pack in available_mod_packs:
 		var pack_id := String(pack.get("id", ""))
 		var display_name := String(pack.get("display_name", pack_id))
@@ -785,7 +682,7 @@ func _rebuild_mod_menu() -> void:
 		checkbox.toggled.connect(_on_mod_checkbox_toggled.bind(pack_id))
 		mods_list_vbox.add_child(checkbox)
 
-	mods_menu_button.text = "%s (%d/%d)" % [MODS_BUTTON_BASE_TEXT, enabled_mod_pack_ids.size(), available_mod_packs.size()]
+	run_controls.show_mod_pack_count(enabled_mod_pack_ids.size(), available_mod_packs.size())
 	if mods_list_panel.visible:
 		call_deferred("_position_mods_panel")
 
@@ -809,7 +706,7 @@ func _on_mod_checkbox_toggled(pressed: bool, pack_id: String) -> void:
 
 
 func _position_mods_panel() -> void:
-	var button_rect := mods_menu_button.get_global_rect()
+	var button_rect: Rect2 = run_controls.mods_button_rect()
 	var viewport_rect := get_viewport_rect()
 	var desired_size := Vector2(300.0, 220.0)
 	var x: float = min(button_rect.position.x, viewport_rect.size.x - desired_size.x - 8.0)
@@ -829,7 +726,8 @@ func _input(event: InputEvent) -> void:
 			return
 		var click_pos := mouse_event.global_position
 		var in_panel := mods_list_panel.get_global_rect().has_point(click_pos)
-		var in_button := mods_menu_button.get_global_rect().has_point(click_pos)
+		var mods_button_rect: Rect2 = run_controls.mods_button_rect()
+		var in_button := mods_button_rect.has_point(click_pos)
 		if not in_panel and not in_button:
 			mods_list_panel.visible = false
 
@@ -906,7 +804,6 @@ func _clear_replay_log() -> void:
 func _stop_log_replay() -> void:
 	replay_panel.call("stop_replay")
 	replay_is_active = false
-	run_button.disabled = false
 	_update_run_controls()
 
 

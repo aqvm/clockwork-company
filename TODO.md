@@ -4,10 +4,10 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 
 ## Near-Term UI and UX
 
-- Continue replacing the prototype scenario workbench layout with cleaner dedicated UI panels/components. The planning workbench row now lives in its own wrapper scene; next good extraction candidates are tooltip hosting or reward/debug controls if they keep growing.
+- Continue replacing the prototype scenario workbench layout with cleaner dedicated UI panels/components. The planning workbench row and run-flow controls now live in focused UI components; next good extraction candidate is tooltip hosting if nested traversal makes it grow.
 - Split remaining `combat_test_scene.gd` responsibilities into focused Control scenes/scripts for any future tooltip host UI or smaller replay subpanels. The scenario list, scenario detail, party list, unit detail, unit action, and combat replay panels have been extracted.
-- Move stable UI layout into `.tscn` component scenes while keeping truly data-driven rows/lists dynamic. The planning workbench row is now scene-authored; keep moving only stable layout, not generated rows.
-- Keep using custom panel signals for extracted UI components. `scenario_selected`, `unit_selected`, `cycle_equipment_requested`, and `equip_option_requested` are now used by extracted panels.
+- Move stable UI layout into `.tscn` component scenes while keeping truly data-driven rows/lists dynamic. The planning workbench row and top control row now have component ownership; keep moving only stable layout, not generated rows.
+- Keep using custom panel signals for extracted UI components. `scenario_selected`, `unit_selected`, `cycle_equipment_requested`, `equip_option_requested`, and run-flow request signals are now used by extracted panels.
 - Build a real inventory/equipment browser instead of cycle-buttons for equipment changes.
 
 ## Tooltips
