@@ -1,55 +1,54 @@
-[gd_resource type="Resource" script_class="JobDefinition" load_steps=6 format=3]
+[gd_resource type="Resource" script_class="JobDefinition" format=3 uid="uid://drwlqef75d1it"]
 
-[ext_resource type="Script" path="res://scripts/data/job_definition.gd" id="1_job"]
-[ext_resource type="Script" path="res://scripts/data/skill_definition.gd" id="2_skill"]
-[ext_resource type="Script" path="res://scripts/data/passive_definition.gd" id="3_passive"]
-[ext_resource type="Script" path="res://scripts/data/reaction_definition.gd" id="4_reaction"]
-[ext_resource type="Script" path="res://scripts/data/tactic_definition.gd" id="5_tactic"]
+[ext_resource type="Script" uid="uid://8cikor8oh0rp" path="res://scripts/data/job_definition.gd" id="1_job"]
+[ext_resource type="Script" uid="uid://dt86e2l5m6yo4" path="res://scripts/data/skill_definition.gd" id="2_skill"]
+[ext_resource type="Script" uid="uid://bw4e1gp6l02uv" path="res://scripts/data/passive_definition.gd" id="3_passive"]
+[ext_resource type="Script" uid="uid://c3ugwbjpivem3" path="res://scripts/data/reaction_definition.gd" id="4_reaction"]
+[ext_resource type="Script" uid="uid://cl3b7aebl31vg" path="res://scripts/data/tactic_definition.gd" id="5_tactic"]
 
-[sub_resource type="Resource" id="Resource_foundry_monk_skill"]
-script = ExtResource("2_skill")
+[sub_resource type="Resource" id="Resource_foundry_monk_default_tactic"]
+script = ExtResource("5_tactic")
 display_name = "Bank the Furnace"
-tags = ["foundry", "guard"]
-action = "Guard"
-default_target = "Self"
-amount_modifier = 2
+tags = Array[String](["job_default"])
+condition = "Enemy Alive"
+action = "Job Skill"
+target = "Self"
 
 [sub_resource type="Resource" id="Resource_foundry_monk_passive"]
+resource_name = "Tempered Breath"
 script = ExtResource("3_passive")
 display_name = "Tempered Breath"
-tags = ["guard"]
+tags = Array[String](["guard"])
 passive_type = "Guard Armor Bonus"
 amount = 1
 cooldown_turns = 1
 
 [sub_resource type="Resource" id="Resource_foundry_monk_reaction"]
+resource_name = "Turtle Furnace"
 script = ExtResource("4_reaction")
 display_name = "Turtle Furnace"
-tags = ["low_hp", "reaction"]
+tags = Array[String](["low_hp", "reaction"])
 trigger = "HP Below Threshold"
 condition = "Self HP Below Percent"
-reaction_type = "Gain Armor"
 amount = 8
 threshold_percent = 35
 cooldown_turns = 6
 
-[sub_resource type="Resource" id="Resource_foundry_monk_default_tactic"]
-script = ExtResource("5_tactic")
+[sub_resource type="Resource" id="Resource_foundry_monk_skill"]
+resource_name = "Bank the Furnace"
+script = ExtResource("2_skill")
 display_name = "Bank the Furnace"
-tags = ["job_default"]
-condition = "Enemy Alive"
-action = "Job Skill"
-target = "Self"
+tags = Array[String](["foundry", "guard"])
+action = "Guard"
+default_target = "Self"
+amount_modifier = 2
 
 [resource]
 script = ExtResource("1_job")
 display_name = "Foundry Monk"
-tags = ["job", "foundry", "guard"]
+tags = Array[String](["job", "foundry", "guard"])
 max_hp_growth = 2
-physical_damage_growth = 0
-magic_damage_growth = 0
 armor_growth = 1
-action_interval_growth = 0
 skill = SubResource("Resource_foundry_monk_skill")
 passive = SubResource("Resource_foundry_monk_passive")
 reaction = SubResource("Resource_foundry_monk_reaction")

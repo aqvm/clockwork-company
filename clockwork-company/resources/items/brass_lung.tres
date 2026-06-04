@@ -1,15 +1,14 @@
-[gd_resource type="Resource" script_class="ItemDefinition" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="ItemDefinition" format=3 uid="uid://bs5cr7jt2nhtb"]
 
-[ext_resource type="Script" path="res://scripts/data/item_definition.gd" id="1_item"]
-[ext_resource type="Script" path="res://scripts/data/effect_definition.gd" id="2_effect"]
+[ext_resource type="Script" uid="uid://h21mlqiqe25f" path="res://scripts/data/item_definition.gd" id="1_item"]
+[ext_resource type="Script" uid="uid://bq86vbaajvphi" path="res://scripts/data/effect_definition.gd" id="2_effect"]
 
 [sub_resource type="Resource" id="Resource_brass_lung_second_breath"]
 script = ExtResource("2_effect")
 display_name = "Second Breath"
-tags = ["survival", "low_hp"]
+tags = Array[String](["survival", "low_hp"])
 trigger = "HP Below Threshold"
 condition = "Self HP Below Percent"
-target_selector = "Self"
 effect_type = "Increase Max HP"
 amount = 4
 threshold_percent = 45
@@ -18,8 +17,8 @@ once_per_battle = true
 [resource]
 script = ExtResource("1_item")
 display_name = "Brass Lung"
-tags = ["trinket", "survival", "machine"]
+tags = Array[String](["trinket", "survival", "machine"])
 slot = "Trinket"
 max_hp_modifier = 5
 action_interval_modifier = 1
-effects = [SubResource("Resource_brass_lung_second_breath")]
+effects = Array[ExtResource("2_effect")]([SubResource("Resource_brass_lung_second_breath")])

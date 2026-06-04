@@ -1,7 +1,7 @@
-[gd_resource type="Resource" script_class="CampaignDefinition" load_steps=9 format=3]
+[gd_resource type="Resource" script_class="CampaignDefinition" format=3 uid="uid://dpiwxlt0ag6om"]
 
-[ext_resource type="Script" path="res://scripts/data/campaign_definition.gd" id="1_campaign"]
-[ext_resource type="Script" path="res://scripts/data/campaign_scenario_node_definition.gd" id="2_node_script"]
+[ext_resource type="Script" uid="uid://cjtvg56ynelab" path="res://scripts/data/campaign_definition.gd" id="1_campaign"]
+[ext_resource type="Script" uid="uid://da5sg16hv37n1" path="res://scripts/data/campaign_scenario_node_definition.gd" id="2_node_script"]
 [ext_resource type="Resource" path="res://resources/scenarios/roadside_ambush.tres" id="3_roadside"]
 [ext_resource type="Resource" path="res://resources/scenarios/burned_chapel.tres" id="4_chapel"]
 [ext_resource type="Resource" path="res://resources/scenarios/iron_tollgate.tres" id="5_tollgate"]
@@ -9,19 +9,19 @@
 [sub_resource type="Resource" id="CampaignScenarioNodeDefinition_roadside"]
 script = ExtResource("2_node_script")
 scenario = ExtResource("3_roadside")
-unlock_scenario_ids_on_completion = ["burned_chapel"]
-content_unlocks_on_completion = ["roadside_ambush_cleared"]
+unlock_scenario_ids_on_completion = Array[String](["burned_chapel"])
+content_unlocks_on_completion = Array[String](["roadside_ambush_cleared"])
 
 [sub_resource type="Resource" id="CampaignScenarioNodeDefinition_chapel"]
 script = ExtResource("2_node_script")
 scenario = ExtResource("4_chapel")
-unlock_scenario_ids_on_completion = ["iron_tollgate"]
-content_unlocks_on_completion = ["burned_chapel_cleared"]
+unlock_scenario_ids_on_completion = Array[String](["iron_tollgate"])
+content_unlocks_on_completion = Array[String](["burned_chapel_cleared"])
 
 [sub_resource type="Resource" id="CampaignScenarioNodeDefinition_tollgate"]
 script = ExtResource("2_node_script")
 scenario = ExtResource("5_tollgate")
-content_unlocks_on_completion = ["iron_tollgate_cleared"]
+content_unlocks_on_completion = Array[String](["iron_tollgate_cleared"])
 completes_campaign = true
 
 [resource]
@@ -29,7 +29,7 @@ script = ExtResource("1_campaign")
 campaign_id = "first_road"
 display_name = "The First Road"
 description = "A small mercenary company follows a chain of contracts that gradually introduce combat concepts."
-starting_scenario_ids = ["roadside_ambush"]
-scenario_nodes = [SubResource("CampaignScenarioNodeDefinition_roadside"), SubResource("CampaignScenarioNodeDefinition_chapel"), SubResource("CampaignScenarioNodeDefinition_tollgate")]
-starting_roster_ids = ["alden_guard", "mira_scout", "sol_apprentice"]
-starting_unlocks = ["basic_jobs", "basic_gear"]
+starting_scenario_ids = Array[String](["roadside_ambush"])
+scenario_nodes = Array[Resource]([SubResource("CampaignScenarioNodeDefinition_roadside"), SubResource("CampaignScenarioNodeDefinition_chapel"), SubResource("CampaignScenarioNodeDefinition_tollgate")])
+starting_roster_ids = Array[String](["alden_guard", "mira_scout", "sol_apprentice"])
+starting_unlocks = Array[String](["basic_jobs", "basic_gear"])

@@ -1,9 +1,13 @@
 [gd_scene format=3 uid="uid://bwypver014851"]
 
 [ext_resource type="Script" uid="uid://bha8swoxgq5r6" path="res://scripts/ui/combat_test_scene.gd" id="1_combat_ui"]
-[ext_resource type="Script" path="res://scripts/ui/combat_replay_panel.gd" id="2_replay_panel"]
+[ext_resource type="Script" uid="uid://v41dhcmpn4bs" path="res://scripts/ui/combat_replay_panel.gd" id="2_replay_panel"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mods_panel"]
+content_margin_left = 6.0
+content_margin_top = 6.0
+content_margin_right = 6.0
+content_margin_bottom = 6.0
 bg_color = Color(0.0705882, 0.0862745, 0.117647, 1)
 border_width_left = 1
 border_width_top = 1
@@ -14,10 +18,6 @@ corner_radius_top_left = 4
 corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
-content_margin_left = 6.0
-content_margin_top = 6.0
-content_margin_right = 6.0
-content_margin_bottom = 6.0
 
 [node name="CombatTestScene" type="Control" unique_id=1765527660]
 layout_mode = 3
@@ -71,25 +71,6 @@ text = "Run Fight"
 unique_name_in_owner = true
 layout_mode = 2
 text = "Mods"
-
-[node name="ModsListPanel" type="PanelContainer" parent="." unique_id=565656565]
-unique_name_in_owner = true
-visible = false
-layout_mode = 0
-offset_right = 280.0
-offset_bottom = 180.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_mods_panel")
-
-[node name="ModsListScroll" type="ScrollContainer" parent="ModsListPanel" unique_id=575757575]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-
-[node name="ModsListVBox" type="VBoxContainer" parent="ModsListPanel/ModsListScroll" unique_id=585858585]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 4
 
 [node name="LogSplit" type="VSplitContainer" parent="MarginContainer/VBoxContainer" unique_id=260957601]
 unique_name_in_owner = true
@@ -172,6 +153,25 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 6
 alignment = 1
+
+[node name="ModsListPanel" type="PanelContainer" parent="." unique_id=565656565]
+unique_name_in_owner = true
+visible = false
+layout_mode = 0
+offset_right = 280.0
+offset_bottom = 180.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_mods_panel")
+
+[node name="ModsListScroll" type="ScrollContainer" parent="ModsListPanel" unique_id=575757575]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="ModsListVBox" type="VBoxContainer" parent="ModsListPanel/ModsListScroll" unique_id=585858585]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
 
 [node name="ReplayTimer" type="Timer" parent="." unique_id=1205822638]
 unique_name_in_owner = true

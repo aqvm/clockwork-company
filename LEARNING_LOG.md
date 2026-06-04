@@ -2134,3 +2134,41 @@ Manual exercise:
 Open questions:
 
 - Should highlighting remain whole-line, or should a later pass highlight only keywords and values inside each line?
+
+## 2026-06-04 - Replay cache cleanup and architecture wording
+
+Feature worked on:
+
+- Removed the old cached replay-line array from `combat_test_scene.gd`.
+- Renamed the log split helper so it now describes its actual job: collecting static setup/context lines before `Combat log:`.
+- Updated architecture wording so replay timing and visualization are documented as `CombatReplayPanel` responsibilities.
+
+Godot concepts introduced:
+
+- After moving behavior into a child panel, old parent caches should be removed if they no longer feed UI state.
+- A helper name should describe the current data flow, not the older implementation it replaced.
+
+Game architecture concepts introduced:
+
+- The parent workbench now keeps only static setup/context lines from simulator output.
+- Timed replay uses structured combat events, which keeps replay presentation separate from plain setup text.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `ARCHITECTURE.md`
+- `GODOT_BEST_PRACTICES_AUDIT.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why `CombatReplayPanel` does not need the old plain replay-line cache.
+- Why `combat_test_scene.gd` still splits simulator output at `Combat log:` for the setup pane.
+
+Manual exercise:
+
+- Find `_collect_static_log_lines` and explain why it stops collecting after `Combat log:` appears.
+
+Open questions:
+
+- Should the setup/context summary eventually become its own `FightSummaryPanel`, or is it small enough to stay parent-owned for now?

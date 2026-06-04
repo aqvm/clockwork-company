@@ -25,7 +25,7 @@ Primary sources used:
 
 The project is strongest where its learning goals already pushed it: deterministic combat logic, inspectable Resource data, readable docs, and separation between definitions and runtime state.
 
-The main architectural pressure is UI composition. `clockwork-company/scripts/ui/combat_test_scene.gd` is now a 1400+ line scenario workbench, combat replay, party editor, tooltip host, and debug surface. That was acceptable while the UI shape was forming, but it is now the clearest place where Godot best practices point toward smaller scenes/scripts.
+The main architectural pressure is UI composition. `clockwork-company/scripts/ui/combat_test_scene.gd` has been reduced from one large scenario workbench into a coordinator over focused child panels, but it still owns campaign/run coordination, mod toggles, tooltip hosting, and some prototype run controls. That is acceptable for now, with further extraction reserved for responsibilities that become hard to review.
 
 Do not chase every best practice immediately. The next high-value cleanup is to split the UI into focused Control scenes/scripts while preserving the existing combat and Resource data model.
 

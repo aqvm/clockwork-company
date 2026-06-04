@@ -1,11 +1,21 @@
-[gd_resource type="Resource" script_class="ItemDefinition" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="ItemDefinition" format=3 uid="uid://ck44yy0q4ncmq"]
 
-[ext_resource type="Script" path="res://scripts/data/item_definition.gd" id="1_item"]
+[ext_resource type="Script" uid="uid://h21mlqiqe25f" path="res://scripts/data/item_definition.gd" id="1_item"]
+[ext_resource type="Script" uid="uid://bq86vbaajvphi" path="res://scripts/data/effect_definition.gd" id="1_yvlaq"]
+
+[sub_resource type="Resource" id="Resource_0cyl2"]
+script = ExtResource("1_yvlaq")
+trigger = "HP Below Threshold"
+target_selector = "Attack Target"
+effect_type = "Bonus Damage"
+amount = 3
+metadata/_custom_type_script = "uid://bq86vbaajvphi"
 
 [resource]
 script = ExtResource("1_item")
 display_name = "Redcap Hood"
-tags = ["helmet", "swift", "bloodied"]
+tags = Array[String](["helmet", "swift", "bloodied"])
 slot = "Helmet"
 physical_damage_modifier = 1
 action_interval_modifier = -1
+effects = Array[ExtResource("1_yvlaq")]([SubResource("Resource_0cyl2")])

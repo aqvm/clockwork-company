@@ -1,38 +1,31 @@
-[gd_resource type="Resource" script_class="AncestryDefinition" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="AncestryDefinition" format=3 uid="uid://b7jjuc53tgsnh"]
 
-[ext_resource type="Script" path="res://scripts/data/ancestry_definition.gd" id="1_ancestry"]
-[ext_resource type="Script" path="res://scripts/data/ancestry_feature_definition.gd" id="2_feature"]
+[ext_resource type="Script" uid="uid://cd1dshturnux8" path="res://scripts/data/ancestry_definition.gd" id="1_ancestry"]
+[ext_resource type="Script" uid="uid://ejchwjlwm2mx" path="res://scripts/data/ancestry_feature_definition.gd" id="2_feature"]
 
 [sub_resource type="Resource" id="Feature_memory"]
+resource_name = "Stone Memory"
 script = ExtResource("2_feature")
 display_name = "Stone Memory"
-tags = ["guard", "stone"]
-trigger = "Battle Start"
-condition = "Always"
-feature_type = "Gain Armor"
+tags = Array[String](["guard", "stone"])
 amount = 4
-threshold_percent = 50
-cooldown_turns = 0
 notes = "A slow ancestry that starts battles already braced."
 
 [resource]
+resource_name = "Stonekin"
 script = ExtResource("1_ancestry")
 display_name = "Stonekin"
-tags = ["ancestry", "stone", "durable"]
+tags = Array[String](["ancestry", "stone", "durable"])
 min_max_hp = 20
 max_max_hp = 26
 min_physical_damage = 3
 max_physical_damage = 5
-min_magic_damage = 0
 max_magic_damage = 2
 min_armor = 2
 max_armor = 5
 min_action_interval = 11
 max_action_interval = 14
 max_hp_growth = 2
-physical_damage_growth = 0
-magic_damage_growth = 0
 armor_growth = 1
-action_interval_growth = 0
 feature = SubResource("Feature_memory")
 notes = "Baseline tank ancestry; not flashy, but very hard to shove off the line."

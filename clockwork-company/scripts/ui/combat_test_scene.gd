@@ -37,9 +37,7 @@ const DEFAULT_LOG_HIGHLIGHT_PALETTE := preload("res://resources/ui/combat_log_hi
 
 var planning_panel: PanelContainer = null
 var tooltip_presenter = null
-var cached_replay_lines: Array[String] = []
 var cached_static_lines: Array[String] = []
-var cached_fight_static_lines: Array[String] = []
 var cached_structured_events: Array[Dictionary] = []
 var cached_roster_units: Array[Dictionary] = []
 var replay_is_active := false
@@ -126,12 +124,10 @@ func _load_combat_preview() -> void:
 	var static_lines: Array[String] = []
 
 	cached_battle_report = report.duplicate(true)
-	cached_replay_lines.clear()
 	cached_static_lines.clear()
 	cached_structured_events = report.get("events", []).duplicate(true)
 	cached_roster_units = report.get("roster_units", []).duplicate(true)
-	_split_log_lines(log_lines, static_lines, cached_replay_lines)
-	cached_fight_static_lines = static_lines.duplicate()
+	_collect_static_log_lines(log_lines, static_lines)
 	cached_static_lines = _build_run_static_lines(static_lines)
 	_append_lines(combat_summary, cached_static_lines)
 	replay_panel.call("load_preview", cached_roster_units, cached_structured_events)
@@ -142,9 +138,7 @@ func _load_combat_preview() -> void:
 func _show_run_state_without_combat_preview() -> void:
 	_clear_logs()
 	cached_battle_report.clear()
-	cached_replay_lines.clear()
 	cached_static_lines.clear()
-	cached_fight_static_lines.clear()
 	cached_structured_events.clear()
 	cached_roster_units.clear()
 	_clear_replay_log()
@@ -771,16 +765,14 @@ func _save_enabled_mod_pack_ids(enabled_ids: Array[String]) -> void:
 		push_warning("Failed to save mod settings to %s" % MOD_SETTINGS_PATH)
 
 
-func _split_log_lines(log_lines: Array[String], static_lines: Array[String], replay_lines: Array[String]) -> void:
+func _collect_static_log_lines(log_lines: Array[String], static_lines: Array[String]) -> void:
 	var found_combat_log := false
 	for line in log_lines:
 		if line == COMBAT_LOG_HEADER:
 			found_combat_log = true
 			continue
 
-		if found_combat_log:
-			replay_lines.append(line)
-		else:
+		if not found_combat_log:
 			static_lines.append(line)
 
 

@@ -1,54 +1,47 @@
-[gd_resource type="Resource" script_class="JobDefinition" load_steps=6 format=3]
+[gd_resource type="Resource" script_class="JobDefinition" format=3 uid="uid://dc7oxwd1djur3"]
 
-[ext_resource type="Script" path="res://scripts/data/job_definition.gd" id="1_job"]
-[ext_resource type="Script" path="res://scripts/data/skill_definition.gd" id="2_skill"]
-[ext_resource type="Script" path="res://scripts/data/passive_definition.gd" id="3_passive"]
-[ext_resource type="Script" path="res://scripts/data/reaction_definition.gd" id="4_reaction"]
-[ext_resource type="Script" path="res://scripts/data/tactic_definition.gd" id="5_tactic"]
+[ext_resource type="Script" uid="uid://8cikor8oh0rp" path="res://scripts/data/job_definition.gd" id="1_job"]
+[ext_resource type="Script" uid="uid://dt86e2l5m6yo4" path="res://scripts/data/skill_definition.gd" id="2_skill"]
+[ext_resource type="Script" uid="uid://bw4e1gp6l02uv" path="res://scripts/data/passive_definition.gd" id="3_passive"]
+[ext_resource type="Script" uid="uid://c3ugwbjpivem3" path="res://scripts/data/reaction_definition.gd" id="4_reaction"]
+[ext_resource type="Script" uid="uid://cl3b7aebl31vg" path="res://scripts/data/tactic_definition.gd" id="5_tactic"]
 
-[sub_resource type="Resource" id="Resource_cutpurse_skill"]
-script = ExtResource("2_skill")
-display_name = "Pocket Sand"
-tags = ["swift", "attack"]
-action = "Attack"
-default_target = "Frontmost Enemy"
-amount_modifier = 1
+[sub_resource type="Resource" id="Resource_cutpurse_default_tactic"]
+script = ExtResource("5_tactic")
+display_name = "Throw Pocket Sand"
+tags = Array[String](["job_default"])
+condition = "Enemy Alive"
+action = "Job Skill"
 
 [sub_resource type="Resource" id="Resource_cutpurse_passive"]
+resource_name = "Dirty Edge"
 script = ExtResource("3_passive")
 display_name = "Dirty Edge"
-tags = ["blade"]
+tags = Array[String](["blade"])
 passive_type = "Attack Damage Bonus"
 amount = 1
 cooldown_turns = 1
 
 [sub_resource type="Resource" id="Resource_cutpurse_reaction"]
+resource_name = "Vanish Step"
 script = ExtResource("4_reaction")
 display_name = "Vanish Step"
-tags = ["damaged", "reaction"]
-trigger = "Damaged"
-condition = "Always"
-reaction_type = "Gain Armor"
+tags = Array[String](["damaged", "reaction"])
 amount = 2
-threshold_percent = 50
 cooldown_turns = 3
 
-[sub_resource type="Resource" id="Resource_cutpurse_default_tactic"]
-script = ExtResource("5_tactic")
-display_name = "Throw Pocket Sand"
-tags = ["job_default"]
-condition = "Enemy Alive"
-action = "Job Skill"
-target = "Frontmost Enemy"
+[sub_resource type="Resource" id="Resource_cutpurse_skill"]
+resource_name = "Pocket Sand"
+script = ExtResource("2_skill")
+display_name = "Pocket Sand"
+tags = Array[String](["swift", "attack"])
+amount_modifier = 1
 
 [resource]
 script = ExtResource("1_job")
 display_name = "Cutpurse"
-tags = ["job", "swift", "blade"]
-max_hp_growth = 0
+tags = Array[String](["job", "swift", "blade"])
 physical_damage_growth = 1
-magic_damage_growth = 0
-armor_growth = 0
 action_interval_growth = -1
 skill = SubResource("Resource_cutpurse_skill")
 passive = SubResource("Resource_cutpurse_passive")

@@ -136,7 +136,7 @@ This is intentionally crude and replaceable. There is no magic resistance stat y
 The first playable test now opens as a scenario workbench with the older combat replay harness below it. The planning area is now split into small child UI scenes so the main scene can coordinate state without owning every rendering detail:
 
 - `clockwork-company/scenes/combat_test_scene.tscn` owns the visible test scene.
-- `clockwork-company/scripts/ui/combat_test_scene.gd` owns campaign/run coordination, selected scenario/unit state, simple planning equipment cycling, run/fight/reward buttons, static combat setup display after a fight starts, tooltip hosting, and live replay timing for generated combat event lines.
+- `clockwork-company/scripts/ui/combat_test_scene.gd` owns campaign/run coordination, selected scenario/unit state, simple planning equipment cycling, run/fight/reward buttons, static combat setup display after a fight starts, and tooltip hosting.
 - `clockwork-company/scenes/scenario_list_panel.tscn` and `scripts/ui/scenario_list_panel.gd` own scenario list button rendering and emit `scenario_selected`.
 - `clockwork-company/scenes/scenario_detail_panel.tscn` and `scripts/ui/scenario_detail_panel.gd` own read-only selected scenario detail rendering.
 - `clockwork-company/scenes/party_panel.tscn` and `scripts/ui/party_panel.gd` own party summary button rendering and emit `unit_selected`.
@@ -281,12 +281,12 @@ Combat log responsibility split:
 - `CombatLog` owns the entry list, assigns IDs, attaches children to parents, renders `Array[String]`, and can emit structured JSON-like event dictionaries.
 - `CombatLog.add_event(...)` validates event type and required payload keys against `combat_event_schema.gd` before accepting an event.
 - `CombatSimulator` decides what happened and whether a line is a parent event or a child explanation.
-- `combat_test_scene.gd` still renders plain lines for readable logs, but replay visualization now consumes structured event metadata instead of parsing combat prose.
+- `combat_test_scene.gd` extracts setup/context lines for the static summary pane, while `CombatReplayPanel` owns timed combat-event presentation.
 - Replay identity now prefers stable `unit_id` references from event payloads and only falls back to display names when needed.
-- The combat test UI splits those plain lines at `Combat log:`. Setup, roster, loadout, gear, and tactic information appears immediately in a static `RichTextLabel`; timestamped combat events appear in a separate replay `RichTextLabel`.
+- The combat test UI splits simulator lines at `Combat log:`. Setup, roster, loadout, gear, and tactic information appears immediately in a static `RichTextLabel`; timestamped combat events are driven in the replay pane from structured event metadata.
 - Scenario selection shows authored scenario and party data without running combat. The static setup pane is populated after a fight report is generated for the active encounter.
 - Resource tooltips are custom UI, not Godot native `tooltip_text`, so the project can later grow CK3-style locked/nested tooltips from one presenter path.
-- The replay does not start when the scene opens. The UI waits for the run button, then clears and starts the timed replay pane from the cached combat-event lines.
+- The replay does not start when the scene opens. The UI waits for the run button, then clears and starts `CombatReplayPanel` from the cached structured combat events.
 - The replay shows one timestamped parent combat event per second. Child explanation lines without their own timestamp appear with the most recent parent event.
 - The combat test scene sizes the game window to roughly three quarters of the current monitor's usable area and stacks setup above replay in a vertical split. The setup pane is resized after each run to use the smaller of its content height or half the available log area.
 - The replay and setup panes now apply UI-layer keyword highlighting to plain simulator lines by wrapping BBCode-safe text in color tags by category (timestamp, attacks, damage, healing, guard, tactics, job effects, item triggers, defeats, and result).
