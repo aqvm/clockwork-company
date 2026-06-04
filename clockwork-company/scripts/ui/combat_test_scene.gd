@@ -211,7 +211,7 @@ func _setup_planning_panel() -> void:
 	planning_panel.connect("start_scenario_requested", _on_start_selected_scenario_pressed)
 	planning_panel.connect("practice_scenario_requested", _on_practice_selected_scenario_pressed)
 	planning_panel.connect("unit_selected", _on_party_unit_pressed)
-	planning_panel.connect("cycle_equipment_requested", _on_cycle_equipment_pressed)
+	planning_panel.connect("planning_item_requested", _on_planning_item_requested)
 	planning_panel.connect("equip_option_requested", _on_planning_equip_pressed)
 	_connect_panel_tooltips(planning_panel)
 	parent_vbox.add_child(planning_panel)
@@ -444,6 +444,7 @@ func _render_unit_actions() -> void:
 	var selected_unit := _find_planning_unit(selected_unit_name)
 	var is_equipment_state: bool = run_state != null and run_state.status == RunStateScript.STATUS_EQUIPMENT
 	var equip_options: Array = run_state.equip_options() if is_equipment_state else []
+	var planning_item_options := _planning_item_options(selected_unit)
 	planning_panel.call(
 		"show_actions",
 		selected_scenario,
@@ -455,6 +456,7 @@ func _render_unit_actions() -> void:
 		_has_active_scenario_run(),
 		replay_is_active,
 		is_equipment_state,
+		planning_item_options,
 		equip_options
 	)
 
@@ -554,29 +556,33 @@ func _on_tooltip_exited() -> void:
 		tooltip_presenter.hide_tooltip()
 
 
-func _on_cycle_equipment_pressed(slot: String) -> void:
-	var unit := _find_planning_unit(selected_unit_name)
+func _planning_item_options(unit: UnitDefinition) -> Array:
+	var options := []
 	if unit == null:
-		return
-	_equip_next_planning_item(unit, slot)
-	_refresh_planning_panel()
-
-
-func _equip_next_planning_item(unit: UnitDefinition, slot: String) -> void:
+		return options
 	var loadout = _ensure_planning_loadout(unit)
-	var candidates: Array[ItemDefinition] = []
 	for item: ItemDefinition in available_items:
-		if item.slot == slot and _item_allowed_for_planning_unit(unit, item):
-			candidates.append(item)
-	if candidates.is_empty():
+		if not _item_allowed_for_planning_unit(unit, item):
+			continue
+		var current_item = _current_slot_item(loadout, item.slot)
+		options.append({
+			"slot": item.slot,
+			"item": item,
+			"label": "%s%s" % [item.display_name, " [Equipped]" if item == current_item else ""],
+			"equipped": item == current_item,
+		})
+	return options
+
+
+func _on_planning_item_requested(slot: String, item: ItemDefinition) -> void:
+	var unit := _find_planning_unit(selected_unit_name)
+	if unit == null or item == null:
 		return
-	var current_item = _current_slot_item(loadout, slot)
-	var next_index := 0
-	for index in candidates.size():
-		if candidates[index] == current_item:
-			next_index = (index + 1) % candidates.size()
-			break
-	_set_slot_item(loadout, slot, candidates[next_index])
+	if item.slot != slot or not _item_allowed_for_planning_unit(unit, item):
+		return
+	var loadout = _ensure_planning_loadout(unit)
+	_set_slot_item(loadout, slot, item)
+	_refresh_planning_panel()
 
 
 func _ensure_planning_loadout(unit: UnitDefinition):

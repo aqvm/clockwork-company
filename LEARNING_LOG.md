@@ -13,6 +13,50 @@ Each entry should include:
 - Manual exercise
 - Open questions
 
+## 2026-06-04 - Planning equipment browser
+
+Feature worked on:
+
+- Replaced selected-unit planning equipment cycle buttons with explicit item dropdowns grouped by slot.
+- Added `planning_item_requested(slot, item)` as the unit action panel signal for explicit pre-scenario equipment choices.
+- Kept between-fight run equipment options separate from pre-scenario planning equipment.
+
+Godot concepts introduced:
+
+- A dynamically built panel can still present grouped choices by creating labels and option buttons from option dictionaries.
+- Child panels can forward Resource tooltip requests so new dynamic controls still use the shared tooltip presenter.
+- Signals can carry Resource references when the parent remains responsible for mutating state.
+
+Game architecture concepts introduced:
+
+- A small equipment browser can improve readability without becoming a full inventory model.
+- Planning equipment changes mutate the selected planning-party Resource copy; active run reward/equipment choices still flow through `RunState`.
+- Equipment validity remains job-owned through the existing forbid checks.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/unit_action_panel.gd`
+- `clockwork-company/scripts/ui/planning_workbench_panel.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why explicit item dropdowns are easier to reason about than cycling through hidden candidates.
+- Why `UnitActionPanel` emits the chosen `ItemDefinition` instead of editing the unit directly.
+- Why this is not the same thing as persistent inventory save/load.
+
+Manual exercise:
+
+- Select a unit before starting a scenario, choose a different weapon from the Planning Equipment dropdown, and predict which computed stat or gear line should change.
+
+Open questions:
+
+- Should the browser later filter by unlocked content IDs, or wait until content unlocks have a documented consuming system?
+
 ## 2026-06-04 - Run flow control panel extraction
 
 Feature worked on:
@@ -1911,7 +1955,7 @@ Add a fourth scenario Resource and make `Iron Tollgate` unlock it instead of com
 What changed:
 
 - The scene now opens on authored scenario and party planning data instead of pre-running a combat report.
-- Added a planning panel with scenario buttons, selected scenario details, party summaries, selected-unit details, and simple equipment cycling before a scenario starts.
+- Added a planning panel with scenario buttons, selected scenario details, party summaries, selected-unit details, and simple equipment editing before a scenario starts.
 - `RunState` can start a scenario from the edited planning party.
 - Removed legacy top-level item effect fields: `trigger`, `effect`, and `effect_amount`.
 - JSON modding examples now use `effects[]` for item effects.
@@ -1931,11 +1975,11 @@ What I should now be able to explain:
 
 Manual exercise:
 
-- Select `Roadside Ambush`, pick Mira, cycle her weapon once, then start the scenario. Before pressing `Run Fight`, predict which gear line should differ in the static fight setup.
+- Select `Roadside Ambush`, pick Mira, choose a different weapon, then start the scenario. Before pressing `Run Fight`, predict which gear line should differ in the static fight setup.
 
 Tradeoffs and risks:
 
-- Equipment editing is intentionally a simple cycle-button prototype, not a full inventory browser yet.
+- Equipment editing is still a compact planning prototype, not a persistent inventory system yet.
 - The old Phase 7 run path remains available as a debug fallback, so future UI work should avoid letting it dominate the main scenario flow again.
 
 ## 2026-06-03 - Scenario list and replay cleanup follow-up
@@ -2040,7 +2084,7 @@ Files touched:
 What I should now be able to explain:
 
 - Which panel owns scenario list rendering versus selected scenario detail rendering.
-- Why `combat_test_scene.gd` still owns starting scenarios and cycling equipment.
+- Why `combat_test_scene.gd` still owns starting scenarios and planning equipment changes.
 - How a child signal reaches the parent without the child knowing about `CampaignManager` or `RunState`.
 
 Manual exercise:
@@ -2057,7 +2101,7 @@ Open questions:
 Feature worked on:
 
 - Extracted the selected-unit action area from `combat_test_scene.gd` into `UnitActionPanel`.
-- The panel now renders start-scenario, planning equipment cycle, and between-fight equipment option buttons.
+- The panel now renders start-scenario, pre-scenario planning equipment, and between-fight equipment option buttons.
 - The parent scene still owns the actual state changes: starting scenarios, mutating planning loadouts, and applying run equipment.
 
 Godot concepts introduced:
@@ -2083,13 +2127,13 @@ Files touched:
 
 What I should now be able to explain:
 
-- Why `UnitActionPanel` emits `cycle_equipment_requested` instead of changing a loadout directly.
-- Why `combat_test_scene.gd` still owns `_on_cycle_equipment_pressed` and `_on_planning_equip_pressed`.
+- Why `UnitActionPanel` emits an equipment request signal instead of changing a loadout directly.
+- Why `combat_test_scene.gd` still owns planning equipment mutation and `_on_planning_equip_pressed`.
 - How the panel knows which buttons to show without knowing what `RunState` is.
 
 Manual exercise:
 
-- Select a unit before starting a scenario, press `Cycle Weapon`, and trace the signal from `UnitActionPanel` to the parent callback that changes the planning loadout.
+- Select a unit before starting a scenario, choose a weapon from the Planning Equipment list, and trace the signal from `UnitActionPanel` to the parent callback that changes the planning loadout.
 
 Open questions:
 
@@ -2330,7 +2374,7 @@ What I should now be able to explain:
 
 Manual exercise:
 
-- Select a unit, cycle one equipment slot, and predict which computed stat should change before pressing `Start Selected Scenario`.
+- Select a unit, choose one Planning Equipment item, and predict which computed stat should change before pressing `Start Selected Scenario`.
 
 Open questions:
 

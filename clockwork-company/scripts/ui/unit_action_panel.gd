@@ -3,8 +3,10 @@ class_name UnitActionPanel
 
 signal start_scenario_requested
 signal practice_scenario_requested
-signal cycle_equipment_requested(slot: String)
+signal planning_item_requested(slot: String, item: ItemDefinition)
 signal equip_option_requested(option_index: int)
+signal resource_tooltip_requested(source: Control, resource: Resource)
+signal tooltip_cleared
 
 
 func show_actions(
@@ -17,6 +19,7 @@ func show_actions(
 	has_active_campaign_scenario: bool,
 	is_replay_active: bool,
 	is_equipment_state: bool,
+	planning_item_options: Array,
 	equip_options: Array
 ) -> void:
 	_clear_children()
@@ -31,7 +34,7 @@ func show_actions(
 	add_child(unit_label)
 
 	if not is_equipment_state:
-		_show_planning_or_locked_actions(has_active_campaign_scenario)
+		_show_planning_or_locked_actions(has_active_campaign_scenario, planning_item_options)
 		return
 
 	_show_equipment_options(selected_unit_name, equip_options)
@@ -78,18 +81,69 @@ func _start_button_text(selected_scenario: Resource, selected_scenario_status: S
 	return "Start %s" % selected_scenario.display_name
 
 
-func _show_planning_or_locked_actions(has_active_campaign_scenario: bool) -> void:
-	if not has_active_campaign_scenario:
-		for slot in ["Weapon", "Armor", "Helmet", "Trinket"]:
-			var button := Button.new()
-			button.text = "Cycle %s" % slot
-			button.pressed.connect(_on_cycle_button_pressed.bind(slot))
-			add_child(button)
-	else:
+func _show_planning_or_locked_actions(has_active_campaign_scenario: bool, planning_item_options: Array) -> void:
+	if has_active_campaign_scenario:
 		var hint := Label.new()
 		hint.text = "Equipment changes unlock between fights."
 		hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		add_child(hint)
+		return
+
+	_show_planning_equipment_browser(planning_item_options)
+
+
+func _show_planning_equipment_browser(planning_item_options: Array) -> void:
+	var browser_label := Label.new()
+	browser_label.text = "Planning Equipment"
+	add_child(browser_label)
+
+	var shown_any := false
+	for slot in ["Weapon", "Armor", "Helmet", "Trinket"]:
+		var slot_options := _options_for_slot(planning_item_options, slot)
+		if slot_options.is_empty():
+			continue
+		shown_any = true
+		_add_planning_slot_selector(slot, slot_options)
+
+	if not shown_any:
+		var no_options := Label.new()
+		no_options.text = "No valid planning equipment for this unit."
+		no_options.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		add_child(no_options)
+
+
+func _options_for_slot(options: Array, slot: String) -> Array:
+	var out := []
+	for option in options:
+		if String(option.get("slot", "")) == slot:
+			out.append(option)
+	return out
+
+
+func _add_planning_slot_selector(slot: String, slot_options: Array) -> void:
+	var row := HBoxContainer.new()
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	add_child(row)
+
+	var slot_label := Label.new()
+	slot_label.text = "%s:" % slot
+	slot_label.custom_minimum_size = Vector2(54, 0)
+	row.add_child(slot_label)
+
+	var selector := OptionButton.new()
+	selector.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(selector)
+
+	var selected_index := 0
+	for index in slot_options.size():
+		var option: Dictionary = slot_options[index]
+		selector.add_item(String(option["label"]))
+		if bool(option.get("equipped", false)):
+			selected_index = index
+	selector.select(selected_index)
+	var selected_item: ItemDefinition = slot_options[selected_index]["item"]
+	_bind_resource_tooltip(selector, selected_item)
+	selector.item_selected.connect(_on_planning_item_option_selected.bind(slot, slot_options))
 
 
 func _show_equipment_options(selected_unit_name: String, equip_options: Array) -> void:
@@ -119,8 +173,11 @@ func _on_practice_button_pressed() -> void:
 	practice_scenario_requested.emit()
 
 
-func _on_cycle_button_pressed(slot: String) -> void:
-	cycle_equipment_requested.emit(slot)
+func _on_planning_item_option_selected(selected_index: int, slot: String, slot_options: Array) -> void:
+	if selected_index < 0 or selected_index >= slot_options.size():
+		return
+	var item: ItemDefinition = slot_options[selected_index]["item"]
+	planning_item_requested.emit(slot, item)
 
 
 func _on_equip_button_pressed(option_index: int) -> void:
@@ -130,3 +187,8 @@ func _on_equip_button_pressed(option_index: int) -> void:
 func _clear_children() -> void:
 	for child in get_children():
 		child.queue_free()
+
+
+func _bind_resource_tooltip(control: Control, resource: Resource) -> void:
+	control.mouse_entered.connect(func(): resource_tooltip_requested.emit(control, resource))
+	control.mouse_exited.connect(func(): tooltip_cleared.emit())

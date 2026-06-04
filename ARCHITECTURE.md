@@ -142,7 +142,7 @@ This is intentionally crude and replaceable. There is no magic resistance stat y
 The first playable test now opens as a scenario workbench with the older combat replay harness below it. The planning area is now split into small child UI scenes so the main scene can coordinate state without owning every rendering detail:
 
 - `clockwork-company/scenes/combat_test_scene.tscn` owns the visible test scene.
-- `clockwork-company/scripts/ui/combat_test_scene.gd` owns campaign/run coordination, selected scenario/unit state, simple planning equipment cycling, static combat setup display after a fight starts, and tooltip hosting.
+- `clockwork-company/scripts/ui/combat_test_scene.gd` owns campaign/run coordination, selected scenario/unit state, selected-unit planning equipment changes, static combat setup display after a fight starts, and tooltip hosting.
 - `clockwork-company/scripts/ui/run_flow_controls_panel.gd` is attached to the top control row in `combat_test_scene.tscn`; it owns run button, mod button, palette/save/load/debug buttons, reward buttons, continue button, and top-row equipment option button presentation, then emits request signals back to the main scene.
 - The former `Combat Conditions` pane is now used as a visible `Fight Preview` area for campaign/run status and static setup text.
 - `clockwork-company/scenes/planning_workbench_panel.tscn` and `scripts/ui/planning_workbench_panel.gd` own the stable planning-row layout and forward child-panel signals/tooltips to the main scene.
@@ -340,7 +340,7 @@ Manual test:
 - Press Play.
 - Select an available scenario in the top-left scenario list.
 - Inspect the scenario details and party/unit details.
-- Use the selected unit's cycle buttons to try alternate equipment before the scenario starts.
+- Use the selected unit's planning equipment browser to choose alternate equipment before the scenario starts.
 - Click `Start Selected Scenario`, then click `Run Fight`.
 - Confirm the text log shows loadouts, current jobs, job skills/passives/reactions, equipped or skipped gear, loadout tactics, battle-start item effects, final roster stats, action times, selected tactics, damage, healing or guarding, defeats, and final result.
 - Confirm Sol Apprentice uses the `Apprentice Focus` loadout and that Glass Focus still triggers on attack.

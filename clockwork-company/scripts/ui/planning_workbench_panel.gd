@@ -5,7 +5,7 @@ signal scenario_selected(scenario: Resource)
 signal start_scenario_requested
 signal practice_scenario_requested
 signal unit_selected(unit_name: String)
-signal cycle_equipment_requested(slot: String)
+signal planning_item_requested(slot: String, item: ItemDefinition)
 signal equip_option_requested(index: int)
 signal resource_tooltip_requested(source: Control, resource: Resource)
 signal glossary_tooltip_requested(source: Control, term: String)
@@ -27,8 +27,9 @@ func _ready() -> void:
 	_forward_tooltip_signals(unit_detail_panel)
 	unit_action_panel.connect("start_scenario_requested", func(): start_scenario_requested.emit())
 	unit_action_panel.connect("practice_scenario_requested", func(): practice_scenario_requested.emit())
-	unit_action_panel.connect("cycle_equipment_requested", func(slot): cycle_equipment_requested.emit(slot))
+	unit_action_panel.connect("planning_item_requested", func(slot, item): planning_item_requested.emit(slot, item))
 	unit_action_panel.connect("equip_option_requested", func(index): equip_option_requested.emit(index))
+	_forward_tooltip_signals(unit_action_panel)
 
 
 func show_scenarios(scenarios: Array, progress, selected_scenario: Resource, active_scenario_id: String) -> void:
@@ -57,6 +58,7 @@ func show_actions(
 	has_active_campaign_scenario: bool,
 	is_replay_active: bool,
 	is_equipment_state: bool,
+	planning_item_options: Array,
 	equip_options: Array
 ) -> void:
 	unit_action_panel.call(
@@ -70,6 +72,7 @@ func show_actions(
 		has_active_campaign_scenario,
 		is_replay_active,
 		is_equipment_state,
+		planning_item_options,
 		equip_options
 	)
 
