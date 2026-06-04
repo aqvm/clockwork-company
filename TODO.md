@@ -33,7 +33,6 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
   - active roster state
 - Add persistent roster/job/gear integration across scenarios.
 - Decide how roster/job/gear state moves from one scenario to the next.
-- Decide how branching scenario trees should be represented once linear campaigns are not enough.
 - Add optional mastery goals later, if they help create rotation pressure without punishment systems.
 
 ## Combat and Rules

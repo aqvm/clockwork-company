@@ -2800,3 +2800,38 @@ Manual exercise:
 Open questions:
 
 - What future item design would make offhand/handedness worth implementing?
+
+## 2026-06-04 - Branching campaign representation decision
+
+Feature worked on:
+
+- Recorded that branching campaigns should continue using campaign node unlock id arrays for now.
+- Removed the resolved branching-scenario TODO.
+
+Godot concepts introduced:
+
+- No new Godot concepts; this was a scenario/campaign design note.
+
+Game architecture concepts introduced:
+
+- A campaign node can already unlock multiple scenario ids, so the current Resource shape can represent the first simple branch.
+- A separate graph format should wait until authoring with unlock arrays becomes genuinely awkward.
+
+Files touched:
+
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- How the current campaign node Resource can make a branch.
+- Why the project is delaying a more complex campaign graph.
+
+Manual exercise:
+
+- Open `first_road_campaign.tres` and identify which array you would edit if `Burned Chapel` should unlock two follow-up scenarios.
+
+Open questions:
+
+- What UI would be needed before a multi-branch campaign feels readable instead of merely valid data?

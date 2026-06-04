@@ -227,6 +227,8 @@ Short handcrafted scenarios are the primary content unit. A scenario is a fixed 
 
 Campaigns are chains or trees of scenarios, not a base-management game. The first campaign layer tracks only available scenarios, active/completed scenarios, unlocked content ids, and campaign completion. The first sample campaign now has four linked scenarios so linear chaining past the initial three-node slice stays visible.
 
+Branching campaigns should keep using `CampaignScenarioNodeDefinition.unlock_scenario_ids_on_completion` until that becomes hard to author. A node can already unlock more than one scenario id, so the next branch does not need a separate graph format yet.
+
 Scenario rules should be data-first. A rule such as `ash_chapel_healing_pressure` may exist as a readable Resource before the combat simulator knows how to enforce it.
 
 Campaign persistence should stay light at first: completed scenarios, unlocked content, and eventually roster/job/gear state. Do not add injury, rest, fatigue, base-building, calendars, or management-sim systems without an explicit design pass.
