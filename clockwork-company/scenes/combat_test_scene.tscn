@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://bwypver014851"]
 
 [ext_resource type="Script" uid="uid://bha8swoxgq5r6" path="res://scripts/ui/combat_test_scene.gd" id="1_combat_ui"]
+[ext_resource type="Script" path="res://scripts/ui/combat_replay_panel.gd" id="2_replay_panel"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mods_panel"]
 bg_color = Color(0.0705882, 0.0862745, 0.117647, 1)
@@ -113,9 +114,11 @@ size_flags_vertical = 3
 bbcode_enabled = true
 
 [node name="ReplayColumn" type="VBoxContainer" parent="MarginContainer/VBoxContainer/LogSplit" unique_id=320607774]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 4
+script = ExtResource("2_replay_panel")
 
 [node name="PaneDivider" type="HSeparator" parent="MarginContainer/VBoxContainer/LogSplit/ReplayColumn" unique_id=1465120435]
 layout_mode = 2

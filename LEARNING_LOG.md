@@ -2008,3 +2008,90 @@ Open questions:
 
 - Should the next extraction be the unit action/equipment controls or the combat replay panel?
 - Should repeated tooltip signal wiring eventually move into a tiny helper, or is the current duplication clearer for learning?
+
+## 2026-06-04 - Unit action panel extraction
+
+Feature worked on:
+
+- Extracted the selected-unit action area from `combat_test_scene.gd` into `UnitActionPanel`.
+- The panel now renders start-scenario, planning equipment cycle, and between-fight equipment option buttons.
+- The parent scene still owns the actual state changes: starting scenarios, mutating planning loadouts, and applying run equipment.
+
+Godot concepts introduced:
+
+- A child `Control` can emit request signals for actions it should not perform itself.
+- The parent can keep authority over game state while a child scene owns button layout.
+- Passing booleans and option dictionaries into a panel is a simple bridge before a fuller view model exists.
+
+Game architecture concepts introduced:
+
+- Rendering a button and executing the game command behind that button are separate responsibilities.
+- Equipment changes still flow through `RunState` or planning-party Resource copies; the UI panel is not inventory authority.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `clockwork-company/scripts/ui/unit_action_panel.gd`
+- `clockwork-company/scenes/unit_action_panel.tscn`
+- `ARCHITECTURE.md`
+- `TODO.md`
+- `GODOT_BEST_PRACTICES_AUDIT.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why `UnitActionPanel` emits `cycle_equipment_requested` instead of changing a loadout directly.
+- Why `combat_test_scene.gd` still owns `_on_cycle_equipment_pressed` and `_on_planning_equip_pressed`.
+- How the panel knows which buttons to show without knowing what `RunState` is.
+
+Manual exercise:
+
+- Select a unit before starting a scenario, press `Cycle Weapon`, and trace the signal from `UnitActionPanel` to the parent callback that changes the planning loadout.
+
+Open questions:
+
+- Should combat replay be extracted as one panel next, or should replay text and replay visualization become separate child panels?
+
+## 2026-06-04 - Combat replay panel extraction
+
+Feature worked on:
+
+- Extracted combat replay behavior from `combat_test_scene.gd` into `CombatReplayPanel`.
+- The replay panel now owns timed replay playback, combat replay text autoscroll, structured event grouping, visual unit dot state, and runtime unit tooltip requests.
+- The parent scene still owns combat report generation, run completion, campaign scenario completion, and summary/status panel refreshes.
+
+Godot concepts introduced:
+
+- A script can be attached to an existing scene node to give an already-authored UI subtree focused behavior.
+- A child panel can own a `Timer` connection and emit `replay_finished` when its presentation work is complete.
+- Signals can keep presentation completion separate from game-state advancement.
+
+Game architecture concepts introduced:
+
+- Combat simulation still finishes before replay starts; replay is presentation, not combat authority.
+- Structured combat events are now consumed by a replay panel instead of being managed by the scenario workbench parent.
+- Runtime unit snapshots shown in tooltips are presentation state derived from simulator reports, not mutable combat rules.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/combat_replay_panel.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `clockwork-company/scenes/combat_test_scene.tscn`
+- `ARCHITECTURE.md`
+- `TODO.md`
+- `GODOT_BEST_PRACTICES_AUDIT.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why `CombatReplayPanel` emits `replay_finished` instead of calling `RunState.complete_fight(...)`.
+- Why replay can update unit dots from structured event payloads without changing combat rules.
+- Why the existing replay UI subtree stayed in `combat_test_scene.tscn` while behavior moved into a focused script.
+
+Manual exercise:
+
+- Start a fight and watch for the moment replay ends. Then find `_on_replay_finished` in `combat_test_scene.gd` and explain why campaign completion happens there rather than inside `CombatReplayPanel`.
+
+Open questions:
+
+- Should future replay work split text replay and unit-dot visualization into separate child panels, or is one replay panel still the clearest ownership boundary?

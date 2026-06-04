@@ -2,7 +2,6 @@ extends Control
 
 const CombatSimulatorScript := preload("res://scripts/combat/combat_simulator.gd")
 const CombatLogHighlightPaletteScript := preload("res://scripts/ui/combat_log_highlight_palette.gd")
-const UnitStatusDotScript := preload("res://scripts/ui/unit_status_dot.gd")
 const JsonContentLoaderScript := preload("res://scripts/modding/json_content_loader.gd")
 const RunStateScript := preload("res://scripts/run/run_state.gd")
 const CampaignManagerScript := preload("res://scripts/campaign/campaign_manager.gd")
@@ -12,6 +11,7 @@ const ScenarioListPanelScene := preload("res://scenes/scenario_list_panel.tscn")
 const ScenarioDetailPanelScene := preload("res://scenes/scenario_detail_panel.tscn")
 const PartyPanelScene := preload("res://scenes/party_panel.tscn")
 const UnitDetailPanelScene := preload("res://scenes/unit_detail_panel.tscn")
+const UnitActionPanelScene := preload("res://scenes/unit_action_panel.tscn")
 const COMBAT_LOG_HEADER := "Combat log:"
 const RUN_BUTTON_REPLAYING_TEXT := "Replaying..."
 const MODS_BUTTON_BASE_TEXT := "Mods"
@@ -19,8 +19,6 @@ const MOD_SETTINGS_PATH := "user://mod_settings.cfg"
 const MOD_SETTINGS_SECTION := "mods"
 const MOD_SETTINGS_KEY_ENABLED_IDS := "enabled_pack_ids"
 const MIN_CONDITIONS_HEIGHT := 120
-const SECONDS_PER_SIM_SECOND := 0.2
-const MIN_SECONDS_BETWEEN_REPLAY_ACTIONS := 0.1
 const MAX_EQUIPMENT_BUTTONS := 12
 const FIRST_ROAD_CAMPAIGN := preload("res://resources/campaigns/first_road_campaign.tres")
 const DEFAULT_LOG_HIGHLIGHT_PALETTE := preload("res://resources/ui/combat_log_highlight_palette_default.tres")
@@ -32,34 +30,18 @@ const DEFAULT_LOG_HIGHLIGHT_PALETTE := preload("res://resources/ui/combat_log_hi
 @onready var log_split: VSplitContainer = %LogSplit
 @onready var conditions_label: Label = %ConditionsLabel
 @onready var combat_summary: RichTextLabel = %CombatSummary
-@onready var combat_log: RichTextLabel = %CombatLog
-@onready var allies_row: HBoxContainer = %AlliesRow
-@onready var enemies_row: HBoxContainer = %EnemiesRow
+@onready var replay_panel: Control = %ReplayColumn
 @onready var replay_timer: Timer = %ReplayTimer
 @export var log_highlight_palette: CombatLogHighlightPaletteScript = DEFAULT_LOG_HIGHLIGHT_PALETTE
 
 var planning_panel: PanelContainer = null
-var unit_action_vbox: VBoxContainer = null
-var start_scenario_button: Button = null
 var tooltip_presenter = null
 var cached_replay_lines: Array[String] = []
 var cached_static_lines: Array[String] = []
 var cached_fight_static_lines: Array[String] = []
-var combat_replay_events: Array[Dictionary] = []
 var cached_structured_events: Array[Dictionary] = []
 var cached_roster_units: Array[Dictionary] = []
-var replay_units_by_name := {}
-var replay_units_by_id := {}
-var replay_unit_widgets_by_name := {}
-var replay_event_index := 0
-var autoscroll_enabled := true
-var is_programmatic_scroll := false
 var replay_is_active := false
-var displayed_sim_time := 0.0
-var current_event_time := 0.0
-var next_event_time := 0.0
-var event_transition_elapsed := 0.0
-var active_event_actor_name := ""
 var available_mod_packs: Array[Dictionary] = []
 var enabled_mod_pack_ids := {}
 var run_state = null
@@ -79,14 +61,16 @@ var scenario_list_panel: Control = null
 var scenario_detail_panel: Control = null
 var party_panel: Control = null
 var unit_detail_panel: Control = null
+var unit_action_panel: Control = null
 
 
 func _ready() -> void:
 	run_button.pressed.connect(_on_run_button_pressed)
 	mods_menu_button.pressed.connect(_on_mods_button_pressed)
-	replay_timer.timeout.connect(_on_replay_timer_timeout)
-	replay_timer.one_shot = true
-	combat_log.get_v_scroll_bar().value_changed.connect(_on_combat_log_scroll_value_changed)
+	replay_panel.call("setup", replay_timer, log_highlight_palette)
+	replay_panel.connect("replay_finished", _on_replay_finished)
+	replay_panel.connect("runtime_tooltip_requested", _on_panel_runtime_tooltip_requested)
+	replay_panel.connect("tooltip_cleared", _on_tooltip_exited)
 	get_viewport().size_changed.connect(_on_viewport_size_changed)
 	_setup_mod_menu()
 	_setup_run_controls()
@@ -97,14 +81,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	if not replay_is_active:
-		return
-
-	event_transition_elapsed = min(replay_timer.wait_time, event_transition_elapsed + delta)
-	if replay_timer.wait_time > 0.0:
-		var lerp_weight: float = clamp(event_transition_elapsed / replay_timer.wait_time, 0.0, 1.0)
-		displayed_sim_time = lerp(current_event_time, next_event_time, lerp_weight)
-		_update_visual_replay_widgets()
+	replay_panel.call("tick", delta)
 
 
 func _on_run_button_pressed() -> void:
@@ -121,34 +98,10 @@ func _on_run_button_pressed() -> void:
 	_load_combat_preview()
 	_clear_replay_log()
 
-	_build_visual_replay_model()
-	_prepare_replay_events(cached_replay_lines)
-	_build_visual_replay_widgets()
-
 	run_button.disabled = true
 	run_button.text = RUN_BUTTON_REPLAYING_TEXT
 	replay_is_active = true
-	autoscroll_enabled = true
-	replay_event_index = 0
-	displayed_sim_time = 0.0
-	current_event_time = 0.0
-	next_event_time = 0.0
-	event_transition_elapsed = 0.0
-	active_event_actor_name = ""
-
-	_append_log_line(COMBAT_LOG_HEADER)
-	_show_next_replay_event()
-
-
-func _on_replay_timer_timeout() -> void:
-	_show_next_replay_event()
-
-
-func _on_combat_log_scroll_value_changed(_value: float) -> void:
-	if not replay_is_active or is_programmatic_scroll:
-		return
-
-	autoscroll_enabled = false
+	replay_panel.call("start_replay", cached_roster_units, cached_structured_events)
 
 
 func _on_viewport_size_changed() -> void:
@@ -180,12 +133,8 @@ func _load_combat_preview() -> void:
 	cached_fight_static_lines = static_lines.duplicate()
 	cached_static_lines = _build_run_static_lines(static_lines)
 	_append_lines(combat_summary, cached_static_lines)
-	_build_visual_replay_model()
-	_build_visual_replay_widgets()
-	displayed_sim_time = 0.0
-	active_event_actor_name = ""
+	replay_panel.call("load_preview", cached_roster_units, cached_structured_events)
 	_update_run_controls()
-	_update_visual_replay_widgets()
 	call_deferred("_resize_conditions_pane")
 
 
@@ -290,15 +239,11 @@ func _setup_planning_panel() -> void:
 	_connect_panel_tooltips(unit_detail_panel)
 	planning_row.add_child(unit_detail_panel)
 
-	unit_action_vbox = VBoxContainer.new()
-	unit_action_vbox.custom_minimum_size = Vector2(220, 0)
-	unit_action_vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	planning_row.add_child(unit_action_vbox)
-
-	start_scenario_button = Button.new()
-	start_scenario_button.text = "Start Selected Scenario"
-	start_scenario_button.pressed.connect(_on_start_selected_scenario_pressed)
-	unit_action_vbox.add_child(start_scenario_button)
+	unit_action_panel = UnitActionPanelScene.instantiate()
+	unit_action_panel.connect("start_scenario_requested", _on_start_selected_scenario_pressed)
+	unit_action_panel.connect("cycle_equipment_requested", _on_cycle_equipment_pressed)
+	unit_action_panel.connect("equip_option_requested", _on_planning_equip_pressed)
+	planning_row.add_child(unit_action_panel)
 	conditions_label.get_parent().visible = false
 
 
@@ -538,51 +483,21 @@ func _refresh_planning_panel() -> void:
 
 
 func _render_unit_actions() -> void:
-	for child in unit_action_vbox.get_children():
-		child.queue_free()
-	start_scenario_button = Button.new()
-	start_scenario_button.text = "Start %s" % selected_scenario.display_name if selected_scenario != null else "Start Selected Scenario"
-	start_scenario_button.disabled = selected_scenario == null or not active_campaign_scenario_id.is_empty() or replay_is_active or not _selected_scenario_can_start()
-	start_scenario_button.pressed.connect(_on_start_selected_scenario_pressed)
-	unit_action_vbox.add_child(start_scenario_button)
-
 	var selected_unit := _find_planning_unit(selected_unit_name)
-	if selected_unit == null:
-		return
-	var unit_label := Label.new()
-	unit_label.text = "Unit Actions"
-	unit_action_vbox.add_child(unit_label)
-
-	if run_state == null or run_state.status != RunStateScript.STATUS_EQUIPMENT:
-		if run_state == null and active_campaign_scenario_id.is_empty():
-			for slot in ["Weapon", "Armor", "Helmet", "Trinket"]:
-				var button := Button.new()
-				button.text = "Cycle %s" % slot
-				button.pressed.connect(_on_cycle_equipment_pressed.bind(slot))
-				unit_action_vbox.add_child(button)
-		else:
-			var hint := Label.new()
-			hint.text = "Equipment changes unlock between fights."
-			hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			unit_action_vbox.add_child(hint)
-		return
-
-	var options: Array[Dictionary] = run_state.equip_options()
-	var added_option := false
-	for index in options.size():
-		var option: Dictionary = options[index]
-		if String(option["unit_name"]) != selected_unit_name:
-			continue
-		added_option = true
-		var button := Button.new()
-		button.text = String(option["label"])
-		button.pressed.connect(_on_planning_equip_pressed.bind(index))
-		unit_action_vbox.add_child(button)
-	if not added_option:
-		var no_options := Label.new()
-		no_options.text = "No valid equipment changes for this unit."
-		no_options.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		unit_action_vbox.add_child(no_options)
+	var is_equipment_state: bool = run_state != null and run_state.status == RunStateScript.STATUS_EQUIPMENT
+	var equip_options: Array = run_state.equip_options() if is_equipment_state else []
+	if unit_action_panel != null:
+		unit_action_panel.call(
+			"show_actions",
+			selected_scenario,
+			selected_unit,
+			selected_unit_name,
+			_selected_scenario_can_start(),
+			not active_campaign_scenario_id.is_empty(),
+			replay_is_active,
+			is_equipment_state,
+			equip_options
+		)
 
 
 func _selected_scenario_can_start() -> bool:
@@ -634,6 +549,11 @@ func _on_panel_resource_tooltip_requested(_source: Control, resource: Resource) 
 		tooltip_presenter.show_resource(resource)
 
 
+func _on_panel_runtime_tooltip_requested(_source: Control, snapshot: Dictionary) -> void:
+	if tooltip_presenter != null:
+		tooltip_presenter.show_runtime_unit(snapshot)
+
+
 func _bind_resource_tooltip(control: Control, resource) -> void:
 	control.set_meta("tooltip_resource", resource)
 	if control.has_meta("resource_tooltip_bound"):
@@ -643,25 +563,10 @@ func _bind_resource_tooltip(control: Control, resource) -> void:
 	control.mouse_exited.connect(_on_tooltip_exited)
 
 
-func _bind_runtime_tooltip(control: Control, snapshot: Dictionary) -> void:
-	control.set_meta("tooltip_snapshot", snapshot)
-	if control.has_meta("runtime_tooltip_bound"):
-		return
-	control.set_meta("runtime_tooltip_bound", true)
-	control.mouse_entered.connect(_on_runtime_tooltip_entered.bind(control))
-	control.mouse_exited.connect(_on_tooltip_exited)
-
-
 func _on_resource_tooltip_entered(source: Control) -> void:
 	if tooltip_presenter != null:
 		var resource = source.get_meta("tooltip_resource", null)
 		tooltip_presenter.show_resource(resource)
-
-
-func _on_runtime_tooltip_entered(source: Control) -> void:
-	if tooltip_presenter != null:
-		var snapshot: Dictionary = source.get_meta("tooltip_snapshot", {})
-		tooltip_presenter.show_runtime_unit(snapshot)
 
 
 func _on_tooltip_exited() -> void:
@@ -878,82 +783,9 @@ func _split_log_lines(log_lines: Array[String], static_lines: Array[String], rep
 			static_lines.append(line)
 
 
-func _prepare_replay_events(_replay_lines: Array[String]) -> void:
-	combat_replay_events.clear()
-	var event_by_id := {}
-	var root_ids: Array[int] = []
-	for entry: Dictionary in cached_structured_events:
-		var entry_id := int(entry.get("id", -1))
-		event_by_id[entry_id] = entry
-		if int(entry.get("parent_id", -1)) == -1:
-			root_ids.append(entry_id)
-
-	var last_timed_event := 0.0
-	for root_id in root_ids:
-		if not event_by_id.has(root_id):
-			continue
-		var entry: Dictionary = event_by_id[root_id]
-		var event_type := String(entry.get("event_type", "text"))
-		var timed_value := int(entry.get("time", -1))
-		if timed_value < 0 and event_type != "result":
-			continue
-		var grouped_lines: Array[String] = []
-		var grouped_events: Array[Dictionary] = []
-		for nested: Dictionary in cached_structured_events:
-			var nested_id := int(nested.get("id", -1))
-			if _event_is_descendant_of(nested_id, root_id, event_by_id):
-				grouped_events.append(nested)
-				grouped_lines.append(String(nested.get("rendered_line", nested.get("text", ""))))
-
-		if timed_value >= 0:
-			last_timed_event = float(timed_value)
-		var replay_time := last_timed_event if timed_value < 0 else float(timed_value)
-		combat_replay_events.append({
-			"time": replay_time,
-			"lines": grouped_lines,
-			"events": grouped_events,
-		})
-
-
-func _show_next_replay_event() -> void:
-	if replay_event_index >= combat_replay_events.size():
-		_finish_log_replay()
-		return
-
-	var event := combat_replay_events[replay_event_index]
-	current_event_time = float(event.get("time", current_event_time))
-	displayed_sim_time = current_event_time
-	_apply_structured_events_to_visual_model(event.get("events", []))
-	_update_visual_replay_widgets()
-
-	var event_lines: Array = event["lines"]
-	for line: String in event_lines:
-		_append_log_line(line)
-
-	replay_event_index += 1
-	_schedule_next_replay_event()
-
-
-func _schedule_next_replay_event() -> void:
-	if replay_event_index >= combat_replay_events.size():
-		_finish_log_replay()
-		return
-
-	next_event_time = float(combat_replay_events[replay_event_index].get("time", current_event_time))
-	event_transition_elapsed = 0.0
-	var sim_delta: float = max(0.0, next_event_time - current_event_time)
-	replay_timer.wait_time = max(MIN_SECONDS_BETWEEN_REPLAY_ACTIONS, sim_delta * SECONDS_PER_SIM_SECOND)
-	replay_timer.start()
-
-
 func _append_lines(target_log: RichTextLabel, lines: Array[String]) -> void:
 	for line in lines:
 		_append_rich_text_line(target_log, line)
-
-
-func _append_log_line(line: String) -> void:
-	_append_rich_text_line(combat_log, line)
-	_scroll_combat_log_to_bottom()
 
 
 func _append_rich_text_line(target_log: RichTextLabel, line: String) -> void:
@@ -1015,19 +847,6 @@ func _bbcode_color_text(color: Color) -> String:
 	return "#" + color.to_html(false)
 
 
-func _scroll_combat_log_to_bottom() -> void:
-	if not autoscroll_enabled:
-		return
-
-	is_programmatic_scroll = true
-	combat_log.scroll_to_line(max(0, combat_log.get_line_count() - 1))
-	call_deferred("_finish_programmatic_scroll")
-
-
-func _finish_programmatic_scroll() -> void:
-	is_programmatic_scroll = false
-
-
 func _resize_conditions_pane() -> void:
 	if combat_summary.get_line_count() == 0 or log_split.size.y <= 0:
 		return
@@ -1043,29 +862,17 @@ func _clear_logs() -> void:
 
 
 func _clear_replay_log() -> void:
-	combat_log.clear()
-	replay_units_by_name.clear()
-	replay_units_by_id.clear()
-	replay_unit_widgets_by_name.clear()
-	for child in allies_row.get_children():
-		child.queue_free()
-	for child in enemies_row.get_children():
-		child.queue_free()
+	replay_panel.call("clear_replay")
 
 
 func _stop_log_replay() -> void:
-	replay_timer.stop()
-	combat_replay_events.clear()
-	replay_event_index = 0
+	replay_panel.call("stop_replay")
 	replay_is_active = false
-	autoscroll_enabled = true
-	is_programmatic_scroll = false
 	run_button.disabled = false
 	_update_run_controls()
 
 
-func _finish_log_replay() -> void:
-	replay_timer.stop()
+func _on_replay_finished() -> void:
 	replay_is_active = false
 	if run_state != null and run_state.status == RunStateScript.STATUS_ACTIVE:
 		run_state.complete_fight(cached_battle_report)
@@ -1080,142 +887,3 @@ func _finish_log_replay() -> void:
 		call_deferred("_resize_conditions_pane")
 	_update_run_controls()
 	_refresh_planning_panel()
-
-
-func _build_visual_replay_model() -> void:
-	replay_units_by_name.clear()
-	replay_units_by_id.clear()
-	for unit: Dictionary in cached_roster_units:
-		var unit_id := String(unit.get("id", ""))
-		var name := String(unit.get("name", ""))
-		if name.is_empty():
-			continue
-		var max_hp: int = max(1, int(unit.get("max_hp", 1)))
-		var action_interval: int = max(1, int(unit.get("action_interval", 1)))
-		var state := {
-			"id": unit_id,
-			"name": name,
-			"team": String(unit.get("team", "Enemies")),
-			"max_hp": max_hp,
-			"hp": max_hp,
-			"previous_hp": max_hp,
-			"action_interval": action_interval,
-			"next_action_time": float(action_interval),
-			"display_time": 0.0,
-			"is_alive": true,
-			"turn_pulse_started_at": -9999.0,
-			"floating_text": "",
-			"floating_text_started_at": -9999.0,
-			"floating_text_pulse_started_at": -9999.0,
-			"defeat_time": -9999.0,
-			"is_defeated": false,
-		}
-		replay_units_by_name[name] = state
-		if not unit_id.is_empty():
-			replay_units_by_id[unit_id] = state
-
-
-func _build_visual_replay_widgets() -> void:
-	for child in allies_row.get_children():
-		child.queue_free()
-	for child in enemies_row.get_children():
-		child.queue_free()
-	replay_unit_widgets_by_name.clear()
-
-	var names := replay_units_by_name.keys()
-	names.sort()
-	for name in names:
-		var unit_data: Dictionary = replay_units_by_name[name]
-		var dot: Control = UnitStatusDotScript.new()
-		if unit_data["team"] == "Allies":
-			allies_row.add_child(dot)
-		else:
-			enemies_row.add_child(dot)
-		_bind_runtime_tooltip(dot, unit_data)
-		replay_unit_widgets_by_name[name] = dot
-
-	_update_visual_replay_widgets()
-
-
-func _apply_structured_events_to_visual_model(events: Array) -> void:
-	for raw_event in events:
-		var event: Dictionary = raw_event
-		var event_type := String(event.get("event_type", "text"))
-		var payload: Dictionary = event.get("payload", {})
-		if event_type == "turn_start":
-			_apply_turn_start_event(payload)
-			continue
-		if event_type == "damage" or event_type == "heal":
-			_apply_hp_change_event(payload)
-			continue
-		if event_type == "defeat":
-			_apply_defeat_event(payload)
-
-
-func _apply_turn_start_event(payload: Dictionary) -> void:
-	var actor_state: Dictionary = _find_unit_state_from_payload(payload, "actor_id", "actor")
-	if actor_state.is_empty():
-		return
-	actor_state["next_action_time"] = current_event_time + float(actor_state["action_interval"])
-	actor_state["turn_pulse_started_at"] = displayed_sim_time
-	var actor_name := String(actor_state.get("name", ""))
-	active_event_actor_name = actor_name
-
-
-func _apply_hp_change_event(payload: Dictionary) -> void:
-	var target_state: Dictionary = _find_unit_state_from_payload(payload, "target_id", "target")
-	if target_state.is_empty():
-		return
-	var previous_hp := int(payload.get("previous_hp", 0))
-	var new_hp := int(payload.get("new_hp", previous_hp))
-	target_state["previous_hp"] = previous_hp
-	target_state["hp"] = new_hp
-	target_state["is_alive"] = new_hp > 0
-	var delta := new_hp - previous_hp
-	if delta != 0:
-		var delta_prefix := "+" if delta > 0 else ""
-		target_state["floating_text"] = "%s%d" % [delta_prefix, delta]
-		target_state["floating_text_started_at"] = displayed_sim_time
-		target_state["floating_text_pulse_started_at"] = displayed_sim_time
-
-
-func _apply_defeat_event(payload: Dictionary) -> void:
-	var defeated_state: Dictionary = _find_unit_state_from_payload(payload, "target_id", "target")
-	if defeated_state.is_empty():
-		return
-	defeated_state["hp"] = 0
-	defeated_state["is_alive"] = false
-	defeated_state["is_defeated"] = true
-	defeated_state["defeat_time"] = displayed_sim_time
-
-
-func _event_is_descendant_of(entry_id: int, root_id: int, event_by_id: Dictionary) -> bool:
-	var current_id := entry_id
-	while event_by_id.has(current_id):
-		if current_id == root_id:
-			return true
-		current_id = int(event_by_id[current_id].get("parent_id", -1))
-		if current_id == -1:
-			return false
-	return false
-
-
-func _find_unit_state_from_payload(payload: Dictionary, id_key: String, name_key: String) -> Dictionary:
-	var unit_id := String(payload.get(id_key, ""))
-	if not unit_id.is_empty() and replay_units_by_id.has(unit_id):
-		return replay_units_by_id[unit_id]
-	var unit_name := String(payload.get(name_key, ""))
-	if not unit_name.is_empty() and replay_units_by_name.has(unit_name):
-		return replay_units_by_name[unit_name]
-	return {}
-
-
-func _update_visual_replay_widgets() -> void:
-	for name in replay_unit_widgets_by_name.keys():
-		if not replay_units_by_name.has(name):
-			continue
-		var state: Dictionary = replay_units_by_name[name]
-		state["display_time"] = displayed_sim_time
-		state["is_acting"] = name == active_event_actor_name
-		var dot: Control = replay_unit_widgets_by_name[name]
-		dot.configure(state)

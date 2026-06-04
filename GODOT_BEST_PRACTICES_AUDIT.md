@@ -120,10 +120,12 @@ Adopted:
 
 - Split the first four planning UI responsibilities into component scenes/scripts: scenario list, scenario detail, party list, and unit detail.
 - Use custom child-panel signals for scenario and unit selection.
+- Split unit action button rendering into a component scene/script that emits start and equipment-change request signals.
+- Split combat replay timing, replay text display, visual unit dots, and runtime replay tooltips into a focused `CombatReplayPanel` script.
 
 Adopt soon:
 
-- Continue splitting the main UI script into component scenes/scripts, especially unit actions and combat replay.
+- Continue splitting the main UI script only where a remaining responsibility becomes hard to review; the next candidates are tooltip host behavior or smaller replay subpanels if replay grows again.
 - Keep new UI components signal-driven.
 - Add a light content validation script or Godot check scene once scenario content grows.
 - Keep `TODO.md` synced with this audit when recommendations become actual backlog items.

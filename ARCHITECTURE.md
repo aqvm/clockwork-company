@@ -141,6 +141,8 @@ The first playable test now opens as a scenario workbench with the older combat 
 - `clockwork-company/scenes/scenario_detail_panel.tscn` and `scripts/ui/scenario_detail_panel.gd` own read-only selected scenario detail rendering.
 - `clockwork-company/scenes/party_panel.tscn` and `scripts/ui/party_panel.gd` own party summary button rendering and emit `unit_selected`.
 - `clockwork-company/scenes/unit_detail_panel.tscn` and `scripts/ui/unit_detail_panel.gd` own read-only selected unit detail rendering.
+- `clockwork-company/scenes/unit_action_panel.tscn` and `scripts/ui/unit_action_panel.gd` own selected-unit action button rendering and emit start/equipment-change request signals.
+- `clockwork-company/scripts/ui/combat_replay_panel.gd` is attached to the existing replay column in `combat_test_scene.tscn`; it owns replay text timing, replay log autoscroll, structured event grouping, unit replay dots, and runtime unit tooltip requests.
 - `clockwork-company/scripts/ui/resource_tooltip_builder.gd` converts known game Resources into readable tooltip text.
 - `clockwork-company/scripts/ui/tooltip_presenter.gd` owns the shared floating tooltip panel used by hoverable Resource rows/buttons.
 - `clockwork-company/scripts/ui/combat_test_scene.gd` now also owns the local mod-pack toggle UI state (checkbox dropdown), including enabled-pack persistence and preview refresh behavior.

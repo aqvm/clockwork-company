@@ -5,9 +5,9 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 ## Near-Term UI and UX
 
 - Continue replacing the prototype scenario workbench layout with cleaner dedicated UI panels/components.
-- Split remaining `combat_test_scene.gd` responsibilities into focused Control scenes/scripts for unit actions, combat replay, and any future tooltip host UI. The scenario list, scenario detail, party list, and unit detail panels have been extracted.
+- Split remaining `combat_test_scene.gd` responsibilities into focused Control scenes/scripts for any future tooltip host UI or smaller replay subpanels. The scenario list, scenario detail, party list, unit detail, unit action, and combat replay panels have been extracted.
 - Move stable UI layout into `.tscn` component scenes while keeping truly data-driven rows/lists dynamic.
-- Use custom panel signals such as `equipment_change_requested` when extracting future action components. `scenario_selected` and `unit_selected` are now used by the extracted list panels.
+- Keep using custom panel signals for extracted UI components. `scenario_selected`, `unit_selected`, `cycle_equipment_requested`, and `equip_option_requested` are now used by extracted panels.
 - Build a real inventory/equipment browser instead of cycle-buttons for equipment changes.
 - Make the planning UI show final computed combat stats before starting a fight without pre-running combat.
 - Improve scenario selection feedback for locked, completed, active, and replayable scenarios.
