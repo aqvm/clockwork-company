@@ -8,6 +8,9 @@ const MAX_WIDTH := 380.0
 const PANEL_PADDING := Vector2(28, 22)
 
 var label: RichTextLabel = null
+var header_row: HBoxContainer = null
+var pinned_label: Label = null
+var close_button: Button = null
 var related_label: Label = null
 var related_list: VBoxContainer = null
 var back_button: Button = null
@@ -41,6 +44,22 @@ func _ready() -> void:
 	var content := VBoxContainer.new()
 	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	add_child(content)
+
+	header_row = HBoxContainer.new()
+	header_row.visible = false
+	header_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content.add_child(header_row)
+
+	pinned_label = Label.new()
+	pinned_label.text = "Pinned Tooltip"
+	pinned_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	pinned_label.add_theme_color_override("font_color", Color(0.72, 0.78, 0.86))
+	header_row.add_child(pinned_label)
+
+	close_button = Button.new()
+	close_button.text = "Close"
+	close_button.pressed.connect(func(): hide_tooltip(true))
+	header_row.add_child(close_button)
 
 	label = RichTextLabel.new()
 	label.bbcode_enabled = true
@@ -123,6 +142,7 @@ func hide_tooltip(force := false) -> void:
 	current_resource = null
 	resource_history.clear()
 	_clear_related_links()
+	_set_pinned_header_visible(false)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
@@ -147,6 +167,7 @@ func handle_input(event: InputEvent) -> bool:
 	pinned = true
 	follow_mouse = false
 	mouse_filter = Control.MOUSE_FILTER_STOP
+	_set_pinned_header_visible(true)
 	_render_related_links()
 	_place_near_mouse()
 	return false
@@ -216,6 +237,11 @@ func _clear_related_links() -> void:
 	related_list.visible = false
 	for child in related_list.get_children():
 		child.queue_free()
+
+
+func _set_pinned_header_visible(is_visible: bool) -> void:
+	if header_row != null:
+		header_row.visible = is_visible
 
 
 func _on_related_resource_pressed(resource) -> void:

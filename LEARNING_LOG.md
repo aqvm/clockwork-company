@@ -20,6 +20,7 @@ Feature worked on:
 - Added nested Resource traversal to pinned tooltips.
 - Pinned Resource tooltips now show related Resource buttons, such as loadout, job, gear, tactics, encounters, scenario rules, and rewards.
 - Added Back navigation inside the pinned tooltip.
+- Added a visible pinned header and Close button so locked tooltip state is clearer.
 - Added specific tooltip text for scenario, scenario rule, campaign, and campaign scenario node Resources.
 
 Godot concepts introduced:
@@ -48,10 +49,11 @@ What I should now be able to explain:
 - Why related Resource links live in `ResourceTooltipBuilder` instead of every panel script.
 - Why nested traversal appears after pinning, not during normal hover.
 - How the tooltip Back button uses a simple Resource history stack.
+- Why an explicit Close button is enough for the current click-based traversal model.
 
 Manual exercise:
 
-- Hover a unit, click to pin the tooltip, open its loadout, then open the current job or weapon and use Back to return.
+- Hover a unit, click to pin the tooltip, open its loadout, then open the current job or weapon, use Back to return, and use Close to dismiss it.
 
 Open questions:
 

@@ -250,7 +250,7 @@ Rotation pressure should eventually come from XP caps, scenario constraints, ene
 
 ### Tooltip input
 
-Tooltips use a simple pinned mode before any nested traversal work: hover opens the tooltip, left click pins the currently visible tooltip, Escape closes it, and clicking outside the pinned tooltip also closes it. This keeps normal hover inspection fast while giving longer Resource text somewhere stable to sit.
+Tooltips use a pinned mode for deliberate inspection: hover opens the tooltip, left click pins the currently visible tooltip, and Escape, the pinned Close button, or clicking outside the pinned tooltip closes it. This keeps normal hover inspection fast while giving longer Resource text somewhere stable to sit.
 
 Nested tooltip traversal now uses pinned Resource tooltips: pin a Resource tooltip, then choose related Resources such as loadout, job, gear, tactic, encounter, rule, or reward links inside the same presenter. This keeps normal hover fast while making deeper inspection deliberate. It should not force the whole UI to use native Godot tooltip strings, because the custom presenter is the path for locked/nested game-data inspection.
 
