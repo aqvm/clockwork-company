@@ -2725,3 +2725,39 @@ Manual exercise:
 Open questions:
 
 - What specific item or scenario would justify adding a contact-triggered hit effect?
+
+## 2026-06-04 - Item effect tooltip support notes
+
+Feature worked on:
+
+- Effect tooltips now say whether the current trigger/effect pair is supported by the item resolver.
+- Unsupported combinations explicitly warn that combat logs will call them out if triggered.
+- Removed the completed unsupported-effect tooltip TODO.
+
+Godot concepts introduced:
+
+- No new Godot concepts; this reused the existing Resource tooltip builder.
+
+Game architecture concepts introduced:
+
+- Declarative effect data can exist before every combination has resolver behavior.
+- Authoring UI should make unsupported combinations obvious before they surprise the player in combat.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/resource_tooltip_builder.gd`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Which item trigger/effect combinations are currently supported.
+- Why unsupported combinations are still allowed as readable placeholders.
+
+Manual exercise:
+
+- Hover an item effect Resource and explain whether its resolver note says supported or not implemented.
+
+Open questions:
+
+- Should the content validator eventually fail live scenario-facing items that use unsupported effect combinations?

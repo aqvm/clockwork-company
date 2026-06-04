@@ -74,7 +74,6 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 - Build a real inventory model instead of the current simple between-fight item list.
 - Decide whether shields need a true offhand/handedness system or should remain bundled into weapon/armor concepts.
 - Expand item effects only through declarative `EffectDefinition` data unless a focused mechanics pass requires new resolver code.
-- Keep unsupported effect combinations obvious in logs/tooltips.
 - Decide whether procedural items ever belong in the project; this is explicitly not soon.
 - Audit item catalog balance once more scenarios are playable.
 

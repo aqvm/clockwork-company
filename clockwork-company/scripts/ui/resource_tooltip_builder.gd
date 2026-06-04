@@ -137,7 +137,7 @@ static func _tactic_text(tactic: TacticDefinition) -> String:
 
 
 static func _effect_text(effect: EffectDefinition) -> String:
-	return "%s\n%s" % [_title(effect), _effect_summary(effect)]
+	return "%s\n%s\nResolver: %s" % [_title(effect), _effect_summary(effect), _effect_support_note(effect)]
 
 
 static func _encounter_text(encounter: EncounterDefinition) -> String:
@@ -181,6 +181,22 @@ static func _generic_resource_text(resource) -> String:
 static func _effect_summary(effect: EffectDefinition) -> String:
 	var limit_text := ", once per battle" if effect.once_per_battle else ""
 	return "%s when %s: %s %d to %s%s" % [effect.effect_type, effect.trigger, effect.condition, effect.amount, effect.target_selector, limit_text]
+
+
+static func _effect_support_note(effect: EffectDefinition) -> String:
+	if effect.trigger == "Battle Start" and effect.effect_type == "Gain Armor":
+		return "supported"
+	if effect.trigger == "Attack" and effect.effect_type == "Bonus Damage":
+		return "supported"
+	if effect.trigger == "Hit" and effect.effect_type == "Reduce Target Armor":
+		return "supported"
+	if (effect.trigger == "Damaged" or effect.trigger == "HP Below Threshold") and (effect.effect_type == "Heal" or effect.effect_type == "Heal Self" or effect.effect_type == "Increase Max HP"):
+		return "supported"
+	if effect.trigger == "Kill" and (effect.effect_type == "Heal" or effect.effect_type == "Heal Self"):
+		return "supported"
+	if effect.trigger == "Death" and effect.effect_type == "Damage Killer":
+		return "supported"
+	return "not implemented for this trigger/effect pair; combat logs will say so if it triggers"
 
 
 static func _item_stats(item: ItemDefinition) -> String:
