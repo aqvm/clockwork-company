@@ -275,7 +275,8 @@ func _setup_planning_panel() -> void:
 	unit_action_panel.connect("cycle_equipment_requested", _on_cycle_equipment_pressed)
 	unit_action_panel.connect("equip_option_requested", _on_planning_equip_pressed)
 	planning_row.add_child(unit_action_panel)
-	conditions_label.get_parent().visible = false
+	conditions_label.text = "Fight Preview"
+	conditions_label.get_parent().visible = true
 
 
 func _setup_tooltip_presenter() -> void:

@@ -3206,3 +3206,40 @@ Manual exercise:
 Open questions:
 
 - Should future validation collect all JSON errors in one run instead of stopping at the first assertion?
+
+## 2026-06-04 - Fight Preview pane decision
+
+Feature worked on:
+
+- Replaced the obsolete hidden `Combat Conditions` label with a visible `Fight Preview` pane.
+- Kept the existing static summary target instead of deleting it, because run status and setup text still need a home.
+- Removed the resolved hidden-pane TODO.
+
+Godot concepts introduced:
+
+- Existing scene nodes can be repurposed when their layout role still makes sense but their label no longer does.
+
+Game architecture concepts introduced:
+
+- Fight preview/status text is UI presentation, not combat simulation authority.
+- Reusing the existing summary pane avoids a larger layout refactor while making current behavior visible.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `ARCHITECTURE.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why the old `Combat Conditions` pane became `Fight Preview`.
+- Why deleting the pane would lose useful run/setup context.
+
+Manual exercise:
+
+- Start the scene, select a scenario, and confirm the preview/status pane is visible before running combat.
+
+Open questions:
+
+- Should `Fight Preview` eventually become its own extracted panel scene?
