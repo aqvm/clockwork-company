@@ -473,7 +473,7 @@ func _refresh_planning_panel() -> void:
 	if party_panel != null:
 		party_panel.call("show_party", planning_party, selected_unit_name)
 	if unit_detail_panel != null:
-		unit_detail_panel.call("show_unit", _find_planning_unit(selected_unit_name))
+		unit_detail_panel.call("show_unit", _find_planning_unit(selected_unit_name), planning_party)
 	_render_unit_actions()
 
 

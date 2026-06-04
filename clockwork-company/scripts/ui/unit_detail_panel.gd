@@ -1,6 +1,8 @@
 extends ScrollContainer
 class_name UnitDetailPanel
 
+const PlanningStatPreviewScript := preload("res://scripts/ui/planning_stat_preview.gd")
+
 signal resource_tooltip_requested(source: Control, resource: Resource)
 signal tooltip_cleared
 
@@ -13,15 +15,24 @@ func _ready() -> void:
 	_ensure_content()
 
 
-func show_unit(unit: UnitDefinition) -> void:
+func show_unit(unit: UnitDefinition, party_units: Array[UnitDefinition] = []) -> void:
 	_ensure_content()
 	_clear_content()
 	if unit == null:
 		_add_plain_text("Select a unit to inspect details.")
 		return
 
+	var preview: Dictionary = _preview_for_unit(unit, party_units)
+	var computed_stats: Dictionary = preview.get("before_battle_start", {})
+	var battle_start_stats: Dictionary = preview.get("after_battle_start", {})
 	_add_resource_text(unit, unit.display_name)
-	_add_plain_text("Stats: HP %d, physical %d, magic %d, armor %d, interval %d" % [unit.max_hp, unit.physical_damage, unit.magic_damage, unit.armor, unit.action_interval])
+	_add_plain_text("Base stats: HP %d, physical %d, magic %d, armor %d, interval %d" % [unit.max_hp, unit.physical_damage, unit.magic_damage, unit.armor, unit.action_interval])
+	_add_plain_text("Computed stats: %s" % PlanningStatPreviewScript.stats_line(computed_stats))
+	if PlanningStatPreviewScript.stats_changed(computed_stats, battle_start_stats):
+		_add_plain_text("After battle-start effects: %s" % PlanningStatPreviewScript.stats_line(battle_start_stats))
+	var skipped_items: Array = preview.get("skipped_items", [])
+	if not skipped_items.is_empty():
+		_add_plain_text("Skipped equipment: %s" % _join_values(skipped_items, ", "))
 	_add_plain_text("Tags: %s" % _join_values(unit.tags, ", "))
 	_add_resource_text(unit.ancestry, "Ancestry: %s" % _resource_display_name(unit.ancestry))
 	_add_plain_text("Job progress: %s" % _job_progress_summary(unit))
@@ -103,6 +114,14 @@ func _ensure_content() -> void:
 	content = VBoxContainer.new()
 	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	add_child(content)
+
+
+func _preview_for_unit(unit: UnitDefinition, party_units: Array[UnitDefinition]) -> Dictionary:
+	var units: Array[UnitDefinition] = party_units
+	if units.is_empty():
+		units = [unit]
+	var previews: Dictionary = PlanningStatPreviewScript.build_party_preview_by_name(units)
+	return previews.get(unit.display_name, {})
 
 
 func _resource_display_name(resource) -> String:

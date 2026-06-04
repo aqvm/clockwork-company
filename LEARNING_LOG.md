@@ -2249,3 +2249,45 @@ Manual exercise:
 Open questions:
 
 - Should the next campaign content pass make later scenarios mechanically distinct through implemented scenario rules, or keep using content composition until the UI explains rules better?
+
+## 2026-06-04 - Planning computed stat preview
+
+Feature worked on:
+
+- Added a planning stat preview helper that builds `UnitState` objects from the current planning party without running combat turns.
+- Updated the party panel to show computed planning combat stats instead of raw authored base stats.
+- Updated the unit detail panel to show base stats, computed stats, battle-start preview stats when they differ, and skipped equipment.
+
+Godot concepts introduced:
+
+- A `RefCounted` helper can hold shared UI calculations without becoming a scene node.
+- UI panels can render derived runtime previews while still leaving combat authority in the simulator.
+
+Game architecture concepts introduced:
+
+- `UnitDefinition` is source data; `UnitState` is the runtime combat copy that applies growth, equipment permissions, and stat modifiers.
+- Battle-start hooks can be previewed by using resolver functions on temporary `UnitState` copies without advancing the turn scheduler.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/planning_stat_preview.gd`
+- `clockwork-company/scripts/ui/party_panel.gd`
+- `clockwork-company/scripts/ui/unit_detail_panel.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `ARCHITECTURE.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why base stats and computed combat stats can differ.
+- Why the preview uses temporary `UnitState` objects instead of running a battle report.
+- Why skipped equipment belongs in the planning view before a fight starts.
+
+Manual exercise:
+
+- Select a unit, cycle one equipment slot, and predict which computed stat should change before pressing `Start Selected Scenario`.
+
+Open questions:
+
+- Should future scenario enemy previews use the same helper, or wait for a dedicated fight-preview panel?

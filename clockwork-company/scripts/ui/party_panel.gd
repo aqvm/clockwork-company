@@ -1,6 +1,8 @@
 extends VBoxContainer
 class_name PartyPanel
 
+const PlanningStatPreviewScript := preload("res://scripts/ui/planning_stat_preview.gd")
+
 signal unit_selected(unit_name: String)
 signal resource_tooltip_requested(source: Control, resource: Resource)
 signal tooltip_cleared
@@ -8,14 +10,17 @@ signal tooltip_cleared
 
 func show_party(units: Array[UnitDefinition], selected_unit_name: String) -> void:
 	_clear_children()
+	var previews: Dictionary = PlanningStatPreviewScript.build_party_preview_by_name(units)
 
 	var title := Label.new()
 	title.text = "Party"
 	add_child(title)
 
 	for unit: UnitDefinition in units:
+		var preview: Dictionary = previews.get(unit.display_name, {})
+		var stats: Dictionary = preview.get("after_battle_start", {})
 		var button := Button.new()
-		button.text = "%s | HP %d | P%d M%d A%d I%d" % [unit.display_name, unit.max_hp, unit.physical_damage, unit.magic_damage, unit.armor, unit.action_interval]
+		button.text = "%s | %s" % [unit.display_name, PlanningStatPreviewScript.compact_stats_line(stats)]
 		button.toggle_mode = true
 		button.button_pressed = unit.display_name == selected_unit_name
 		button.pressed.connect(_on_unit_button_pressed.bind(unit.display_name))
