@@ -9,7 +9,6 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 - Move stable UI layout into `.tscn` component scenes while keeping truly data-driven rows/lists dynamic.
 - Keep using custom panel signals for extracted UI components. `scenario_selected`, `unit_selected`, `cycle_equipment_requested`, and `equip_option_requested` are now used by extracted panels.
 - Build a real inventory/equipment browser instead of cycle-buttons for equipment changes.
-- Keep the old Phase 7 debug run visually subordinate to the main scenario flow.
 - Add better unit detail presentation for:
   - current job
   - learned/equipped skill, passive, and reaction

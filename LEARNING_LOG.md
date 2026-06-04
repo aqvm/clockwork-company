@@ -2334,3 +2334,39 @@ Manual exercise:
 Open questions:
 
 - Should completed scenarios eventually launch a standalone replay run, or should replay wait until campaign save/load exists?
+
+## 2026-06-04 - Subordinate debug harness controls
+
+Feature worked on:
+
+- Labeled the old Phase 7/loss-test controls as a debug harness.
+- Shortened and visually softened the debug buttons so the main scenario flow remains the primary UI path.
+- Kept the debug paths available for testing instead of deleting them.
+
+Godot concepts introduced:
+
+- Buttons can be made flatter and quieter with `flat`, `modulate`, and font-size overrides.
+- Prototype controls can remain in the scene while being visually deprioritized.
+
+Game architecture concepts introduced:
+
+- A debug harness is useful while the scenario flow matures, but it should not look like the main player path.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why the Phase 7 run path still exists.
+- Why visual hierarchy matters even in a prototype UI.
+
+Manual exercise:
+
+- Open the scene and identify which controls belong to the main scenario flow versus the debug harness before pressing any buttons.
+
+Open questions:
+
+- Should the debug harness eventually move behind a collapsible advanced section, or is the small subdued label enough for now?

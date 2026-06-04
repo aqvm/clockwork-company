@@ -21,6 +21,7 @@ const MOD_SETTINGS_SECTION := "mods"
 const MOD_SETTINGS_KEY_ENABLED_IDS := "enabled_pack_ids"
 const MIN_CONDITIONS_HEIGHT := 120
 const MAX_EQUIPMENT_BUTTONS := 12
+const DEBUG_CONTROL_FONT_SIZE := 12
 const FIRST_ROAD_CAMPAIGN := preload("res://resources/campaigns/first_road_campaign.tres")
 const DEFAULT_LOG_HIGHLIGHT_PALETTE := preload("res://resources/ui/combat_log_highlight_palette_default.tres")
 
@@ -171,13 +172,21 @@ func _setup_mod_menu() -> void:
 
 
 func _setup_run_controls() -> void:
+	var debug_label := Label.new()
+	debug_label.text = "Debug harness"
+	debug_label.modulate = Color(0.65, 0.65, 0.65)
+	debug_label.add_theme_font_size_override("font_size", DEBUG_CONTROL_FONT_SIZE)
+	run_button.get_parent().add_child(debug_label)
+
 	loss_test_button = Button.new()
-	loss_test_button.text = "Start Loss Test"
+	loss_test_button.text = "Loss Test"
+	_style_debug_button(loss_test_button)
 	loss_test_button.pressed.connect(_on_loss_test_button_pressed)
 	run_button.get_parent().add_child(loss_test_button)
 
 	phase7_run_button = Button.new()
-	phase7_run_button.text = "Start Phase 7 Run"
+	phase7_run_button.text = "Phase 7 Run"
+	_style_debug_button(phase7_run_button)
 	phase7_run_button.pressed.connect(_on_phase7_run_button_pressed)
 	run_button.get_parent().add_child(phase7_run_button)
 
@@ -200,6 +209,12 @@ func _setup_run_controls() -> void:
 		equipment_button.pressed.connect(_on_equipment_button_pressed.bind(index))
 		run_button.get_parent().add_child(equipment_button)
 		equipment_buttons.append(equipment_button)
+
+
+func _style_debug_button(button: Button) -> void:
+	button.flat = true
+	button.modulate = Color(0.75, 0.75, 0.75)
+	button.add_theme_font_size_override("font_size", DEBUG_CONTROL_FONT_SIZE)
 
 
 func _setup_planning_panel() -> void:
