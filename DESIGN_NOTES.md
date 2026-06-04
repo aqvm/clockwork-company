@@ -38,6 +38,8 @@ Avoid pure "number goes up forever" design.
 
 Phase 3 kept gear intentionally blunt: items were one-slot Resources with flat stat modifiers. The current gear model still values clear tradeoffs, but it now has weapon, armor, helmet, and trinket slots, with shields represented as bundled weapon/armor concepts until offhand rules are worth the extra system weight.
 
+Shields should remain bundled into weapon or armor item concepts for now. A true offhand/handedness system should wait until there are actual two-hand, dual-wield, shield-skill, or slot-capacity decisions for the player to make.
+
 Phase 4 adds triggered item effects, but keeps them deliberately narrow. An item can define one trigger, one effect type, and one amount. This is enough to make gear feel like an identity hook, while avoiding a full ability engine before tactics and jobs exist.
 
 Current triggered item design rules:
@@ -200,6 +202,7 @@ Current catalog authoring rules:
 - only rely on simulator-supported effect combinations for live content
 - reserve run-loop wiring for a later focused pass
 - use optional catalog encounters/rewards as staging material, not automatically reachable content
+- procedural items do not belong in the current prototype; hand-authored items teach the combat vocabulary more clearly
 
 ### Short roguelite run loop
 

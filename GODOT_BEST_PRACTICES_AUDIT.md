@@ -144,7 +144,7 @@ Defer:
 - Autoload managers.
 - Git LFS.
 - Plugins/addons for testing or UI unless the project starts paying clear complexity costs.
-- Root-project migration.
+- Root-project migration; keep `project.godot` nested in `clockwork-company/` during active feature work.
 - Any management-sim campaign systems.
 
 Reject for now:

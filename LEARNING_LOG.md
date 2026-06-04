@@ -2761,3 +2761,42 @@ Manual exercise:
 Open questions:
 
 - Should the content validator eventually fail live scenario-facing items that use unsupported effect combinations?
+
+## 2026-06-04 - Gear and project-structure deferral decisions
+
+Feature worked on:
+
+- Recorded that shields stay bundled into weapon/armor concepts until offhand choices create real player decisions.
+- Reaffirmed that procedural items do not belong in the current learning-first prototype.
+- Recorded that `project.godot` should remain nested in `clockwork-company/` during active feature work.
+- Removed the resolved decision TODOs.
+
+Godot concepts introduced:
+
+- `project.godot` marks the project root; moving it is a project-structure migration, not a gameplay feature.
+
+Game architecture concepts introduced:
+
+- Avoiding a handedness system keeps gear tradeoffs understandable until content needs the extra slot model.
+- Hand-authored items are better than procedural items while the combat vocabulary is still being taught.
+
+Files touched:
+
+- `DESIGN_NOTES.md`
+- `GODOT_BEST_PRACTICES_AUDIT.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why shields are currently item flavor plus stat/effect data, not a separate offhand rules layer.
+- Why procedural items would fight the current learning goal.
+- Why the Godot project root stays nested for now.
+
+Manual exercise:
+
+- Pick one existing shield-like item and explain whether it is currently acting more like a weapon concept or an armor concept.
+
+Open questions:
+
+- What future item design would make offhand/handedness worth implementing?

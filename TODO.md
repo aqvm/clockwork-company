@@ -72,9 +72,7 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 ## Gear, Items, and Inventory
 
 - Build a real inventory model instead of the current simple between-fight item list.
-- Decide whether shields need a true offhand/handedness system or should remain bundled into weapon/armor concepts.
 - Expand item effects only through declarative `EffectDefinition` data unless a focused mechanics pass requires new resolver code.
-- Decide whether procedural items ever belong in the project; this is explicitly not soon.
 - Audit item catalog balance once more scenarios are playable.
 
 ## Content and Authoring
@@ -92,7 +90,6 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 - Update sidecar `*.options.md` files whenever JSON schema, enums, keywords, or reference rules change.
 - Add better validation/errors for bad mod references and unsupported enum values.
 - Decide whether base `.tres` content should eventually be exported to reference JSON automatically.
-- Decide whether `project.godot` should eventually live at the repository root or remain nested.
 
 ## Save/Load and Persistence
 
