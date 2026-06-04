@@ -2521,3 +2521,42 @@ Manual exercise:
 Open questions:
 
 - Should future glossary tooltips have a third source label such as `Source: rules glossary`?
+
+## 2026-06-04 - Replay speed control
+
+Feature worked on:
+
+- Added 0.5x, 1x, 2x, and 4x replay speed buttons to `CombatReplayPanel`.
+- Replay speed now changes the timer delay between subsequent replay events.
+- Removed the completed replay speed TODO.
+
+Godot concepts introduced:
+
+- UI controls can be created dynamically by a focused panel script when the scene structure is still evolving.
+- Toggle buttons can act like a segmented control when the panel keeps their pressed states synchronized.
+- A `Timer` can pace presentation without becoming combat authority.
+
+Game architecture concepts introduced:
+
+- Replay speed changes how quickly already-generated events are revealed; it does not rerun or alter combat simulation.
+- Presentation timing belongs to `CombatReplayPanel`, not `CombatSimulator`.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/combat_replay_panel.gd`
+- `ARCHITECTURE.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why changing replay speed cannot change the fight winner.
+- Why the speed control lives in the replay panel instead of the parent scene.
+
+Manual exercise:
+
+- Start a fight, switch to 4x for a few events, then switch to 0.5x and confirm only reveal pacing changes.
+
+Open questions:
+
+- Should speed changes reschedule the currently waiting event immediately, or is applying the speed to subsequent events enough for this prototype?

@@ -10,6 +10,7 @@ const CombatLogRichTextFormatterScript := preload("res://scripts/ui/combat_log_r
 const COMBAT_LOG_HEADER := "Combat log:"
 const SECONDS_PER_SIM_SECOND := 0.2
 const MIN_SECONDS_BETWEEN_REPLAY_ACTIONS := 0.1
+const REPLAY_SPEEDS: Array[float] = [0.5, 1.0, 2.0, 4.0]
 
 @onready var combat_log: RichTextLabel = %CombatLog
 @onready var allies_row: HBoxContainer = %AlliesRow
@@ -17,6 +18,8 @@ const MIN_SECONDS_BETWEEN_REPLAY_ACTIONS := 0.1
 
 var timer: Timer = null
 var log_highlight_palette = null
+var speed_label: Label = null
+var speed_buttons: Array[Button] = []
 var replay_events: Array[Dictionary] = []
 var structured_events: Array[Dictionary] = []
 var roster_units: Array[Dictionary] = []
@@ -32,6 +35,7 @@ var current_event_time := 0.0
 var next_event_time := 0.0
 var event_transition_elapsed := 0.0
 var active_event_actor_name := ""
+var replay_speed := 1.0
 
 
 func setup(replay_timer: Timer, highlight_palette) -> void:
@@ -40,6 +44,7 @@ func setup(replay_timer: Timer, highlight_palette) -> void:
 	timer.timeout.connect(_on_replay_timer_timeout)
 	timer.one_shot = true
 	combat_log.get_v_scroll_bar().value_changed.connect(_on_combat_log_scroll_value_changed)
+	_setup_speed_controls()
 
 
 func tick(delta: float) -> void:
@@ -178,7 +183,7 @@ func _schedule_next_replay_event() -> void:
 	next_event_time = float(replay_events[replay_event_index].get("time", current_event_time))
 	event_transition_elapsed = 0.0
 	var sim_delta: float = max(0.0, next_event_time - current_event_time)
-	timer.wait_time = max(MIN_SECONDS_BETWEEN_REPLAY_ACTIONS, sim_delta * SECONDS_PER_SIM_SECOND)
+	timer.wait_time = max(MIN_SECONDS_BETWEEN_REPLAY_ACTIONS, sim_delta * SECONDS_PER_SIM_SECOND / replay_speed)
 	timer.start()
 
 
@@ -191,6 +196,38 @@ func _finish_replay() -> void:
 
 func _on_replay_timer_timeout() -> void:
 	_show_next_replay_event()
+
+
+func _setup_speed_controls() -> void:
+	if speed_label != null:
+		return
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 4)
+	speed_label = Label.new()
+	speed_label.text = "Speed"
+	row.add_child(speed_label)
+	for speed in REPLAY_SPEEDS:
+		var button := Button.new()
+		button.text = _speed_text(speed)
+		button.toggle_mode = true
+		button.button_pressed = is_equal_approx(speed, replay_speed)
+		button.pressed.connect(_on_speed_button_pressed.bind(speed))
+		row.add_child(button)
+		speed_buttons.append(button)
+	add_child(row)
+	move_child(row, min(2, get_child_count() - 1))
+
+
+func _on_speed_button_pressed(speed: float) -> void:
+	replay_speed = speed
+	for button in speed_buttons:
+		button.button_pressed = button.text == _speed_text(speed)
+
+
+func _speed_text(speed: float) -> String:
+	if is_equal_approx(speed, round(speed)):
+		return "%dx" % int(round(speed))
+	return "%.1fx" % speed
 
 
 func _on_combat_log_scroll_value_changed(_value: float) -> void:
