@@ -64,6 +64,7 @@ Current combat log design rules:
 - scenario list buttons select scenarios for inspection; a separate main action starts the selected available scenario
 - the scene should open on scenario planning data, not a precomputed combat report
 - top-row run/debug/reward controls should render in a small panel component, while campaign and run-state decisions stay in the main scene coordinator
+- old run-harness controls should stay available behind a small Debug toggle until the fallback path is intentionally retired
 - the old combat conditions pane should not compete with the planning UI once scenario, party, and unit details are visible
 - selected-unit planning equipment should show explicit valid item choices by slot rather than hiding choices behind cycle buttons
 - the combat test should wait for an explicit run click before replaying combat events

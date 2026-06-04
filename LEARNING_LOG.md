@@ -13,6 +13,44 @@ Each entry should include:
 - Manual exercise
 - Open questions
 
+## 2026-06-04 - Collapsed debug harness controls
+
+Feature worked on:
+
+- Moved the old Phase 7 run and loss-test buttons behind a small Debug toggle.
+- Kept both debug paths available while making the main scenario flow less visually crowded.
+
+Godot concepts introduced:
+
+- `Button.toggle_mode` and the `toggled` signal can show or hide a small group of controls.
+- A panel can track child controls in an array when it owns their presentation state.
+
+Game architecture concepts introduced:
+
+- Debug harnesses are useful while replacing old flows, but they should be visually subordinate to the current primary workflow.
+- Hiding a debug path is different from deleting it; `RunState` still supports both scenario-backed and legacy Phase 7 runs.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/run_flow_controls_panel.gd`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why the old Phase 7 run remains available.
+- Why the Debug toggle belongs in `RunFlowControlsPanel` instead of `RunState`.
+
+Manual exercise:
+
+- Open the scene, click `Debug`, confirm `Loss Test` and `Phase 7 Run` appear, then hide them again without starting a run.
+
+Open questions:
+
+- At what point is the legacy Phase 7 path no longer useful enough to keep?
+
 ## 2026-06-04 - JSON sidecar validation
 
 Feature worked on:

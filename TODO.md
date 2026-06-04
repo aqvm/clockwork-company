@@ -85,7 +85,7 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 
 ## Cleanup Watchlist
 
-- Fully remove or replace obsolete combat-test harness concepts as the scenario workbench matures.
+- Fully remove or replace obsolete combat-test harness concepts as the scenario workbench matures. The old Phase 7/loss-test controls now live behind a Debug toggle.
 - Watch for duplicated UI logic in `combat_test_scene.gd`; extract components only when duplication becomes painful.
 - Keep `GODOT_BEST_PRACTICES_AUDIT.md` current when a documented practice is adopted, rejected, or substantially reconsidered.
 - Keep `RunState` scenario-backed and old debug-run paths both working until the debug run is intentionally retired.

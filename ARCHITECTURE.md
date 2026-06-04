@@ -143,7 +143,7 @@ The first playable test now opens as a scenario workbench with the older combat 
 
 - `clockwork-company/scenes/combat_test_scene.tscn` owns the visible test scene.
 - `clockwork-company/scripts/ui/combat_test_scene.gd` owns campaign/run coordination, selected scenario/unit state, selected-unit planning equipment changes, static combat setup display after a fight starts, and tooltip hosting.
-- `clockwork-company/scripts/ui/run_flow_controls_panel.gd` is attached to the top control row in `combat_test_scene.tscn`; it owns run button, mod button, palette/save/load/debug buttons, reward buttons, continue button, and top-row equipment option button presentation, then emits request signals back to the main scene.
+- `clockwork-company/scripts/ui/run_flow_controls_panel.gd` is attached to the top control row in `combat_test_scene.tscn`; it owns run button, mod button, palette/save/load buttons, a collapsed debug harness, reward buttons, continue button, and top-row equipment option button presentation, then emits request signals back to the main scene.
 - The former `Combat Conditions` pane is now used as a visible `Fight Preview` area for campaign/run status and static setup text.
 - `clockwork-company/scenes/planning_workbench_panel.tscn` and `scripts/ui/planning_workbench_panel.gd` own the stable planning-row layout and forward child-panel signals/tooltips to the main scene.
 - `clockwork-company/scenes/scenario_list_panel.tscn` and `scripts/ui/scenario_list_panel.gd` own scenario list button rendering, campaign state labels, and emit `scenario_selected`.
