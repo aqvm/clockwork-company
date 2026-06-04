@@ -3093,3 +3093,44 @@ Manual exercise:
 Open questions:
 
 - Should a future fight-preview panel show enemy units and scenario rules during this transition?
+
+## 2026-06-04 - Structured replay event payload tooltips
+
+Feature worked on:
+
+- Added an `Event Data` hover target to the replay controls.
+- The hover target shows the currently displayed structured event group and payload fields in the shared tooltip presenter.
+- Removed the completed combat-log/event-payload tooltip TODO.
+
+Godot concepts introduced:
+
+- Signals can pass typed arrays of dictionaries between a child panel and parent tooltip host.
+- A disabled button can become a hover target once replay data exists.
+
+Game architecture concepts introduced:
+
+- Structured combat events are the machine-readable companion to readable combat log prose.
+- Payload tooltips help inspect replay data without making the replay UI parse prose.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/combat_replay_panel.gd`
+- `clockwork-company/scripts/ui/resource_tooltip_builder.gd`
+- `clockwork-company/scripts/ui/tooltip_presenter.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `ARCHITECTURE.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why replay event payloads are useful even when the combat log text is readable.
+- Why this tooltip is tied to the current replay event group instead of individual RichTextLabel lines.
+
+Manual exercise:
+
+- Run a fight, hover `Event Data` after a turn appears, and compare the payload fields to the visible combat log line.
+
+Open questions:
+
+- Should future replay text lines become individually hoverable once the log display moves away from one monolithic `RichTextLabel`?

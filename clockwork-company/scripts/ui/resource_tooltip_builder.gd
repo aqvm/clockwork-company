@@ -59,6 +59,27 @@ static func text_for_glossary_term(term: String) -> String:
 	return _with_source_note(String(definitions.get(key, term)), "Source: rules glossary")
 
 
+static func text_for_structured_events(events: Array[Dictionary]) -> String:
+	var lines: Array[String] = ["Structured Event Payloads"]
+	if events.is_empty():
+		lines.append("No structured event payload is currently selected.")
+		return _with_source_note(_join(lines, "\n"), "Source: structured combat report")
+
+	for event in events:
+		var event_type := String(event.get("event_type", "text"))
+		var payload: Dictionary = event.get("payload", {})
+		lines.append("")
+		lines.append("%s:" % event_type)
+		if payload.is_empty():
+			lines.append("- payload: none")
+		else:
+			var keys := payload.keys()
+			keys.sort()
+			for key in keys:
+				lines.append("- %s: %s" % [String(key), String(payload[key])])
+	return _with_source_note(_join(lines, "\n"), "Source: structured combat report")
+
+
 static func _unit_text(unit: UnitDefinition) -> String:
 	var lines: Array[String] = []
 	lines.append(_title(unit))

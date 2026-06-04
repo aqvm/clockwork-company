@@ -3,6 +3,7 @@ class_name CombatReplayPanel
 
 signal replay_finished
 signal runtime_tooltip_requested(source: Control, snapshot: Dictionary)
+signal structured_event_tooltip_requested(source: Control, events: Array[Dictionary])
 signal tooltip_cleared
 
 const UnitStatusDotScript := preload("res://scripts/ui/unit_status_dot.gd")
@@ -19,9 +20,11 @@ const REPLAY_SPEEDS: Array[float] = [0.5, 1.0, 2.0, 4.0]
 var timer: Timer = null
 var log_highlight_palette = null
 var speed_label: Label = null
+var event_data_button: Button = null
 var speed_buttons: Array[Button] = []
 var replay_events: Array[Dictionary] = []
 var structured_events: Array[Dictionary] = []
+var current_grouped_events: Array[Dictionary] = []
 var roster_units: Array[Dictionary] = []
 var units_by_name := {}
 var units_by_id := {}
@@ -94,14 +97,18 @@ func stop_replay() -> void:
 	if timer != null:
 		timer.stop()
 	replay_events.clear()
+	current_grouped_events.clear()
 	replay_event_index = 0
 	replay_is_active = false
 	autoscroll_enabled = true
 	is_programmatic_scroll = false
+	_update_event_data_button()
 
 
 func clear_replay() -> void:
 	combat_log.clear()
+	current_grouped_events.clear()
+	_update_event_data_button()
 	units_by_name.clear()
 	units_by_id.clear()
 	unit_widgets_by_name.clear()
@@ -168,7 +175,9 @@ func _show_next_replay_event() -> void:
 	var event := replay_events[replay_event_index]
 	current_event_time = float(event.get("time", current_event_time))
 	displayed_sim_time = current_event_time
-	_apply_structured_events_to_visual_model(event.get("events", []))
+	current_grouped_events = _typed_dictionary_array(event.get("events", []))
+	_update_event_data_button()
+	_apply_structured_events_to_visual_model(current_grouped_events)
 	_update_visual_replay_widgets()
 
 	var event_lines: Array = event["lines"]
@@ -218,6 +227,12 @@ func _setup_speed_controls() -> void:
 		button.pressed.connect(_on_speed_button_pressed.bind(speed))
 		row.add_child(button)
 		speed_buttons.append(button)
+	event_data_button = Button.new()
+	event_data_button.text = "Event Data"
+	event_data_button.disabled = true
+	event_data_button.mouse_entered.connect(_on_event_data_mouse_entered)
+	event_data_button.mouse_exited.connect(_on_tooltip_exited)
+	row.add_child(event_data_button)
 	add_child(row)
 	move_child(row, min(2, get_child_count() - 1))
 
@@ -232,6 +247,18 @@ func _speed_text(speed: float) -> String:
 	if is_equal_approx(speed, round(speed)):
 		return "%dx" % int(round(speed))
 	return "%.1fx" % speed
+
+
+func _update_event_data_button() -> void:
+	if event_data_button == null:
+		return
+	event_data_button.disabled = current_grouped_events.is_empty()
+
+
+func _on_event_data_mouse_entered() -> void:
+	if current_grouped_events.is_empty() or event_data_button == null:
+		return
+	structured_event_tooltip_requested.emit(event_data_button, current_grouped_events)
 
 
 func _on_combat_log_scroll_value_changed(_value: float) -> void:

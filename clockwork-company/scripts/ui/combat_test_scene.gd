@@ -73,6 +73,7 @@ func _ready() -> void:
 	replay_panel.call("setup", replay_timer, log_highlight_palette)
 	replay_panel.connect("replay_finished", _on_replay_finished)
 	replay_panel.connect("runtime_tooltip_requested", _on_panel_runtime_tooltip_requested)
+	replay_panel.connect("structured_event_tooltip_requested", _on_panel_structured_event_tooltip_requested)
 	replay_panel.connect("tooltip_cleared", _on_tooltip_exited)
 	get_viewport().size_changed.connect(_on_viewport_size_changed)
 	_setup_mod_menu()
@@ -623,6 +624,11 @@ func _on_panel_runtime_tooltip_requested(_source: Control, snapshot: Dictionary)
 func _on_panel_glossary_tooltip_requested(_source: Control, term: String) -> void:
 	if tooltip_presenter != null:
 		tooltip_presenter.show_glossary_term(term)
+
+
+func _on_panel_structured_event_tooltip_requested(_source: Control, events: Array[Dictionary]) -> void:
+	if tooltip_presenter != null:
+		tooltip_presenter.show_structured_events(events)
 
 
 func _bind_resource_tooltip(control: Control, resource) -> void:

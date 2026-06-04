@@ -61,6 +61,10 @@ func show_glossary_term(term: String) -> void:
 	show_text(ResourceTooltipBuilderScript.text_for_glossary_term(term))
 
 
+func show_structured_events(events: Array[Dictionary]) -> void:
+	show_text(ResourceTooltipBuilderScript.text_for_structured_events(events))
+
+
 func show_text(text: String) -> void:
 	if text.is_empty():
 		hide_tooltip()
