@@ -35,6 +35,8 @@ func show_unit(unit: UnitDefinition, party_units: Array[UnitDefinition] = []) ->
 		_add_plain_text("Skipped equipment: %s" % _join_values(skipped_items, ", "))
 	_add_plain_text("Tags: %s" % _join_values(unit.tags, ", "))
 	_add_resource_text(unit.ancestry, "Ancestry: %s" % _resource_display_name(unit.ancestry))
+	if unit.ancestry != null:
+		_add_resource_text(unit.ancestry.feature, "Ancestry feature: %s" % _resource_display_name(unit.ancestry.feature))
 	_add_plain_text("Job progress: %s" % _job_progress_summary(unit))
 	_add_plain_text("")
 	if unit.loadout == null:
@@ -47,9 +49,9 @@ func show_unit(unit: UnitDefinition, party_units: Array[UnitDefinition] = []) ->
 	var reaction = loadout.equipped_reaction if loadout.equipped_reaction != null else loadout.current_job.reaction if loadout.current_job != null else null
 	_add_resource_text(loadout, "Loadout: %s" % loadout.display_name)
 	_add_resource_text(loadout.current_job, "Current job: %s" % _resource_display_name(loadout.current_job))
-	_add_resource_text(skill, "Skill: %s" % _resource_display_name(skill))
-	_add_resource_text(passive, "Passive: %s" % _resource_display_name(passive))
-	_add_resource_text(reaction, "Reaction: %s" % _resource_display_name(reaction))
+	_add_resource_text(skill, "Skill: %s (%s)" % [_resource_display_name(skill), _ability_source(loadout.equipped_skill)])
+	_add_resource_text(passive, "Passive: %s (%s)" % [_resource_display_name(passive), _ability_source(loadout.equipped_passive)])
+	_add_resource_text(reaction, "Reaction: %s (%s)" % [_resource_display_name(reaction), _ability_source(loadout.equipped_reaction)])
 	_add_plain_text("")
 	_add_plain_text("Equipment:")
 	_add_item_row("Weapon", loadout.weapon)
@@ -61,9 +63,12 @@ func show_unit(unit: UnitDefinition, party_units: Array[UnitDefinition] = []) ->
 	if loadout.tactics.is_empty():
 		_add_plain_text("- none")
 	else:
-		for tactic in loadout.tactics:
+		for index in loadout.tactics.size():
+			var tactic = loadout.tactics[index]
 			if tactic != null:
-				_add_resource_text(tactic, "- %s: %s -> %s -> %s" % [tactic.display_name, tactic.condition, tactic.action, tactic.target])
+				_add_resource_text(tactic, "%d. %s: %s -> %s -> %s" % [index + 1, tactic.display_name, tactic.condition, tactic.action, tactic.target])
+		if loadout.current_job != null and loadout.current_job.default_tactic != null:
+			_add_resource_text(loadout.current_job.default_tactic, "%d. %s: %s -> %s -> %s (job default)" % [loadout.tactics.size() + 1, loadout.current_job.default_tactic.display_name, loadout.current_job.default_tactic.condition, loadout.current_job.default_tactic.action, loadout.current_job.default_tactic.target])
 
 
 func _add_item_row(slot_name: String, item: ItemDefinition) -> void:
@@ -128,6 +133,12 @@ func _resource_display_name(resource) -> String:
 	if resource == null:
 		return "none"
 	return String(resource.display_name)
+
+
+func _ability_source(equipped_override: Resource) -> String:
+	if equipped_override != null:
+		return "equipped learned override"
+	return "current job"
 
 
 func _item_detail_text(item: ItemDefinition) -> String:

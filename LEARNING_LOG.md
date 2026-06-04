@@ -2370,3 +2370,43 @@ Manual exercise:
 Open questions:
 
 - Should the debug harness eventually move behind a collapsible advanced section, or is the small subdued label enough for now?
+
+## 2026-06-04 - Richer unit detail presentation
+
+Feature worked on:
+
+- Added ancestry feature display to the unit detail panel.
+- Labeled skill, passive, and reaction sources as current-job abilities or equipped learned overrides.
+- Numbered tactic order and included the current job's appended default tactic.
+- Removed the completed unit-detail presentation TODO.
+
+Godot concepts introduced:
+
+- A UI panel can show Resource relationships directly by rendering hoverable rows for nested Resource references.
+- Ordered arrays such as tactics can be displayed as priority lists without changing the underlying data.
+
+Game architecture concepts introduced:
+
+- Current-job abilities and equipped learned overrides are different sources even when combat only sees the resolved ability.
+- Job default tactics are appended after loadout tactics, so explicit loadout tactics keep priority.
+- An ancestry feature is part of the unit's body/origin layer, not its job or gear.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/unit_detail_panel.gd`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- How a unit's selected skill/passive/reaction is resolved from loadout override versus current job fallback.
+- Why tactic order matters before combat starts.
+- Why ancestry feature appears near ancestry instead of under equipment or jobs.
+
+Manual exercise:
+
+- Open Roger Spellsword in the party detail panel and identify which ability line comes from an equipped learned override rather than the current job.
+
+Open questions:
+
+- Should future unit detail UI group this information into collapsible sections once the panel becomes visually dense?
