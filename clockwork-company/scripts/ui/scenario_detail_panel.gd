@@ -29,6 +29,7 @@ func show_scenario(scenario: Resource, status_text: String) -> void:
 	for encounter in scenario.encounters:
 		if encounter != null:
 			_add_resource_text(encounter, "- %s" % encounter.display_name)
+	_add_scouting_reports(scenario.encounters)
 	_add_plain_text("Party size: %d" % scenario.party_size)
 	_add_plain_text("Recommended level: %d-%d" % [scenario.recommended_level_min, scenario.recommended_level_max])
 	_add_plain_text("Status: %s" % _status_summary(status_text))
@@ -65,6 +66,21 @@ func _add_resource_text(resource: Resource, text: String) -> Label:
 	label.mouse_entered.connect(_on_resource_mouse_entered.bind(label, resource))
 	label.mouse_exited.connect(_on_resource_mouse_exited)
 	return label
+
+
+func _add_scouting_reports(encounters: Array) -> void:
+	var has_report := false
+	for encounter in encounters:
+		if encounter != null and "scout_text" in encounter and not String(encounter.scout_text).is_empty():
+			has_report = true
+			break
+	if not has_report:
+		return
+	_add_plain_text("")
+	_add_plain_text("Scouting reports:")
+	for encounter in encounters:
+		if encounter != null and "scout_text" in encounter and not String(encounter.scout_text).is_empty():
+			_add_resource_text(encounter, "- %s: %s" % [encounter.display_name, encounter.scout_text])
 
 
 func _on_resource_mouse_entered(source: Control, resource: Resource) -> void:

@@ -3134,3 +3134,39 @@ Manual exercise:
 Open questions:
 
 - Should future replay text lines become individually hoverable once the log display moves away from one monolithic `RichTextLabel`?
+
+## 2026-06-04 - Visible scenario scouting reports
+
+Feature worked on:
+
+- Scenario detail now shows encounter scouting reports when encounter Resources provide `scout_text`.
+- Removed the completed scouting report TODO.
+
+Godot concepts introduced:
+
+- A UI panel can render optional Resource fields only when authored content exists.
+
+Game architecture concepts introduced:
+
+- Scouting reports are scenario-facing presentation of normal encounter data.
+- Enemies remain normal unit/loadout/job/item/tactic builds; scout text explains them without a separate monster ruleset.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/scenario_detail_panel.gd`
+- `ARCHITECTURE.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Where encounter scout text is authored.
+- Why scenario detail shows scout text without changing combat rules.
+
+Manual exercise:
+
+- Select each scenario and read its scouting reports, then hover the same encounter names to compare the tooltip text.
+
+Open questions:
+
+- Should future scouting reports summarize enemy tags mechanically, or stay authored prose?

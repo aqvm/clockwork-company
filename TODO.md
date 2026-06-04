@@ -66,7 +66,6 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 - Turn the broad content catalog into curated scenario-facing content.
 - Add more handcrafted scenarios only when the framework and UI can make them understandable.
 - Keep enemies as normal unit/loadout/job/item/tactic builds, not a separate monster-only ruleset.
-- Add scouting reports when enemy mechanics become more varied.
 - Use tags for filtering/conditions/content tools when an actual tool or rule needs them.
 - Keep JSON sidecar docs next to every JSON content/modding file.
 
