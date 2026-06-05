@@ -22,6 +22,7 @@ Feature worked on:
 - Winning a campaign scenario commits the mutated `RunState` party and inventory back into campaign state.
 - Standalone practice scenarios still avoid the campaign commit path.
 - Campaign saves now include roster units, job progress, equipped gear, and unequipped campaign inventory.
+- Added scenario-local knockout tracking so defeated allies sit out later encounters in the same active scenario.
 
 Godot concepts introduced:
 
@@ -33,6 +34,7 @@ Game architecture concepts introduced:
 - Campaign state and scenario-run state are separate ownership layers.
 - A run can mutate cloned units freely, then only become durable if the campaign explicitly commits it after scenario victory.
 - Practice mode can reuse scenario execution without writing long-term campaign state.
+- Knockout is active-scenario state, not campaign biography state yet.
 
 Files touched:
 
@@ -51,10 +53,11 @@ What I should now be able to explain:
 - Why `CampaignRosterState` owns durable roster/inventory data instead of `RunState`.
 - Why job XP from a failed campaign scenario is not committed to the campaign roster.
 - How content ids survive Resource cloning through metadata.
+- Why scenario-local knockout should reset after scenario end.
 
 Manual exercise:
 
-- Start Roadside Ambush from the campaign, change a unit's planning equipment before starting, clear the scenario, save the campaign, restart, load the campaign, and confirm the unit's gear/job progress is still visible in the campaign roster summary.
+- Start Roadside Ambush from the campaign, change a unit's planning equipment before starting, clear the scenario, save the campaign, restart, load the campaign, and confirm the unit's gear/job progress is still visible in the campaign roster summary. Then try a harder scenario and watch the run summary for `Scenario knockouts` after an ally is defeated in a won encounter.
 
 Open questions:
 

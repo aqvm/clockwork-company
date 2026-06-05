@@ -38,6 +38,7 @@ var encounter_definitions: Array = []
 var reward_definitions: Array = []
 var inventory_items: Array[ItemDefinition] = []
 var reward_history: Array[String] = []
+var knocked_out_unit_names: Array[String] = []
 var last_result_summary := ""
 var loss_test_mode := false
 var active_scenario: Resource = null
@@ -67,6 +68,7 @@ func _start_common(enabled_mod_pack_ids: Array[String], should_force_loss := fal
 	status = STATUS_ACTIVE
 	inventory_items.clear()
 	reward_history.clear()
+	knocked_out_unit_names.clear()
 	last_result_summary = ""
 	loss_test_mode = should_force_loss
 	active_scenario = null
@@ -122,6 +124,8 @@ func current_encounter_name() -> String:
 func build_current_fight_definitions() -> Array[UnitDefinition]:
 	var definitions: Array[UnitDefinition] = []
 	for ally in ally_definitions:
+		if knocked_out_unit_names.has(ally.display_name):
+			continue
 		definitions.append(_clone_unit_definition(ally))
 	var encounter = _current_encounter()
 	if encounter == null:
@@ -141,6 +145,7 @@ func complete_fight(report: Dictionary) -> void:
 		last_result_summary = "Run lost on fight %d. The enemy team survived the battle." % current_fight_number()
 		return
 
+	_record_scenario_knockouts(report)
 	if fight_index >= current_fight_count() - 1:
 		_award_current_job_levels()
 		if scenario_runner != null:
@@ -278,6 +283,10 @@ func status_lines() -> Array[String]:
 	lines.append("Party equipment:")
 	for ally in ally_definitions:
 		lines.append("- %s: %s" % [ally.display_name, _equipment_summary(ally)])
+	if knocked_out_unit_names.is_empty():
+		lines.append("Scenario knockouts: none")
+	else:
+		lines.append("Scenario knockouts: %s" % _join_string_parts(knocked_out_unit_names, ", "))
 	lines.append("Job progress:")
 	for ally in ally_definitions:
 		lines.append("- %s: %s" % [ally.display_name, _job_progress_summary(ally)])
@@ -354,6 +363,8 @@ func _scenario_has_rule(rule_id: String) -> bool:
 
 func _award_current_job_levels() -> void:
 	for ally in ally_definitions:
+		if knocked_out_unit_names.has(ally.display_name):
+			continue
 		if ally.loadout == null or ally.loadout.current_job == null:
 			continue
 		if _total_job_levels(ally) >= MAX_UNIT_JOB_LEVELS:
@@ -364,6 +375,28 @@ func _award_current_job_levels() -> void:
 			progress.xp -= JOB_XP_PER_LEVEL
 			progress.level += 1
 			_apply_job_unlocks(progress)
+
+
+func _record_scenario_knockouts(report: Dictionary) -> void:
+	if active_scenario == null:
+		return
+	var snapshots: Array = report.get("replay_snapshots", [])
+	if snapshots.is_empty():
+		return
+	var final_snapshot = snapshots[snapshots.size() - 1]
+	if not (final_snapshot is Dictionary):
+		return
+	for raw_unit in final_snapshot.get("units", []):
+		if not (raw_unit is Dictionary):
+			continue
+		var unit_snapshot: Dictionary = raw_unit
+		if String(unit_snapshot.get("team", "")) != CombatConstantsScript.TEAM_ALLY:
+			continue
+		if bool(unit_snapshot.get("is_alive", true)):
+			continue
+		var unit_name := String(unit_snapshot.get("name", ""))
+		if not unit_name.is_empty() and not knocked_out_unit_names.has(unit_name):
+			knocked_out_unit_names.append(unit_name)
 
 
 func _ensure_job_progress(unit: UnitDefinition, job: JobDefinition) -> JobProgressDefinition:
