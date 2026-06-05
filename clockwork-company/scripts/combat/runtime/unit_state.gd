@@ -3,6 +3,7 @@ class_name UnitState
 
 var unit_name := ""
 var unit_id := ""
+var campaign_unit_id := ""
 var tags: Array[String] = []
 var team := ""
 var ancestry: Resource = null
@@ -31,6 +32,7 @@ var ability_cooldowns := {}
 func _init(definition: UnitDefinition, unit_slot_index: int) -> void:
 	unit_name = definition.display_name
 	unit_id = _build_unit_id(definition.team, unit_slot_index, definition.display_name)
+	campaign_unit_id = String(definition.get_meta("campaign_unit_id", definition.display_name))
 	tags = definition.tags.duplicate()
 	team = definition.team
 	ancestry = definition.ancestry

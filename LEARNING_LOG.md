@@ -23,6 +23,7 @@ Feature worked on:
 - Standalone practice scenarios still avoid the campaign commit path.
 - Campaign saves now include roster units, job progress, equipped gear, and unequipped campaign inventory.
 - Added scenario-local knockout tracking so defeated allies sit out later encounters in the same active scenario.
+- Replaced knockout's display-name key with a stable campaign unit instance id carried through simulator snapshots.
 
 Godot concepts introduced:
 
@@ -35,6 +36,7 @@ Game architecture concepts introduced:
 - A run can mutate cloned units freely, then only become durable if the campaign explicitly commits it after scenario victory.
 - Practice mode can reuse scenario execution without writing long-term campaign state.
 - Knockout is active-scenario state, not campaign biography state yet.
+- Stable long-term unit identity and battle-local replay identity are related but not the same thing.
 
 Files touched:
 
@@ -54,6 +56,7 @@ What I should now be able to explain:
 - Why job XP from a failed campaign scenario is not committed to the campaign roster.
 - How content ids survive Resource cloning through metadata.
 - Why scenario-local knockout should reset after scenario end.
+- Why a campaign unit id is safer than display name once duplicate recruits or renaming are possible.
 
 Manual exercise:
 

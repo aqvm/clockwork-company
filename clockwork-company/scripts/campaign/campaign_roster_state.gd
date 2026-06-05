@@ -7,6 +7,8 @@ const UnitDefinitionScript := preload("res://scripts/data/unit_definition.gd")
 const UnitLoadoutDefinitionScript := preload("res://scripts/data/unit_loadout_definition.gd")
 const ItemDefinitionScript := preload("res://scripts/data/item_definition.gd")
 const JobProgressDefinitionScript := preload("res://scripts/data/job_progress_definition.gd")
+const META_CAMPAIGN_UNIT_ID := "campaign_unit_id"
+const META_CONTENT_ID := "content_id"
 
 var roster_units: Array[UnitDefinition] = []
 var inventory_items: Array[ItemDefinition] = []
@@ -17,7 +19,9 @@ func reset(starting_roster_ids: Array[String], enabled_mod_pack_ids: Array[Strin
 	inventory_items.clear()
 	for unit in JsonContentLoaderScript.load_unit_definitions_by_ids(starting_roster_ids, enabled_mod_pack_ids):
 		if unit.team == CombatConstantsScript.TEAM_ALLY:
-			roster_units.append(_clone_unit_definition(unit))
+			var copy := _clone_unit_definition(unit)
+			_set_campaign_unit_id(copy, _unique_campaign_unit_id(_content_id(copy)))
+			roster_units.append(copy)
 
 
 func active_party_snapshot() -> Array[UnitDefinition]:
@@ -31,7 +35,10 @@ func replace_roster_units(units: Array[UnitDefinition]) -> void:
 	roster_units.clear()
 	for unit in units:
 		if unit != null:
-			roster_units.append(_clone_unit_definition(unit))
+			var copy := _clone_unit_definition(unit)
+			if _campaign_unit_id(copy).is_empty():
+				_set_campaign_unit_id(copy, _unique_campaign_unit_id(_content_id(copy)))
+			roster_units.append(copy)
 
 
 func commit_from_run(run_state) -> void:
@@ -39,7 +46,10 @@ func commit_from_run(run_state) -> void:
 		return
 	roster_units.clear()
 	for unit: UnitDefinition in run_state.ally_definitions:
-		roster_units.append(_clone_unit_definition(unit))
+		var copy := _clone_unit_definition(unit)
+		if _campaign_unit_id(copy).is_empty():
+			_set_campaign_unit_id(copy, _unique_campaign_unit_id(_content_id(copy)))
+		roster_units.append(copy)
 	inventory_items.clear()
 	for item: ItemDefinition in run_state.inventory_items:
 		inventory_items.append(_clone_item_definition(item))
@@ -112,6 +122,7 @@ func _unit_from_save_data(data: Dictionary, enabled_mod_pack_ids: Array[String])
 		return null
 	var unit := _clone_unit_definition(units[0])
 	unit.team = CombatConstantsScript.TEAM_ALLY
+	_set_campaign_unit_id(unit, String(data.get("campaign_unit_id", unit_id)))
 	unit.job_progress = _job_progress_from_save_data(data.get("job_progress", []), unit.job_progress)
 	_apply_loadout_save_data(unit, data.get("loadout", {}), enabled_mod_pack_ids)
 	return unit
@@ -131,6 +142,7 @@ func _unit_to_save_data(unit: UnitDefinition) -> Dictionary:
 			"trinket_id": _content_id(unit.loadout.trinket),
 		}
 	return {
+		"campaign_unit_id": _campaign_unit_id(unit),
 		"unit_id": _content_id(unit),
 		"display_name": unit.display_name,
 		"job_progress": _job_progress_to_save_data(unit.job_progress),
@@ -239,6 +251,7 @@ func _item_name_or_empty(item: ItemDefinition) -> String:
 func _clone_unit_definition(source: UnitDefinition) -> UnitDefinition:
 	var copy: UnitDefinition = UnitDefinitionScript.new()
 	_copy_content_id(source, copy)
+	_copy_campaign_unit_id(source, copy)
 	copy.display_name = source.display_name
 	copy.tags = source.tags.duplicate()
 	copy.team = source.team
@@ -304,8 +317,8 @@ func _clone_job_progress(source: Array[JobProgressDefinition]) -> Array[JobProgr
 func _content_id(resource: Resource) -> String:
 	if resource == null:
 		return ""
-	if resource.has_meta("content_id"):
-		return String(resource.get_meta("content_id"))
+	if resource.has_meta(META_CONTENT_ID):
+		return String(resource.get_meta(META_CONTENT_ID))
 	if not resource.resource_path.is_empty():
 		return resource.resource_path.get_file().get_basename()
 	return ""
@@ -314,7 +327,41 @@ func _content_id(resource: Resource) -> String:
 func _copy_content_id(source: Resource, target: Resource) -> void:
 	var id := _content_id(source)
 	if not id.is_empty():
-		target.set_meta("content_id", id)
+		target.set_meta(META_CONTENT_ID, id)
+
+
+func _campaign_unit_id(unit: UnitDefinition) -> String:
+	if unit == null or not unit.has_meta(META_CAMPAIGN_UNIT_ID):
+		return ""
+	return String(unit.get_meta(META_CAMPAIGN_UNIT_ID))
+
+
+func _set_campaign_unit_id(unit: UnitDefinition, id: String) -> void:
+	if unit != null and not id.is_empty():
+		unit.set_meta(META_CAMPAIGN_UNIT_ID, id)
+
+
+func _copy_campaign_unit_id(source: UnitDefinition, target: UnitDefinition) -> void:
+	var id := _campaign_unit_id(source)
+	if not id.is_empty():
+		_set_campaign_unit_id(target, id)
+
+
+func _unique_campaign_unit_id(base_id: String) -> String:
+	var safe_base := base_id if not base_id.is_empty() else "unit"
+	var candidate := safe_base
+	var index := 2
+	while _campaign_unit_id_exists(candidate):
+		candidate = "%s_%d" % [safe_base, index]
+		index += 1
+	return candidate
+
+
+func _campaign_unit_id_exists(id: String) -> bool:
+	for unit in roster_units:
+		if _campaign_unit_id(unit) == id:
+			return true
+	return false
 
 
 func _join(parts: Array[String], separator: String) -> String:

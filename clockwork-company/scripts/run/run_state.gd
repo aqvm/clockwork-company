@@ -30,6 +30,8 @@ const REWARD_PATHS := [
 ]
 const RULE_IRON_TOLLGATE_ARMORED_ENEMIES := "iron_tollgate_armored_enemies"
 const IRON_TOLLGATE_ARMOR_BONUS := 2
+const META_CAMPAIGN_UNIT_ID := "campaign_unit_id"
+const META_CONTENT_ID := "content_id"
 
 var fight_index := 0
 var status := STATUS_ACTIVE
@@ -38,7 +40,7 @@ var encounter_definitions: Array = []
 var reward_definitions: Array = []
 var inventory_items: Array[ItemDefinition] = []
 var reward_history: Array[String] = []
-var knocked_out_unit_names: Array[String] = []
+var knocked_out_unit_ids: Array[String] = []
 var last_result_summary := ""
 var loss_test_mode := false
 var active_scenario: Resource = null
@@ -68,7 +70,7 @@ func _start_common(enabled_mod_pack_ids: Array[String], should_force_loss := fal
 	status = STATUS_ACTIVE
 	inventory_items.clear()
 	reward_history.clear()
-	knocked_out_unit_names.clear()
+	knocked_out_unit_ids.clear()
 	last_result_summary = ""
 	loss_test_mode = should_force_loss
 	active_scenario = null
@@ -124,7 +126,7 @@ func current_encounter_name() -> String:
 func build_current_fight_definitions() -> Array[UnitDefinition]:
 	var definitions: Array[UnitDefinition] = []
 	for ally in ally_definitions:
-		if knocked_out_unit_names.has(ally.display_name):
+		if knocked_out_unit_ids.has(_campaign_unit_id(ally)):
 			continue
 		definitions.append(_clone_unit_definition(ally))
 	var encounter = _current_encounter()
@@ -283,10 +285,10 @@ func status_lines() -> Array[String]:
 	lines.append("Party equipment:")
 	for ally in ally_definitions:
 		lines.append("- %s: %s" % [ally.display_name, _equipment_summary(ally)])
-	if knocked_out_unit_names.is_empty():
+	if knocked_out_unit_ids.is_empty():
 		lines.append("Scenario knockouts: none")
 	else:
-		lines.append("Scenario knockouts: %s" % _join_string_parts(knocked_out_unit_names, ", "))
+		lines.append("Scenario knockouts: %s" % _join_string_parts(_knockout_display_names(), ", "))
 	lines.append("Job progress:")
 	for ally in ally_definitions:
 		lines.append("- %s: %s" % [ally.display_name, _job_progress_summary(ally)])
@@ -363,7 +365,7 @@ func _scenario_has_rule(rule_id: String) -> bool:
 
 func _award_current_job_levels() -> void:
 	for ally in ally_definitions:
-		if knocked_out_unit_names.has(ally.display_name):
+		if knocked_out_unit_ids.has(_campaign_unit_id(ally)):
 			continue
 		if ally.loadout == null or ally.loadout.current_job == null:
 			continue
@@ -394,9 +396,9 @@ func _record_scenario_knockouts(report: Dictionary) -> void:
 			continue
 		if bool(unit_snapshot.get("is_alive", true)):
 			continue
-		var unit_name := String(unit_snapshot.get("name", ""))
-		if not unit_name.is_empty() and not knocked_out_unit_names.has(unit_name):
-			knocked_out_unit_names.append(unit_name)
+		var campaign_unit_id := String(unit_snapshot.get("campaign_unit_id", ""))
+		if not campaign_unit_id.is_empty() and not knocked_out_unit_ids.has(campaign_unit_id):
+			knocked_out_unit_ids.append(campaign_unit_id)
 
 
 func _ensure_job_progress(unit: UnitDefinition, job: JobDefinition) -> JobProgressDefinition:
@@ -504,6 +506,7 @@ func _ensure_loadout_clone(unit: UnitDefinition) -> UnitLoadoutDefinition:
 func _clone_unit_definition(source: UnitDefinition) -> UnitDefinition:
 	var copy: UnitDefinition = UnitDefinitionScript.new()
 	_copy_content_id(source, copy)
+	_copy_campaign_unit_id(source, copy)
 	copy.display_name = source.display_name
 	copy.tags = source.tags.duplicate()
 	copy.team = source.team
@@ -569,8 +572,8 @@ func _clone_job_progress(source: Array[JobProgressDefinition]) -> Array[JobProgr
 func _content_id(resource: Resource) -> String:
 	if resource == null:
 		return ""
-	if resource.has_meta("content_id"):
-		return String(resource.get_meta("content_id"))
+	if resource.has_meta(META_CONTENT_ID):
+		return String(resource.get_meta(META_CONTENT_ID))
 	if not resource.resource_path.is_empty():
 		return resource.resource_path.get_file().get_basename()
 	return ""
@@ -579,7 +582,36 @@ func _content_id(resource: Resource) -> String:
 func _copy_content_id(source: Resource, target: Resource) -> void:
 	var id := _content_id(source)
 	if not id.is_empty():
-		target.set_meta("content_id", id)
+		target.set_meta(META_CONTENT_ID, id)
+
+
+func _campaign_unit_id(unit: UnitDefinition) -> String:
+	if unit == null:
+		return ""
+	if unit.has_meta(META_CAMPAIGN_UNIT_ID):
+		return String(unit.get_meta(META_CAMPAIGN_UNIT_ID))
+	return unit.display_name
+
+
+func _copy_campaign_unit_id(source: UnitDefinition, target: UnitDefinition) -> void:
+	var id := _campaign_unit_id(source)
+	if not id.is_empty():
+		target.set_meta(META_CAMPAIGN_UNIT_ID, id)
+
+
+func _knockout_display_names() -> Array[String]:
+	var names: Array[String] = []
+	for id in knocked_out_unit_ids:
+		var unit := _find_ally_by_campaign_unit_id(id)
+		names.append(unit.display_name if unit != null else id)
+	return names
+
+
+func _find_ally_by_campaign_unit_id(id: String) -> UnitDefinition:
+	for ally in ally_definitions:
+		if _campaign_unit_id(ally) == id:
+			return ally
+	return null
 
 
 func _join_string_parts(parts: Array[String], separator: String) -> String:

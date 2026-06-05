@@ -99,7 +99,7 @@ The campaign layer does not change combat rules. Real fights still run through `
 
 Campaign progress can be saved to and loaded from `user://first_road_campaign_save.json` as small JSON. The save stores campaign id/version, completed scenarios, unlocked scenarios, unlocked content ids, campaign completion, and campaign roster state. Roster state currently includes the campaign's durable unit definitions, their per-job progress, their current loadout equipment, and unequipped campaign inventory items.
 
-Scenario-local knockout lives in `RunState`, not campaign save data. When an ally is defeated in a won fight, `RunState` records that ally's display name from the simulator's final replay snapshot and omits the unit from later encounters in the same active scenario. Because only completed campaign scenarios commit back to `CampaignRosterState`, knockouts create short-term scenario pressure without becoming long-term injury or death.
+Scenario-local knockout lives in `RunState`, not campaign save data. When an ally is defeated in a won fight, `RunState` records that ally's stable campaign unit id from the simulator's final replay snapshot and omits the unit from later encounters in the same active scenario. Because only completed campaign scenarios commit back to `CampaignRosterState`, knockouts create short-term scenario pressure without becoming long-term injury or death.
 
 Intentionally not implemented here:
 
@@ -175,7 +175,7 @@ The first playable test now opens as a scenario workbench with the older combat 
 - `clockwork-company/scripts/run/run_state.gd` owns short-run progression state: current fight index, active/reward/equipment/won/lost status, cloned party definitions, run inventory, fixed encounter order, and reward/equipment application.
 - `clockwork-company/scripts/scenario/scenario_runner.gd` owns the current scenario progress wrapper: active scenario id, encounter index, completion, and scenario summary lines.
 - `clockwork-company/scripts/campaign/campaign_manager.gd` owns campaign unlock progression: available scenarios, completed scenarios, unlocked content ids, and campaign completion.
-- `clockwork-company/scripts/campaign/campaign_roster_state.gd` owns durable campaign roster state: starting roster construction from campaign unit ids, campaign-party snapshots for scenario starts, victory commits from `RunState`, campaign inventory, and roster/inventory JSON save data.
+- `clockwork-company/scripts/campaign/campaign_roster_state.gd` owns durable campaign roster state: starting roster construction from campaign unit ids, stable campaign unit instance ids, campaign-party snapshots for scenario starts, victory commits from `RunState`, campaign inventory, and roster/inventory JSON save data.
 - `clockwork-company/scripts/modding/json_content_loader.gd` owns JSON pack loading/merging/validation and runtime Resource reconstruction for ancestries, items, jobs, tactics, loadouts, and units.
 - `clockwork-company/scripts/tools/content_validation_check.gd` owns repository content sanity checks for scenarios, scenario rules, scenario rewards, campaign identity/graph references, JSON pack loading, and required JSON sidecar docs.
 - `CombatLog` and `CombatLogEntry` are dedicated helper classes in `scripts/combat/logging/combat_log.gd` that build readable text logs and structured event metadata.

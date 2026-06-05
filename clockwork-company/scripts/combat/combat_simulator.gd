@@ -243,6 +243,7 @@ func _build_roster_units(units: Array) -> Array[Dictionary]:
 	for unit in units:
 		roster_units.append({
 			"id": unit.unit_id,
+			"campaign_unit_id": unit.campaign_unit_id,
 			"name": unit.unit_name,
 			"team": unit.team,
 			"max_hp": unit.max_hp,
@@ -256,6 +257,7 @@ func _build_replay_snapshot(root_event_id: int, time: int, units: Array) -> Dict
 	for unit in units:
 		unit_snapshots.append({
 			"id": unit.unit_id,
+			"campaign_unit_id": unit.campaign_unit_id,
 			"name": unit.unit_name,
 			"team": unit.team,
 			"max_hp": unit.max_hp,
