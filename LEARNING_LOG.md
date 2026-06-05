@@ -13,6 +13,53 @@ Each entry should include:
 - Manual exercise
 - Open questions
 
+## 2026-06-05 - First campaign roster persistence slice
+
+Feature worked on:
+
+- Added campaign-owned roster state through `CampaignRosterState`.
+- Campaign scenarios now start from the campaign roster instead of freshly loaded demo allies.
+- Winning a campaign scenario commits the mutated `RunState` party and inventory back into campaign state.
+- Standalone practice scenarios still avoid the campaign commit path.
+- Campaign saves now include roster units, job progress, equipped gear, and unequipped campaign inventory.
+
+Godot concepts introduced:
+
+- Runtime `Resource` instances can carry lightweight metadata with `set_meta(...)`, which this patch uses for stable content ids after JSON/.tres reconstruction.
+- `RefCounted` state objects are useful for gameplay state that should not be editor-authored `.tres` content.
+
+Game architecture concepts introduced:
+
+- Campaign state and scenario-run state are separate ownership layers.
+- A run can mutate cloned units freely, then only become durable if the campaign explicitly commits it after scenario victory.
+- Practice mode can reuse scenario execution without writing long-term campaign state.
+
+Files touched:
+
+- `clockwork-company/scripts/campaign/campaign_roster_state.gd`
+- `clockwork-company/scripts/campaign/campaign_manager.gd`
+- `clockwork-company/scripts/run/run_state.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `clockwork-company/scripts/modding/json_content_loader.gd`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why `CampaignRosterState` owns durable roster/inventory data instead of `RunState`.
+- Why job XP from a failed campaign scenario is not committed to the campaign roster.
+- How content ids survive Resource cloning through metadata.
+
+Manual exercise:
+
+- Start Roadside Ambush from the campaign, change a unit's planning equipment before starting, clear the scenario, save the campaign, restart, load the campaign, and confirm the unit's gear/job progress is still visible in the campaign roster summary.
+
+Open questions:
+
+- Should scenario-local knockout be tracked by roster unit id or by a future explicit campaign unit instance id once recruits can duplicate the same base unit template?
+
 ## 2026-06-04 - Campaign graph content validation
 
 Feature worked on:

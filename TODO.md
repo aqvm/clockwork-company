@@ -40,8 +40,8 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 - Most campaign scenarios can stay limited to a small deployed party, currently three units, while a campaign finale can deliberately allow the entire roster so long-term roster development pays off.
 - Future content unlocks should gate content complexity, not raw power. Good first targets are new recruit candidates, new item/reward types entering scenario reward pools, optional scenario branches, or more complex buildcraft concepts.
 - Avoid using content unlock IDs to hide basic UI, core job rules, or strictly stronger upgrades unless a later design pass deliberately revises the unlock philosophy.
-- Add campaign save/load for active roster state. Completed scenarios, unlocked scenario IDs, unlocked content IDs, campaign completion, and campaign ID/version validation now save/load as small JSON; the next persistence slice should add roster/career/loadout/inventory state for campaigns only.
-- Add persistent roster/job/gear integration across scenarios in campaigns. Standalone scenarios should remain self-contained and should not write long-term roster state.
+- Expand campaign save/load after the first roster-state slice. Completed scenarios, unlocked scenario IDs, unlocked content IDs, campaign completion, campaign roster units, job progress, loadout equipment, and campaign inventory now save/load as small JSON; active scenario attempts still do not.
+- Keep hardening persistent roster/job/gear integration across scenarios in campaigns. Standalone practice scenarios should remain self-contained and should not write long-term roster state.
 - Campaign runs should carry forward everything that contributes to unit biography: named unit identity, ancestry/body, current job, job progress, learned/equipped abilities, tactics/loadout choices, equipped gear, unequipped inventory, and scenario/content unlocks.
 - Unit biography should eventually surface stats, jobs trained, job features unlocked, scars acquired, bosses defeated, notable scenario clears, tactics used, and other history that explains how the unit became who they are.
 - Do not overemphasize gear in biography tracking because gear is intentionally swappable. Current equipment matters to builds, but long-term biography should focus more on persistent unit history.
@@ -49,7 +49,7 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 - Do not carry battle-only effects forward after a scenario. Current HP damage, temporary armor, statuses, and other combat runtime effects should reset unless a later explicit design pass adds long-term consequences.
 - Lock roster, gear, tactics, jobs, and learned ability assignments for the duration of a scenario once it starts. The player can adjust them before starting or retrying a scenario, not between encounters inside that scenario.
 - Between encounters inside a scenario, reset surviving units to baseline combat capacity: HP, temporary armor, statuses, cooldown-like battle state, and other runtime effects should reset before the next fight.
-- Implement simple campaign defeat handling first: a unit defeated during a fight is unavailable for the rest of that scenario, then returns after the scenario with no long-term penalty.
+- Implement simple campaign defeat handling first: a unit defeated during a fight is unavailable for the rest of that scenario, then returns after the scenario with no long-term penalty. This needs scenario-local knockout state in `RunState` keyed by stable campaign unit identity, plus fight-building logic that omits knocked-out allies without writing long-term campaign roster damage.
 - In non-permadeath campaign mode, losing a scenario should let the player adjust roster, gear, tactics, and learned ability assignments, then retry the scenario.
 - Failed campaign scenario attempts should grant knowledge only: revealed encounter/scouting information can persist for planning, but no XP, rewards, scenario unlocks, content unlocks, or roster progression should be awarded until the scenario is completed.
 - Revisit campaign retry framing later. Retries fit the buildcraft puzzle, but may weaken campaign narrative stakes if the story implies irreversible events.
@@ -119,9 +119,9 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 
 ## Save/Load and Persistence
 
-- Add broader campaign save/load only after the campaign state shape is stable.
-- Persisted unlocked/completed scenarios now exist as the first save slice; add roster persistence separately.
-- Persist roster/job/gear state after the roster model is clear.
+- Add broader campaign save/load only after the remaining campaign state shapes are stable.
+- Persisted unlocked/completed scenarios and first roster/job/gear/inventory state now exist; add active-attempt save/load only after scenario-local knockout, retry, and scouting reveal state are modeled cleanly.
+- Revisit roster/job/gear serialization once learned ability choice/equip UI exists, because current persistence keeps the one-skill/one-passive/one-reaction scaffold but does not yet solve broader learned-ability catalogs.
 - Keep save data small and inspectable while the project is still learning-first.
 
 ## Later / Not Soon

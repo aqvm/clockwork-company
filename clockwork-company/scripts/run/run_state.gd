@@ -50,8 +50,8 @@ func start(enabled_mod_pack_ids: Array[String], should_force_loss := false) -> v
 	reward_definitions = _load_reward_definitions()
 
 
-func start_scenario(enabled_mod_pack_ids: Array[String], scenario: Resource, should_force_loss := false, starting_allies: Array = []) -> void:
-	_start_common(enabled_mod_pack_ids, should_force_loss, starting_allies)
+func start_scenario(enabled_mod_pack_ids: Array[String], scenario: Resource, should_force_loss := false, starting_allies: Array = [], starting_inventory: Array = []) -> void:
+	_start_common(enabled_mod_pack_ids, should_force_loss, starting_allies, starting_inventory)
 	active_scenario = scenario
 	scenario_runner = ScenarioRunnerScript.new()
 	scenario_runner.start(scenario)
@@ -62,7 +62,7 @@ func start_scenario(enabled_mod_pack_ids: Array[String], scenario: Resource, sho
 	last_result_summary = "Ready to enter encounter %d: %s." % [current_fight_number(), current_encounter_name()]
 
 
-func _start_common(enabled_mod_pack_ids: Array[String], should_force_loss := false, starting_allies: Array = []) -> void:
+func _start_common(enabled_mod_pack_ids: Array[String], should_force_loss := false, starting_allies: Array = [], starting_inventory: Array = []) -> void:
 	fight_index = 0
 	status = STATUS_ACTIVE
 	inventory_items.clear()
@@ -90,6 +90,9 @@ func _start_common(enabled_mod_pack_ids: Array[String], should_force_loss := fal
 			ally.physical_damage = 1
 			ally.magic_damage = 0
 			ally.armor = 0
+
+	for item: ItemDefinition in starting_inventory:
+		inventory_items.append(_clone_item_definition(item))
 
 
 func current_fight_number() -> int:
@@ -467,6 +470,7 @@ func _ensure_loadout_clone(unit: UnitDefinition) -> UnitLoadoutDefinition:
 
 func _clone_unit_definition(source: UnitDefinition) -> UnitDefinition:
 	var copy: UnitDefinition = UnitDefinitionScript.new()
+	_copy_content_id(source, copy)
 	copy.display_name = source.display_name
 	copy.tags = source.tags.duplicate()
 	copy.team = source.team
@@ -483,6 +487,7 @@ func _clone_unit_definition(source: UnitDefinition) -> UnitDefinition:
 
 func _clone_loadout_definition(source: UnitLoadoutDefinition) -> UnitLoadoutDefinition:
 	var copy: UnitLoadoutDefinition = UnitLoadoutDefinitionScript.new()
+	_copy_content_id(source, copy)
 	copy.display_name = source.display_name
 	copy.current_job = source.current_job
 	copy.equipped_skill = source.equipped_skill
@@ -498,6 +503,7 @@ func _clone_loadout_definition(source: UnitLoadoutDefinition) -> UnitLoadoutDefi
 
 func _clone_item_definition(source: ItemDefinition) -> ItemDefinition:
 	var copy: ItemDefinition = ItemDefinitionScript.new()
+	_copy_content_id(source, copy)
 	copy.display_name = source.display_name
 	copy.tags = source.tags.duplicate()
 	copy.slot = source.slot
@@ -525,6 +531,22 @@ func _clone_job_progress(source: Array[JobProgressDefinition]) -> Array[JobProgr
 		copy.pending_unlock_choice = progress.pending_unlock_choice
 		results.append(copy)
 	return results
+
+
+func _content_id(resource: Resource) -> String:
+	if resource == null:
+		return ""
+	if resource.has_meta("content_id"):
+		return String(resource.get_meta("content_id"))
+	if not resource.resource_path.is_empty():
+		return resource.resource_path.get_file().get_basename()
+	return ""
+
+
+func _copy_content_id(source: Resource, target: Resource) -> void:
+	var id := _content_id(source)
+	if not id.is_empty():
+		target.set_meta("content_id", id)
 
 
 func _join_string_parts(parts: Array[String], separator: String) -> String:

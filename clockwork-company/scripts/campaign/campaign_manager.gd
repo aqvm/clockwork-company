@@ -2,18 +2,24 @@ extends RefCounted
 class_name CampaignManager
 
 const CampaignProgressScript := preload("res://scripts/campaign/campaign_progress.gd")
-const SAVE_VERSION := 1
+const CampaignRosterStateScript := preload("res://scripts/campaign/campaign_roster_state.gd")
+const SAVE_VERSION := 2
 
 var campaign: Resource = null
 var progress = CampaignProgressScript.new()
+var roster_state = CampaignRosterStateScript.new()
+var enabled_mod_pack_ids: Array[String] = []
 
 
-func start(definition: Resource) -> void:
+func start(definition: Resource, active_mod_pack_ids: Array[String] = []) -> void:
 	campaign = definition
+	enabled_mod_pack_ids = active_mod_pack_ids.duplicate()
 	if campaign == null:
 		progress.reset([], [])
+		roster_state.reset([], enabled_mod_pack_ids)
 		return
 	progress.reset(campaign.starting_scenario_ids, campaign.starting_unlocks)
+	roster_state.reset(campaign.starting_roster_ids, enabled_mod_pack_ids)
 
 
 func available_scenarios() -> Array:
@@ -65,6 +71,25 @@ func complete_scenario(scenario_id: String) -> void:
 		progress.campaign_completed = true
 
 
+func campaign_party_snapshot() -> Array[UnitDefinition]:
+	return roster_state.active_party_snapshot()
+
+
+func campaign_inventory_snapshot() -> Array[ItemDefinition]:
+	var items: Array[ItemDefinition] = []
+	for item in roster_state.inventory_items:
+		items.append(item)
+	return items
+
+
+func commit_completed_run(run_state) -> void:
+	roster_state.commit_from_run(run_state)
+
+
+func commit_planning_roster(units: Array[UnitDefinition]) -> void:
+	roster_state.replace_roster_units(units)
+
+
 func status_lines() -> Array[String]:
 	var lines: Array[String] = []
 	if campaign == null:
@@ -75,6 +100,8 @@ func status_lines() -> Array[String]:
 	lines.append("Unlocked scenarios: %s" % _join_or_none(progress.unlocked_scenario_ids))
 	lines.append("Completed scenarios: %s" % _join_or_none(progress.completed_scenario_ids))
 	lines.append("Unlocked content: %s" % _join_or_none(progress.unlocked_content_ids))
+	for roster_line in roster_state.status_lines():
+		lines.append(roster_line)
 	return lines
 
 
@@ -103,13 +130,15 @@ func to_save_data() -> Dictionary:
 		"save_version": SAVE_VERSION,
 		"campaign_id": campaign.campaign_id if campaign != null else "",
 		"progress": progress.to_save_data(),
+		"roster_state": roster_state.to_save_data(),
 	}
 
 
 func apply_save_data(data: Dictionary) -> bool:
 	if campaign == null:
 		return false
-	if int(data.get("save_version", 0)) != SAVE_VERSION:
+	var save_version := int(data.get("save_version", 0))
+	if save_version < 1 or save_version > SAVE_VERSION:
 		return false
 	if String(data.get("campaign_id", "")) != campaign.campaign_id:
 		return false
@@ -117,6 +146,9 @@ func apply_save_data(data: Dictionary) -> bool:
 	if not (progress_data is Dictionary):
 		return false
 	progress.apply_save_data(progress_data, _scenario_ids())
+	var roster_data = data.get("roster_state", {})
+	if roster_data is Dictionary:
+		roster_state.apply_save_data(roster_data, campaign.starting_roster_ids, enabled_mod_pack_ids)
 	return true
 
 

@@ -241,7 +241,7 @@ func _start_new_run(should_force_loss: bool) -> void:
 func _start_first_road_campaign() -> void:
 	_stop_log_replay()
 	campaign_manager = CampaignManagerScript.new()
-	campaign_manager.start(FIRST_ROAD_CAMPAIGN)
+	campaign_manager.start(FIRST_ROAD_CAMPAIGN, _enabled_mod_pack_ids_array())
 	active_campaign_scenario_id = ""
 	run_state = null
 	selected_scenario = null
@@ -254,7 +254,9 @@ func _start_scenario_run(scenario: Resource, should_mutate_campaign := true) -> 
 	_stop_log_replay()
 	run_state = RunStateScript.new()
 	active_campaign_scenario_id = scenario.scenario_id if should_mutate_campaign else ""
-	run_state.start_scenario(_enabled_mod_pack_ids_array(), scenario, false, planning_party)
+	var starting_party: Array = campaign_manager.campaign_party_snapshot() if should_mutate_campaign and campaign_manager != null else planning_party
+	var starting_inventory: Array = campaign_manager.campaign_inventory_snapshot() if should_mutate_campaign and campaign_manager != null else []
+	run_state.start_scenario(_enabled_mod_pack_ids_array(), scenario, false, starting_party, starting_inventory)
 	_load_planning_party_from_run()
 	_refresh_planning_panel()
 	_show_run_state_without_combat_preview()
@@ -397,6 +399,11 @@ func _on_scenario_selected(scenario: Resource) -> void:
 
 func _load_planning_party() -> void:
 	planning_party.clear()
+	if campaign_manager != null:
+		planning_party = campaign_manager.campaign_party_snapshot()
+		if selected_unit_name.is_empty() and not planning_party.is_empty():
+			selected_unit_name = planning_party[0].display_name
+		return
 	for definition: UnitDefinition in JsonContentLoaderScript.load_demo_unit_definitions(_enabled_mod_pack_ids_array()):
 		if definition.team == "Allies":
 			planning_party.append(definition)
@@ -578,6 +585,8 @@ func _planning_item_options(unit: UnitDefinition) -> Array:
 
 
 func _on_planning_item_requested(slot: String, item: ItemDefinition) -> void:
+	if _has_active_scenario_run():
+		return
 	var unit := _find_planning_unit(selected_unit_name)
 	if unit == null or item == null:
 		return
@@ -585,6 +594,8 @@ func _on_planning_item_requested(slot: String, item: ItemDefinition) -> void:
 		return
 	var loadout = _ensure_planning_loadout(unit)
 	_set_slot_item(loadout, slot, item)
+	if campaign_manager != null:
+		campaign_manager.commit_planning_roster(planning_party)
 	_refresh_planning_panel()
 
 
@@ -821,10 +832,14 @@ func _on_replay_finished() -> void:
 	if run_state != null and run_state.status == RunStateScript.STATUS_ACTIVE:
 		run_state.complete_fight(cached_battle_report)
 		if run_state.status == RunStateScript.STATUS_WON and campaign_manager != null and not active_campaign_scenario_id.is_empty():
+			campaign_manager.commit_completed_run(run_state)
 			campaign_manager.complete_scenario(active_campaign_scenario_id)
 			active_campaign_scenario_id = ""
 			selected_scenario = null
-		_load_planning_party_from_run()
+		if run_state.status == RunStateScript.STATUS_WON and campaign_manager != null:
+			_load_planning_party()
+		else:
+			_load_planning_party_from_run()
 		combat_summary.clear()
 		cached_static_lines = _build_run_static_lines([])
 		_append_lines(combat_summary, cached_static_lines)

@@ -97,12 +97,13 @@ The scenario workbench can also start an unlocked scenario as a practice run. Pr
 
 The campaign layer does not change combat rules. Real fights still run through `CombatSimulator`; runtime combat state still lives in combat runtime classes; between-fight roster/reward/equipment choices still live in `RunState`.
 
-Campaign progress can be saved to and loaded from `user://first_road_campaign_save.json` as small JSON. This first save slice stores campaign id/version, completed scenarios, unlocked scenarios, unlocked content ids, and campaign completion. It deliberately does not restore an active scenario run, roster state, inventory, gear, or job progress yet.
+Campaign progress can be saved to and loaded from `user://first_road_campaign_save.json` as small JSON. The save stores campaign id/version, completed scenarios, unlocked scenarios, unlocked content ids, campaign completion, and campaign roster state. Roster state currently includes the campaign's durable unit definitions, their per-job progress, their current loadout equipment, and unequipped campaign inventory items.
 
 Intentionally not implemented here:
 
-- active-run, roster, inventory, gear, or job-progress save/load
-- persistent roster import/export
+- active scenario-run save/load
+- roster import/export outside the current campaign save
+- scenario-local knockout tracking between encounters
 - injuries, fatigue, rest, or base management
 - procedural generation
 - async multiplayer or ghost snapshots
@@ -173,6 +174,7 @@ The first playable test now opens as a scenario workbench with the older combat 
 - `clockwork-company/scripts/run/run_state.gd` owns short-run progression state: current fight index, active/reward/equipment/won/lost status, cloned party definitions, run inventory, fixed encounter order, and reward/equipment application.
 - `clockwork-company/scripts/scenario/scenario_runner.gd` owns the current scenario progress wrapper: active scenario id, encounter index, completion, and scenario summary lines.
 - `clockwork-company/scripts/campaign/campaign_manager.gd` owns campaign unlock progression: available scenarios, completed scenarios, unlocked content ids, and campaign completion.
+- `clockwork-company/scripts/campaign/campaign_roster_state.gd` owns durable campaign roster state: starting roster construction from campaign unit ids, campaign-party snapshots for scenario starts, victory commits from `RunState`, campaign inventory, and roster/inventory JSON save data.
 - `clockwork-company/scripts/modding/json_content_loader.gd` owns JSON pack loading/merging/validation and runtime Resource reconstruction for ancestries, items, jobs, tactics, loadouts, and units.
 - `clockwork-company/scripts/tools/content_validation_check.gd` owns repository content sanity checks for scenarios, scenario rules, scenario rewards, campaign identity/graph references, JSON pack loading, and required JSON sidecar docs.
 - `CombatLog` and `CombatLogEntry` are dedicated helper classes in `scripts/combat/logging/combat_log.gd` that build readable text logs and structured event metadata.
@@ -198,7 +200,7 @@ The first playable test now opens as a scenario workbench with the older combat 
 - `clockwork-company/scripts/data/reward_definition.gd` defines a run reward as a named offer with a suggested recipient and a normal `ItemDefinition` payload.
 - `clockwork-company/scripts/data/scenario_definition.gd` defines a handcrafted mission as story text, ordered encounter references, optional data-only scenario rules, rewards, tags, and unlock ids.
 - `clockwork-company/scripts/data/scenario_rule_definition.gd` defines a named scenario rule placeholder that can exist as data before combat mechanics implement it.
-- `clockwork-company/scripts/data/campaign_definition.gd` and `campaign_scenario_node_definition.gd` define a lightweight scenario chain.
+- `clockwork-company/scripts/data/campaign_definition.gd` and `campaign_scenario_node_definition.gd` define a lightweight scenario chain and starting roster ids.
 - `clockwork-company/resources/ancestries/*.tres` stores the current ancestry catalog.
 - `clockwork-company/resources/units/*.tres` stores the current demo unit definitions and a wider catalog of future ally/enemy build bodies.
 - `clockwork-company/resources/items/*.tres` stores the current demo item definitions and a wider catalog of build-enabling gear.

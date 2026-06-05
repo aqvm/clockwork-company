@@ -58,6 +58,29 @@ static func load_demo_unit_definitions(enabled_mod_pack_ids: Variant = null) -> 
 	return _build_demo_unit_definitions(merged_data)
 
 
+static func load_unit_definitions_by_ids(unit_ids: Array[String], enabled_mod_pack_ids: Variant = null) -> Array[UnitDefinition]:
+	var base_data := _load_base_data_from_resources()
+	var merged_data := _apply_mod_packs(base_data, enabled_mod_pack_ids)
+	var content := _build_content_resources(merged_data)
+	var units_by_id: Dictionary = content["units"]
+	var results: Array[UnitDefinition] = []
+	for unit_id in unit_ids:
+		var key := String(unit_id)
+		if units_by_id.has(key):
+			results.append(units_by_id[key])
+	return results
+
+
+static func load_item_definition_by_id(item_id: String, enabled_mod_pack_ids: Variant = null) -> ItemDefinition:
+	if item_id.is_empty():
+		return null
+	var base_data := _load_base_data_from_resources()
+	var merged_data := _apply_mod_packs(base_data, enabled_mod_pack_ids)
+	var content := _build_content_resources(merged_data)
+	var items_by_id: Dictionary = content["items"]
+	return items_by_id.get(item_id, null)
+
+
 static func list_available_mod_packs() -> Array[Dictionary]:
 	var descriptors: Array[Dictionary] = []
 	_collect_pack_descriptors_from_dir(descriptors, MODS_DIR, true)
@@ -339,12 +362,8 @@ static func _validate_merged_data(data: Dictionary) -> void:
 
 
 static func _build_demo_unit_definitions(merged_data: Dictionary) -> Array[UnitDefinition]:
-	var ancestries_by_id := _build_ancestry_resources(merged_data["ancestries"])
-	var items_by_id := _build_item_resources(merged_data["items"])
-	var jobs_by_id := _build_job_resources(merged_data["jobs"])
-	var tactics_by_id := _build_tactic_resources(merged_data["tactics"])
-	var loadouts_by_id := _build_loadout_resources(merged_data["loadouts"], jobs_by_id, items_by_id, tactics_by_id)
-	var units_by_id := _build_unit_resources(merged_data["units"], loadouts_by_id, jobs_by_id, ancestries_by_id)
+	var content := _build_content_resources(merged_data)
+	var units_by_id: Dictionary = content["units"]
 
 	var results: Array[UnitDefinition] = []
 	for unit_id in merged_data.get("demo_roster", DEFAULT_DEMO_ROSTER_IDS):
@@ -354,11 +373,29 @@ static func _build_demo_unit_definitions(merged_data: Dictionary) -> Array[UnitD
 	return results
 
 
+static func _build_content_resources(merged_data: Dictionary) -> Dictionary:
+	var ancestries_by_id := _build_ancestry_resources(merged_data["ancestries"])
+	var items_by_id := _build_item_resources(merged_data["items"])
+	var jobs_by_id := _build_job_resources(merged_data["jobs"])
+	var tactics_by_id := _build_tactic_resources(merged_data["tactics"])
+	var loadouts_by_id := _build_loadout_resources(merged_data["loadouts"], jobs_by_id, items_by_id, tactics_by_id)
+	var units_by_id := _build_unit_resources(merged_data["units"], loadouts_by_id, jobs_by_id, ancestries_by_id)
+	return {
+		"ancestries": ancestries_by_id,
+		"items": items_by_id,
+		"jobs": jobs_by_id,
+		"tactics": tactics_by_id,
+		"loadouts": loadouts_by_id,
+		"units": units_by_id,
+	}
+
+
 static func _build_ancestry_resources(ancestries_data: Dictionary) -> Dictionary:
 	var out := {}
 	for id in ancestries_data.keys():
 		var src: Dictionary = ancestries_data[id]
 		var ancestry = AncestryDefinitionScript.new()
+		_set_content_id(ancestry, id)
 		ancestry.display_name = String(src.get("display_name", id))
 		ancestry.tags = _string_array(src.get("tags", []))
 		ancestry.min_max_hp = int(src.get("min_max_hp", 1))
@@ -387,6 +424,7 @@ static func _build_ancestry_feature_resource(raw: Variant):
 		return null
 	var src: Dictionary = raw
 	var feature = AncestryFeatureDefinitionScript.new()
+	_set_content_id(feature, String(src.get("id", "")))
 	feature.display_name = String(src.get("display_name", "Ancestry Feature"))
 	feature.tags = _string_array(src.get("tags", []))
 	feature.trigger = String(src.get("trigger", "Battle Start"))
@@ -404,6 +442,7 @@ static func _build_item_resources(items_data: Dictionary) -> Dictionary:
 	for id in items_data.keys():
 		var src: Dictionary = items_data[id]
 		var item: ItemDefinition = ItemDefinitionScript.new()
+		_set_content_id(item, id)
 		item.display_name = String(src.get("display_name", id))
 		item.tags = _string_array(src.get("tags", []))
 		item.slot = String(src.get("slot", "Weapon"))
@@ -422,6 +461,7 @@ static func _build_effect_resources(effects_data: Array) -> Array[EffectDefiniti
 	for raw in effects_data:
 		var src: Dictionary = raw
 		var effect: EffectDefinition = EffectDefinitionScript.new()
+		_set_content_id(effect, String(src.get("id", "")))
 		effect.display_name = String(src.get("display_name", ""))
 		effect.tags = _string_array(src.get("tags", []))
 		effect.trigger = String(src.get("trigger", "Battle Start"))
@@ -441,6 +481,7 @@ static func _build_job_resources(jobs_data: Dictionary) -> Dictionary:
 	for id in jobs_data.keys():
 		var src: Dictionary = jobs_data[id]
 		var job: JobDefinition = JobDefinitionScript.new()
+		_set_content_id(job, id)
 		job.display_name = String(src.get("display_name", id))
 		job.tags = _string_array(src.get("tags", []))
 		job.max_hp_growth = int(src.get("max_hp_growth", 0))
@@ -468,6 +509,7 @@ static func _build_skill_resource(raw: Variant) -> SkillDefinition:
 		return null
 	var src: Dictionary = raw
 	var skill: SkillDefinition = SkillDefinitionScript.new()
+	_set_content_id(skill, String(src.get("id", "")))
 	skill.display_name = String(src.get("display_name", "Job Skill"))
 	skill.tags = _string_array(src.get("tags", []))
 	skill.action = String(src.get("action", "Attack"))
@@ -480,6 +522,7 @@ static func _build_passive_resource(raw: Variant) -> PassiveDefinition:
 	if typeof(raw) == TYPE_DICTIONARY and not Dictionary(raw).is_empty():
 		var src: Dictionary = raw
 		var passive: PassiveDefinition = PassiveDefinitionScript.new()
+		_set_content_id(passive, String(src.get("id", "")))
 		passive.display_name = String(src.get("display_name", "Job Passive"))
 		passive.tags = _string_array(src.get("tags", []))
 		passive.passive_type = String(src.get("passive_type", "None"))
@@ -494,6 +537,7 @@ static func _build_reaction_resource(raw: Variant) -> ReactionDefinition:
 		return null
 	var src: Dictionary = raw
 	var reaction: ReactionDefinition = ReactionDefinitionScript.new()
+	_set_content_id(reaction, String(src.get("id", "")))
 	reaction.display_name = String(src.get("display_name", "Job Reaction"))
 	reaction.tags = _string_array(src.get("tags", []))
 	reaction.trigger = String(src.get("trigger", "Damaged"))
@@ -510,6 +554,7 @@ static func _build_tactic_resource(raw: Variant) -> TacticDefinition:
 		return null
 	var src: Dictionary = raw
 	var tactic: TacticDefinition = TacticDefinitionScript.new()
+	_set_content_id(tactic, String(src.get("id", "")))
 	tactic.display_name = String(src.get("display_name", "Use Job Skill"))
 	tactic.tags = _string_array(src.get("tags", []))
 	tactic.condition = String(src.get("condition", "Enemy Alive"))
@@ -657,6 +702,7 @@ static func _build_tactic_resources(tactics_data: Dictionary) -> Dictionary:
 	for id in tactics_data.keys():
 		var src: Dictionary = tactics_data[id]
 		var tactic: TacticDefinition = TacticDefinitionScript.new()
+		_set_content_id(tactic, id)
 		tactic.display_name = String(src.get("display_name", id))
 		tactic.tags = _string_array(src.get("tags", []))
 		tactic.condition = String(src.get("condition", "Always"))
@@ -671,6 +717,7 @@ static func _build_loadout_resources(loadouts_data: Dictionary, jobs_by_id: Dict
 	for id in loadouts_data.keys():
 		var src: Dictionary = loadouts_data[id]
 		var loadout: UnitLoadoutDefinition = UnitLoadoutDefinitionScript.new()
+		_set_content_id(loadout, id)
 		loadout.display_name = String(src.get("display_name", id))
 		loadout.current_job = jobs_by_id.get(String(src.get("current_job_id", "")), null)
 		loadout.equipped_skill = _build_skill_resource(src.get("equipped_skill", {}))
@@ -695,6 +742,7 @@ static func _build_unit_resources(units_data: Dictionary, loadouts_by_id: Dictio
 	for id in units_data.keys():
 		var src: Dictionary = units_data[id]
 		var unit: UnitDefinition = UnitDefinitionScript.new()
+		_set_content_id(unit, id)
 		unit.display_name = String(src.get("display_name", id))
 		unit.tags = _string_array(src.get("tags", []))
 		unit.team = String(src.get("team", "Allies"))
@@ -708,6 +756,11 @@ static func _build_unit_resources(units_data: Dictionary, loadouts_by_id: Dictio
 		unit.loadout = loadouts_by_id.get(String(src.get("loadout_id", "")), null)
 		out[id] = unit
 	return out
+
+
+static func _set_content_id(resource: Resource, id: String) -> void:
+	if resource != null and not id.is_empty():
+		resource.set_meta("content_id", id)
 
 
 static func _load_mod_packs(enabled_mod_pack_ids: Variant = null) -> Array[Dictionary]:

@@ -327,7 +327,11 @@ A future permadeath mode can exist, but it needs its own focused design pass. Pe
 
 Long-term death consequences need special care because this is a biography-focused game. Character death should not be memoryholed. One promising direction is a scar system for near-death survival: units accumulate scars that alter stats, capabilities, or build incentives, probably with some negative pressure. True death could offer a blaze-of-glory moment, inspired by games like Wyldermyth: the unit expires while doing something extraordinary, helpful, and likely life-saving for the rest of the party. This needs its own design pass before implementation.
 
-The first campaign save/load slice should restore only stable campaign progress: completed scenarios, unlocked scenario IDs, unlocked content IDs, and campaign completion. Active scenario runs, roster careers, inventory, gear, and job progress need their own model before being serialized.
+The first campaign roster persistence slice now restores stable campaign progress plus campaign-owned roster state. `CampaignRosterState` carries the starting roster by campaign unit ids, current campaign unit definitions, per-job progress, current loadout equipment, and unequipped campaign inventory. Active scenario attempts still are not saved; a run must finish successfully before `RunState` mutations become durable campaign state.
+
+Standalone scenario practice remains self-contained. Practice starts from the current visible planning party snapshot and does not call the campaign completion or roster-commit path, so it can teach encounter contents without writing long-term campaign roster state.
+
+Failed campaign scenario attempts grant knowledge only in the current architecture because `RunState` owns temporary fight rewards, inventory, and job XP until the scenario is won. If a later UI persists scouting reveals explicitly, that reveal state should be separate from XP/reward/unlock commits.
 
 Roster rotation pressure should come from opportunity cost and matchup evaluation rather than punishment systems. A campaign unit may remain available long after reaching max level. Max-level units should still be legal, powerful, and sometimes the correct choice for a dangerous fight, but bringing them should waste potential XP compared with fielding units that can still grow.
 
