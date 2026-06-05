@@ -14,6 +14,17 @@ Act as a tutor and pair-programmer, not a ghostwriter. The goal is that the huma
 - Use Godot 4.x and GDScript unless told otherwise.
 - Use Godot Resources for data definitions when they make the project more inspectable in Godot.
 
+## Efficient Codex usage
+
+- For implementation requests, prefer prompts that state the goal, relevant context or files, constraints, and done criteria.
+- Use Plan mode or ask for an interview first when the task is fuzzy, multi-step, architectural, or likely to affect several systems.
+- Keep one chat to one coherent unit of work. Start a new chat when the next request is a new phase rather than a direct follow-up.
+- Before coding, inspect the relevant files instead of relying only on handoff text or memory.
+- Prefer small vertical changes that can be manually tested in Godot.
+- When Codex repeats a mistake, ask for a short retrospective and update `AGENTS.md` only if the lesson should persist.
+- Put durable repo behavior in `AGENTS.md`; put one-off task constraints in the prompt.
+- If this file grows too large, move detailed workflows into focused docs and reference them from here.
+
 ## Context and handoff hygiene
 
 Prefer chats that stay coherent as one reviewable unit of work. A good chat scope might be one project phase, one logging improvement pass, one focused combat-system change, or one documentation/design discussion.
