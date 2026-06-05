@@ -109,7 +109,7 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 - Do a project-wide content hook audit for mechanics authoring. Ensure mechanics can be authored, applied, inspected, and responded to through the relevant systems: tactics conditions/actions/targets, declarative item effects, job skills/passives/reactions, ancestry features, enemy builds, scenario rules, combat logs, replay snapshots, tooltips, save boundaries, content validation, and JSON sidecar docs where applicable.
 - During the content hook audit, look for existing straggler mechanics that only work through one-off code paths or are not exposed cleanly to content authors.
 - Use tags for filtering/conditions/content tools when an actual tool or rule needs them.
-- Keep scenario, campaign, rule, and reward references complete enough for `tools/check_content.ps1` to validate ids, names, graph links, and reward items.
+- Keep scenario, campaign, rule, reward, and roster references complete enough for `tools/check_content.ps1` to validate ids, names, graph links, reward items, and campaign starting units.
 - Keep JSON sidecar docs next to every JSON content/modding file. `tools/check_content.ps1` now validates that discovered JSON packs have adjacent `*.options.md` files.
 
 ## Modding and Data Pipeline

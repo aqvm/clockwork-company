@@ -134,6 +134,23 @@ func _validate_campaign(scenarios_by_id: Dictionary, errors: Array[String]) -> v
 		elif not node_scenario_ids.has(starting_id):
 			errors.append("Campaign starts with scenario_id '%s' that is not part of this campaign." % starting_id)
 
+	_validate_campaign_starting_roster(campaign, errors)
+
+
+func _validate_campaign_starting_roster(campaign, errors: Array[String]) -> void:
+	if campaign.starting_roster_ids.is_empty():
+		errors.append("Campaign '%s' has no starting roster ids." % String(campaign.campaign_id))
+		return
+	for unit_id in campaign.starting_roster_ids:
+		var id_text := String(unit_id)
+		var units := JsonContentLoaderScript.load_unit_definitions_by_ids([id_text], [])
+		if units.is_empty():
+			errors.append("Campaign '%s' starts with unknown unit id '%s'." % [String(campaign.campaign_id), id_text])
+			continue
+		var unit: UnitDefinition = units[0]
+		if unit.team != "Allies":
+			errors.append("Campaign '%s' starting roster id '%s' is not an ally unit." % [String(campaign.campaign_id), id_text])
+
 
 func _validate_json_packs(errors: Array[String]) -> int:
 	var descriptors: Array[Dictionary] = JsonContentLoaderScript.list_available_mod_packs()
