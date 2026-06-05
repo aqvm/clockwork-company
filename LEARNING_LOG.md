@@ -25,6 +25,7 @@ Feature worked on:
 - Added scenario-local knockout tracking so defeated allies sit out later encounters in the same active scenario.
 - Replaced knockout's display-name key with a stable campaign unit instance id carried through simulator snapshots.
 - Added campaign attempted-scenario tracking so failed attempts persist knowledge without granting rewards, unlocks, XP, or roster progression.
+- Campaign losses now reload the visible planning party from durable campaign roster state instead of the failed run's disposable clones.
 
 Godot concepts introduced:
 
@@ -39,6 +40,7 @@ Game architecture concepts introduced:
 - Knockout is active-scenario state, not campaign biography state yet.
 - Stable long-term unit identity and battle-local replay identity are related but not the same thing.
 - Campaign progress can remember knowledge state separately from reward/progression state.
+- Retry planning should read from campaign state, while an active attempt can mutate `RunState` clones.
 
 Files touched:
 
@@ -60,6 +62,7 @@ What I should now be able to explain:
 - Why scenario-local knockout should reset after scenario end.
 - Why a campaign unit id is safer than display name once duplicate recruits or renaming are possible.
 - Why failed attempts mark a scenario as attempted but do not call `commit_completed_run(...)`.
+- Why reloading campaign roster after a loss protects against accidental failed-run persistence.
 
 Manual exercise:
 

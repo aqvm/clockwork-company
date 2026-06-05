@@ -833,15 +833,18 @@ func _on_replay_finished() -> void:
 	replay_is_active = false
 	if run_state != null and run_state.status == RunStateScript.STATUS_ACTIVE:
 		run_state.complete_fight(cached_battle_report)
+		var should_reload_campaign_party := false
 		if run_state.status == RunStateScript.STATUS_WON and campaign_manager != null and not active_campaign_scenario_id.is_empty():
 			campaign_manager.commit_completed_run(run_state)
 			campaign_manager.complete_scenario(active_campaign_scenario_id)
 			active_campaign_scenario_id = ""
 			selected_scenario = null
+			should_reload_campaign_party = true
 		elif run_state.status == RunStateScript.STATUS_LOST and campaign_manager != null and not active_campaign_scenario_id.is_empty():
 			campaign_manager.fail_scenario(active_campaign_scenario_id)
 			active_campaign_scenario_id = ""
-		if run_state.status == RunStateScript.STATUS_WON and campaign_manager != null:
+			should_reload_campaign_party = true
+		if should_reload_campaign_party:
 			_load_planning_party()
 		else:
 			_load_planning_party_from_run()

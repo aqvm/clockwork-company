@@ -97,6 +97,8 @@ The scenario workbench can also start an unlocked scenario as a practice run. Pr
 
 The campaign layer does not change combat rules. Real fights still run through `CombatSimulator`; runtime combat state still lives in combat runtime classes; between-fight roster/reward/equipment choices still live in `RunState`.
 
+When a campaign scenario is lost, the workbench marks the scenario as attempted, clears the active campaign scenario id, and reloads the visible planning party from durable campaign roster state instead of the failed `RunState` clones. This keeps failed attempts from accidentally becoming progression state while still allowing a retry from planning.
+
 Campaign progress can be saved to and loaded from `user://first_road_campaign_save.json` as small JSON. The save stores campaign id/version, attempted scenarios, completed scenarios, unlocked scenarios, unlocked content ids, campaign completion, and campaign roster state. Roster state currently includes the campaign's durable unit definitions, their per-job progress, their current loadout equipment, and unequipped campaign inventory items.
 
 Scenario-local knockout lives in `RunState`, not campaign save data. When an ally is defeated in a won fight, `RunState` records that ally's stable campaign unit id from the simulator's final replay snapshot and omits the unit from later encounters in the same active scenario. Because only completed campaign scenarios commit back to `CampaignRosterState`, knockouts create short-term scenario pressure without becoming long-term injury or death.
