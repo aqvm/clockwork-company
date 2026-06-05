@@ -36,6 +36,8 @@ func _state_label(scenario: Resource, campaign_progress, active_scenario_id: Str
 		return "active"
 	if campaign_progress.completed_scenario_ids.has(scenario.scenario_id):
 		return "complete"
+	if campaign_progress.attempted_scenario_ids.has(scenario.scenario_id):
+		return "attempted"
 	if campaign_progress.is_scenario_unlocked(scenario.scenario_id):
 		return "available"
 	return "locked"

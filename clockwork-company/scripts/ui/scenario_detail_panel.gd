@@ -33,6 +33,7 @@ func show_scenario(scenario: Resource, status_text: String, campaign_progress = 
 	_add_plain_text("Party size: %d" % scenario.party_size)
 	_add_plain_text("Recommended level: %d-%d" % [scenario.recommended_level_min, scenario.recommended_level_max])
 	_add_plain_text("Status: %s" % _status_summary(status_text))
+	_add_attempt_state(scenario, campaign_progress)
 	_add_plain_text("Tags: %s" % _join_values(scenario.tags, ", "))
 	_add_plain_text("Content unlocks: %s" % _join_values(scenario.content_unlocks, ", "))
 	_add_content_unlock_state(scenario, campaign_progress)
@@ -99,6 +100,17 @@ func _add_content_unlock_state(scenario: Resource, campaign_progress) -> void:
 	_add_plain_text("Still pending from this scenario: %s" % _join_values(pending, ", "))
 
 
+func _add_attempt_state(scenario: Resource, campaign_progress) -> void:
+	if campaign_progress == null:
+		return
+	if campaign_progress.completed_scenario_ids.has(scenario.scenario_id):
+		_add_plain_text("Attempt knowledge: completed")
+	elif campaign_progress.attempted_scenario_ids.has(scenario.scenario_id):
+		_add_plain_text("Attempt knowledge: attempted - no rewards or progression awarded yet")
+	else:
+		_add_plain_text("Attempt knowledge: none")
+
+
 func _on_resource_mouse_entered(source: Control, resource: Resource) -> void:
 	resource_tooltip_requested.emit(source, resource)
 
@@ -141,6 +153,8 @@ func _status_summary(status_text: String) -> String:
 		return "available - ready to start"
 	if status_text == "complete":
 		return "complete - campaign replay is not implemented yet"
+	if status_text == "attempted":
+		return "attempted - retry is available, but rewards and progression wait for completion"
 	if status_text == "locked":
 		return "locked - complete prerequisite scenarios first"
 	return status_text

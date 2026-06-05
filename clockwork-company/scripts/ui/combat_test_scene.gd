@@ -510,6 +510,8 @@ func _scenario_campaign_status(scenario: Resource) -> String:
 		return "practice"
 	if campaign_manager.progress.completed_scenario_ids.has(scenario.scenario_id):
 		return "complete"
+	if campaign_manager.progress.attempted_scenario_ids.has(scenario.scenario_id):
+		return "attempted"
 	if campaign_manager.progress.is_scenario_unlocked(scenario.scenario_id):
 		return "available"
 	return "locked"
@@ -836,6 +838,9 @@ func _on_replay_finished() -> void:
 			campaign_manager.complete_scenario(active_campaign_scenario_id)
 			active_campaign_scenario_id = ""
 			selected_scenario = null
+		elif run_state.status == RunStateScript.STATUS_LOST and campaign_manager != null and not active_campaign_scenario_id.is_empty():
+			campaign_manager.fail_scenario(active_campaign_scenario_id)
+			active_campaign_scenario_id = ""
 		if run_state.status == RunStateScript.STATUS_WON and campaign_manager != null:
 			_load_planning_party()
 		else:

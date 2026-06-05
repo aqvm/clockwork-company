@@ -319,7 +319,7 @@ The first campaign defeat rule is scenario-local knockout, not long-term death. 
 
 In non-permadeath campaign mode, losing a scenario should return the player to planning for that scenario. They can adjust roster, gear, tactics, and learned ability assignments, then retry. This is the natural expression of the buildcraft puzzle: a failed attempt teaches the enemy plan, then the player responds with a better plan.
 
-Failed campaign attempts should grant knowledge only. Revealed encounter contents, scouting information, or post-loss insight can persist for future planning, but the campaign should not award XP, rewards, scenario unlocks, content unlocks, or roster progression until the scenario is completed.
+Failed campaign attempts grant knowledge only. The campaign progress model now tracks attempted scenario ids separately from completed scenario ids, and the scenario list/detail UI marks attempted scenarios so the player can recognize a learned-but-not-cleared mission. Failed attempts do not call the roster commit path and do not award XP, rewards, scenario unlocks, content unlocks, or roster progression.
 
 This retry model has a narrative risk. If campaign fiction implies irreversible events, unlimited retries can cheapen the story. Keep that concern visible for a later campaign-framing pass; do not add harsher failure consequences until the project deliberately wants them.
 

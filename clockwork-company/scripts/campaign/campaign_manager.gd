@@ -71,6 +71,10 @@ func complete_scenario(scenario_id: String) -> void:
 		progress.campaign_completed = true
 
 
+func fail_scenario(scenario_id: String) -> void:
+	progress.mark_scenario_attempted(scenario_id)
+
+
 func campaign_party_snapshot() -> Array[UnitDefinition]:
 	return roster_state.active_party_snapshot()
 
@@ -98,6 +102,7 @@ func status_lines() -> Array[String]:
 	lines.append("Campaign: %s" % campaign.display_name)
 	lines.append("Campaign completed: %s" % ("yes" if progress.campaign_completed else "no"))
 	lines.append("Unlocked scenarios: %s" % _join_or_none(progress.unlocked_scenario_ids))
+	lines.append("Attempted scenarios: %s" % _join_or_none(progress.attempted_scenario_ids))
 	lines.append("Completed scenarios: %s" % _join_or_none(progress.completed_scenario_ids))
 	lines.append("Unlocked content: %s" % _join_or_none(progress.unlocked_content_ids))
 	for roster_line in roster_state.status_lines():
