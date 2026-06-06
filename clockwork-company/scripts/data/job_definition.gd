@@ -17,6 +17,3 @@ class_name JobDefinition
 @export var passive: PassiveDefinition = null
 @export var reaction: ReactionDefinition = null
 @export var default_tactic: TacticDefinition = null
-@export_range(1, 5, 1) var skill_unlock_level := 1
-@export_range(1, 5, 1) var passive_unlock_level := 2
-@export_range(1, 5, 1) var reaction_unlock_level := 3

@@ -81,6 +81,16 @@ static func load_item_definition_by_id(item_id: String, enabled_mod_pack_ids: Va
 	return items_by_id.get(item_id, null)
 
 
+static func load_job_definition_by_id(job_id: String, enabled_mod_pack_ids: Variant = null) -> JobDefinition:
+	if job_id.is_empty():
+		return null
+	var base_data := _load_base_data_from_resources()
+	var merged_data := _apply_mod_packs(base_data, enabled_mod_pack_ids)
+	var content := _build_content_resources(merged_data)
+	var jobs_by_id: Dictionary = content["jobs"]
+	return jobs_by_id.get(job_id, null)
+
+
 static func list_available_mod_packs() -> Array[Dictionary]:
 	var descriptors: Array[Dictionary] = []
 	_collect_pack_descriptors_from_dir(descriptors, MODS_DIR, true)
@@ -169,9 +179,6 @@ static func _load_base_jobs() -> Dictionary:
 			"passive": _passive_resource_to_data(resource.passive),
 			"reaction": _reaction_resource_to_data(resource.reaction),
 			"default_tactic": _tactic_resource_to_data(resource.default_tactic),
-			"skill_unlock_level": resource.skill_unlock_level,
-			"passive_unlock_level": resource.passive_unlock_level,
-			"reaction_unlock_level": resource.reaction_unlock_level,
 		}
 	return out
 
@@ -497,9 +504,6 @@ static func _build_job_resources(jobs_data: Dictionary) -> Dictionary:
 		job.passive = _build_passive_resource(src.get("passive", {}))
 		job.reaction = _build_reaction_resource(src.get("reaction", {}))
 		job.default_tactic = _build_tactic_resource(src.get("default_tactic", {}))
-		job.skill_unlock_level = int(src.get("skill_unlock_level", 1))
-		job.passive_unlock_level = int(src.get("passive_unlock_level", 2))
-		job.reaction_unlock_level = int(src.get("reaction_unlock_level", 3))
 		out[id] = job
 	return out
 
@@ -658,7 +662,6 @@ static func _job_progress_resources_to_data(job_progress: Array[JobProgressDefin
 		out.append({
 			"job_id": _resource_ref_id(progress.job),
 			"level": progress.level,
-			"xp": progress.xp,
 			"skill_unlocked": progress.skill_unlocked,
 			"passive_unlocked": progress.passive_unlocked,
 			"reaction_unlocked": progress.reaction_unlocked,
@@ -678,8 +681,7 @@ static func _build_job_progress_resources(raw_progress: Variant, jobs_by_id: Dic
 			continue
 		var progress: JobProgressDefinition = JobProgressDefinitionScript.new()
 		progress.job = jobs_by_id[job_id]
-		progress.level = clamp(int(src.get("level", 0)), 0, 5)
-		progress.xp = int(src.get("xp", 0))
+		progress.level = clamp(int(src.get("level", 0)), 0, 3)
 		progress.skill_unlocked = bool(src.get("skill_unlocked", false))
 		progress.passive_unlocked = bool(src.get("passive_unlocked", false))
 		progress.reaction_unlocked = bool(src.get("reaction_unlocked", false))

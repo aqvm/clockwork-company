@@ -18,6 +18,7 @@ story_outro = "The last cinders gutter out, leaving only ash and questions."
 party_size = 3
 encounters = [ExtResource("2_encounter_a"), ExtResource("3_encounter_b"), ExtResource("4_encounter_c")]
 scenario_rules = [ExtResource("5_rule")]
+tier = 2
 recommended_level_min = 1
 recommended_level_max = 3
 tags = ["chapel", "ash", "status"]

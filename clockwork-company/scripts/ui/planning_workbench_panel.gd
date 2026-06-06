@@ -7,6 +7,7 @@ signal practice_scenario_requested
 signal unit_selected(unit_name: String)
 signal planning_item_requested(slot: String, item: ItemDefinition)
 signal equip_option_requested(index: int)
+signal unlock_choice_requested(choice: String)
 signal resource_tooltip_requested(source: Control, resource: Resource)
 signal glossary_tooltip_requested(source: Control, term: String)
 signal tooltip_cleared
@@ -29,6 +30,7 @@ func _ready() -> void:
 	unit_action_panel.connect("practice_scenario_requested", func(): practice_scenario_requested.emit())
 	unit_action_panel.connect("planning_item_requested", func(slot, item): planning_item_requested.emit(slot, item))
 	unit_action_panel.connect("equip_option_requested", func(index): equip_option_requested.emit(index))
+	unit_action_panel.connect("unlock_choice_requested", func(choice): unlock_choice_requested.emit(choice))
 	_forward_tooltip_signals(unit_action_panel)
 
 
@@ -59,7 +61,8 @@ func show_actions(
 	is_replay_active: bool,
 	is_equipment_state: bool,
 	planning_item_options: Array,
-	equip_options: Array
+	equip_options: Array,
+	unlock_options: Array
 ) -> void:
 	unit_action_panel.call(
 		"show_actions",
@@ -73,7 +76,8 @@ func show_actions(
 		is_replay_active,
 		is_equipment_state,
 		planning_item_options,
-		equip_options
+		equip_options,
+		unlock_options
 	)
 
 

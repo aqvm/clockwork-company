@@ -143,9 +143,7 @@ Optional fields:
 - `passive` (`Dictionary`): current job passive payload. See `jobs[].passive` below.
 - `reaction` (`Dictionary`): current job reaction payload. See `jobs[].reaction` below.
 - `default_tactic` (`Dictionary`): tactic automatically appended while this is the unit's current job. See `jobs[].default_tactic` below.
-- `skill_unlock_level` (`int`, 1-5): job level where this job's skill is permanently unlocked.
-- `passive_unlock_level` (`int`, 1-5): job level where this job's passive is permanently unlocked.
-- `reaction_unlock_level` (`int`, 1-5): job level where this job's reaction is permanently unlocked.
+- Job unlock timing is fixed: level 1 chooses skill or reaction, level 2 unlocks the passive, and level 3 unlocks the remaining skill or reaction.
 
 Equipment note:
 - Equipment is allowed by default. Use `forbid_weapon`, `forbid_armor`, `forbid_helmet`, and `forbid_trinket` only when a job concept explicitly forbids a category.
@@ -255,7 +253,7 @@ Optional fields:
 - `magic_damage` (`int`)
 - `armor` (`int`)
 - `action_interval` (`int`)
-- `job_progress` (`Array[Dictionary]`): one unit's per-job XP, levels, and unlocks. See `units[].job_progress[]` below.
+- `job_progress` (`Array[Dictionary]`): one unit's per-job levels and permanent unlocks. See `units[].job_progress[]` below.
 - `loadout_id` (`String` or empty string)
 
 Reference rules:
@@ -266,17 +264,17 @@ Reference rules:
 
 Optional fields:
 - `job_id` (`String`): must reference an existing job id.
-- `level` (`int`, 0-5)
-- `xp` (`int`)
+- `level` (`int`, 0-3)
 - `skill_unlocked` (`bool`)
 - `passive_unlocked` (`bool`)
 - `reaction_unlocked` (`bool`)
-- `pending_unlock_choice` (`bool`): reserved scaffolding for future choice-based unlocks.
+- `pending_unlock_choice` (`bool`): whether the unit must choose this job's skill or reaction before starting another campaign scenario.
 
 Current progression behavior:
-- The run loop currently awards each ally one XP in their current job after a won fight.
-- One XP currently becomes one job level.
-- A unit can gain at most five total job levels across all jobs.
+- A completed campaign scenario grants one level to one surviving deployed unit tied for the lowest total unit level.
+- The recipient levels their current job. A job can reach level 3 and a unit can currently reach total level 5.
+- A scenario tier prevents the scenario from advancing a unit beyond that tier.
+- Failed and practice scenarios grant no levels.
 - Unlocks are currently automatic based on the current job's configured unlock levels.
 
 ## Validation behavior

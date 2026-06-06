@@ -216,6 +216,7 @@ func _setup_planning_panel() -> void:
 	planning_panel.connect("unit_selected", _on_party_unit_pressed)
 	planning_panel.connect("planning_item_requested", _on_planning_item_requested)
 	planning_panel.connect("equip_option_requested", _on_planning_equip_pressed)
+	planning_panel.connect("unlock_choice_requested", _on_unlock_choice_requested)
 	_connect_panel_tooltips(planning_panel)
 	parent_vbox.add_child(planning_panel)
 	parent_vbox.move_child(planning_panel, log_split.get_index())
@@ -455,6 +456,9 @@ func _render_unit_actions() -> void:
 	var is_equipment_state: bool = run_state != null and run_state.status == RunStateScript.STATUS_EQUIPMENT
 	var equip_options: Array = run_state.equip_options() if is_equipment_state else []
 	var planning_item_options := _planning_item_options(selected_unit)
+	var unlock_options: Array = []
+	if campaign_manager != null and selected_unit != null:
+		unlock_options = campaign_manager.pending_unlock_options_for_unit(_campaign_unit_id(selected_unit))
 	planning_panel.call(
 		"show_actions",
 		selected_scenario,
@@ -467,7 +471,8 @@ func _render_unit_actions() -> void:
 		replay_is_active,
 		is_equipment_state,
 		planning_item_options,
-		equip_options
+		equip_options,
+		unlock_options
 	)
 
 
@@ -475,6 +480,8 @@ func _selected_scenario_can_start() -> bool:
 	if selected_scenario == null or campaign_manager == null:
 		return false
 	if _has_active_scenario_run():
+		return false
+	if campaign_manager.has_pending_unlock_choices():
 		return false
 	if campaign_manager.progress.completed_scenario_ids.has(selected_scenario.scenario_id):
 		return false
@@ -520,6 +527,17 @@ func _scenario_campaign_status(scenario: Resource) -> String:
 func _on_party_unit_pressed(unit_name: String) -> void:
 	selected_unit_name = unit_name
 	_refresh_planning_panel()
+
+
+func _on_unlock_choice_requested(choice: String) -> void:
+	if campaign_manager == null:
+		return
+	var unit := _find_planning_unit(selected_unit_name)
+	if unit == null:
+		return
+	if campaign_manager.resolve_pending_unlock(_campaign_unit_id(unit), choice):
+		_load_planning_party()
+		_show_campaign_landing()
 
 
 func _on_planning_equip_pressed(index: int) -> void:
@@ -651,6 +669,12 @@ func _find_planning_unit(unit_name: String) -> UnitDefinition:
 		if unit.display_name == unit_name:
 			return unit
 	return null
+
+
+func _campaign_unit_id(unit: UnitDefinition) -> String:
+	if unit == null:
+		return ""
+	return String(unit.get_meta("campaign_unit_id", unit.display_name))
 
 
 func _show_campaign_landing() -> void:

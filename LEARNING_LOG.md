@@ -13,6 +13,67 @@ Each entry should include:
 - Manual exercise
 - Open questions
 
+## 2026-06-05 - Post-scenario unit and job progression
+
+Feature worked on:
+
+- Replaced per-encounter XP with one post-scenario campaign level.
+- Added scenario tiers that prevent easy scenarios from advancing units beyond the authored tier.
+- A successful campaign scenario now levels one surviving deployed unit tied for the lowest total level.
+- Added the three-level job schedule: choose skill/reaction at level 1, passive at level 2, remaining feature at level 3.
+- Added planning buttons for the pending level-1 choice and blocked new campaign scenarios until it is resolved.
+- Removed XP and configurable unlock-level fields from Resource, save, and JSON contracts.
+
+Godot concepts introduced:
+
+- Runtime campaign state can apply deterministic pseudo-random selection by hashing stable authored/runtime ids without introducing combat randomness.
+- A Resource's exported range can communicate a hard content cap directly in the Inspector.
+
+Game architecture concepts introduced:
+
+- Scenario completion, not individual encounters, owns durable character progression.
+- Scenario tier is a progression ceiling, separate from recommended combat level.
+- `CampaignRosterState` owns permanent character-sheet unlocks while `RunState` remains disposable until victory.
+
+Files touched:
+
+- `clockwork-company/scripts/campaign/campaign_roster_state.gd`
+- `clockwork-company/scripts/campaign/campaign_manager.gd`
+- `clockwork-company/scripts/run/run_state.gd`
+- `clockwork-company/scripts/data/scenario_definition.gd`
+- `clockwork-company/scripts/data/job_progress_definition.gd`
+- `clockwork-company/scripts/data/job_definition.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `clockwork-company/scripts/ui/planning_workbench_panel.gd`
+- `clockwork-company/scripts/ui/unit_action_panel.gd`
+- `clockwork-company/scripts/ui/scenario_detail_panel.gd`
+- `clockwork-company/scripts/ui/unit_detail_panel.gd`
+- `clockwork-company/scripts/ui/resource_tooltip_builder.gd`
+- `clockwork-company/scripts/modding/json_content_loader.gd`
+- `clockwork-company/scripts/tools/content_validation_check.gd`
+- `clockwork-company/resources/scenarios/*.tres`
+- `clockwork-company/modding/reference/base_content.options.md`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `MODDING.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why scenario tiers prevent low-tier farming without forbidding easy scenario replays.
+- Why knocked-out units cannot receive the post-scenario level.
+- Why the recipient selection is stable despite feeling random.
+- Why pending unlock choices live in durable campaign roster state.
+
+Manual exercise:
+
+- Complete Roadside Ambush, find the one unit with a pending level-1 choice, confirm another campaign scenario cannot start, choose skill or reaction, then confirm the next scenario becomes startable.
+
+Open questions:
+
+- When roster selection exists, should the progression summary explicitly list every deployed survivor that was eligible for the tie?
+
 ## 2026-06-05 - Project-wide content hook audit
 
 Feature worked on:

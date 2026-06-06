@@ -46,6 +46,8 @@ func all_scenarios() -> Array:
 
 
 func start_scenario(scenario_id: String):
+	if has_pending_unlock_choices():
+		return null
 	if not progress.is_scenario_unlocked(scenario_id):
 		return null
 	var node = _find_node(scenario_id)
@@ -88,10 +90,23 @@ func campaign_inventory_snapshot() -> Array[ItemDefinition]:
 
 func commit_completed_run(run_state) -> void:
 	roster_state.commit_from_run(run_state)
+	roster_state.award_scenario_level(run_state.active_scenario, run_state.knocked_out_unit_ids)
 
 
 func commit_planning_roster(units: Array[UnitDefinition]) -> void:
 	roster_state.replace_roster_units(units)
+
+
+func has_pending_unlock_choices() -> bool:
+	return roster_state.has_pending_unlock_choices()
+
+
+func pending_unlock_options_for_unit(campaign_unit_id: String) -> Array[Dictionary]:
+	return roster_state.pending_unlock_options_for_unit(campaign_unit_id)
+
+
+func resolve_pending_unlock(campaign_unit_id: String, choice: String) -> bool:
+	return roster_state.resolve_pending_unlock(campaign_unit_id, choice)
 
 
 func status_lines() -> Array[String]:

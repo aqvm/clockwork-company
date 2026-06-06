@@ -58,6 +58,8 @@ func _validate_scenario(path: String, scenario, scenarios_by_id: Dictionary, err
 		errors.append("Scenario '%s' has empty display_name." % scenario.scenario_id)
 	if scenario.encounters.is_empty():
 		errors.append("Scenario '%s' has no encounters." % scenario.scenario_id)
+	if int(scenario.tier) < 1 or int(scenario.tier) > 5:
+		errors.append("Scenario '%s' has invalid tier %d." % [scenario.scenario_id, scenario.tier])
 	for encounter in scenario.encounters:
 		if encounter == null:
 			errors.append("Scenario '%s' has a missing encounter reference." % scenario.scenario_id)

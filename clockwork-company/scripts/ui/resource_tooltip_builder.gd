@@ -149,7 +149,7 @@ static func _unit_text(unit: UnitDefinition) -> String:
 		var progress_parts: Array[String] = []
 		for progress in unit.job_progress:
 			if progress != null and progress.job != null:
-				progress_parts.append("%s L%d XP%d" % [progress.job.display_name, progress.level, progress.xp])
+				progress_parts.append("%s L%d%s" % [progress.job.display_name, progress.level, " choice pending" if progress.pending_unlock_choice else ""])
 		lines.append("Job progress: %s" % _join(progress_parts, "; "))
 	return _join(lines, "\n")
 
@@ -208,7 +208,7 @@ static func _job_text(job: JobDefinition) -> String:
 	lines.append("Passive: %s" % _name_or_none(job.passive))
 	lines.append("Reaction: %s" % _name_or_none(job.reaction))
 	lines.append("Default tactic: %s" % _name_or_none(job.default_tactic))
-	lines.append("Unlock levels: skill %d, passive %d, reaction %d" % [job.skill_unlock_level, job.passive_unlock_level, job.reaction_unlock_level])
+	lines.append("Unlock schedule: L1 choose skill/reaction, L2 passive, L3 remaining feature")
 	return _join(lines, "\n")
 
 

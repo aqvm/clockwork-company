@@ -103,6 +103,8 @@ When a campaign scenario is lost, the workbench marks the scenario as attempted,
 
 Campaign progress can be saved to and loaded from `user://first_road_campaign_save.json` as small JSON. The save stores campaign id/version, attempted scenarios, completed scenarios, unlocked scenarios, unlocked content ids, campaign completion, and campaign roster state. Roster state currently includes the campaign's durable unit definitions, their per-job progress, their current loadout equipment, and unequipped campaign inventory items.
 
+Campaign scenario victory awards one post-scenario job level after the successful run is committed. `CampaignRosterState` chooses one surviving deployed unit tied for the lowest total level, enforces the scenario tier plus unit/job caps, and owns permanent unlock flags. A pending level-1 skill-versus-reaction choice blocks starting another campaign scenario until planning UI resolves it; practice scenarios remain available.
+
 Scenario-local knockout lives in `RunState`, not campaign save data. When an ally is defeated in a won fight, `RunState` records that ally's stable campaign unit id from the simulator's final replay snapshot and omits the unit from later encounters in the same active scenario. Because only completed campaign scenarios commit back to `CampaignRosterState`, knockouts create short-term scenario pressure without becoming long-term injury or death.
 
 Intentionally not implemented here:
@@ -253,7 +255,7 @@ Current combat rules:
 - ancestries, items, jobs, tactics, and units can carry freeform tags for future filtering/conditions/content tools
 - each job has small per-level growth values for HP, physical damage, magic damage, armor, and action interval
 - each unit can gain at most five total job levels across all jobs
-- job progress is stored per unit and per job, with predetermined skill/passive/reaction unlock thresholds
+- job progress is stored per unit and per job, with a fixed three-level unlock schedule and a level-1 skill-versus-reaction choice
 - ancestries provide baseline stat-growth values that apply once per total unit job level, in addition to the growth from the specific jobs leveled
 - ancestry features are always-on deterministic hooks separate from job passives/reactions
 - equipment is allowed by default; jobs may explicitly forbid weapons, armor, helmets, or trinkets

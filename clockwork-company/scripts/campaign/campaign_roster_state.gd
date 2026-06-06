@@ -9,14 +9,18 @@ const ItemDefinitionScript := preload("res://scripts/data/item_definition.gd")
 const JobProgressDefinitionScript := preload("res://scripts/data/job_progress_definition.gd")
 const META_CAMPAIGN_UNIT_ID := "campaign_unit_id"
 const META_CONTENT_ID := "content_id"
+const MAX_UNIT_LEVEL := 5
+const MAX_JOB_LEVEL := 3
 
 var roster_units: Array[UnitDefinition] = []
 var inventory_items: Array[ItemDefinition] = []
+var last_progression_summary := ""
 
 
 func reset(starting_roster_ids: Array[String], enabled_mod_pack_ids: Array[String]) -> void:
 	roster_units.clear()
 	inventory_items.clear()
+	last_progression_summary = ""
 	for unit in JsonContentLoaderScript.load_unit_definitions_by_ids(starting_roster_ids, enabled_mod_pack_ids):
 		if unit.team == CombatConstantsScript.TEAM_ALLY:
 			var copy := _clone_unit_definition(unit)
@@ -55,6 +59,89 @@ func commit_from_run(run_state) -> void:
 		inventory_items.append(_clone_item_definition(item))
 
 
+func award_scenario_level(scenario: Resource, knocked_out_unit_ids: Array[String]) -> void:
+	last_progression_summary = ""
+	if scenario == null:
+		return
+	var eligible: Array[UnitDefinition] = []
+	var lowest_level := MAX_UNIT_LEVEL + 1
+	for unit in roster_units:
+		if knocked_out_unit_ids.has(_campaign_unit_id(unit)):
+			continue
+		if unit.loadout == null or unit.loadout.current_job == null:
+			continue
+		var unit_level := _total_job_levels(unit)
+		if unit_level >= MAX_UNIT_LEVEL or unit_level >= int(scenario.tier) or _job_level(unit, unit.loadout.current_job) >= MAX_JOB_LEVEL:
+			continue
+		if unit_level < lowest_level:
+			lowest_level = unit_level
+			eligible.clear()
+		if unit_level == lowest_level:
+			eligible.append(unit)
+	if eligible.is_empty():
+		last_progression_summary = "No surviving deployed unit could gain a level from Tier %d." % int(scenario.tier)
+		return
+
+	eligible.sort_custom(func(a, b): return _campaign_unit_id(a) < _campaign_unit_id(b))
+	var seed_text := "%s|%s" % [String(scenario.scenario_id), _join(_campaign_unit_ids(eligible), "|")]
+	var chosen: UnitDefinition = eligible[abs(seed_text.hash()) % eligible.size()]
+	var progress := _ensure_job_progress(chosen, chosen.loadout.current_job)
+	progress.level += 1
+	_apply_job_level_unlock(chosen, progress)
+	last_progression_summary = "%s reached unit level %d and %s level %d." % [
+		chosen.display_name,
+		_total_job_levels(chosen),
+		progress.job.display_name,
+		progress.level,
+	]
+	if progress.pending_unlock_choice:
+		last_progression_summary += " Choose its first job feature before starting another campaign scenario."
+
+
+func has_pending_unlock_choices() -> bool:
+	for unit in roster_units:
+		for progress in unit.job_progress:
+			if progress != null and progress.pending_unlock_choice:
+				return true
+	return false
+
+
+func pending_unlock_options_for_unit(campaign_unit_id: String) -> Array[Dictionary]:
+	var options: Array[Dictionary] = []
+	var unit := _find_unit(campaign_unit_id)
+	if unit == null:
+		return options
+	for progress in unit.job_progress:
+		if progress == null or progress.job == null or not progress.pending_unlock_choice:
+			continue
+		if not progress.skill_unlocked and progress.job.skill != null:
+			options.append({"choice": "skill", "label": "Unlock skill: %s" % progress.job.skill.display_name, "resource": progress.job.skill})
+		if not progress.reaction_unlocked and progress.job.reaction != null:
+			options.append({"choice": "reaction", "label": "Unlock reaction: %s" % progress.job.reaction.display_name, "resource": progress.job.reaction})
+	return options
+
+
+func resolve_pending_unlock(campaign_unit_id: String, choice: String) -> bool:
+	var unit := _find_unit(campaign_unit_id)
+	if unit == null:
+		return false
+	for progress in unit.job_progress:
+		if progress == null or progress.job == null or not progress.pending_unlock_choice:
+			continue
+		if choice == "skill" and not progress.skill_unlocked and progress.job.skill != null:
+			progress.skill_unlocked = true
+		elif choice == "reaction" and not progress.reaction_unlocked and progress.job.reaction != null:
+			progress.reaction_unlocked = true
+			if unit.loadout != null and unit.loadout.equipped_reaction == null:
+				unit.loadout.equipped_reaction = progress.job.reaction
+		else:
+			return false
+		progress.pending_unlock_choice = false
+		last_progression_summary = "%s permanently learned %s." % [unit.display_name, progress.job.skill.display_name if choice == "skill" else progress.job.reaction.display_name]
+		return true
+	return false
+
+
 func status_lines() -> Array[String]:
 	var lines: Array[String] = []
 	lines.append("Campaign roster: %d unit%s" % [roster_units.size(), "" if roster_units.size() == 1 else "s"])
@@ -69,6 +156,8 @@ func status_lines() -> Array[String]:
 		lines.append("Campaign inventory:")
 		for item in inventory_items:
 			lines.append("- %s (%s)" % [item.display_name, item.slot])
+	if not last_progression_summary.is_empty():
+		lines.append("Latest progression: %s" % last_progression_summary)
 	return lines
 
 
@@ -123,7 +212,7 @@ func _unit_from_save_data(data: Dictionary, enabled_mod_pack_ids: Array[String])
 	var unit := _clone_unit_definition(units[0])
 	unit.team = CombatConstantsScript.TEAM_ALLY
 	_set_campaign_unit_id(unit, String(data.get("campaign_unit_id", unit_id)))
-	unit.job_progress = _job_progress_from_save_data(data.get("job_progress", []), unit.job_progress)
+	unit.job_progress = _job_progress_from_save_data(data.get("job_progress", []), unit.job_progress, enabled_mod_pack_ids)
 	_apply_loadout_save_data(unit, data.get("loadout", {}), enabled_mod_pack_ids)
 	return unit
 
@@ -181,7 +270,6 @@ func _job_progress_to_save_data(job_progress: Array[JobProgressDefinition]) -> A
 		results.append({
 			"job_id": _content_id(progress.job),
 			"level": progress.level,
-			"xp": progress.xp,
 			"skill_unlocked": progress.skill_unlocked,
 			"passive_unlocked": progress.passive_unlocked,
 			"reaction_unlocked": progress.reaction_unlocked,
@@ -190,7 +278,7 @@ func _job_progress_to_save_data(job_progress: Array[JobProgressDefinition]) -> A
 	return results
 
 
-func _job_progress_from_save_data(raw_progress: Variant, fallback_progress: Array[JobProgressDefinition]) -> Array[JobProgressDefinition]:
+func _job_progress_from_save_data(raw_progress: Variant, fallback_progress: Array[JobProgressDefinition], enabled_mod_pack_ids: Array[String]) -> Array[JobProgressDefinition]:
 	var by_job_id := {}
 	for progress in fallback_progress:
 		if progress != null and progress.job != null:
@@ -205,11 +293,14 @@ func _job_progress_from_save_data(raw_progress: Variant, fallback_progress: Arra
 		var data: Dictionary = raw
 		var job_id := String(data.get("job_id", ""))
 		if not by_job_id.has(job_id):
+			var loaded_job := JsonContentLoaderScript.load_job_definition_by_id(job_id, enabled_mod_pack_ids)
+			if loaded_job != null:
+				by_job_id[job_id] = loaded_job
+		if not by_job_id.has(job_id):
 			continue
 		var progress: JobProgressDefinition = JobProgressDefinitionScript.new()
 		progress.job = by_job_id[job_id]
-		progress.level = clamp(int(data.get("level", 0)), 0, 5)
-		progress.xp = int(data.get("xp", 0))
+		progress.level = clamp(int(data.get("level", 0)), 0, MAX_JOB_LEVEL)
 		progress.skill_unlocked = bool(data.get("skill_unlocked", false))
 		progress.passive_unlocked = bool(data.get("passive_unlocked", false))
 		progress.reaction_unlocked = bool(data.get("reaction_unlocked", false))
@@ -236,7 +327,7 @@ func _job_progress_summary(unit: UnitDefinition) -> String:
 	for progress in unit.job_progress:
 		if progress == null or progress.job == null:
 			continue
-		parts.append("%s L%d XP%d" % [progress.job.display_name, progress.level, progress.xp])
+		parts.append("%s L%d%s" % [progress.job.display_name, progress.level, " choice pending" if progress.pending_unlock_choice else ""])
 	if parts.is_empty():
 		return "job progress none"
 	return "job progress %s" % _join(parts, "; ")
@@ -305,13 +396,68 @@ func _clone_job_progress(source: Array[JobProgressDefinition]) -> Array[JobProgr
 		var copy: JobProgressDefinition = JobProgressDefinitionScript.new()
 		copy.job = progress.job
 		copy.level = progress.level
-		copy.xp = progress.xp
 		copy.skill_unlocked = progress.skill_unlocked
 		copy.passive_unlocked = progress.passive_unlocked
 		copy.reaction_unlocked = progress.reaction_unlocked
 		copy.pending_unlock_choice = progress.pending_unlock_choice
 		results.append(copy)
 	return results
+
+
+func _apply_job_level_unlock(unit: UnitDefinition, progress: JobProgressDefinition) -> void:
+	if progress.level == 1:
+		progress.pending_unlock_choice = true
+	elif progress.level == 2:
+		progress.passive_unlocked = true
+		if unit.loadout != null and unit.loadout.equipped_passive == null:
+			unit.loadout.equipped_passive = progress.job.passive
+	elif progress.level >= 3:
+		if not progress.skill_unlocked:
+			progress.skill_unlocked = true
+		elif not progress.reaction_unlocked:
+			progress.reaction_unlocked = true
+			if unit.loadout != null and unit.loadout.equipped_reaction == null:
+				unit.loadout.equipped_reaction = progress.job.reaction
+		progress.pending_unlock_choice = false
+
+
+func _ensure_job_progress(unit: UnitDefinition, job: JobDefinition) -> JobProgressDefinition:
+	for progress in unit.job_progress:
+		if progress != null and progress.job == job:
+			return progress
+	var progress: JobProgressDefinition = JobProgressDefinitionScript.new()
+	progress.job = job
+	unit.job_progress.append(progress)
+	return progress
+
+
+func _total_job_levels(unit: UnitDefinition) -> int:
+	var total := 0
+	for progress in unit.job_progress:
+		if progress != null:
+			total += progress.level
+	return total
+
+
+func _job_level(unit: UnitDefinition, job: JobDefinition) -> int:
+	for progress in unit.job_progress:
+		if progress != null and progress.job == job:
+			return progress.level
+	return 0
+
+
+func _campaign_unit_ids(units: Array[UnitDefinition]) -> Array[String]:
+	var ids: Array[String] = []
+	for unit in units:
+		ids.append(_campaign_unit_id(unit))
+	return ids
+
+
+func _find_unit(campaign_unit_id: String) -> UnitDefinition:
+	for unit in roster_units:
+		if _campaign_unit_id(unit) == campaign_unit_id:
+			return unit
+	return null
 
 
 func _content_id(resource: Resource) -> String:

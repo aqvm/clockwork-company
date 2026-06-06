@@ -5,6 +5,7 @@ signal start_scenario_requested
 signal practice_scenario_requested
 signal planning_item_requested(slot: String, item: ItemDefinition)
 signal equip_option_requested(option_index: int)
+signal unlock_choice_requested(choice: String)
 signal resource_tooltip_requested(source: Control, resource: Resource)
 signal tooltip_cleared
 
@@ -20,7 +21,8 @@ func show_actions(
 	is_replay_active: bool,
 	is_equipment_state: bool,
 	planning_item_options: Array,
-	equip_options: Array
+	equip_options: Array,
+	unlock_options: Array
 ) -> void:
 	_clear_children()
 	_add_start_button(selected_scenario, selected_scenario_status, can_start_scenario, has_active_campaign_scenario, is_replay_active)
@@ -32,12 +34,26 @@ func show_actions(
 	var unit_label := Label.new()
 	unit_label.text = "Unit Actions"
 	add_child(unit_label)
+	_show_unlock_options(unlock_options)
 
 	if not is_equipment_state:
 		_show_planning_or_locked_actions(has_active_campaign_scenario, planning_item_options)
 		return
 
 	_show_equipment_options(selected_unit_name, equip_options)
+
+
+func _show_unlock_options(unlock_options: Array) -> void:
+	if unlock_options.is_empty():
+		return
+	var label := Label.new()
+	label.text = "Pending Job Unlock"
+	add_child(label)
+	for option in unlock_options:
+		var button := Button.new()
+		button.text = String(option.get("label", "Choose Unlock"))
+		button.pressed.connect(func(): unlock_choice_requested.emit(String(option.get("choice", ""))))
+		add_child(button)
 
 
 func _add_start_button(

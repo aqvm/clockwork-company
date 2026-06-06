@@ -144,11 +144,17 @@ FFT-style job unlock dependencies are a future layer, not part of the first lear
 Current job leveling rules:
 
 - each unit can gain at most five total job levels across all jobs
-- winning a fight currently grants each ally one level's worth of XP in their current job
+- each job can gain at most three levels
+- completing a campaign scenario grants one level to one surviving deployed unit tied for the lowest total unit level
+- ties use a stable pseudo-random selection derived from the scenario and eligible campaign unit ids, so save/load cannot reroll the recipient
+- the scenario tier prevents that scenario from advancing a unit beyond the tier
+- failed scenarios, practice scenarios, knocked-out units, max-level units, and units whose current job is already level 3 are not eligible
 - job levels are per unit and per job, not one global unit level
 - job levels permanently apply that job's growth spread to runtime stats
-- unlocks are currently predetermined tracks: skill, passive, and reaction unlock at configured job levels
-- `pending_unlock_choice` exists as scaffolding for future player choice, but this pass auto-unlocks by track
+- job level 1 requires a skill-versus-reaction choice before another campaign scenario can start
+- job level 2 unlocks the passive
+- job level 3 unlocks the unchosen skill or reaction
+- unlocked features permanently remain on the unit's character sheet
 - job unlock dependency trees are intentionally deferred; do not add dependencies until there are enough jobs that dependency rules clarify choices instead of obscuring them
 
 Future player-facing job unlocks should be authored, not random. The current job scaffold is still small, with one active skill, one passive, and one reaction per job, but the unlock UI should point toward a larger authored progression shape rather than a loot-roll shape. For the first choice structure, a unit should choose between an active skill and a reaction first, then receive or choose the job passive later. When practical, an unpicked active/reaction option should remain available through further investment in that same job, so choices shape development order and unit biography without making early experimentation too punishing.
@@ -331,7 +337,7 @@ The first campaign roster persistence slice now restores stable campaign progres
 
 Standalone scenario practice remains self-contained. Practice starts from the current visible planning party snapshot and does not call the campaign completion or roster-commit path, so it can teach encounter contents without writing long-term campaign roster state.
 
-Failed campaign scenario attempts grant knowledge only in the current architecture because `RunState` owns temporary fight rewards, inventory, and job XP until the scenario is won. If a later UI persists scouting reveals explicitly, that reveal state should be separate from XP/reward/unlock commits.
+Failed campaign scenario attempts grant knowledge only in the current architecture because `RunState` owns temporary fight rewards and inventory until the scenario is won, while campaign roster progression is awarded only after victory. If a later UI persists scouting reveals explicitly, that reveal state should be separate from reward/progression commits.
 
 Roster rotation pressure should come from opportunity cost and matchup evaluation rather than punishment systems. A campaign unit may remain available long after reaching max level. Max-level units should still be legal, powerful, and sometimes the correct choice for a dangerous fight, but bringing them should waste potential XP compared with fielding units that can still grow.
 

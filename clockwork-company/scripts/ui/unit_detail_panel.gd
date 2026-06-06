@@ -192,7 +192,7 @@ func _job_progress_summary(unit: UnitDefinition) -> String:
 	var parts: Array[String] = []
 	for progress in unit.job_progress:
 		if progress != null and progress.job != null:
-			parts.append("%s L%d XP%d" % [progress.job.display_name, progress.level, progress.xp])
+			parts.append("%s L%d%s" % [progress.job.display_name, progress.level, " choice pending" if progress.pending_unlock_choice else ""])
 	return "none" if parts.is_empty() else _join_values(parts, "; ")
 
 

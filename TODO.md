@@ -82,9 +82,7 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 - Future learned ability equipment should give each unit two skills: their current assigned class/job skill, plus one equipped learned skill unlocked from a different class/job.
 - Future learned ability equipment should also give each unit one equipped learned passive and one equipped learned reaction from their unlocked ability pool.
 - Track which class/job each learned ability came from so progression menus can filter, explain, and assign cross-class skills/passives/reactions correctly.
-- Implement player choice for `pending_unlock_choice` using authored, non-random job unlock offers.
-- First player-facing unlock choice should offer an active skill versus a reaction from the unit's current job. A later unlock should offer the job passive.
-- Let unpicked active/reaction options remain available through further investment in that same job where practical, so the choice affects development order and biography without making experimentation too brittle.
+- Keep the first authored job unlock schedule small: level 1 chooses skill or reaction, level 2 unlocks the passive, and level 3 unlocks the remaining skill or reaction.
 - Keep the first real progression implementation content-small: build the unlock tracking, choice, equip, persistence, and UI plumbing around the current one-skill/one-passive/one-reaction job scaffold before adding larger job ability catalogs.
 - Add persistent unit careers across scenarios.
 - Build roster rotation pressure around opportunity cost and matchup evaluation, not fatigue/injury/rest punishment. Max-level units should still be legal and powerful, but bringing them should waste potential XP compared with developing lower-level units.

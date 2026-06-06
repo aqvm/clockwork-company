@@ -31,6 +31,7 @@ func show_scenario(scenario: Resource, status_text: String, campaign_progress = 
 			_add_resource_text(encounter, "- %s" % encounter.display_name)
 	_add_scouting_reports(scenario.encounters)
 	_add_plain_text("Party size: %d" % scenario.party_size)
+	_add_plain_text("Scenario tier: %d (cannot advance units beyond level %d)" % [scenario.tier, scenario.tier])
 	_add_plain_text("Recommended level: %d-%d" % [scenario.recommended_level_min, scenario.recommended_level_max])
 	_add_plain_text("Status: %s" % _status_summary(status_text))
 	_add_attempt_state(scenario, campaign_progress)

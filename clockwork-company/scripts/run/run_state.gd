@@ -14,8 +14,6 @@ const STATUS_EQUIPMENT := "equipment"
 const STATUS_WON := "won"
 const STATUS_LOST := "lost"
 const FIGHT_COUNT := 5
-const MAX_UNIT_JOB_LEVELS := 5
-const JOB_XP_PER_LEVEL := 1
 const ENCOUNTER_PATHS := [
 	"res://resources/encounters/phase7_fight_01_street_corner.tres",
 	"res://resources/encounters/phase7_fight_02_toll_gate.tres",
@@ -146,7 +144,6 @@ func complete_fight(report: Dictionary) -> void:
 
 	_record_scenario_knockouts(report)
 	if fight_index >= current_fight_count() - 1:
-		_award_current_job_levels()
 		if scenario_runner != null:
 			scenario_runner.complete_current_encounter()
 		status = STATUS_WON
@@ -156,7 +153,6 @@ func complete_fight(report: Dictionary) -> void:
 			last_result_summary = "Run won after fight %d. The party cleared the five-fight slice." % current_fight_number()
 		return
 
-	_award_current_job_levels()
 	status = STATUS_REWARD
 	last_result_summary = "Encounter %d cleared. Choose one reward before encounter %d: %s." % [current_fight_number(), current_fight_number() + 1, _next_encounter_name()]
 
@@ -337,22 +333,6 @@ func _apply_loss_test_enemy_pressure(enemy: UnitDefinition) -> void:
 	enemy.action_interval = max(1, enemy.action_interval - 3)
 
 
-func _award_current_job_levels() -> void:
-	for ally in ally_definitions:
-		if knocked_out_unit_ids.has(_campaign_unit_id(ally)):
-			continue
-		if ally.loadout == null or ally.loadout.current_job == null:
-			continue
-		if _total_job_levels(ally) >= MAX_UNIT_JOB_LEVELS:
-			continue
-		var progress := _ensure_job_progress(ally, ally.loadout.current_job)
-		progress.xp += 1
-		while progress.xp >= JOB_XP_PER_LEVEL and progress.level < 5 and _total_job_levels(ally) < MAX_UNIT_JOB_LEVELS:
-			progress.xp -= JOB_XP_PER_LEVEL
-			progress.level += 1
-			_apply_job_unlocks(progress)
-
-
 func _record_scenario_knockouts(report: Dictionary) -> void:
 	if active_scenario == null:
 		return
@@ -373,29 +353,6 @@ func _record_scenario_knockouts(report: Dictionary) -> void:
 		var campaign_unit_id := String(unit_snapshot.get("campaign_unit_id", ""))
 		if not campaign_unit_id.is_empty() and not knocked_out_unit_ids.has(campaign_unit_id):
 			knocked_out_unit_ids.append(campaign_unit_id)
-
-
-func _ensure_job_progress(unit: UnitDefinition, job: JobDefinition) -> JobProgressDefinition:
-	for progress: JobProgressDefinition in unit.job_progress:
-		if progress != null and progress.job == job:
-			return progress
-	var progress: JobProgressDefinition = JobProgressDefinitionScript.new()
-	progress.job = job
-	unit.job_progress.append(progress)
-	return progress
-
-
-func _apply_job_unlocks(progress: JobProgressDefinition) -> void:
-	var job := progress.job
-	if job == null:
-		return
-	if progress.level >= job.skill_unlock_level:
-		progress.skill_unlocked = true
-	if progress.level >= job.passive_unlock_level:
-		progress.passive_unlocked = true
-	if progress.level >= job.reaction_unlock_level:
-		progress.reaction_unlocked = true
-	progress.pending_unlock_choice = false
 
 
 func _total_job_levels(unit: UnitDefinition) -> int:
@@ -421,7 +378,7 @@ func _job_progress_summary(unit: UnitDefinition) -> String:
 		if progress.reaction_unlocked:
 			unlocks.append("reaction")
 		var unlock_text := "no unlocks" if unlocks.is_empty() else _join_string_parts(unlocks, ",")
-		parts.append("%s L%d XP%d [%s]" % [progress.job.display_name, progress.level, progress.xp, unlock_text])
+		parts.append("%s L%d [%s%s]" % [progress.job.display_name, progress.level, unlock_text, ", choice pending" if progress.pending_unlock_choice else ""])
 	if parts.is_empty():
 		return "none"
 	return _join_string_parts(parts, "; ")
@@ -534,7 +491,6 @@ func _clone_job_progress(source: Array[JobProgressDefinition]) -> Array[JobProgr
 		var copy: JobProgressDefinition = JobProgressDefinitionScript.new()
 		copy.job = progress.job
 		copy.level = progress.level
-		copy.xp = progress.xp
 		copy.skill_unlocked = progress.skill_unlocked
 		copy.passive_unlocked = progress.passive_unlocked
 		copy.reaction_unlocked = progress.reaction_unlocked
