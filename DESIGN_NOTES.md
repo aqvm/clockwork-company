@@ -267,7 +267,7 @@ Campaign graph validation should stay simple but strict: starting scenarios and 
 
 Scenario rules should be data-first. A rule such as `ash_chapel_healing_pressure` may exist as a readable Resource before the combat simulator knows how to enforce it.
 
-The first mechanical scenario rule, `iron_tollgate_armored_enemies`, was intentionally narrow and useful as a plumbing proof. It should not become the model for good scenario-rule design. "Enemies have more armor" should usually be expressed through enemy builds, jobs, gear, tactics, and encounter composition. If a scenario is meant to test armor-breaking, the enemies should naturally have high-armor builds rather than receiving hidden stat patches from a rule.
+The first mechanical scenario rule, `iron_tollgate_armored_enemies`, was intentionally narrow and useful as a plumbing proof, but it has now been retired as a runtime stat patch. Iron Tollgate keeps a visible rule Resource as an authoring note, while armor pressure should come from enemy builds, jobs, gear, tactics, and encounter composition. If a scenario is meant to test armor-breaking, the enemies should naturally have high-armor builds rather than receiving hidden stat patches from a rule.
 
 Scenario rules are better suited to broad scenario-wide conditions: weather, terrain, visibility, ritual pressure, environmental hazards, or other global modifiers that affect the battlefield. A rainstorm that makes attacks less reliable is a more natural scenario rule than a rule that quietly changes one team's armor. Keep these rules visible, deterministic, and easy to explain before combat starts.
 

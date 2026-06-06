@@ -13,6 +13,46 @@ Each entry should include:
 - Manual exercise
 - Open questions
 
+## 2026-06-05 - Retired the Iron Tollgate armor stat patch
+
+Feature worked on:
+
+- Removed the hardcoded `iron_tollgate_armored_enemies` runtime armor bonus from `RunState`.
+- Kept the scenario rule Resource as a visible authoring note.
+- Updated the architecture and design notes to make enemy builds, gear, jobs, tactics, and encounter composition responsible for armor pressure.
+
+Godot concepts introduced:
+
+- No new Godot API. This pass clarified the boundary between authored Resource notes and runtime rule execution.
+
+Game architecture concepts introduced:
+
+- A scenario rule should represent a broad battlefield condition, not quietly patch individual enemy stats.
+- A visible data Resource can remain useful as an authoring note even when it no longer drives runtime behavior.
+
+Files touched:
+
+- `clockwork-company/scripts/run/run_state.gd`
+- `clockwork-company/resources/scenario_rules/iron_tollgate_armored_enemies.tres`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why armor pressure belongs in normal enemy content rather than a hidden scenario-specific stat bonus.
+- Why the Iron Tollgate rule Resource remains referenced by the scenario.
+- Why removing a one-off rule path makes future scenario-rule design easier to reason about.
+
+Manual exercise:
+
+- Practice Iron Tollgate, inspect its rule description, then inspect the enemy units and identify which normal builds create the scenario's armor pressure.
+
+Open questions:
+
+- Which future broad battlefield condition should become the next mechanical scenario rule?
+
 ## 2026-06-05 - First campaign roster persistence slice
 
 Feature worked on:

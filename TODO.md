@@ -15,7 +15,6 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 
 ## Scenario and Campaign
 
-- Revisit `iron_tollgate_armored_enemies`. It was useful as the first mechanical scenario rule, but "enemies have more armor" should usually be expressed through enemy builds/loadouts, not a scenario rule.
 - Use scenario rules for broad scenario-wide modifiers such as weather, terrain, visibility, ritual pressure, or other global conditions that affect the battlefield rather than patching individual enemy stats.
 - Build scenarios and encounters to test a specific mechanic, matchup question, or synergy pattern. If a fight is meant to test armor-breaking, author enemies with naturally high-armor builds instead of adding invisible armor from a rule.
 - Scenario questions should not have one mandatory correct answer. Good enemy designs pose pressures that can be solved through several build routes, such as mitigation, burst damage, sustain, control, ramping damage, or targeting plans.

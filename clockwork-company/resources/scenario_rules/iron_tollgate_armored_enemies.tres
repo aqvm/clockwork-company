@@ -6,5 +6,5 @@
 script = ExtResource("1_rule")
 rule_id = "iron_tollgate_armored_enemies"
 display_name = "Iron Tollgate Armor"
-description = "Enemies gain +2 armor during this scenario, making physical mitigation visible in the fight preview and roster."
-tags = ["armor", "physical", "mechanical"]
+description = "Authoring note: this scenario should express armor pressure through enemy jobs, gear, tactics, and encounter composition rather than a hidden scenario stat patch."
+tags = ["armor", "physical", "authoring_note"]

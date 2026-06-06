@@ -91,7 +91,7 @@ The project now has three tactical content layers:
 
 Scenarios own authored mission data: story text, party size, encounter Resources, data-only scenario rules, rewards, tags, and content unlock ids. Campaigns own availability and completion: which scenarios start unlocked, which scenarios have been attempted or completed, which scenarios unlock after completion, which content ids are unlocked, and whether the campaign is complete.
 
-Scenario rules stay data-first, but `RunState` can apply tiny hardcoded rule effects while the rule vocabulary is still young. The current mechanical example is `iron_tollgate_armored_enemies`, which adds armor to enemy definitions before the simulator builds combat runtime state.
+Scenario rules stay data-first while the rule vocabulary is still young. `RunState` no longer patches Iron Tollgate enemy armor; that scenario should express armor pressure through normal enemy definitions, jobs, gear, tactics, and encounter composition.
 
 The scenario workbench can also start an unlocked scenario as a practice run. Practice runs use `RunState.start_scenario(...)` but do not call `CampaignManager.start_scenario(...)`, and they do not complete or unlock campaign nodes.
 
