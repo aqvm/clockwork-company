@@ -217,6 +217,8 @@ func _setup_planning_panel() -> void:
 	planning_panel.connect("planning_item_requested", _on_planning_item_requested)
 	planning_panel.connect("equip_option_requested", _on_planning_equip_pressed)
 	planning_panel.connect("unlock_choice_requested", _on_unlock_choice_requested)
+	planning_panel.connect("planning_job_requested", _on_planning_job_requested)
+	planning_panel.connect("planning_feature_requested", _on_planning_feature_requested)
 	_connect_panel_tooltips(planning_panel)
 	parent_vbox.add_child(planning_panel)
 	parent_vbox.move_child(planning_panel, log_split.get_index())
@@ -457,8 +459,14 @@ func _render_unit_actions() -> void:
 	var equip_options: Array = run_state.equip_options() if is_equipment_state else []
 	var planning_item_options := _planning_item_options(selected_unit)
 	var unlock_options: Array = []
+	var job_options: Array = []
+	var learned_feature_options := {}
 	if campaign_manager != null and selected_unit != null:
-		unlock_options = campaign_manager.pending_unlock_options_for_unit(_campaign_unit_id(selected_unit))
+		var unit_id := _campaign_unit_id(selected_unit)
+		unlock_options = campaign_manager.pending_unlock_options_for_unit(unit_id)
+		job_options = _planning_job_options(selected_unit)
+		for feature_type in ["skill", "passive", "reaction"]:
+			learned_feature_options[feature_type] = campaign_manager.learned_feature_options(unit_id, feature_type)
 	planning_panel.call(
 		"show_actions",
 		selected_scenario,
@@ -472,7 +480,9 @@ func _render_unit_actions() -> void:
 		is_equipment_state,
 		planning_item_options,
 		equip_options,
-		unlock_options
+		unlock_options,
+		job_options,
+		learned_feature_options
 	)
 
 
@@ -538,6 +548,34 @@ func _on_unlock_choice_requested(choice: String) -> void:
 	if campaign_manager.resolve_pending_unlock(_campaign_unit_id(unit), choice):
 		_load_planning_party()
 		_show_campaign_landing()
+
+
+func _on_planning_job_requested(job: JobDefinition) -> void:
+	if campaign_manager == null or _has_active_scenario_run():
+		return
+	var unit := _find_planning_unit(selected_unit_name)
+	if unit != null and campaign_manager.set_current_job(_campaign_unit_id(unit), job):
+		_load_planning_party()
+		_refresh_planning_panel()
+
+
+func _on_planning_feature_requested(feature_type: String, feature: Resource) -> void:
+	if campaign_manager == null or _has_active_scenario_run():
+		return
+	var unit := _find_planning_unit(selected_unit_name)
+	if unit != null and campaign_manager.assign_learned_feature(_campaign_unit_id(unit), feature_type, feature):
+		_load_planning_party()
+		_refresh_planning_panel()
+
+
+func _planning_job_options(unit: UnitDefinition) -> Array:
+	var options: Array = []
+	if campaign_manager == null or unit == null:
+		return options
+	var current_job = unit.loadout.current_job if unit.loadout != null else null
+	for job in campaign_manager.available_jobs():
+		options.append({"job": job, "label": job.display_name, "equipped": _content_id(job) == _content_id(current_job)})
+	return options
 
 
 func _on_planning_equip_pressed(index: int) -> void:
@@ -650,18 +688,10 @@ func _set_slot_item(loadout, slot: String, item: ItemDefinition) -> void:
 
 
 func _item_allowed_for_planning_unit(unit: UnitDefinition, item: ItemDefinition) -> bool:
-	if item == null or unit.loadout == null or unit.loadout.current_job == null:
-		return true
-	var job := unit.loadout.current_job
-	if item.slot == "Weapon":
-		return not job.forbid_weapon
-	if item.slot == "Armor":
-		return not job.forbid_armor
-	if item.slot == "Helmet":
-		return not job.forbid_helmet
-	if item.slot == "Trinket":
-		return not job.forbid_trinket
-	return false
+	if item == null:
+		return false
+	var property_name := "forbid_%s" % item.slot.to_lower()
+	return not ((unit.loadout != null and unit.loadout.current_job != null and bool(unit.loadout.current_job.get(property_name))) or (unit.ancestry != null and bool(unit.ancestry.get(property_name))))
 
 
 func _find_planning_unit(unit_name: String) -> UnitDefinition:
@@ -675,6 +705,16 @@ func _campaign_unit_id(unit: UnitDefinition) -> String:
 	if unit == null:
 		return ""
 	return String(unit.get_meta("campaign_unit_id", unit.display_name))
+
+
+func _content_id(resource: Resource) -> String:
+	if resource == null:
+		return ""
+	if resource.has_meta("content_id"):
+		return String(resource.get_meta("content_id"))
+	if not resource.resource_path.is_empty():
+		return resource.resource_path.get_file().get_basename()
+	return ""
 
 
 func _show_campaign_landing() -> void:

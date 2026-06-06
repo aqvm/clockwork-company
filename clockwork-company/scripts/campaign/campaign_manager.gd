@@ -3,7 +3,8 @@ class_name CampaignManager
 
 const CampaignProgressScript := preload("res://scripts/campaign/campaign_progress.gd")
 const CampaignRosterStateScript := preload("res://scripts/campaign/campaign_roster_state.gd")
-const SAVE_VERSION := 2
+const JsonContentLoaderScript := preload("res://scripts/modding/json_content_loader.gd")
+const SAVE_VERSION := 3
 
 var campaign: Resource = null
 var progress = CampaignProgressScript.new()
@@ -107,6 +108,22 @@ func pending_unlock_options_for_unit(campaign_unit_id: String) -> Array[Dictiona
 
 func resolve_pending_unlock(campaign_unit_id: String, choice: String) -> bool:
 	return roster_state.resolve_pending_unlock(campaign_unit_id, choice)
+
+
+func available_jobs() -> Array[JobDefinition]:
+	return JsonContentLoaderScript.load_job_definitions(enabled_mod_pack_ids)
+
+
+func set_current_job(campaign_unit_id: String, job: JobDefinition) -> bool:
+	return roster_state.set_current_job(campaign_unit_id, job)
+
+
+func learned_feature_options(campaign_unit_id: String, feature_type: String) -> Array[Dictionary]:
+	return roster_state.learned_feature_options(campaign_unit_id, feature_type)
+
+
+func assign_learned_feature(campaign_unit_id: String, feature_type: String, feature: Resource) -> bool:
+	return roster_state.assign_learned_feature(campaign_unit_id, feature_type, feature)
 
 
 func status_lines() -> Array[String]:

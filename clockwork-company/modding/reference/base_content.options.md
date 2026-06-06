@@ -47,6 +47,10 @@ Optional fields:
 - `magic_damage_growth` (`int`): baseline magic growth applied once per total unit job level.
 - `armor_growth` (`int`): baseline armor growth applied once per total unit job level.
 - `action_interval_growth` (`int`): baseline action interval adjustment applied once per total unit job level. Negative is faster.
+- `forbid_weapon` (`bool`): default `false`; when `true`, this ancestry cannot equip weapons.
+- `forbid_armor` (`bool`): default `false`; when `true`, this ancestry cannot equip armor.
+- `forbid_helmet` (`bool`): default `false`; when `true`, this ancestry cannot equip helmets.
+- `forbid_trinket` (`bool`): default `false`; when `true`, this ancestry cannot equip trinkets.
 - `feature` (`Dictionary`): always-on ancestry feature payload. See `ancestries[].feature` below.
 - `notes` (`String`)
 
@@ -196,7 +200,7 @@ Optional fields:
 - `display_name` (`String`)
 - `tags` (`Array[String]`)
 - `condition` (`String enum`): `Always`, `Self HP Below Half`, `Ally HP Below Half`, `Enemy Alive`
-- `action` (`String enum`): `Attack`, `Heal`, `Guard`, `Job Skill`
+- `action` (`String enum`): `Attack`, `Heal`, `Guard`, `Job Skill`, `Assigned Skill`
 - `target` (`String enum`): `Self`, `Lowest HP Ally`, `Frontmost Enemy`
 
 ## `tactics[]` keys
@@ -208,7 +212,7 @@ Optional fields:
 - `display_name` (`String`)
 - `tags` (`Array[String]`)
 - `condition` (`String enum`): `Always`, `Self HP Below Half`, `Ally HP Below Half`, `Enemy Alive`
-- `action` (`String enum`): `Attack`, `Heal`, `Guard`, `Job Skill`
+- `action` (`String enum`): `Attack`, `Heal`, `Guard`, `Job Skill`, `Assigned Skill`
 - `target` (`String enum`): `Self`, `Lowest HP Ally`, `Frontmost Enemy`
 
 ## `loadouts[]` keys
@@ -219,9 +223,9 @@ Required:
 Optional fields:
 - `display_name` (`String`)
 - `current_job_id` (`String` or empty string)
-- `equipped_skill` (`Dictionary`): optional learned/equipped active skill override. If omitted or empty, the current job's skill is used.
-- `equipped_passive` (`Dictionary`): optional learned/equipped passive override. If omitted or empty, the current job's passive is used.
-- `equipped_reaction` (`Dictionary`): optional learned/equipped reaction override. If omitted or empty, the current job's reaction is used.
+- `equipped_skill_job_id` (`String` or empty string): source job for the assigned cross-job skill.
+- `equipped_passive_job_id` (`String` or empty string): source job for the assigned learned passive.
+- `equipped_reaction_job_id` (`String` or empty string): source job for the assigned learned reaction.
 - `weapon_id` (`String` or empty string)
 - `armor_id` (`String` or empty string)
 - `helmet_id` (`String` or empty string)
@@ -230,13 +234,15 @@ Optional fields:
 
 Reference rules:
 - Non-empty `current_job_id` must reference an existing job id.
+- Non-empty assigned feature job ids must reference existing job ids.
 - Non-empty `weapon_id`/`armor_id`/`helmet_id`/`trinket_id` must reference existing item ids.
 - Every `tactic_id` must reference an existing tactic id.
 
 Equipped ability notes:
-- `equipped_skill`, `equipped_passive`, and `equipped_reaction` use the same dictionary fields as `jobs[].skill`, `jobs[].passive`, and `jobs[].reaction`.
-- These fields model a later learned-ability system without requiring progression UI yet.
-- A loadout that equips a skill from another job should include a tactic that uses `Job Skill` with an appropriate target.
+- Assigned feature job ids identify provenance; the unit must also have the corresponding permanent unlock in `job_progress`.
+- `Job Skill` uses the unlocked skill from the current job.
+- `Assigned Skill` uses the separately equipped unlocked skill from a different job.
+- A loadout that equips a skill from another job should include an `Assigned Skill` tactic with an appropriate target.
 
 ## `units[]` keys
 

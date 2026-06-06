@@ -46,14 +46,15 @@ func show_unit(unit: UnitDefinition, party_units: Array[UnitDefinition] = []) ->
 		return
 
 	var loadout := unit.loadout
-	var skill = loadout.equipped_skill if loadout.equipped_skill != null else loadout.current_job.skill if loadout.current_job != null else null
-	var passive = loadout.equipped_passive if loadout.equipped_passive != null else loadout.current_job.passive if loadout.current_job != null else null
-	var reaction = loadout.equipped_reaction if loadout.equipped_reaction != null else loadout.current_job.reaction if loadout.current_job != null else null
+	var skill = loadout.current_job.skill if loadout.current_job != null and _job_feature_unlocked(unit, loadout.current_job, "skill") else null
+	var passive = loadout.equipped_passive
+	var reaction = loadout.equipped_reaction
 	_add_resource_text(loadout, "Loadout: %s" % loadout.display_name)
 	_add_resource_text(loadout.current_job, "Current job: %s" % _resource_display_name(loadout.current_job))
-	_add_resource_text(skill, "Skill: %s (%s)" % [_resource_display_name(skill), _ability_source(loadout.equipped_skill)])
-	_add_resource_text(passive, "Passive: %s (%s)" % [_resource_display_name(passive), _ability_source(loadout.equipped_passive)])
-	_add_resource_text(reaction, "Reaction: %s (%s)" % [_resource_display_name(reaction), _ability_source(loadout.equipped_reaction)])
+	_add_resource_text(skill, "Job skill: %s" % _resource_display_name(skill))
+	_add_resource_text(loadout.equipped_skill, "Assigned skill: %s" % _resource_display_name(loadout.equipped_skill))
+	_add_resource_text(passive, "Assigned passive: %s" % _resource_display_name(passive))
+	_add_resource_text(reaction, "Assigned reaction: %s" % _resource_display_name(reaction))
 	_add_plain_text("")
 	_add_plain_text("Equipment:")
 	_add_item_row("Weapon", loadout.weapon)
@@ -155,10 +156,13 @@ func _resource_display_name(resource) -> String:
 	return String(resource.display_name)
 
 
-func _ability_source(equipped_override: Resource) -> String:
-	if equipped_override != null:
-		return "equipped learned override"
-	return "current job"
+func _job_feature_unlocked(unit: UnitDefinition, job: JobDefinition, feature_type: String) -> bool:
+	for progress in unit.job_progress:
+		if progress == null or progress.job != job:
+			continue
+		if feature_type == "skill":
+			return progress.skill_unlocked
+	return false
 
 
 func _item_detail_text(item: ItemDefinition) -> String:

@@ -13,6 +13,67 @@ Each entry should include:
 - Manual exercise
 - Open questions
 
+## 2026-06-05 - Learned ability assignment and Assigned Skill tactics
+
+Feature worked on:
+
+- Added planning selectors for freely changing current jobs and assigning unlocked learned skills, passives, and reactions.
+- Split tactic skill actions into `Job Skill` and `Assigned Skill`.
+- Locked combat ability use behind permanent per-job unlock flags.
+- Persisted assigned ability provenance through source job ids.
+- Added strict job/ancestry equipment blacklists and automatic return of newly illegal gear to campaign inventory after a job change.
+
+Godot concepts introduced:
+
+- `OptionButton` can present Resource-backed planning choices while signals pass the selected Resource back to the campaign owner.
+- Resource identity is local to a loaded object graph, so save data restores nested abilities through stable source job ids rather than nested subresource identity.
+
+Game architecture concepts introduced:
+
+- Per-job progress owns permanent learned features; the loadout owns current between-scenario assignments.
+- Current-job skills and assigned cross-job skills are separate tactic actions, so ordered tactics remain combat authority.
+- Equipment legality is a strict blacklist composed from current job and ancestry rules.
+
+Files touched:
+
+- `clockwork-company/scripts/campaign/campaign_roster_state.gd`
+- `clockwork-company/scripts/campaign/campaign_manager.gd`
+- `clockwork-company/scripts/combat/combat_constants.gd`
+- `clockwork-company/scripts/combat/combat_simulator.gd`
+- `clockwork-company/scripts/combat/rules/tactic_resolver.gd`
+- `clockwork-company/scripts/combat/runtime/unit_state.gd`
+- `clockwork-company/scripts/data/ancestry_definition.gd`
+- `clockwork-company/scripts/data/tactic_definition.gd`
+- `clockwork-company/scripts/modding/json_content_loader.gd`
+- `clockwork-company/scripts/run/run_state.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `clockwork-company/scripts/ui/planning_workbench_panel.gd`
+- `clockwork-company/scripts/ui/unit_action_panel.gd`
+- `clockwork-company/scripts/ui/unit_detail_panel.gd`
+- `clockwork-company/scripts/ui/resource_tooltip_builder.gd`
+- `clockwork-company/modding/reference/base_content.options.md`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `CONTENT_HOOK_AUDIT.md`
+- `TODO.md`
+- `MODDING.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why an assigned skill must come from a job other than the current job.
+- How a tactic distinguishes `Job Skill` from `Assigned Skill`.
+- Why save data records an assigned feature's source job id.
+- Why changing jobs may move equipment back into campaign inventory.
+
+Manual exercise:
+
+- Unlock a skill in one job, change the unit to another job, assign the prior skill, and inspect the unit detail panel. Author or select an `Assigned Skill` tactic to make that second skill fire.
+
+Open questions:
+
+- What is the smallest useful tactic-list editing UI for ordering and changing `Job Skill` versus `Assigned Skill` tactics?
+
 ## 2026-06-05 - Post-scenario unit and job progression
 
 Feature worked on:

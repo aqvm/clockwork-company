@@ -12,6 +12,8 @@ static func text_for_resource(resource) -> String:
 		text = _loadout_text(resource)
 	elif resource is ItemDefinition:
 		text = _item_text(resource)
+	elif resource is AncestryDefinition:
+		text = _ancestry_text(resource)
 	elif resource is JobDefinition:
 		text = _job_text(resource)
 	elif resource is SkillDefinition:
@@ -53,9 +55,9 @@ static func related_resources_for_resource(resource) -> Array:
 				_append_related(related, "Job Progress", progress.job)
 	elif resource is UnitLoadoutDefinition:
 		_append_related(related, "Current Job", resource.current_job)
-		_append_related(related, "Skill", resource.equipped_skill if resource.equipped_skill != null else resource.current_job.skill if resource.current_job != null else null)
-		_append_related(related, "Passive", resource.equipped_passive if resource.equipped_passive != null else resource.current_job.passive if resource.current_job != null else null)
-		_append_related(related, "Reaction", resource.equipped_reaction if resource.equipped_reaction != null else resource.current_job.reaction if resource.current_job != null else null)
+		_append_related(related, "Assigned Skill", resource.equipped_skill)
+		_append_related(related, "Assigned Passive", resource.equipped_passive)
+		_append_related(related, "Assigned Reaction", resource.equipped_reaction)
 		_append_related(related, "Weapon", resource.weapon)
 		_append_related(related, "Armor", resource.armor)
 		_append_related(related, "Helmet", resource.helmet)
@@ -70,6 +72,8 @@ static func related_resources_for_resource(resource) -> Array:
 		_append_related(related, "Passive", resource.passive)
 		_append_related(related, "Reaction", resource.reaction)
 		_append_related(related, "Default Tactic", resource.default_tactic)
+	elif resource is AncestryDefinition:
+		_append_related(related, "Feature", resource.feature)
 	elif resource is EncounterDefinition:
 		for enemy in resource.enemy_units:
 			_append_related(related, "Enemy", enemy)
@@ -158,9 +162,9 @@ static func _loadout_text(loadout: UnitLoadoutDefinition) -> String:
 	var lines: Array[String] = []
 	lines.append(_title(loadout))
 	lines.append("Current job: %s" % _name_or_none(loadout.current_job))
-	lines.append("Skill: %s" % _name_or_none(loadout.equipped_skill if loadout.equipped_skill != null else loadout.current_job.skill if loadout.current_job != null else null))
-	lines.append("Passive: %s" % _name_or_none(loadout.equipped_passive if loadout.equipped_passive != null else loadout.current_job.passive if loadout.current_job != null else null))
-	lines.append("Reaction: %s" % _name_or_none(loadout.equipped_reaction if loadout.equipped_reaction != null else loadout.current_job.reaction if loadout.current_job != null else null))
+	lines.append("Assigned skill: %s" % _name_or_none(loadout.equipped_skill))
+	lines.append("Assigned passive: %s" % _name_or_none(loadout.equipped_passive))
+	lines.append("Assigned reaction: %s" % _name_or_none(loadout.equipped_reaction))
 	lines.append("Weapon: %s" % _name_or_none(loadout.weapon))
 	lines.append("Armor: %s" % _name_or_none(loadout.armor))
 	lines.append("Helmet: %s" % _name_or_none(loadout.helmet))
@@ -210,6 +214,29 @@ static func _job_text(job: JobDefinition) -> String:
 	lines.append("Default tactic: %s" % _name_or_none(job.default_tactic))
 	lines.append("Unlock schedule: L1 choose skill/reaction, L2 passive, L3 remaining feature")
 	return _join(lines, "\n")
+
+
+static func _ancestry_text(ancestry: AncestryDefinition) -> String:
+	var forbids: Array[String] = []
+	if ancestry.forbid_weapon:
+		forbids.append("weapon")
+	if ancestry.forbid_armor:
+		forbids.append("armor")
+	if ancestry.forbid_helmet:
+		forbids.append("helmet")
+	if ancestry.forbid_trinket:
+		forbids.append("trinket")
+	return "%s\nTags: %s\nGrowth: HP %+d, physical %+d, magic %+d, armor %+d, interval %+d\nForbids: %s\nFeature: %s" % [
+		_title(ancestry),
+		_join(ancestry.tags),
+		ancestry.max_hp_growth,
+		ancestry.physical_damage_growth,
+		ancestry.magic_damage_growth,
+		ancestry.armor_growth,
+		ancestry.action_interval_growth,
+		_join(forbids),
+		_name_or_none(ancestry.feature),
+	]
 
 
 static func _skill_text(skill: SkillDefinition) -> String:

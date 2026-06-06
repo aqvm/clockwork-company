@@ -78,10 +78,7 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 
 ## Units, Jobs, Progression, and Roster
 
-- Replace loadout-level ability overrides with real learned ability unlock/equip rules when progression UI exists.
-- Future learned ability equipment should give each unit two skills: their current assigned class/job skill, plus one equipped learned skill unlocked from a different class/job.
-- Future learned ability equipment should also give each unit one equipped learned passive and one equipped learned reaction from their unlocked ability pool.
-- Track which class/job each learned ability came from so progression menus can filter, explain, and assign cross-class skills/passives/reactions correctly.
+- Add tactic-list editing so planning can deliberately order authored `Job Skill` and `Assigned Skill` tactics instead of relying only on existing loadout tactics.
 - Keep the first authored job unlock schedule small: level 1 chooses skill or reaction, level 2 unlocks the passive, and level 3 unlocks the remaining skill or reaction.
 - Keep the first real progression implementation content-small: build the unlock tracking, choice, equip, persistence, and UI plumbing around the current one-skill/one-passive/one-reaction job scaffold before adding larger job ability catalogs.
 - Add persistent unit careers across scenarios.
@@ -101,6 +98,7 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 ## Content and Authoring
 
 - Turn the broad content catalog into curated scenario-facing content. A first slice now adds existing catalog rewards to the authored scenarios; keep future curation small and scenario-specific.
+- Re-author Roger Spellsword's legacy loadout-only custom abilities as normal job/progression content before using that catalog unit in a scenario.
 - Add more handcrafted scenarios only when the framework and UI can make them understandable.
 - Keep enemies as normal unit/loadout/job/item/tactic builds, not a separate monster-only ruleset.
 - Use tags for filtering/conditions/content tools when an actual tool or rule needs them.
@@ -116,7 +114,7 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 
 - Add broader campaign save/load only after the remaining campaign state shapes are stable.
 - Persisted unlocked/completed scenarios and first roster/job/gear/inventory state now exist; add active-attempt save/load only after scenario-local knockout, retry, and scouting reveal state are modeled cleanly.
-- Revisit roster/job/gear serialization once learned ability choice/equip UI exists, because current persistence keeps the one-skill/one-passive/one-reaction scaffold but does not yet solve broader learned-ability catalogs.
+- Revisit roster/job/gear serialization only when broader learned-ability catalogs outgrow the current one-skill/one-passive/one-reaction per-job scaffold.
 - Keep save data small and inspectable while the project is still learning-first.
 
 ## Later / Not Soon

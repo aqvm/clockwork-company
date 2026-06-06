@@ -142,6 +142,62 @@ func resolve_pending_unlock(campaign_unit_id: String, choice: String) -> bool:
 	return false
 
 
+func set_current_job(campaign_unit_id: String, job: JobDefinition) -> bool:
+	var unit := _find_unit(campaign_unit_id)
+	if unit == null or job == null:
+		return false
+	if unit.loadout == null:
+		unit.loadout = UnitLoadoutDefinitionScript.new()
+		unit.loadout.display_name = "%s Campaign Loadout" % unit.display_name
+	unit.loadout.current_job = _canonical_job_for_unit(unit, job)
+	if _content_id(_job_for_feature(unit, unit.loadout.equipped_skill, "skill")) == _content_id(unit.loadout.current_job):
+		unit.loadout.equipped_skill = null
+	_return_illegal_equipment_to_inventory(unit)
+	return true
+
+
+func assign_learned_feature(campaign_unit_id: String, feature_type: String, feature: Resource) -> bool:
+	var unit := _find_unit(campaign_unit_id)
+	if unit == null or unit.loadout == null:
+		return false
+	if feature != null and not _feature_unlocked(unit, feature_type, feature):
+		return false
+	if feature_type == "skill":
+		if feature != null and _job_for_feature(unit, feature, feature_type) == unit.loadout.current_job:
+			return false
+		unit.loadout.equipped_skill = feature
+		return true
+	if feature_type == "passive":
+		unit.loadout.equipped_passive = feature
+		return true
+	if feature_type == "reaction":
+		unit.loadout.equipped_reaction = feature
+		return true
+	return false
+
+
+func learned_feature_options(campaign_unit_id: String, feature_type: String) -> Array[Dictionary]:
+	var options: Array[Dictionary] = [{"feature": null, "label": "None", "equipped": false}]
+	var unit := _find_unit(campaign_unit_id)
+	if unit == null or unit.loadout == null:
+		return options
+	var equipped := _equipped_feature(unit.loadout, feature_type)
+	options[0]["equipped"] = equipped == null
+	for progress in unit.job_progress:
+		if progress == null or progress.job == null or not _progress_feature_unlocked(progress, feature_type):
+			continue
+		if feature_type == "skill" and progress.job == unit.loadout.current_job:
+			continue
+		var feature := _job_feature(progress.job, feature_type)
+		if feature != null:
+			options.append({
+				"feature": feature,
+				"label": "%s (%s)" % [feature.display_name, progress.job.display_name],
+				"equipped": feature == equipped,
+			})
+	return options
+
+
 func status_lines() -> Array[String]:
 	var lines: Array[String] = []
 	lines.append("Campaign roster: %d unit%s" % [roster_units.size(), "" if roster_units.size() == 1 else "s"])
@@ -222,9 +278,9 @@ func _unit_to_save_data(unit: UnitDefinition) -> Dictionary:
 	if unit.loadout != null:
 		loadout_data = {
 			"current_job_id": _content_id(unit.loadout.current_job),
-			"equipped_skill_id": _content_id(unit.loadout.equipped_skill),
-			"equipped_passive_id": _content_id(unit.loadout.equipped_passive),
-			"equipped_reaction_id": _content_id(unit.loadout.equipped_reaction),
+			"equipped_skill_job_id": _content_id(_job_for_feature(unit, unit.loadout.equipped_skill, "skill")),
+			"equipped_passive_job_id": _content_id(_job_for_feature(unit, unit.loadout.equipped_passive, "passive")),
+			"equipped_reaction_job_id": _content_id(_job_for_feature(unit, unit.loadout.equipped_reaction, "reaction")),
 			"weapon_id": _content_id(unit.loadout.weapon),
 			"armor_id": _content_id(unit.loadout.armor),
 			"helmet_id": _content_id(unit.loadout.helmet),
@@ -246,6 +302,12 @@ func _apply_loadout_save_data(unit: UnitDefinition, raw_loadout: Variant, enable
 	if unit.loadout == null:
 		unit.loadout = UnitLoadoutDefinitionScript.new()
 		unit.loadout.display_name = "%s Campaign Loadout" % unit.display_name
+	var current_job := _job_from_progress_or_load(unit, String(data.get("current_job_id", "")), enabled_mod_pack_ids)
+	if current_job != null:
+		unit.loadout.current_job = current_job
+	unit.loadout.equipped_skill = _saved_job_feature(unit, data, "equipped_skill_job_id", "skill")
+	unit.loadout.equipped_passive = _saved_job_feature(unit, data, "equipped_passive_job_id", "passive")
+	unit.loadout.equipped_reaction = _saved_job_feature(unit, data, "equipped_reaction_job_id", "reaction")
 	unit.loadout.weapon = _load_item_or_keep(data, "weapon_id", unit.loadout.weapon, enabled_mod_pack_ids)
 	unit.loadout.armor = _load_item_or_keep(data, "armor_id", unit.loadout.armor, enabled_mod_pack_ids)
 	unit.loadout.helmet = _load_item_or_keep(data, "helmet_id", unit.loadout.helmet, enabled_mod_pack_ids)
@@ -444,6 +506,116 @@ func _job_level(unit: UnitDefinition, job: JobDefinition) -> int:
 		if progress != null and progress.job == job:
 			return progress.level
 	return 0
+
+
+func _feature_unlocked(unit: UnitDefinition, feature_type: String, feature: Resource) -> bool:
+	for progress in unit.job_progress:
+		if progress != null and _job_feature(progress.job, feature_type) == feature:
+			return _progress_feature_unlocked(progress, feature_type)
+	return false
+
+
+func _progress_feature_unlocked(progress: JobProgressDefinition, feature_type: String) -> bool:
+	if feature_type == "skill":
+		return progress.skill_unlocked
+	if feature_type == "passive":
+		return progress.passive_unlocked
+	if feature_type == "reaction":
+		return progress.reaction_unlocked
+	return false
+
+
+func _job_feature(job: JobDefinition, feature_type: String) -> Resource:
+	if job == null:
+		return null
+	if feature_type == "skill":
+		return job.skill
+	if feature_type == "passive":
+		return job.passive
+	if feature_type == "reaction":
+		return job.reaction
+	return null
+
+
+func _job_for_feature(unit: UnitDefinition, feature: Resource, feature_type: String) -> JobDefinition:
+	if feature == null:
+		return null
+	for progress in unit.job_progress:
+		if progress != null and _job_feature(progress.job, feature_type) == feature:
+			return progress.job
+	return null
+
+
+func _equipped_feature(loadout: UnitLoadoutDefinition, feature_type: String) -> Resource:
+	if feature_type == "skill":
+		return loadout.equipped_skill
+	if feature_type == "passive":
+		return loadout.equipped_passive
+	if feature_type == "reaction":
+		return loadout.equipped_reaction
+	return null
+
+
+func _saved_job_feature(unit: UnitDefinition, data: Dictionary, key: String, feature_type: String) -> Resource:
+	var job_id := String(data.get(key, ""))
+	for progress in unit.job_progress:
+		if progress != null and _content_id(progress.job) == job_id and _progress_feature_unlocked(progress, feature_type):
+			return _job_feature(progress.job, feature_type)
+	return null
+
+
+func _job_from_progress_or_load(unit: UnitDefinition, job_id: String, enabled_mod_pack_ids: Array[String]) -> JobDefinition:
+	for progress in unit.job_progress:
+		if progress != null and _content_id(progress.job) == job_id:
+			return progress.job
+	return JsonContentLoaderScript.load_job_definition_by_id(job_id, enabled_mod_pack_ids)
+
+
+func _canonical_job_for_unit(unit: UnitDefinition, job: JobDefinition) -> JobDefinition:
+	var job_id := _content_id(job)
+	for progress in unit.job_progress:
+		if progress != null and _content_id(progress.job) == job_id:
+			return progress.job
+	return job
+
+
+func _return_illegal_equipment_to_inventory(unit: UnitDefinition) -> void:
+	for slot in ["Weapon", "Armor", "Helmet", "Trinket"]:
+		var item := _loadout_item(unit.loadout, slot)
+		if item == null or _can_equip_item(unit, item):
+			continue
+		inventory_items.append(_clone_item_definition(item))
+		_set_loadout_item(unit.loadout, slot, null)
+
+
+func _can_equip_item(unit: UnitDefinition, item: ItemDefinition) -> bool:
+	if item == null:
+		return false
+	var property_name := "forbid_%s" % item.slot.to_lower()
+	return not ((unit.loadout != null and unit.loadout.current_job != null and bool(unit.loadout.current_job.get(property_name))) or (unit.ancestry != null and bool(unit.ancestry.get(property_name))))
+
+
+func _loadout_item(loadout: UnitLoadoutDefinition, slot: String) -> ItemDefinition:
+	if slot == "Weapon":
+		return loadout.weapon
+	if slot == "Armor":
+		return loadout.armor
+	if slot == "Helmet":
+		return loadout.helmet
+	if slot == "Trinket":
+		return loadout.trinket
+	return null
+
+
+func _set_loadout_item(loadout: UnitLoadoutDefinition, slot: String, item: ItemDefinition) -> void:
+	if slot == "Weapon":
+		loadout.weapon = item
+	elif slot == "Armor":
+		loadout.armor = item
+	elif slot == "Helmet":
+		loadout.helmet = item
+	elif slot == "Trinket":
+		loadout.trinket = item
 
 
 func _campaign_unit_ids(units: Array[UnitDefinition]) -> Array[String]:

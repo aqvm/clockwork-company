@@ -105,6 +105,8 @@ Campaign progress can be saved to and loaded from `user://first_road_campaign_sa
 
 Campaign scenario victory awards one post-scenario job level after the successful run is committed. `CampaignRosterState` chooses one surviving deployed unit tied for the lowest total level, enforces the scenario tier plus unit/job caps, and owns permanent unlock flags. A pending level-1 skill-versus-reaction choice blocks starting another campaign scenario until planning UI resolves it; practice scenarios remain available.
 
+Campaign planning can freely change a unit's current job and assign unlocked learned features between scenarios. Per-job progress supplies ability provenance. `Job Skill` resolves the unlocked current-job skill, while `Assigned Skill` resolves the separately equipped skill from a different learned job. Passives and reactions use their assigned learned slots. Current job and ancestry equipment restrictions are strict blacklists; changing jobs returns newly illegal gear to campaign inventory.
+
 Scenario-local knockout lives in `RunState`, not campaign save data. When an ally is defeated in a won fight, `RunState` records that ally's stable campaign unit id from the simulator's final replay snapshot and omits the unit from later encounters in the same active scenario. Because only completed campaign scenarios commit back to `CampaignRosterState`, knockouts create short-term scenario pressure without becoming long-term injury or death.
 
 Intentionally not implemented here:
@@ -258,10 +260,10 @@ Current combat rules:
 - job progress is stored per unit and per job, with a fixed three-level unlock schedule and a level-1 skill-versus-reaction choice
 - ancestries provide baseline stat-growth values that apply once per total unit job level, in addition to the growth from the specific jobs leveled
 - ancestry features are always-on deterministic hooks separate from job passives/reactions
-- equipment is allowed by default; jobs may explicitly forbid weapons, armor, helmets, or trinkets
+- equipment is allowed by default; the current job or ancestry may explicitly forbid weapons, armor, helmets, or trinkets
 - shields currently live inside weapon or armor item concepts; there is no offhand/handedness rules layer yet
-- each current job grants one active skill, one passive, one reaction, and one default tactic
-- loadouts can override the current job's granted skill, passive, or reaction to model learned abilities before progression UI exists
+- each current job defines one active skill, one passive, one reaction, and one default tactic; only unlocked and appropriately assigned features function
+- loadouts store one cross-job assigned skill plus one assigned learned passive and reaction
 - `UnitState` copies definition data into combat-only runtime state at battle start, reads ancestry and loadout data, applies ancestry baseline growth and permanent job-progress growth, appends the current job's default tactic, checks equipment forbids, then applies allowed item modifiers to produce final battle stats
 - battle-start item effects can further change combat-only runtime stats before the roster is printed
 - battle-start ancestry features can further change combat-only runtime stats before the roster is printed

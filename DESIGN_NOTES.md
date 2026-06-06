@@ -122,22 +122,23 @@ Current job design rules:
 - each unit points to one reusable loadout Resource
 - each loadout has exactly one current job
 - current jobs define small per-level growth biases instead of applying their old flat stat modifiers directly
-- equipment is allowed by default; a job can explicitly forbid weapon, armor, helmet, or trinket slots for special identities
+- equipment is allowed by default; the current job or immutable ancestry can explicitly forbid weapon, armor, helmet, or trinket slots for special identities
+- changing jobs automatically returns newly illegal equipped items to campaign inventory
 - forbidden loadout equipment is skipped and explained in the combat log
-- each current job grants one skill, one passive, one reaction, and one default tactic
-- each loadout can override the current job's skill, passive, or reaction to model learned abilities before full progression exists
-- a skill is an active combat action that tactics can select through `Job Skill`
+- each current job defines one skill, one passive, one reaction, and one default tactic, but only unlocked/assigned features function in combat
+- each loadout stores one cross-job assigned skill plus one assigned learned passive and reaction
+- a skill is an active combat action that tactics can select through `Job Skill` or `Assigned Skill`
 - a passive is a deterministic combat hook with an optional unit-turn cooldown
 - a reaction is a conditional response with an optional unit-turn cooldown
 - job abilities modify `UnitState` combat outcomes, not unit or job Resource files
 
 This is deliberately not a job tree, XP system, unlock system, visual loadout editor, or progression UI. Those can come later once the small version is understandable.
 
-Current loadout-level equipped ability slots are the first small version of learned job history. Future job progression can replace manual loadout overrides with unlock rules, but the combat simulator already sees the intended shape: current job frame plus equipped skill/passive/reaction.
+Current loadout-level equipped ability slots are the first small learned-job assignment model. Per-job progress proves which features are permanently learned, while the loadout stores the current between-scenario assignments.
 
-Future learned ability equipment should preserve the current-job frame while letting past jobs leave readable residue. A unit should have two usable skills: the skill granted by their currently assigned class/job, plus one equipped learned skill unlocked from a different class/job. A unit should also equip one learned passive and one learned reaction from their unlocked pool. This keeps experimentation and emergent synergies important without letting veteran units stack every ability they have ever learned.
+Learned ability equipment preserves the current-job frame while letting past jobs leave readable residue. A unit has two possible skill channels: `Job Skill` uses the unlocked skill from the currently assigned job, while `Assigned Skill` uses one equipped learned skill unlocked from a different job. A unit can also equip one learned passive and one learned reaction from any job where it unlocked them. Planning can change jobs and assignments freely between scenarios. Changing into the assigned skill's source job clears that assigned skill slot.
 
-The unit career model needs to remember ability provenance. For each learned skill, passive, and reaction, the save/career data should know which class/job unlocked it so menus can filter eligible cross-class skills, explain where abilities came from, and support later planning like "develop this unit in Job A now so they can carry one of its tools while maining Job B later."
+The unit career model remembers current ability provenance through per-job progress. Save data stores the source job id for assigned skills, passives, and reactions, so planning menus can filter eligible cross-class skills and restore assignments.
 
 FFT-style job unlock dependencies are a future layer, not part of the first learned ability assignment pass. The design should leave room for levels in some jobs to unlock other jobs later, but the near-term goal is only to track learned abilities, assign the allowed cross-class slots, and make that understandable in the UI.
 
@@ -323,7 +324,7 @@ Between encounters inside a scenario, surviving units reset to baseline combat c
 
 The first campaign defeat rule is scenario-local knockout, not long-term death. If a unit is defeated in a won fight, `RunState` omits that unit from the remaining fights in the same scenario using the unit's stable campaign instance id. After the scenario ends, the unit returns with no long-term penalty because the campaign commit path stores roster definitions, job progress, equipment, and inventory, not scenario knockout flags. This creates short-term stakes inside multi-fight scenarios without pulling injury, recovery, or replacement systems into the main campaign model.
 
-In non-permadeath campaign mode, losing a scenario returns the player to durable campaign planning for that scenario. The first implemented slice lets them retry from campaign roster state after the scenario is marked attempted; fuller roster selection, job changing, tactics editing, and learned ability assignment still need their own UI/model passes. This is the natural expression of the buildcraft puzzle: a failed attempt teaches the enemy plan, then the player responds with a better plan.
+In non-permadeath campaign mode, losing a scenario returns the player to durable campaign planning for that scenario. Job changing and learned ability assignment now exist in planning; fuller roster selection and tactic-list editing still need their own UI/model passes. This is the natural expression of the buildcraft puzzle: a failed attempt teaches the enemy plan, then the player responds with a better plan.
 
 Failed campaign attempts grant knowledge only. The campaign progress model now tracks attempted scenario ids separately from completed scenario ids, and the scenario list/detail UI marks attempted scenarios so the player can recognize a learned-but-not-cleared mission. Failed attempts do not call the roster commit path and do not award XP, rewards, scenario unlocks, content unlocks, or roster progression.
 

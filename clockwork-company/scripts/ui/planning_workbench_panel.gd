@@ -8,6 +8,8 @@ signal unit_selected(unit_name: String)
 signal planning_item_requested(slot: String, item: ItemDefinition)
 signal equip_option_requested(index: int)
 signal unlock_choice_requested(choice: String)
+signal planning_job_requested(job: JobDefinition)
+signal planning_feature_requested(feature_type: String, feature: Resource)
 signal resource_tooltip_requested(source: Control, resource: Resource)
 signal glossary_tooltip_requested(source: Control, term: String)
 signal tooltip_cleared
@@ -31,6 +33,8 @@ func _ready() -> void:
 	unit_action_panel.connect("planning_item_requested", func(slot, item): planning_item_requested.emit(slot, item))
 	unit_action_panel.connect("equip_option_requested", func(index): equip_option_requested.emit(index))
 	unit_action_panel.connect("unlock_choice_requested", func(choice): unlock_choice_requested.emit(choice))
+	unit_action_panel.connect("planning_job_requested", func(job): planning_job_requested.emit(job))
+	unit_action_panel.connect("planning_feature_requested", func(feature_type, feature): planning_feature_requested.emit(feature_type, feature))
 	_forward_tooltip_signals(unit_action_panel)
 
 
@@ -62,7 +66,9 @@ func show_actions(
 	is_equipment_state: bool,
 	planning_item_options: Array,
 	equip_options: Array,
-	unlock_options: Array
+	unlock_options: Array,
+	job_options: Array,
+	learned_feature_options: Dictionary
 ) -> void:
 	unit_action_panel.call(
 		"show_actions",
@@ -77,7 +83,9 @@ func show_actions(
 		is_equipment_state,
 		planning_item_options,
 		equip_options,
-		unlock_options
+		unlock_options,
+		job_options,
+		learned_feature_options
 	)
 
 

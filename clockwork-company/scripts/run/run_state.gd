@@ -394,18 +394,8 @@ func _find_ally(unit_name: String) -> UnitDefinition:
 func _can_equip_item(unit: UnitDefinition, item: ItemDefinition) -> bool:
 	if item == null:
 		return false
-	if unit.loadout == null or unit.loadout.current_job == null:
-		return true
-	var job := unit.loadout.current_job
-	if item.slot == "Weapon":
-		return not job.forbid_weapon
-	if item.slot == "Armor":
-		return not job.forbid_armor
-	if item.slot == "Helmet":
-		return not job.forbid_helmet
-	if item.slot == "Trinket":
-		return not job.forbid_trinket
-	return false
+	var property_name := "forbid_%s" % item.slot.to_lower()
+	return not ((unit.loadout != null and unit.loadout.current_job != null and bool(unit.loadout.current_job.get(property_name))) or (unit.ancestry != null and bool(unit.ancestry.get(property_name))))
 
 
 func _equipment_summary(unit: UnitDefinition) -> String:
