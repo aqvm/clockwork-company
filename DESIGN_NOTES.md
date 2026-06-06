@@ -263,7 +263,7 @@ Campaigns are chains or trees of scenarios, not a base-management game. The firs
 
 Branching campaigns should keep using `CampaignScenarioNodeDefinition.unlock_scenario_ids_on_completion` until that becomes hard to author. A node can already unlock more than one scenario id, so the next branch does not need a separate graph format yet.
 
-Campaign graph validation should stay simple but strict: starting scenarios and unlocked scenarios must be normal authored scenarios and must also be present as nodes in the current campaign.
+Campaign graph validation should stay simple but strict: starting scenarios and unlocked scenarios must be normal authored scenarios, must also be present as nodes in the current campaign, and every campaign node must be reachable from at least one starting scenario.
 
 Scenario rules should be data-first. A rule such as `ash_chapel_healing_pressure` may exist as a readable Resource before the combat simulator knows how to enforce it.
 

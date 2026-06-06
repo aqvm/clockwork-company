@@ -13,6 +13,43 @@ Each entry should include:
 - Manual exercise
 - Open questions
 
+## 2026-06-05 - Campaign graph reachability validation
+
+Feature worked on:
+
+- Extended the content validation check so every campaign node must be reachable from at least one starting scenario.
+- Kept malformed and out-of-campaign links handled by the existing structural validation.
+
+Godot concepts introduced:
+
+- Typed arrays can hold the small pending and visited sets needed for a straightforward graph walk in a tool script.
+
+Game architecture concepts introduced:
+
+- A campaign graph can contain valid-looking nodes and links that are still impossible for the player to reach.
+- Authoring validation should reject unreachable campaign content before runtime progression depends on it.
+
+Files touched:
+
+- `clockwork-company/scripts/tools/content_validation_check.gd`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why graph membership validation does not prove graph reachability.
+- How the validator walks outward from all starting scenarios.
+- Why invalid unlock links are not added to the reachability walk.
+
+Manual exercise:
+
+- Temporarily remove the unlock of `clocktower_claim` from the Iron Tollgate campaign node, run `tools/check_content.ps1`, then restore the link and confirm validation passes.
+
+Open questions:
+
+- Should future validation require at least one reachable campaign-completing node?
+
 ## 2026-06-05 - Retired the Iron Tollgate armor stat patch
 
 Feature worked on:

@@ -134,7 +134,33 @@ func _validate_campaign(scenarios_by_id: Dictionary, errors: Array[String]) -> v
 		elif not node_scenario_ids.has(starting_id):
 			errors.append("Campaign starts with scenario_id '%s' that is not part of this campaign." % starting_id)
 
+	_validate_campaign_reachability(campaign, node_scenario_ids, errors)
 	_validate_campaign_starting_roster(campaign, errors)
+
+
+func _validate_campaign_reachability(campaign, node_scenario_ids: Array[String], errors: Array[String]) -> void:
+	var reachable_ids: Array[String] = []
+	var pending_ids: Array[String] = []
+	for starting_id in campaign.starting_scenario_ids:
+		if node_scenario_ids.has(starting_id) and not pending_ids.has(starting_id):
+			pending_ids.append(starting_id)
+
+	while not pending_ids.is_empty():
+		var scenario_id := String(pending_ids.pop_front())
+		if reachable_ids.has(scenario_id):
+			continue
+		reachable_ids.append(scenario_id)
+		for node in campaign.scenario_nodes:
+			if node == null or node.scenario == null or node.scenario.scenario_id != scenario_id:
+				continue
+			for unlock_id in node.unlock_scenario_ids_on_completion:
+				if node_scenario_ids.has(unlock_id) and not reachable_ids.has(unlock_id):
+					pending_ids.append(unlock_id)
+			break
+
+	for scenario_id in node_scenario_ids:
+		if not reachable_ids.has(scenario_id):
+			errors.append("Campaign node '%s' is unreachable from the starting scenarios." % scenario_id)
 
 
 func _validate_campaign_starting_roster(campaign, errors: Array[String]) -> void:
