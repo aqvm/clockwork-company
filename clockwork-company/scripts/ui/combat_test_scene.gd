@@ -113,7 +113,8 @@ func _load_combat_preview() -> void:
 		return
 
 	var simulator: CombatSimulator = CombatSimulatorScript.new()
-	var report: Dictionary = simulator.run_battle_report(run_state.build_current_fight_definitions(), run_state.current_fight_title())
+	var scenario_rules: Array = run_state.active_scenario.scenario_rules if run_state.active_scenario != null else []
+	var report: Dictionary = simulator.run_battle_report(run_state.build_current_fight_definitions(), run_state.current_fight_title(), scenario_rules)
 	var log_lines: Array[String] = report.get("lines", [])
 	var static_lines: Array[String] = []
 

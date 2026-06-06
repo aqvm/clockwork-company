@@ -10,6 +10,7 @@ const TacticResolverScript := preload("res://scripts/combat/rules/tactic_resolve
 const JobEffectResolverScript := preload("res://scripts/combat/rules/job_effect_resolver.gd")
 const AncestryFeatureResolverScript := preload("res://scripts/combat/rules/ancestry_feature_resolver.gd")
 const ItemEffectResolverScript := preload("res://scripts/combat/rules/item_effect_resolver.gd")
+const StatusResolverScript := preload("res://scripts/combat/rules/status_resolver.gd")
 const TargetingRulesScript := preload("res://scripts/combat/rules/targeting_rules.gd")
 const DemoBattleFactoryScript := preload("res://scripts/combat/scenarios/demo_battle_factory.gd")
 const LOG_VERSION := 1
@@ -24,12 +25,12 @@ func run_demo_battle_report(enabled_mod_pack_ids: Variant = null) -> Dictionary:
 	return run_battle_report_from_units(units, "Phase 6 demo battle")
 
 
-func run_battle_report(definitions: Array[UnitDefinition], battle_title := "Run battle") -> Dictionary:
+func run_battle_report(definitions: Array[UnitDefinition], battle_title := "Run battle", scenario_rules: Array = []) -> Dictionary:
 	var units: Array = DemoBattleFactoryScript.create_units_from_definitions(definitions)
-	return run_battle_report_from_units(units, battle_title)
+	return run_battle_report_from_units(units, battle_title, scenario_rules)
 
 
-func run_battle_report_from_units(units: Array, battle_title := "Run battle") -> Dictionary:
+func run_battle_report_from_units(units: Array, battle_title := "Run battle", scenario_rules: Array = []) -> Dictionary:
 	var log = CombatLogScript.new()
 	var actions_taken := 0
 	var replay_snapshots: Array[Dictionary] = []
@@ -53,6 +54,7 @@ func run_battle_report_from_units(units: Array, battle_title := "Run battle") ->
 	var battle_start_entry_id: int = log.add_event("Battle starts.", battle_start_event["event_type"], 0, CombatLogScript.NO_PARENT, battle_start_event["payload"], battle_start_event["tags"])
 	ItemEffectResolverScript.apply_battle_start_item_effects(log, units, battle_start_entry_id)
 	AncestryFeatureResolverScript.apply_battle_start_features(log, units, battle_start_entry_id)
+	StatusResolverScript.apply_scenario_rule_statuses(log, units, scenario_rules, battle_start_entry_id)
 	replay_snapshots.append(_build_replay_snapshot(battle_start_entry_id, 0, units))
 	log.add("")
 	_append_roster(log, units)
@@ -250,6 +252,7 @@ func _build_roster_units(units: Array) -> Array[Dictionary]:
 			"team": unit.team,
 			"max_hp": unit.max_hp,
 			"action_interval": unit.action_interval,
+			"statuses": unit.statuses.duplicate(),
 		})
 	return roster_units
 
@@ -268,6 +271,7 @@ func _build_replay_snapshot(root_event_id: int, time: int, units: Array) -> Dict
 			"next_action_time": unit.next_action_time,
 			"is_alive": unit.is_alive(),
 			"is_defeated": not unit.is_alive(),
+			"statuses": unit.statuses.duplicate(),
 		})
 	return {
 		"root_event_id": root_event_id,

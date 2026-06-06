@@ -91,9 +91,9 @@ The project now has three tactical content layers:
 - Scenario: a short handcrafted sequence of encounters, defined by `ScenarioDefinition` Resources and advanced through `RunState` plus `ScenarioRunner`.
 - Campaign: a thin wrapper over scenarios, defined by `CampaignDefinition` and tracked by `CampaignManager`/`CampaignProgress`.
 
-Scenarios own authored mission data: story text, party size, encounter Resources, data-only scenario rules, rewards, tags, and content unlock ids. Campaigns own availability and completion: which scenarios start unlocked, which scenarios have been attempted or completed, which scenarios unlock after completion, which content ids are unlocked, and whether the campaign is complete.
+Scenarios own authored mission data: story text, party size, encounter Resources, scenario rules, rewards, tags, and content unlock ids. Campaigns own availability and completion: which scenarios start unlocked, which scenarios have been attempted or completed, which scenarios unlock after completion, which content ids are unlocked, and whether the campaign is complete.
 
-Scenario rules stay data-first while the rule vocabulary is still young. `RunState` no longer patches Iron Tollgate enemy armor; that scenario should express armor pressure through normal enemy definitions, jobs, gear, tactics, and encounter composition.
+Scenario rules stay data-first while the rule vocabulary is still young. `RunState` no longer patches Iron Tollgate enemy armor; that scenario should express armor pressure through normal enemy definitions, jobs, gear, tactics, and encounter composition. Burned Chapel's visible `Ash-Choked Rites` rule is the first current mechanical rule and applies battle-long Confusion equally to every unit.
 
 The scenario workbench can also start an unlocked scenario as a practice run. Practice runs use `RunState.start_scenario(...)` but do not call `CampaignManager.start_scenario(...)`, and they do not complete or unlock campaign nodes.
 
@@ -211,7 +211,7 @@ The first playable test now opens as a scenario workbench with the older combat 
 - `clockwork-company/scripts/data/encounter_definition.gd` defines a run encounter as a named enemy party made from normal `UnitDefinition` Resources.
 - `clockwork-company/scripts/data/reward_definition.gd` defines a run reward as a named offer with a suggested recipient and a normal `ItemDefinition` payload.
 - `clockwork-company/scripts/data/scenario_definition.gd` defines a handcrafted mission as story text, ordered encounter references, optional data-only scenario rules, rewards, tags, and unlock ids.
-- `clockwork-company/scripts/data/scenario_rule_definition.gd` defines a named scenario rule placeholder that can exist as data before combat mechanics implement it.
+- `clockwork-company/scripts/data/scenario_rule_definition.gd` defines a named scenario rule that can exist as readable data before combat mechanics implement it.
 - `clockwork-company/scripts/data/campaign_definition.gd` and `campaign_scenario_node_definition.gd` define a lightweight scenario chain and starting roster ids.
 - `clockwork-company/resources/ancestries/*.tres` stores the current ancestry catalog.
 - `clockwork-company/resources/units/*.tres` stores the current demo unit definitions and a wider catalog of future ally/enemy build bodies.
@@ -222,7 +222,7 @@ The first playable test now opens as a scenario workbench with the older combat 
 - `clockwork-company/resources/encounters/*.tres` stores fixed authored encounters used by the old Phase 7 run and the new sample scenarios.
 - `clockwork-company/resources/rewards/*.tres` stores reusable reward offers used by the old Phase 7 run and curated scenario reward lists.
 - `clockwork-company/resources/scenarios/*.tres` stores sample scenario definitions.
-- `clockwork-company/resources/scenario_rules/*.tres` stores data-only scenario rule definitions.
+- `clockwork-company/resources/scenario_rules/*.tres` stores visible scenario rule definitions.
 - `clockwork-company/resources/campaigns/first_road_campaign.tres` stores the first sample campaign.
 
 The scene is set as the main scene in `clockwork-company/project.godot`, so pressing Play in Godot should open the scenario workbench. The simulator should not run merely because a scenario is selected; combat reports are generated when the player starts or runs a fight.
@@ -321,6 +321,7 @@ Combat log responsibility split:
 - The replay pane now has a left/right split: left is the existing text replay, right is a lightweight unit visualization panel separated by a vertical rule.
 - The visualization panel is still presentation-only: it reads initial roster snapshots, simulator-authored replay unit-state snapshots, and structured replay events from the simulator report, then draws unit circles, health arcs, cooldown bars, and lightweight VFX without changing simulator rules.
 - Structured replay events still drive text grouping, turn pulses, and floating HP changes; replay snapshots are the authoritative source for current unit HP, timing, and defeated state when present.
+- Replay snapshots also carry battle-local status names so runtime tooltips can explain Confusion without presentation code inferring combat state.
 - Highlight colors are configured in a dedicated `CombatLogHighlightPalette` Resource so color tuning stays editor-visible and does not require editing code constants.
 - The scenario workbench includes a default/colorblind highlight palette toggle using separate `CombatLogHighlightPalette` Resources.
 - This is presentation only: `run_demo_battle()` still finishes the deterministic simulation before replay starts.
@@ -339,6 +340,7 @@ Tactic responsibility split:
 - Campaign planning can add, remove, and reorder authored tactic Resources in that loadout list; the current job's default tactic remains read-only and is appended later by `UnitState`.
 - `CampaignRosterState` owns durable campaign tactic ordering and serializes stable tactic content IDs; `JsonContentLoader` reconstructs those Resources when loading a save.
 - `UnitState` owns the runtime copy of that priority-ordered tactic list for this combat copy.
+- `UnitState` owns battle-local status names; `StatusResolver` applies concrete scenario-sourced statuses, and `TacticResolver` owns Confusion's tactic-selection pressure.
 - `CombatSimulator` owns tactic evaluation, target validation, and action resolution.
 - The current planning UI selects from an authored tactic library rather than constructing arbitrary tactic rules.
 - The UI still receives plain rendered log lines and does not know how tactics are evaluated.

@@ -9,10 +9,6 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 - Move stable UI layout into `.tscn` component scenes while keeping truly data-driven rows/lists dynamic. The planning workbench row and top control row now have component ownership; keep moving only stable layout, not generated rows.
 - Keep using custom panel signals for extracted UI components. `scenario_selected`, `unit_selected`, `planning_item_requested`, `equip_option_requested`, and run-flow request signals are now used by extracted panels.
 
-## Tooltips
-
-- Add tooltip support for status effects once statuses exist.
-
 ## Scenario and Campaign
 
 - Use scenario rules for broad scenario-wide modifiers such as weather, terrain, visibility, ritual pressure, or other global conditions that affect the battlefield rather than patching individual enemy stats.
@@ -58,18 +54,18 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 
 ## Combat and Rules
 
-- Add status effects when a focused scenario, job, enemy, or item design actually needs them.
+- Add more status effects only when focused content needs them. Burned Chapel now supplies the first narrow status through its battle-long Confusion rule.
 - Design ailments as distinct rule pressures, not generic damage-over-time variants. Each ailment should create a readable tactical question or matchup hook.
 - Good ailment directions to explore: bleed that punishes faster units or future movement, confusion that skips the first tactic the unit would have used, armor corrosion that changes mitigation math, silence-like effects that disrupt skill use, or panic effects that alter targeting.
 - Ailments may either punish a unit's strengths or exploit a unit's weaknesses. Both paradigms are valid and can coexist.
 - Add debuff purge options eventually, but keep them specific and intentionally scarce. Avoid a universal, always-accessible cleanse that erases ailment matchup pressure.
 - Avoid generic ailment resistance stats. Occasional authored immunities are acceptable when they make a unit, enemy, item, or scenario identity clearer.
-- Keep the first ailment implementation very small: one or two statuses with clear logs, deterministic duration rules, tooltip support, and simulator-owned state. Do not build a broad status framework until concrete content needs it.
+- Keep ailments small. Confusion has clear logs, battle-long scenario scope, runtime tooltip support, and simulator-owned state; do not generalize duration, stacking, purge, immunity, or application rules until another concrete status needs them.
 - Consider collapsible structured combat log groups instead of plain indented text.
 
 ## Replay and Presentation
 
-- Keep moving visual replay toward structured simulator snapshots where richer visuals need more state. The replay now consumes simulator-authored unit snapshots after battle start and each root event, while structured events still drive text grouping and lightweight effects.
+- Keep moving visual replay toward structured simulator snapshots where richer visuals need more state. The replay now consumes simulator-authored unit snapshots including statuses after battle start and each root event, while structured events still drive text grouping and lightweight effects.
 - Add richer replay visuals only when they clarify combat:
   - portraits
   - statuses

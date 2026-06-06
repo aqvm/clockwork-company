@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ScenarioRuleDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/scenario_rule_definition.gd" id="1_rule"]
+
+[resource]
+script = ExtResource("1_rule")
+rule_id = "ash_chapel_confusion"
+display_name = "Ash-Choked Rites"
+description = "Every unit has Confusion for each encounter: the first otherwise-valid tactic it would use each turn is skipped."
+tags = ["status", "confusion", "ritual"]

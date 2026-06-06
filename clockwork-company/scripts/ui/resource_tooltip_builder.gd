@@ -103,7 +103,13 @@ static func text_for_runtime_unit(snapshot: Dictionary) -> String:
 	var next_action_time: float = float(snapshot.get("next_action_time", 0.0))
 	var display_time: float = float(snapshot.get("display_time", 0.0))
 	var remaining: float = max(0.0, next_action_time - display_time)
-	return _with_source_note("%s\nTeam: %s\nHP: %d/%d\nAction interval: %d\nNext action in: %.1f" % [name, team, hp, max_hp, action_interval, remaining], "Source: runtime combat state")
+	var statuses: Array = snapshot.get("statuses", [])
+	var status_text := "none"
+	if not statuses.is_empty():
+		status_text = _join(statuses, ", ")
+		if statuses.has("Confusion"):
+			status_text += "\n- Confusion: skips the first otherwise-valid tactic each turn."
+	return _with_source_note("%s\nTeam: %s\nHP: %d/%d\nAction interval: %d\nNext action in: %.1f\nStatuses: %s" % [name, team, hp, max_hp, action_interval, remaining, status_text], "Source: runtime combat state")
 
 
 static func text_for_glossary_term(term: String) -> String:

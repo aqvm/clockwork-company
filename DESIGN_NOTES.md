@@ -227,6 +227,8 @@ Future ailments should not be generic damage-over-time skins. A status should cr
 
 The first ailment implementation should stay tiny and content-led: add one or two statuses only when a scenario, job, enemy, or item needs them. Status state should be simulator-owned, deterministic, visible in logs, and tooltip-readable. Do not build a broad status framework until several concrete ailments prove what common duration, stacking, purge, immunity, and UI rules are actually needed.
 
+Confusion is the first implemented ailment. Burned Chapel's `Ash-Choked Rites` rule gives every unit battle-long Confusion for each encounter. On each turn, Confusion skips the first tactic with a true condition, available action, and valid target; evaluation then continues down the ordered list, and normal fallback attack still applies if nothing later selects. It is intentionally battle-long and non-stacking because no second source yet justifies generic duration, refresh, stacking, purge, or immunity rules.
+
 Debuff purges should eventually exist, but they should be specific tools rather than a universal, always-accessible cleanse. Purge options should create buildcraft and matchup decisions, not erase ailment pressure by default. Generic ailment resistance stats should not be part of the core model; occasional authored immunities are acceptable when they make a unit, enemy, item, or scenario identity clearer.
 
 ### Content catalog rules
@@ -274,11 +276,13 @@ Branching campaigns should keep using `CampaignScenarioNodeDefinition.unlock_sce
 
 Campaign graph validation should stay simple but strict: starting scenarios and unlocked scenarios must be normal authored scenarios, must also be present as nodes in the current campaign, and every campaign node must be reachable from at least one starting scenario.
 
-Scenario rules should be data-first. A rule such as `ash_chapel_healing_pressure` may exist as a readable Resource before the combat simulator knows how to enforce it.
+Scenario rules should be data-first. A readable Resource may exist before the combat simulator knows how to enforce it, but once implemented its description must state the exact visible rule.
 
 The first mechanical scenario rule, `iron_tollgate_armored_enemies`, was intentionally narrow and useful as a plumbing proof, but it has now been retired as a runtime stat patch. Iron Tollgate keeps a visible rule Resource as an authoring note, while armor pressure should come from enemy builds, jobs, gear, tactics, and encounter composition. If a scenario is meant to test armor-breaking, the enemies should naturally have high-armor builds rather than receiving hidden stat patches from a rule.
 
 Scenario rules are better suited to broad scenario-wide conditions: weather, terrain, visibility, ritual pressure, environmental hazards, or other global modifiers that affect the battlefield. A rainstorm that makes attacks less reliable is a more natural scenario rule than a rule that quietly changes one team's armor. Keep these rules visible, deterministic, and easy to explain before combat starts.
+
+Burned Chapel's `Ash-Choked Rites` is the first current mechanical scenario rule. It applies Confusion equally to all units at battle start, creating a planning-order puzzle rather than quietly patching one side's stats.
 
 Scenario and encounter design should intentionally test specific mechanics, matchup questions, or synergy patterns. Enemy parties should be self-synergistic where possible, using normal unit/loadout/job/item/tactic/ancestry tools to demonstrate coherent buildcraft. This makes losses educational: when the player loses, they should be able to inspect the fight and learn what kind of synergy beat them.
 

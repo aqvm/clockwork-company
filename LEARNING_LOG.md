@@ -4417,3 +4417,44 @@ Manual exercise:
 Open questions:
 
 - When duplicate item copies exist, what player-facing identity or history should distinguish them?
+
+## 2026-06-06 - Burned Chapel Confusion
+
+Feature worked on:
+
+- Replaced Burned Chapel's vague healing-pressure placeholder with the visible `Ash-Choked Rites` scenario rule.
+- Added battle-long Confusion as the first simulator-owned status.
+- Confusion skips the first otherwise-valid tactic each turn, with battle-start/tactic logs, replay snapshot state, and runtime tooltip explanation.
+
+Godot concepts introduced:
+
+- Runtime-only status state belongs on `UnitState`, not authored unit Resources or campaign saves.
+- Optional scenario-rule arrays can enter deterministic simulation without coupling the simulator to campaign state.
+
+Game architecture concepts introduced:
+
+- `StatusResolver` owns focused status application; `TacticResolver` owns the rule pressure Confusion creates.
+- The first status avoids a general duration/stacking/purge framework because its only source is battle-long scenario content.
+
+Files touched:
+
+- `clockwork-company/scripts/combat/rules/status_resolver.gd`
+- `clockwork-company/scripts/combat/rules/tactic_resolver.gd`
+- `clockwork-company/scripts/combat/runtime/unit_state.gd`
+- `clockwork-company/scripts/combat/combat_simulator.gd`
+- `clockwork-company/scripts/ui/resource_tooltip_builder.gd`
+- `clockwork-company/resources/scenario_rules/ash_chapel_confusion.tres`
+- `clockwork-company/resources/scenarios/burned_chapel.tres`
+
+What I should now be able to explain:
+
+- Exactly which tactic Confusion skips and why invalid tactics do not consume the skip.
+- Why Confusion resets between encounters and is absent from campaign saves.
+
+Manual exercise:
+
+- In Burned Chapel planning, reorder one unit's tactics so its least valuable valid tactic is first, run an encounter, and confirm the log shows Confusion skipping that tactic.
+
+Open questions:
+
+- Which second concrete status source should force the project to decide duration, refresh, stacking, purge, or immunity behavior?

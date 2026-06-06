@@ -28,6 +28,7 @@ var tactics: Array[TacticDefinition] = []
 var guard_armor := 0
 var effect_usage_counts := {}
 var ability_cooldowns := {}
+var statuses: Array[String] = []
 
 
 func _init(definition: UnitDefinition, unit_slot_index: int) -> void:
@@ -76,6 +77,15 @@ func _init(definition: UnitDefinition, unit_slot_index: int) -> void:
 
 func is_alive() -> bool:
 	return hp > 0
+
+
+func add_status(status_name: String) -> void:
+	if not status_name.is_empty() and not statuses.has(status_name):
+		statuses.append(status_name)
+
+
+func has_status(status_name: String) -> bool:
+	return statuses.has(status_name)
 
 
 func total_armor() -> int:
