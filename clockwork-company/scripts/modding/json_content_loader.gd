@@ -243,9 +243,9 @@ static func _load_base_loadouts() -> Dictionary:
 			"id": id,
 			"display_name": resource.display_name,
 			"current_job_id": _resource_ref_id(resource.current_job),
-			"equipped_skill_job_id": "",
-			"equipped_passive_job_id": "",
-			"equipped_reaction_job_id": "",
+			"equipped_skill_job_id": _base_job_id_for_feature(resource.equipped_skill, "skill"),
+			"equipped_passive_job_id": _base_job_id_for_feature(resource.equipped_passive, "passive"),
+			"equipped_reaction_job_id": _base_job_id_for_feature(resource.equipped_reaction, "reaction"),
 			"weapon_id": _resource_ref_id(resource.weapon),
 			"armor_id": _resource_ref_id(resource.armor),
 			"helmet_id": _resource_ref_id(resource.helmet),
@@ -253,6 +253,15 @@ static func _load_base_loadouts() -> Dictionary:
 			"tactic_ids": _resource_ref_ids(resource.tactics),
 		}
 	return out
+
+
+static func _base_job_id_for_feature(feature: Resource, feature_type: String) -> String:
+	if feature == null:
+		return ""
+	for job in _load_resources_in_dir(BASE_JOBS_DIR):
+		if job.get(feature_type) == feature:
+			return _resource_id(job.resource_path)
+	return ""
 
 
 static func _load_base_units() -> Dictionary:

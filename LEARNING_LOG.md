@@ -4305,3 +4305,42 @@ Manual exercise:
 Open questions:
 
 - Should a later progression or content-unlock system restrict which authored tactics appear in the planning library?
+
+## 2026-06-06 - Roger Spellsword progression migration
+
+Feature worked on:
+
+- Re-authored Roger's Sparkblade, Sword Memory, and Ward Flare as normal `Spellsword` job features.
+- Added authored level-3 Spellsword progress to Roger and removed his loadout-only feature copies.
+- Taught the base `.tres` content loader to preserve equipped-feature provenance when a loadout and job share the same feature Resource.
+
+Godot concepts introduced:
+
+- Standalone Resources can be referenced by multiple other Resources, preserving identity through normal editor-authored content.
+- Resource-based unit definitions can embed `JobProgressDefinition` subresources for developed recruits.
+
+Game architecture concepts introduced:
+
+- Developed recruits should use the same job-progress and unlock model as campaign-developed units.
+- The loader converts authored Resource references into source-job IDs before rebuilding the merged content graph.
+
+Files touched:
+
+- `clockwork-company/resources/jobs/spellsword.tres`
+- `clockwork-company/resources/job_features/spellsword/*.tres`
+- `clockwork-company/resources/loadouts/roger_spellsword.tres`
+- `clockwork-company/resources/units/roger_spellsword.tres`
+- `clockwork-company/scripts/modding/json_content_loader.gd`
+
+What I should now be able to explain:
+
+- Why Roger's job and loadout reference the same passive/reaction Resources.
+- Why a developed recruit needs authored job progress in addition to equipped feature references.
+
+Manual exercise:
+
+- Inspect Roger Spellsword's unit, loadout, and job Resources in Godot, then identify which file owns each part of his build.
+
+Open questions:
+
+- Which future campaign scenario should introduce Roger or another partially developed recruit?

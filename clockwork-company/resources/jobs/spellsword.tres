@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="JobDefinition" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/job_definition.gd" id="1_job"]
+[ext_resource type="Resource" path="res://resources/job_features/spellsword/sparkblade.tres" id="2_skill"]
+[ext_resource type="Resource" path="res://resources/job_features/spellsword/sword_memory.tres" id="3_passive"]
+[ext_resource type="Resource" path="res://resources/job_features/spellsword/ward_flare.tres" id="4_reaction"]
+[ext_resource type="Resource" path="res://resources/tactics/cast_sparkblade.tres" id="5_tactic"]
+
+[resource]
+script = ExtResource("1_job")
+display_name = "Spellsword"
+tags = Array[String](["spellblade", "learned_build"])
+skill = ExtResource("2_skill")
+passive = ExtResource("3_passive")
+reaction = ExtResource("4_reaction")
+default_tactic = ExtResource("5_tactic")

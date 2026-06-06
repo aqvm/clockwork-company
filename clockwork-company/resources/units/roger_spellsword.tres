@@ -1,9 +1,19 @@
-[gd_resource type="Resource" script_class="UnitDefinition" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="UnitDefinition" load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/unit_definition.gd" id="1_unit"]
 [ext_resource type="Resource" path="res://resources/loadouts/roger_spellsword.tres" id="2_loadout"]
-
 [ext_resource type="Resource" path="res://resources/ancestries/typhon_born.tres" id="3_ancestry"]
+[ext_resource type="Script" path="res://scripts/data/job_progress_definition.gd" id="4_progress"]
+[ext_resource type="Resource" path="res://resources/jobs/spellsword.tres" id="5_job"]
+
+[sub_resource type="Resource" id="Resource_spellsword_progress"]
+script = ExtResource("4_progress")
+job = ExtResource("5_job")
+level = 3
+skill_unlocked = true
+passive_unlocked = true
+reaction_unlocked = true
+
 [resource]
 script = ExtResource("1_unit")
 display_name = "Roger Spellsword"
@@ -15,5 +25,5 @@ physical_damage = 1
 magic_damage = 5
 armor = 1
 action_interval = 10
+job_progress = [SubResource("Resource_spellsword_progress")]
 loadout = ExtResource("2_loadout")
-
