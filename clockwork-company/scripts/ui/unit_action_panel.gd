@@ -3,7 +3,7 @@ class_name UnitActionPanel
 
 signal start_scenario_requested
 signal practice_scenario_requested
-signal planning_item_requested(slot: String, item: ItemDefinition)
+signal planning_item_requested(option: Dictionary)
 signal equip_option_requested(option_index: int)
 signal unlock_choice_requested(choice: String)
 signal planning_job_requested(job: JobDefinition)
@@ -252,9 +252,10 @@ func _add_planning_slot_selector(slot: String, slot_options: Array) -> void:
 		if bool(option.get("equipped", false)):
 			selected_index = index
 	selector.select(selected_index)
-	var selected_item: ItemDefinition = slot_options[selected_index]["item"]
-	_bind_resource_tooltip(selector, selected_item)
-	selector.item_selected.connect(_on_planning_item_option_selected.bind(slot, slot_options))
+	var selected_item = slot_options[selected_index]["item"]
+	if selected_item != null:
+		_bind_resource_tooltip(selector, selected_item)
+	selector.item_selected.connect(_on_planning_item_option_selected.bind(slot_options))
 
 
 func _show_equipment_options(selected_unit_name: String, equip_options: Array) -> void:
@@ -284,11 +285,10 @@ func _on_practice_button_pressed() -> void:
 	practice_scenario_requested.emit()
 
 
-func _on_planning_item_option_selected(selected_index: int, slot: String, slot_options: Array) -> void:
+func _on_planning_item_option_selected(selected_index: int, slot_options: Array) -> void:
 	if selected_index < 0 or selected_index >= slot_options.size():
 		return
-	var item: ItemDefinition = slot_options[selected_index]["item"]
-	planning_item_requested.emit(slot, item)
+	planning_item_requested.emit(slot_options[selected_index])
 
 
 func _on_equip_button_pressed(option_index: int) -> void:

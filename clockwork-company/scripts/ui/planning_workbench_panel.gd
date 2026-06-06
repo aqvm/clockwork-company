@@ -5,7 +5,7 @@ signal scenario_selected(scenario: Resource)
 signal start_scenario_requested
 signal practice_scenario_requested
 signal unit_selected(unit_name: String)
-signal planning_item_requested(slot: String, item: ItemDefinition)
+signal planning_item_requested(option: Dictionary)
 signal equip_option_requested(index: int)
 signal unlock_choice_requested(choice: String)
 signal planning_job_requested(job: JobDefinition)
@@ -33,7 +33,7 @@ func _ready() -> void:
 	_forward_tooltip_signals(unit_detail_panel)
 	unit_action_panel.connect("start_scenario_requested", func(): start_scenario_requested.emit())
 	unit_action_panel.connect("practice_scenario_requested", func(): practice_scenario_requested.emit())
-	unit_action_panel.connect("planning_item_requested", func(slot, item): planning_item_requested.emit(slot, item))
+	unit_action_panel.connect("planning_item_requested", func(option): planning_item_requested.emit(option))
 	unit_action_panel.connect("equip_option_requested", func(index): equip_option_requested.emit(index))
 	unit_action_panel.connect("unlock_choice_requested", func(choice): unlock_choice_requested.emit(choice))
 	unit_action_panel.connect("planning_job_requested", func(job): planning_job_requested.emit(job))

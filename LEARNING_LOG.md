@@ -4379,3 +4379,41 @@ Manual exercise:
 Open questions:
 
 - Which unsupported item-effect combinations are stable enough to validate next?
+
+## 2026-06-06 - Owned campaign gear swapping
+
+Feature worked on:
+
+- Replaced the campaign planning full-item-catalog browser with options based on owned inventory and current equipment.
+- Added durable equip, swap, and unequip transactions to `CampaignRosterState`.
+- Verified that moving gear between units survives campaign save/load.
+
+Godot concepts introduced:
+
+- UI option dictionaries can carry stable transaction data such as slot and inventory index without giving the UI ownership of mutation.
+
+Game architecture concepts introduced:
+
+- Planning party units are snapshots; durable roster and inventory mutations belong to `CampaignRosterState`.
+- Inventory and equipped slots form one ownership pool, so an item moves between them instead of being copied from a global catalog.
+
+Files touched:
+
+- `clockwork-company/scripts/campaign/campaign_roster_state.gd`
+- `clockwork-company/scripts/campaign/campaign_manager.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `clockwork-company/scripts/ui/planning_workbench_panel.gd`
+- `clockwork-company/scripts/ui/unit_action_panel.gd`
+
+What I should now be able to explain:
+
+- Why selecting `None` creates an inventory item instead of deleting equipment.
+- Why the planning UI sends an option token back to campaign state rather than editing its unit snapshot.
+
+Manual exercise:
+
+- Unequip Alden's Horncap, equip it on Mira, save/load the campaign, and confirm Alden remains bareheaded while Mira keeps the Horncap.
+
+Open questions:
+
+- When duplicate item copies exist, what player-facing identity or history should distinguish them?

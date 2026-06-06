@@ -47,7 +47,6 @@ var active_campaign_scenario_id := ""
 var selected_scenario: Resource = null
 var selected_unit_name := ""
 var planning_party: Array[UnitDefinition] = []
-var available_items: Array[ItemDefinition] = []
 
 
 func _ready() -> void:
@@ -72,7 +71,6 @@ func _ready() -> void:
 	_setup_run_controls()
 	_setup_planning_panel()
 	_setup_tooltip_presenter()
-	_load_item_catalog()
 	_start_first_road_campaign()
 
 
@@ -417,23 +415,6 @@ func _load_planning_party() -> void:
 		selected_unit_name = planning_party[0].display_name
 
 
-func _load_item_catalog() -> void:
-	available_items.clear()
-	var directory := DirAccess.open("res://resources/items")
-	if directory == null:
-		return
-	directory.list_dir_begin()
-	var file_name := directory.get_next()
-	while not file_name.is_empty():
-		if not directory.current_is_dir() and file_name.ends_with(".tres"):
-			var item = load("res://resources/items/%s" % file_name)
-			if item is ItemDefinition:
-				available_items.append(item)
-		file_name = directory.get_next()
-	directory.list_dir_end()
-	available_items.sort_custom(func(a, b): return a.display_name < b.display_name)
-
-
 func _load_planning_party_from_run() -> void:
 	planning_party.clear()
 	if run_state == null:
@@ -687,36 +668,20 @@ func _on_tooltip_exited() -> void:
 
 
 func _planning_item_options(unit: UnitDefinition) -> Array:
-	var options := []
-	if unit == null:
-		return options
-	var loadout = _ensure_planning_loadout(unit)
-	for item: ItemDefinition in available_items:
-		if not _item_allowed_for_planning_unit(unit, item):
-			continue
-		var current_item = _current_slot_item(loadout, item.slot)
-		options.append({
-			"slot": item.slot,
-			"item": item,
-			"label": "%s%s" % [item.display_name, " [Equipped]" if item == current_item else ""],
-			"equipped": item == current_item,
-		})
-	return options
+	if campaign_manager == null or unit == null or _has_active_scenario_run():
+		return []
+	return campaign_manager.planning_item_options(_campaign_unit_id(unit))
 
 
-func _on_planning_item_requested(slot: String, item: ItemDefinition) -> void:
-	if _has_active_scenario_run():
+func _on_planning_item_requested(option: Dictionary) -> void:
+	if campaign_manager == null or _has_active_scenario_run():
 		return
 	var unit := _find_planning_unit(selected_unit_name)
-	if unit == null or item == null:
+	if unit == null:
 		return
-	if item.slot != slot or not _item_allowed_for_planning_unit(unit, item):
-		return
-	var loadout = _ensure_planning_loadout(unit)
-	_set_slot_item(loadout, slot, item)
-	if campaign_manager != null:
-		campaign_manager.commit_planning_roster(planning_party)
-	_refresh_planning_panel()
+	if campaign_manager.equip_planning_item(_campaign_unit_id(unit), String(option.get("slot", "")), int(option.get("inventory_index", -1))):
+		_load_planning_party()
+		_refresh_planning_panel()
 
 
 func _ensure_planning_loadout(unit: UnitDefinition):
@@ -724,36 +689,6 @@ func _ensure_planning_loadout(unit: UnitDefinition):
 		unit.loadout = UnitLoadoutDefinitionScript.new()
 		unit.loadout.display_name = "%s Planning Loadout" % unit.display_name
 	return unit.loadout
-
-
-func _current_slot_item(loadout, slot: String):
-	if slot == "Weapon":
-		return loadout.weapon
-	if slot == "Armor":
-		return loadout.armor
-	if slot == "Helmet":
-		return loadout.helmet
-	if slot == "Trinket":
-		return loadout.trinket
-	return null
-
-
-func _set_slot_item(loadout, slot: String, item: ItemDefinition) -> void:
-	if slot == "Weapon":
-		loadout.weapon = item
-	elif slot == "Armor":
-		loadout.armor = item
-	elif slot == "Helmet":
-		loadout.helmet = item
-	elif slot == "Trinket":
-		loadout.trinket = item
-
-
-func _item_allowed_for_planning_unit(unit: UnitDefinition, item: ItemDefinition) -> bool:
-	if item == null:
-		return false
-	var property_name := "forbid_%s" % item.slot.to_lower()
-	return not ((unit.loadout != null and unit.loadout.current_job != null and bool(unit.loadout.current_job.get(property_name))) or (unit.ancestry != null and bool(unit.ancestry.get(property_name))))
 
 
 func _find_planning_unit(unit_name: String) -> UnitDefinition:

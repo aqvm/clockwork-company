@@ -134,6 +134,14 @@ func set_tactics(campaign_unit_id: String, tactics: Array[TacticDefinition]) -> 
 	return roster_state.set_tactics(campaign_unit_id, tactics)
 
 
+func planning_item_options(campaign_unit_id: String) -> Array[Dictionary]:
+	return roster_state.planning_item_options(campaign_unit_id)
+
+
+func equip_planning_item(campaign_unit_id: String, slot: String, inventory_index: int) -> bool:
+	return roster_state.equip_planning_item(campaign_unit_id, slot, inventory_index)
+
+
 func status_lines() -> Array[String]:
 	var lines: Array[String] = []
 	if campaign == null:

@@ -89,8 +89,8 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 
 ## Gear, Items, and Inventory
 
-- Build a real inventory model instead of the current simple between-fight item list.
-- Campaign inventory should support free gear swapping between scenarios. Gear should remember who currently has it equipped, but should be unequippable and re-equippable to another available unit between scenarios when unit/job/item constraints allow it.
+- Expand the campaign inventory beyond its current owned-item list only when rewards, duplicate items, filtering, or item-instance history require a richer model.
+- Campaign planning now supports free owned-gear swapping and unequipping between scenarios; keep future inventory UI focused on making larger owned collections easy to inspect.
 - Equipment should be locked only during an active battle/scenario resolution, not permanently bound to a unit across the campaign.
 - Expand item effects only through declarative `EffectDefinition` data unless a focused mechanics pass requires new resolver code.
 - Audit item catalog balance once more scenarios are playable.

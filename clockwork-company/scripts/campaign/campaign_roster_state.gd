@@ -209,6 +209,68 @@ func set_tactics(campaign_unit_id: String, tactics: Array[TacticDefinition]) -> 
 	return true
 
 
+func planning_item_options(campaign_unit_id: String) -> Array[Dictionary]:
+	var options: Array[Dictionary] = []
+	var unit := _find_unit(campaign_unit_id)
+	if unit == null:
+		return options
+	if unit.loadout == null:
+		unit.loadout = UnitLoadoutDefinitionScript.new()
+		unit.loadout.display_name = "%s Campaign Loadout" % unit.display_name
+	for slot in ["Weapon", "Armor", "Helmet", "Trinket"]:
+		var current_item := _loadout_item(unit.loadout, slot)
+		options.append({
+			"slot": slot,
+			"item": null,
+			"inventory_index": -1,
+			"label": "None%s" % (" [Equipped]" if current_item == null else ""),
+			"equipped": current_item == null,
+		})
+		if current_item != null:
+			options.append({
+				"slot": slot,
+				"item": current_item,
+				"inventory_index": -2,
+				"label": "%s [Equipped]" % current_item.display_name,
+				"equipped": true,
+			})
+		for inventory_index in inventory_items.size():
+			var item := inventory_items[inventory_index]
+			if item.slot == slot and _can_equip_item(unit, item):
+				options.append({
+					"slot": slot,
+					"item": item,
+					"inventory_index": inventory_index,
+					"label": item.display_name,
+					"equipped": false,
+				})
+	return options
+
+
+func equip_planning_item(campaign_unit_id: String, slot: String, inventory_index: int) -> bool:
+	var unit := _find_unit(campaign_unit_id)
+	if unit == null or not ["Weapon", "Armor", "Helmet", "Trinket"].has(slot):
+		return false
+	if unit.loadout == null:
+		unit.loadout = UnitLoadoutDefinitionScript.new()
+		unit.loadout.display_name = "%s Campaign Loadout" % unit.display_name
+	if inventory_index == -2:
+		return true
+	var selected_item: ItemDefinition = null
+	if inventory_index >= 0:
+		if inventory_index >= inventory_items.size():
+			return false
+		selected_item = inventory_items[inventory_index]
+		if selected_item.slot != slot or not _can_equip_item(unit, selected_item):
+			return false
+		inventory_items.remove_at(inventory_index)
+	var replaced_item := _loadout_item(unit.loadout, slot)
+	_set_loadout_item(unit.loadout, slot, selected_item)
+	if replaced_item != null:
+		inventory_items.append(replaced_item)
+	return true
+
+
 func status_lines() -> Array[String]:
 	var lines: Array[String] = []
 	lines.append("Campaign roster: %d unit%s" % [roster_units.size(), "" if roster_units.size() == 1 else "s"])

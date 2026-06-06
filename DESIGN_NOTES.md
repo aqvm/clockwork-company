@@ -352,6 +352,8 @@ Do not use hard XP caps as the main rotation tool. Scenario constraints, enemy m
 
 Campaign gear should be freely swappable between scenarios within normal equipment constraints. An item can remain equipped to the unit who last used it, but it is not soulbound or permanently assigned. Between scenarios, the player should be able to unequip it and equip it to another available unit if that unit's ancestry, job, slot, and item rules allow it. Equipment should be locked during active battle/scenario resolution, then become editable again once the campaign returns to planning.
 
+Campaign planning must only offer gear the campaign owns. Selecting `None` returns the current item to campaign inventory; selecting an inventory item removes it from inventory and returns the replaced item. The durable transaction belongs to campaign roster state, not the UI's planning snapshot.
+
 Do not add a separate mastery-goals system for now. Scenario-specific constraints and encounter parameters can create implicit mastery pressure by making some roster, gear, or job choices more elegant than others. Avoid adding an extra reward checklist until ordinary scenario design fails to create enough replay or optimization pressure.
 
 ### Tooltip input

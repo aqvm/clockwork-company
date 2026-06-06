@@ -107,6 +107,8 @@ Campaign scenario victory awards one post-scenario job level after the successfu
 
 Campaign planning can freely change a unit's current job and assign unlocked learned features between scenarios. Per-job progress supplies ability provenance. `Job Skill` resolves the unlocked current-job skill, while `Assigned Skill` resolves the separately equipped skill from a different learned job. Passives and reactions use their assigned learned slots. Current job and ancestry equipment restrictions are strict blacklists; changing jobs returns newly illegal gear to campaign inventory.
 
+Campaign planning equipment options come only from the selected unit's current gear and `CampaignRosterState.inventory_items`. `CampaignRosterState` owns equip/unequip transactions so replacing an item returns the old item to inventory and planning UI snapshots cannot create gear.
+
 Scenario-local knockout lives in `RunState`, not campaign save data. When an ally is defeated in a won fight, `RunState` records that ally's stable campaign unit id from the simulator's final replay snapshot and omits the unit from later encounters in the same active scenario. Because only completed campaign scenarios commit back to `CampaignRosterState`, knockouts create short-term scenario pressure without becoming long-term injury or death.
 
 Intentionally not implemented here:
