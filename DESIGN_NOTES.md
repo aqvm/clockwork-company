@@ -235,7 +235,7 @@ Current catalog authoring rules:
 - use optional catalog encounters/rewards as staging material, not automatically reachable content
 - procedural items do not belong in the current prototype; hand-authored items teach the combat vocabulary more clearly
 
-Mechanics authoring needs a project-wide content hook audit, not only an ailment pass. When a mechanic becomes real content, it should be authorable, inspectable, and respondable through the project's normal systems where relevant: tactics conditions/actions/targets, declarative item effects, job skills/passives/reactions, ancestry features, enemy builds, scenario rules, combat logs, replay snapshots, tooltips, save boundaries, content validation, and JSON sidecar docs. Watch for straggler mechanics that only work through one-off simulator branches or are not exposed cleanly to content authors.
+`CONTENT_HOOK_AUDIT.md` records the first project-wide mechanic authoring audit. When a mechanic becomes real content, it should remain authorable, inspectable, and respondable through the project's normal systems where relevant: tactics conditions/actions/targets, declarative item effects, job skills/passives/reactions, ancestry features, enemy builds, scenario rules, combat logs, replay snapshots, tooltips, save boundaries, content validation, and JSON sidecar docs. Watch for straggler mechanics that only work through one-off simulator branches or are not exposed cleanly to content authors.
 
 ### Short roguelite run loop
 

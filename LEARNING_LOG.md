@@ -13,6 +13,46 @@ Each entry should include:
 - Manual exercise
 - Open questions
 
+## 2026-06-05 - Project-wide content hook audit
+
+Feature worked on:
+
+- Audited how current tactics, item effects, job abilities, ancestry features, enemy builds, scenario rules, logs, replay snapshots, tooltips, saves, validation, and JSON content connect.
+- Added `CONTENT_HOOK_AUDIT.md` as the current support matrix and decision record.
+- Removed the completed audit items from `TODO.md` without adding a generic mechanic framework.
+
+Godot concepts introduced:
+
+- Exported typed Resources and enums provide a useful authoring contract, but runtime resolver support can intentionally remain narrower while content is still small.
+
+Game architecture concepts introduced:
+
+- A mechanic content hook is broader than its resolver: it also needs inspection, explanation, response, persistence boundaries, validation, and modding documentation where relevant.
+- Unsupported authored combinations should be visible during iteration and only become hard validation errors once the supported matrix is stable.
+
+Files touched:
+
+- `CONTENT_HOOK_AUDIT.md`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Which scripts own tactic, item, job, and ancestry mechanic resolution.
+- Why scenario rules currently remain visible data without a generic runtime DSL.
+- Which current mechanics appear in structured events versus replay snapshots.
+- Why `pending_unlock_choice` is scaffolding rather than a complete progression contract.
+
+Manual exercise:
+
+- Pick one existing item effect and trace it from its `.tres` Resource through `ItemEffectResolver`, its combat event, its tooltip, and the JSON options documentation.
+
+Open questions:
+
+- Which concrete new mechanic will first justify stronger mechanics-content validation?
+
 ## 2026-06-05 - Campaign graph reachability validation
 
 Feature worked on:

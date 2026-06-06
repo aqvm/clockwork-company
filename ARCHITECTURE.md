@@ -6,6 +6,8 @@ This is a systems testbed for a small party-based roguelite autobattler. The pri
 
 The current Godot project lives in `clockwork-company/`, where `project.godot` defines the Godot project root.
 
+`CONTENT_HOOK_AUDIT.md` records the current cross-system mechanic authoring and inspection coverage, including deliberate gaps that should remain focused follow-up work.
+
 ## Core layers
 
 ### Combat simulation
