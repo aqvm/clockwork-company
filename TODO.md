@@ -49,7 +49,7 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 - Lock roster, gear, tactics, jobs, and learned ability assignments for the duration of a scenario once it starts. The player can adjust them before starting or retrying a scenario, not between encounters inside that scenario.
 - Between encounters inside a scenario, reset surviving units to baseline combat capacity: HP, temporary armor, statuses, cooldown-like battle state, and other runtime effects should reset before the next fight.
 - Revisit campaign unit instance id presentation once recruits can duplicate the same base unit template or unit renaming exists. The runtime now carries stable ids for knockout tracking, but the UI intentionally still shows readable unit names.
-- Expand non-permadeath retry planning controls. Losing a campaign scenario now returns to durable campaign planning and marks the scenario attempted, but the UI still needs real roster selection, job changing, tactics editing, and learned-ability assignment before retry planning matches the full design.
+- Expand non-permadeath retry planning controls. Losing a campaign scenario now returns to durable campaign planning and marks the scenario attempted; job changing, learned-ability assignment, and ordered tactic-list editing exist, but the UI still needs real roster selection before retry planning matches the full design.
 - Expand failed-attempt knowledge beyond the first attempted-scenario marker. Campaign progress now tracks attempted scenario ids without awarding XP, rewards, unlocks, or roster progression; future scouting state should decide exactly which encounters, enemy parties, or notes become inspectable after a loss.
 - Revisit campaign retry framing later. Retries fit the buildcraft puzzle, but may weaken campaign narrative stakes if the story implies irreversible events.
 - Add a future permadeath mode design pass. Account for replacement/catch-up problems such as losing an MVP, accelerated progression for new units, possible progression penalties for catch-up recruits, roster minimums, finale roster viability, UI warnings, and how memorialization affects unit biography.
@@ -78,7 +78,7 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 
 ## Units, Jobs, Progression, and Roster
 
-- Add tactic-list editing so planning can deliberately order authored `Job Skill` and `Assigned Skill` tactics instead of relying only on existing loadout tactics.
+- Keep tactic planning library-based for now: planning can add, remove, and order authored tactics, while creating or editing tactic rules remains a content-authoring task.
 - Keep the first authored job unlock schedule small: level 1 chooses skill or reaction, level 2 unlocks the passive, and level 3 unlocks the remaining skill or reaction.
 - Keep the first real progression implementation content-small: build the unlock tracking, choice, equip, persistence, and UI plumbing around the current one-skill/one-passive/one-reaction job scaffold before adding larger job ability catalogs.
 - Add persistent unit careers across scenarios.

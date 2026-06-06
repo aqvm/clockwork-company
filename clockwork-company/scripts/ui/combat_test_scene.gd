@@ -219,6 +219,9 @@ func _setup_planning_panel() -> void:
 	planning_panel.connect("unlock_choice_requested", _on_unlock_choice_requested)
 	planning_panel.connect("planning_job_requested", _on_planning_job_requested)
 	planning_panel.connect("planning_feature_requested", _on_planning_feature_requested)
+	planning_panel.connect("planning_tactic_add_requested", _on_planning_tactic_add_requested)
+	planning_panel.connect("planning_tactic_remove_requested", _on_planning_tactic_remove_requested)
+	planning_panel.connect("planning_tactic_move_requested", _on_planning_tactic_move_requested)
 	_connect_panel_tooltips(planning_panel)
 	parent_vbox.add_child(planning_panel)
 	parent_vbox.move_child(planning_panel, log_split.get_index())
@@ -461,12 +464,14 @@ func _render_unit_actions() -> void:
 	var unlock_options: Array = []
 	var job_options: Array = []
 	var learned_feature_options := {}
+	var tactic_options: Array = []
 	if campaign_manager != null and selected_unit != null:
 		var unit_id := _campaign_unit_id(selected_unit)
 		unlock_options = campaign_manager.pending_unlock_options_for_unit(unit_id)
 		job_options = _planning_job_options(selected_unit)
 		for feature_type in ["skill", "passive", "reaction"]:
 			learned_feature_options[feature_type] = campaign_manager.learned_feature_options(unit_id, feature_type)
+		tactic_options = _planning_tactic_options(selected_unit)
 	planning_panel.call(
 		"show_actions",
 		selected_scenario,
@@ -482,7 +487,8 @@ func _render_unit_actions() -> void:
 		equip_options,
 		unlock_options,
 		job_options,
-		learned_feature_options
+		learned_feature_options,
+		tactic_options
 	)
 
 
@@ -576,6 +582,62 @@ func _planning_job_options(unit: UnitDefinition) -> Array:
 	for job in campaign_manager.available_jobs():
 		options.append({"job": job, "label": job.display_name, "equipped": _content_id(job) == _content_id(current_job)})
 	return options
+
+
+func _planning_tactic_options(unit: UnitDefinition) -> Array:
+	var options: Array = []
+	if campaign_manager == null or unit == null:
+		return options
+	var loadout = _ensure_planning_loadout(unit)
+	for tactic in loadout.tactics:
+		options.append({"tactic": tactic, "label": tactic.display_name, "equipped": true})
+	for tactic in campaign_manager.available_tactics():
+		if not _resources_include_id(loadout.tactics, tactic):
+			options.append({"tactic": tactic, "label": tactic.display_name, "equipped": false})
+	return options
+
+
+func _on_planning_tactic_add_requested(tactic: TacticDefinition) -> void:
+	var unit := _editable_planning_unit()
+	if unit == null or tactic == null:
+		return
+	var loadout = _ensure_planning_loadout(unit)
+	if not _resources_include_id(loadout.tactics, tactic):
+		loadout.tactics.append(tactic)
+		_commit_planning_tactics(unit)
+
+
+func _on_planning_tactic_remove_requested(index: int) -> void:
+	var unit := _editable_planning_unit()
+	if unit == null or unit.loadout == null or index < 0 or index >= unit.loadout.tactics.size():
+		return
+	unit.loadout.tactics.remove_at(index)
+	_commit_planning_tactics(unit)
+
+
+func _on_planning_tactic_move_requested(index: int, direction: int) -> void:
+	var unit := _editable_planning_unit()
+	if unit == null or unit.loadout == null:
+		return
+	var destination := index + direction
+	if index < 0 or index >= unit.loadout.tactics.size() or destination < 0 or destination >= unit.loadout.tactics.size():
+		return
+	var tactic := unit.loadout.tactics[index]
+	unit.loadout.tactics.remove_at(index)
+	unit.loadout.tactics.insert(destination, tactic)
+	_commit_planning_tactics(unit)
+
+
+func _editable_planning_unit() -> UnitDefinition:
+	if campaign_manager == null or _has_active_scenario_run():
+		return null
+	return _find_planning_unit(selected_unit_name)
+
+
+func _commit_planning_tactics(unit: UnitDefinition) -> void:
+	if campaign_manager.set_tactics(_campaign_unit_id(unit), unit.loadout.tactics):
+		_load_planning_party()
+		_refresh_planning_panel()
 
 
 func _on_planning_equip_pressed(index: int) -> void:
@@ -715,6 +777,14 @@ func _content_id(resource: Resource) -> String:
 	if not resource.resource_path.is_empty():
 		return resource.resource_path.get_file().get_basename()
 	return ""
+
+
+func _resources_include_id(resources: Array, candidate: Resource) -> bool:
+	var candidate_id := _content_id(candidate)
+	for resource in resources:
+		if _content_id(resource) == candidate_id:
+			return true
+	return false
 
 
 func _show_campaign_landing() -> void:

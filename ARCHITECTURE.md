@@ -279,7 +279,7 @@ Current combat rules:
 - each tactic is a limited `condition -> action -> target` rule
 - the first tactic with a true condition and valid target is selected
 - if no tactic matches, the simulator falls back to attacking the frontmost living enemy
-- current supported tactic actions are attack, heal, guard, and job skill
+- current supported tactic actions are attack, heal, guard, job skill, and assigned skill
 - heal restores a fixed 5 HP without exceeding max HP
 - guard grants 2 temporary armor until that unit's next turn
 - runtime armor is split into base battle armor and temporary guard armor
@@ -333,9 +333,11 @@ Tactic responsibility split:
 
 - `TacticDefinition` owns inspectable source data: a display name, one condition, one action, and one target rule.
 - `UnitLoadoutDefinition` owns the source tactic list for a reusable build.
+- Campaign planning can add, remove, and reorder authored tactic Resources in that loadout list; the current job's default tactic remains read-only and is appended later by `UnitState`.
+- `CampaignRosterState` owns durable campaign tactic ordering and serializes stable tactic content IDs; `JsonContentLoader` reconstructs those Resources when loading a save.
 - `UnitState` owns the runtime copy of that priority-ordered tactic list for this combat copy.
 - `CombatSimulator` owns tactic evaluation, target validation, and action resolution.
-- The current demo loads tactic Resources through unit loadouts, while party editing and encounter data still wait.
+- The current planning UI selects from an authored tactic library rather than constructing arbitrary tactic rules.
 - The UI still receives plain rendered log lines and does not know how tactics are evaluated.
 
 Job responsibility split:

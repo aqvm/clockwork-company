@@ -205,13 +205,15 @@ Current tactic design rules:
 
 - tactics are evaluated from top to bottom
 - the first true condition with a valid target wins
-- supported actions are only attack, heal, and guard
+- supported actions are attack, heal, guard, `Job Skill`, and `Assigned Skill`
 - heal is a small fixed amount so it stays predictable
 - guard is temporary armor until the unit's next turn
 - every selected tactic must explain itself in the combat log
 - tactic Resources live in loadouts so behavior can be edited in Godot without changing simulator code
 - tactics should have human-readable names because a library of behaviors needs to be recognizable in setup and combat logs, not only by filename or raw rule triplet
 - tactics should continue to live on loadouts until a party-level doctrine, unit career, or encounter override creates real duplication pressure
+- campaign planning edits tactics as an ordered library: players can add/remove/reorder authored tactics, but do not construct arbitrary condition/action/target rules in the planning UI
+- the current job's default tactic remains appended at combat initialization and is not part of the editable loadout list
 
 Armor reduction should stay readable when temporary armor exists. Base battle armor cannot go below zero. Effects such as Shortblade reduce base armor first; if a target has no base armor left, the same reduction can reduce temporary guard armor instead.
 
@@ -324,7 +326,7 @@ Between encounters inside a scenario, surviving units reset to baseline combat c
 
 The first campaign defeat rule is scenario-local knockout, not long-term death. If a unit is defeated in a won fight, `RunState` omits that unit from the remaining fights in the same scenario using the unit's stable campaign instance id. After the scenario ends, the unit returns with no long-term penalty because the campaign commit path stores roster definitions, job progress, equipment, and inventory, not scenario knockout flags. This creates short-term stakes inside multi-fight scenarios without pulling injury, recovery, or replacement systems into the main campaign model.
 
-In non-permadeath campaign mode, losing a scenario returns the player to durable campaign planning for that scenario. Job changing and learned ability assignment now exist in planning; fuller roster selection and tactic-list editing still need their own UI/model passes. This is the natural expression of the buildcraft puzzle: a failed attempt teaches the enemy plan, then the player responds with a better plan.
+In non-permadeath campaign mode, losing a scenario returns the player to durable campaign planning for that scenario. Job changing, learned ability assignment, and ordered tactic-list editing now exist in planning; fuller roster selection still needs its own UI/model pass. This is the natural expression of the buildcraft puzzle: a failed attempt teaches the enemy plan, then the player responds with a better plan.
 
 Failed campaign attempts grant knowledge only. The campaign progress model now tracks attempted scenario ids separately from completed scenario ids, and the scenario list/detail UI marks attempted scenarios so the player can recognize a learned-but-not-cleared mission. Failed attempts do not call the roster commit path and do not award XP, rewards, scenario unlocks, content unlocks, or roster progression.
 

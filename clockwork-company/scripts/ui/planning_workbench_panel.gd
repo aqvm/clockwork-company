@@ -10,6 +10,9 @@ signal equip_option_requested(index: int)
 signal unlock_choice_requested(choice: String)
 signal planning_job_requested(job: JobDefinition)
 signal planning_feature_requested(feature_type: String, feature: Resource)
+signal planning_tactic_add_requested(tactic: TacticDefinition)
+signal planning_tactic_remove_requested(index: int)
+signal planning_tactic_move_requested(index: int, direction: int)
 signal resource_tooltip_requested(source: Control, resource: Resource)
 signal glossary_tooltip_requested(source: Control, term: String)
 signal tooltip_cleared
@@ -35,6 +38,9 @@ func _ready() -> void:
 	unit_action_panel.connect("unlock_choice_requested", func(choice): unlock_choice_requested.emit(choice))
 	unit_action_panel.connect("planning_job_requested", func(job): planning_job_requested.emit(job))
 	unit_action_panel.connect("planning_feature_requested", func(feature_type, feature): planning_feature_requested.emit(feature_type, feature))
+	unit_action_panel.connect("planning_tactic_add_requested", func(tactic): planning_tactic_add_requested.emit(tactic))
+	unit_action_panel.connect("planning_tactic_remove_requested", func(index): planning_tactic_remove_requested.emit(index))
+	unit_action_panel.connect("planning_tactic_move_requested", func(index, direction): planning_tactic_move_requested.emit(index, direction))
 	_forward_tooltip_signals(unit_action_panel)
 
 
@@ -68,7 +74,8 @@ func show_actions(
 	equip_options: Array,
 	unlock_options: Array,
 	job_options: Array,
-	learned_feature_options: Dictionary
+	learned_feature_options: Dictionary,
+	tactic_options: Array
 ) -> void:
 	unit_action_panel.call(
 		"show_actions",
@@ -85,7 +92,8 @@ func show_actions(
 		equip_options,
 		unlock_options,
 		job_options,
-		learned_feature_options
+		learned_feature_options,
+		tactic_options
 	)
 
 

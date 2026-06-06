@@ -103,6 +103,27 @@ static func load_job_definitions(enabled_mod_pack_ids: Variant = null) -> Array[
 	return results
 
 
+static func load_tactic_definitions(enabled_mod_pack_ids: Variant = null) -> Array[TacticDefinition]:
+	var base_data := _load_base_data_from_resources()
+	var merged_data := _apply_mod_packs(base_data, enabled_mod_pack_ids)
+	var content := _build_content_resources(merged_data)
+	var tactics_by_id: Dictionary = content["tactics"]
+	var results: Array[TacticDefinition] = []
+	for tactic_id in tactics_by_id.keys():
+		results.append(tactics_by_id[tactic_id])
+	results.sort_custom(func(a, b): return a.display_name < b.display_name)
+	return results
+
+
+static func load_tactic_definition_by_id(tactic_id: String, enabled_mod_pack_ids: Variant = null) -> TacticDefinition:
+	if tactic_id.is_empty():
+		return null
+	for tactic in load_tactic_definitions(enabled_mod_pack_ids):
+		if String(tactic.get_meta("content_id", "")) == tactic_id:
+			return tactic
+	return null
+
+
 static func list_available_mod_packs() -> Array[Dictionary]:
 	var descriptors: Array[Dictionary] = []
 	_collect_pack_descriptors_from_dir(descriptors, MODS_DIR, true)

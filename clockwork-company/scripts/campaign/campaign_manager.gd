@@ -4,7 +4,7 @@ class_name CampaignManager
 const CampaignProgressScript := preload("res://scripts/campaign/campaign_progress.gd")
 const CampaignRosterStateScript := preload("res://scripts/campaign/campaign_roster_state.gd")
 const JsonContentLoaderScript := preload("res://scripts/modding/json_content_loader.gd")
-const SAVE_VERSION := 3
+const SAVE_VERSION := 4
 
 var campaign: Resource = null
 var progress = CampaignProgressScript.new()
@@ -124,6 +124,14 @@ func learned_feature_options(campaign_unit_id: String, feature_type: String) -> 
 
 func assign_learned_feature(campaign_unit_id: String, feature_type: String, feature: Resource) -> bool:
 	return roster_state.assign_learned_feature(campaign_unit_id, feature_type, feature)
+
+
+func available_tactics() -> Array[TacticDefinition]:
+	return JsonContentLoaderScript.load_tactic_definitions(enabled_mod_pack_ids)
+
+
+func set_tactics(campaign_unit_id: String, tactics: Array[TacticDefinition]) -> bool:
+	return roster_state.set_tactics(campaign_unit_id, tactics)
 
 
 func status_lines() -> Array[String]:

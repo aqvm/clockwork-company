@@ -4264,3 +4264,44 @@ Manual exercise:
 Open questions:
 
 - If Codex usage guidance grows, which workflow details should move into a smaller linked document?
+
+## 2026-06-06 - Campaign tactic-list planning
+
+Feature worked on:
+
+- Added campaign planning controls that add, remove, and reorder authored loadout tactics.
+- Added an authored `Use Assigned Skill` tactic so the cross-job skill channel can be deliberately placed in the priority list.
+- Persisted ordered tactic content IDs in campaign saves and raised the compatible save version to 4.
+
+Godot concepts introduced:
+
+- Resource instances reconstructed by separate loader calls are not identity-equal, so planning compares their stable `content_id` metadata.
+- Dynamic `HBoxContainer`, `Button`, and `OptionButton` controls can present an ordered Resource list while signals keep mutation outside the panel.
+
+Game architecture concepts introduced:
+
+- `UnitActionPanel` presents tactic controls, `combat_test_scene.gd` coordinates planning, and `CampaignRosterState` owns durable tactic mutation and persistence.
+- The job default tactic remains read-only because `UnitState` appends it at combat initialization rather than storing it in the loadout's editable list.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/unit_action_panel.gd`
+- `clockwork-company/scripts/ui/planning_workbench_panel.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `clockwork-company/scripts/campaign/campaign_manager.gd`
+- `clockwork-company/scripts/campaign/campaign_roster_state.gd`
+- `clockwork-company/scripts/modding/json_content_loader.gd`
+- `clockwork-company/resources/tactics/use_assigned_skill.tres`
+
+What I should now be able to explain:
+
+- Why tactic ordering belongs to the durable campaign loadout while tactic evaluation remains combat-only.
+- Why the planning UI offers authored tactics instead of editing arbitrary tactic rule fields.
+
+Manual exercise:
+
+- Select a campaign unit, add `Use Assigned Skill`, move it above an attack tactic, save/load the campaign, and confirm the order remains visible.
+
+Open questions:
+
+- Should a later progression or content-unlock system restrict which authored tactics appear in the planning library?

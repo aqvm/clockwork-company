@@ -198,6 +198,17 @@ func learned_feature_options(campaign_unit_id: String, feature_type: String) -> 
 	return options
 
 
+func set_tactics(campaign_unit_id: String, tactics: Array[TacticDefinition]) -> bool:
+	var unit := _find_unit(campaign_unit_id)
+	if unit == null:
+		return false
+	if unit.loadout == null:
+		unit.loadout = UnitLoadoutDefinitionScript.new()
+		unit.loadout.display_name = "%s Campaign Loadout" % unit.display_name
+	unit.loadout.tactics = tactics.duplicate()
+	return true
+
+
 func status_lines() -> Array[String]:
 	var lines: Array[String] = []
 	lines.append("Campaign roster: %d unit%s" % [roster_units.size(), "" if roster_units.size() == 1 else "s"])
@@ -285,6 +296,7 @@ func _unit_to_save_data(unit: UnitDefinition) -> Dictionary:
 			"armor_id": _content_id(unit.loadout.armor),
 			"helmet_id": _content_id(unit.loadout.helmet),
 			"trinket_id": _content_id(unit.loadout.trinket),
+			"tactic_ids": _content_ids(unit.loadout.tactics),
 		}
 	return {
 		"campaign_unit_id": _campaign_unit_id(unit),
@@ -312,6 +324,14 @@ func _apply_loadout_save_data(unit: UnitDefinition, raw_loadout: Variant, enable
 	unit.loadout.armor = _load_item_or_keep(data, "armor_id", unit.loadout.armor, enabled_mod_pack_ids)
 	unit.loadout.helmet = _load_item_or_keep(data, "helmet_id", unit.loadout.helmet, enabled_mod_pack_ids)
 	unit.loadout.trinket = _load_item_or_keep(data, "trinket_id", unit.loadout.trinket, enabled_mod_pack_ids)
+	var saved_tactics = data.get("tactic_ids", null)
+	if saved_tactics is Array:
+		var tactics: Array[TacticDefinition] = []
+		for raw_tactic_id in saved_tactics:
+			var tactic := JsonContentLoaderScript.load_tactic_definition_by_id(String(raw_tactic_id), enabled_mod_pack_ids)
+			if tactic != null:
+				tactics.append(tactic)
+		unit.loadout.tactics = tactics
 
 
 func _load_item_or_keep(data: Dictionary, key: String, current: ItemDefinition, enabled_mod_pack_ids: Array[String]) -> ItemDefinition:
@@ -622,6 +642,15 @@ func _campaign_unit_ids(units: Array[UnitDefinition]) -> Array[String]:
 	var ids: Array[String] = []
 	for unit in units:
 		ids.append(_campaign_unit_id(unit))
+	return ids
+
+
+func _content_ids(resources: Array) -> Array[String]:
+	var ids: Array[String] = []
+	for resource in resources:
+		var id := _content_id(resource)
+		if not id.is_empty():
+			ids.append(id)
 	return ids
 
 
