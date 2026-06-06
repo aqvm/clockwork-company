@@ -4344,3 +4344,38 @@ Manual exercise:
 Open questions:
 
 - Which future campaign scenario should introduce Roger or another partially developed recruit?
+
+## 2026-06-06 - Learned-feature content validation
+
+Feature worked on:
+
+- Added merged-content validation for authored equipped learned features.
+- Rejects missing source-job progress, locked assigned features, and current-job skills incorrectly placed in the cross-job skill slot.
+
+Godot concepts introduced:
+
+- `assert` in the headless content-loading path turns invalid authored Resource/JSON relationships into immediate development failures.
+
+Game architecture concepts introduced:
+
+- A loadout assignment is only valid when the unit's durable job progress proves that feature was learned.
+- The cross-job assigned-skill slot remains distinct from the current-job skill channel.
+
+Files touched:
+
+- `clockwork-company/scripts/modding/json_content_loader.gd`
+- `CONTENT_HOOK_AUDIT.md`
+- `ARCHITECTURE.md`
+
+What I should now be able to explain:
+
+- Why equipping a feature and unlocking a feature are separate pieces of state.
+- Why validation runs on merged content rather than only checking base `.tres` files.
+
+Manual exercise:
+
+- Temporarily set Roger's `reaction_unlocked` to false, run `tools/check_content.ps1`, read the failure, then restore it.
+
+Open questions:
+
+- Which unsupported item-effect combinations are stable enough to validate next?

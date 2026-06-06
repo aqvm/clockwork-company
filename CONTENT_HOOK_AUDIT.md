@@ -44,7 +44,7 @@ This audit checks whether current mechanics can be authored, applied, inspected,
 - Campaign persistence carries unit definitions, current loadouts, job progress flags, equipped gear, and inventory through the current small save shape.
 - Active battle state, scenario-local knockouts, temporary armor, cooldowns, and future statuses correctly remain outside durable campaign saves.
 - Learned-ability provenance and assignment rules now use per-job progress plus loadout assignment slots. Tactic-list editing and broader ability catalogs are not modeled yet.
-- `tools/check_content.ps1` validates scenario/campaign references, graph reachability, rewards, rules, starting roster ids, JSON loading, and JSON sidecar presence.
+- `tools/check_content.ps1` validates scenario/campaign references, graph reachability, rewards, rules, starting roster ids, learned-feature assignment provenance/unlocks, JSON loading, and JSON sidecar presence.
 - Mechanics Resources rely mainly on typed exported enums and loader checks. A future focused validation pass can reject unsupported trigger/effect combinations once the intended supported matrix is stable enough to enforce.
 
 ## Audit Decisions

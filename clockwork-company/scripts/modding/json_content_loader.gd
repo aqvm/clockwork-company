@@ -401,9 +401,32 @@ static func _validate_merged_data(data: Dictionary) -> void:
 			var progress: Dictionary = raw_progress
 			var job_id := String(progress.get("job_id", ""))
 			assert(data["jobs"].has(job_id), "Unknown job id '%s' in job_progress for unit %s" % [job_id, unit_id])
+		_validate_unit_feature_assignments(data, unit_id, unit)
 
 	for roster_unit_id in data.get("demo_roster", []):
 		assert(data["units"].has(String(roster_unit_id)), "Unknown unit id '%s' in demo_roster" % String(roster_unit_id))
+
+
+static func _validate_unit_feature_assignments(data: Dictionary, unit_id: String, unit: Dictionary) -> void:
+	var loadout_id := String(unit.get("loadout_id", ""))
+	if loadout_id.is_empty() or not data["loadouts"].has(loadout_id):
+		return
+	var loadout: Dictionary = data["loadouts"][loadout_id]
+	var progress_by_job_id := {}
+	for raw_progress in unit.get("job_progress", []):
+		var progress: Dictionary = raw_progress
+		progress_by_job_id[String(progress.get("job_id", ""))] = progress
+	var current_job_id := String(loadout.get("current_job_id", ""))
+	for feature_type in ["skill", "passive", "reaction"]:
+		var source_job_id := String(loadout.get("equipped_%s_job_id" % feature_type, ""))
+		if source_job_id.is_empty():
+			continue
+		assert(progress_by_job_id.has(source_job_id), "Unit %s equips %s from job '%s' without matching job_progress." % [unit_id, feature_type, source_job_id])
+		if progress_by_job_id.has(source_job_id):
+			var progress: Dictionary = progress_by_job_id[source_job_id]
+			assert(bool(progress.get("%s_unlocked" % feature_type, false)), "Unit %s equips locked %s from job '%s'." % [unit_id, feature_type, source_job_id])
+		if feature_type == "skill":
+			assert(source_job_id != current_job_id, "Unit %s assigns its current job skill through the cross-job skill slot." % unit_id)
 
 
 static func _build_demo_unit_definitions(merged_data: Dictionary) -> Array[UnitDefinition]:
