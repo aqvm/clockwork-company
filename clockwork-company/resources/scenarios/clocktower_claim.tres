@@ -16,6 +16,7 @@ story_intro = "With the tollgate broken, a ledger crew retreats into the clockto
 story_outro = "The clocktower keeps ticking, but its books no longer name the company as debt."
 party_size = 3
 encounters = [ExtResource("2_encounter_a"), ExtResource("3_encounter_b"), ExtResource("4_encounter_c")]
+tier = 4
 recommended_level_min = 3
 recommended_level_max = 5
 tags = ["clocktower", "debt", "campaign-chain"]

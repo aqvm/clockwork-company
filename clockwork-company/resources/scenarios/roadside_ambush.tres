@@ -16,6 +16,7 @@ story_intro = "Bandits have been harassing caravans on the old road."
 story_outro = "The road is ugly again, but at least it is open."
 party_size = 3
 encounters = [ExtResource("2_encounter_a"), ExtResource("3_encounter_b"), ExtResource("4_encounter_c")]
+tier = 1
 recommended_level_min = 1
 recommended_level_max = 2
 tags = ["road", "bandits", "starter"]

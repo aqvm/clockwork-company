@@ -6,6 +6,8 @@ This is a systems testbed for a small party-based roguelite autobattler. The pri
 
 The current Godot project lives in `clockwork-company/`, where `project.godot` defines the Godot project root.
 
+`CONTENT_HOOK_AUDIT.md` records the current cross-system mechanic authoring and inspection coverage, including deliberate gaps that should remain focused follow-up work.
+
 ## Core layers
 
 ### Combat simulation
@@ -89,20 +91,30 @@ The project now has three tactical content layers:
 - Scenario: a short handcrafted sequence of encounters, defined by `ScenarioDefinition` Resources and advanced through `RunState` plus `ScenarioRunner`.
 - Campaign: a thin wrapper over scenarios, defined by `CampaignDefinition` and tracked by `CampaignManager`/`CampaignProgress`.
 
-Scenarios own authored mission data: story text, party size, encounter Resources, data-only scenario rules, rewards, tags, and content unlock ids. Campaigns own availability and completion: which scenarios start unlocked, which scenarios unlock after completion, which content ids are unlocked, and whether the campaign is complete.
+Scenarios own authored mission data: story text, party size, encounter Resources, scenario rules, rewards, tags, and content unlock ids. Campaigns own availability and completion: which scenarios start unlocked, which scenarios have been attempted or completed, which scenarios unlock after completion, which content ids are unlocked, and whether the campaign is complete.
 
-Scenario rules stay data-first, but `RunState` can apply tiny hardcoded rule effects while the rule vocabulary is still young. The current mechanical example is `iron_tollgate_armored_enemies`, which adds armor to enemy definitions before the simulator builds combat runtime state.
+Scenario rules stay data-first while the rule vocabulary is still young. `RunState` no longer patches Iron Tollgate enemy armor; that scenario should express armor pressure through normal enemy definitions, jobs, gear, tactics, and encounter composition. Burned Chapel's visible `Ash-Choked Rites` rule is the first current mechanical rule and applies battle-long Confusion equally to every unit.
 
 The scenario workbench can also start an unlocked scenario as a practice run. Practice runs use `RunState.start_scenario(...)` but do not call `CampaignManager.start_scenario(...)`, and they do not complete or unlock campaign nodes.
 
 The campaign layer does not change combat rules. Real fights still run through `CombatSimulator`; runtime combat state still lives in combat runtime classes; between-fight roster/reward/equipment choices still live in `RunState`.
 
-Campaign progress can be saved to and loaded from `user://first_road_campaign_save.json` as small JSON. This first save slice stores campaign id/version, completed scenarios, unlocked scenarios, unlocked content ids, and campaign completion. It deliberately does not restore an active scenario run, roster state, inventory, gear, or job progress yet.
+When a campaign scenario is lost, the workbench marks the scenario as attempted, clears the active campaign scenario id, and reloads the visible planning party from durable campaign roster state instead of the failed `RunState` clones. This keeps failed attempts from accidentally becoming progression state while still allowing a retry from planning.
+
+Campaign progress can be saved to and loaded from `user://first_road_campaign_save.json` as small JSON. The save stores campaign id/version, attempted scenarios, completed scenarios, unlocked scenarios, unlocked content ids, campaign completion, and campaign roster state. Roster state currently includes the campaign's durable unit definitions, their per-job progress, their current loadout equipment, and unequipped campaign inventory items.
+
+Campaign scenario victory awards one post-scenario job level after the successful run is committed. `CampaignRosterState` chooses one surviving deployed unit tied for the lowest total level, enforces the scenario tier plus unit/job caps, and owns permanent unlock flags. A pending level-1 skill-versus-reaction choice blocks starting another campaign scenario until planning UI resolves it; practice scenarios remain available.
+
+Campaign planning can freely change a unit's current job and assign unlocked learned features between scenarios. Per-job progress supplies ability provenance. `Job Skill` resolves the unlocked current-job skill, while `Assigned Skill` resolves the separately equipped skill from a different learned job. Passives and reactions use their assigned learned slots. Current job and ancestry equipment restrictions are strict blacklists; changing jobs returns newly illegal gear to campaign inventory.
+
+Campaign planning equipment options come only from the selected unit's current gear and `CampaignRosterState.inventory_items`. `CampaignRosterState` owns equip/unequip transactions so replacing an item returns the old item to inventory and planning UI snapshots cannot create gear.
+
+Scenario-local knockout lives in `RunState`, not campaign save data. When an ally is defeated in a won fight, `RunState` records that ally's stable campaign unit id from the simulator's final replay snapshot and omits the unit from later encounters in the same active scenario. Because only completed campaign scenarios commit back to `CampaignRosterState`, knockouts create short-term scenario pressure without becoming long-term injury or death.
 
 Intentionally not implemented here:
 
-- active-run, roster, inventory, gear, or job-progress save/load
-- persistent roster import/export
+- active scenario-run save/load
+- roster import/export outside the current campaign save
 - injuries, fatigue, rest, or base management
 - procedural generation
 - async multiplayer or ghost snapshots
@@ -172,9 +184,11 @@ The first playable test now opens as a scenario workbench with the older combat 
 - `clockwork-company/scripts/combat/scenarios/demo_battle_factory.gd` owns current fixed demo roster construction.
 - `clockwork-company/scripts/run/run_state.gd` owns short-run progression state: current fight index, active/reward/equipment/won/lost status, cloned party definitions, run inventory, fixed encounter order, and reward/equipment application.
 - `clockwork-company/scripts/scenario/scenario_runner.gd` owns the current scenario progress wrapper: active scenario id, encounter index, completion, and scenario summary lines.
-- `clockwork-company/scripts/campaign/campaign_manager.gd` owns campaign unlock progression: available scenarios, completed scenarios, unlocked content ids, and campaign completion.
+- `clockwork-company/scripts/campaign/campaign_manager.gd` owns campaign unlock progression: available scenarios, attempted scenarios, completed scenarios, unlocked content ids, and campaign completion.
+- `clockwork-company/scripts/campaign/campaign_roster_state.gd` owns durable campaign roster state: starting roster construction from campaign unit ids, stable campaign unit instance ids, campaign-party snapshots for scenario starts, victory commits from `RunState`, campaign inventory, and roster/inventory JSON save data.
 - `clockwork-company/scripts/modding/json_content_loader.gd` owns JSON pack loading/merging/validation and runtime Resource reconstruction for ancestries, items, jobs, tactics, loadouts, and units.
-- `clockwork-company/scripts/tools/content_validation_check.gd` owns repository content sanity checks for scenarios, scenario rules, scenario rewards, campaign identity/graph references, JSON pack loading, and required JSON sidecar docs.
+- Base `.tres` loadouts can author equipped learned passives/reactions/skills by referencing the same standalone feature Resource as the owning job; `JsonContentLoader` infers that job provenance before reconstructing content.
+- `clockwork-company/scripts/tools/content_validation_check.gd` owns repository content sanity checks for scenarios, scenario rules, scenario rewards, campaign identity/graph reachability/starting-roster references, JSON pack loading, and required JSON sidecar docs. The loader validation it invokes also rejects equipped learned features without matching unlocked job progress.
 - `CombatLog` and `CombatLogEntry` are dedicated helper classes in `scripts/combat/logging/combat_log.gd` that build readable text logs and structured event metadata.
 - `scripts/combat/logging/combat_event_schema.gd` defines known event types and required payload keys as the structured logging contract.
 - `scripts/combat/logging/combat_events.gd` provides typed event-construction helpers so simulator/rule code does not handcraft payload dictionaries ad hoc.
@@ -197,8 +211,8 @@ The first playable test now opens as a scenario workbench with the older combat 
 - `clockwork-company/scripts/data/encounter_definition.gd` defines a run encounter as a named enemy party made from normal `UnitDefinition` Resources.
 - `clockwork-company/scripts/data/reward_definition.gd` defines a run reward as a named offer with a suggested recipient and a normal `ItemDefinition` payload.
 - `clockwork-company/scripts/data/scenario_definition.gd` defines a handcrafted mission as story text, ordered encounter references, optional data-only scenario rules, rewards, tags, and unlock ids.
-- `clockwork-company/scripts/data/scenario_rule_definition.gd` defines a named scenario rule placeholder that can exist as data before combat mechanics implement it.
-- `clockwork-company/scripts/data/campaign_definition.gd` and `campaign_scenario_node_definition.gd` define a lightweight scenario chain.
+- `clockwork-company/scripts/data/scenario_rule_definition.gd` defines a named scenario rule that can exist as readable data before combat mechanics implement it.
+- `clockwork-company/scripts/data/campaign_definition.gd` and `campaign_scenario_node_definition.gd` define a lightweight scenario chain and starting roster ids.
 - `clockwork-company/resources/ancestries/*.tres` stores the current ancestry catalog.
 - `clockwork-company/resources/units/*.tres` stores the current demo unit definitions and a wider catalog of future ally/enemy build bodies.
 - `clockwork-company/resources/items/*.tres` stores the current demo item definitions and a wider catalog of build-enabling gear.
@@ -208,7 +222,7 @@ The first playable test now opens as a scenario workbench with the older combat 
 - `clockwork-company/resources/encounters/*.tres` stores fixed authored encounters used by the old Phase 7 run and the new sample scenarios.
 - `clockwork-company/resources/rewards/*.tres` stores reusable reward offers used by the old Phase 7 run and curated scenario reward lists.
 - `clockwork-company/resources/scenarios/*.tres` stores sample scenario definitions.
-- `clockwork-company/resources/scenario_rules/*.tres` stores data-only scenario rule definitions.
+- `clockwork-company/resources/scenario_rules/*.tres` stores visible scenario rule definitions.
 - `clockwork-company/resources/campaigns/first_road_campaign.tres` stores the first sample campaign.
 
 The scene is set as the main scene in `clockwork-company/project.godot`, so pressing Play in Godot should open the scenario workbench. The simulator should not run merely because a scenario is selected; combat reports are generated when the player starts or runs a fight.
@@ -246,13 +260,13 @@ Current combat rules:
 - ancestries, items, jobs, tactics, and units can carry freeform tags for future filtering/conditions/content tools
 - each job has small per-level growth values for HP, physical damage, magic damage, armor, and action interval
 - each unit can gain at most five total job levels across all jobs
-- job progress is stored per unit and per job, with predetermined skill/passive/reaction unlock thresholds
+- job progress is stored per unit and per job, with a fixed three-level unlock schedule and a level-1 skill-versus-reaction choice
 - ancestries provide baseline stat-growth values that apply once per total unit job level, in addition to the growth from the specific jobs leveled
 - ancestry features are always-on deterministic hooks separate from job passives/reactions
-- equipment is allowed by default; jobs may explicitly forbid weapons, armor, helmets, or trinkets
+- equipment is allowed by default; the current job or ancestry may explicitly forbid weapons, armor, helmets, or trinkets
 - shields currently live inside weapon or armor item concepts; there is no offhand/handedness rules layer yet
-- each current job grants one active skill, one passive, one reaction, and one default tactic
-- loadouts can override the current job's granted skill, passive, or reaction to model learned abilities before progression UI exists
+- each current job defines one active skill, one passive, one reaction, and one default tactic; only unlocked and appropriately assigned features function
+- loadouts store one cross-job assigned skill plus one assigned learned passive and reaction
 - `UnitState` copies definition data into combat-only runtime state at battle start, reads ancestry and loadout data, applies ancestry baseline growth and permanent job-progress growth, appends the current job's default tactic, checks equipment forbids, then applies allowed item modifiers to produce final battle stats
 - battle-start item effects can further change combat-only runtime stats before the roster is printed
 - battle-start ancestry features can further change combat-only runtime stats before the roster is printed
@@ -268,7 +282,7 @@ Current combat rules:
 - each tactic is a limited `condition -> action -> target` rule
 - the first tactic with a true condition and valid target is selected
 - if no tactic matches, the simulator falls back to attacking the frontmost living enemy
-- current supported tactic actions are attack, heal, guard, and job skill
+- current supported tactic actions are attack, heal, guard, job skill, and assigned skill
 - heal restores a fixed 5 HP without exceeding max HP
 - guard grants 2 temporary armor until that unit's next turn
 - runtime armor is split into base battle armor and temporary guard armor
@@ -307,6 +321,7 @@ Combat log responsibility split:
 - The replay pane now has a left/right split: left is the existing text replay, right is a lightweight unit visualization panel separated by a vertical rule.
 - The visualization panel is still presentation-only: it reads initial roster snapshots, simulator-authored replay unit-state snapshots, and structured replay events from the simulator report, then draws unit circles, health arcs, cooldown bars, and lightweight VFX without changing simulator rules.
 - Structured replay events still drive text grouping, turn pulses, and floating HP changes; replay snapshots are the authoritative source for current unit HP, timing, and defeated state when present.
+- Replay snapshots also carry battle-local status names so runtime tooltips can explain Confusion without presentation code inferring combat state.
 - Highlight colors are configured in a dedicated `CombatLogHighlightPalette` Resource so color tuning stays editor-visible and does not require editing code constants.
 - The scenario workbench includes a default/colorblind highlight palette toggle using separate `CombatLogHighlightPalette` Resources.
 - This is presentation only: `run_demo_battle()` still finishes the deterministic simulation before replay starts.
@@ -322,9 +337,12 @@ Tactic responsibility split:
 
 - `TacticDefinition` owns inspectable source data: a display name, one condition, one action, and one target rule.
 - `UnitLoadoutDefinition` owns the source tactic list for a reusable build.
+- Campaign planning can add, remove, and reorder authored tactic Resources in that loadout list; the current job's default tactic remains read-only and is appended later by `UnitState`.
+- `CampaignRosterState` owns durable campaign tactic ordering and serializes stable tactic content IDs; `JsonContentLoader` reconstructs those Resources when loading a save.
 - `UnitState` owns the runtime copy of that priority-ordered tactic list for this combat copy.
+- `UnitState` owns battle-local status names; `StatusResolver` applies concrete scenario-sourced statuses, and `TacticResolver` owns Confusion's tactic-selection pressure.
 - `CombatSimulator` owns tactic evaluation, target validation, and action resolution.
-- The current demo loads tactic Resources through unit loadouts, while party editing and encounter data still wait.
+- The current planning UI selects from an authored tactic library rather than constructing arbitrary tactic rules.
 - The UI still receives plain rendered log lines and does not know how tactics are evaluated.
 
 Job responsibility split:
@@ -334,6 +352,7 @@ Job responsibility split:
 - `UnitState` owns the runtime current job and current granted job abilities assigned to this combat copy.
 - `CombatSimulator` owns equipment forbid checks, job skill action resolution, and current-job ability timing.
 - Unit, item, tactic, and job definitions remain separate source data. Runtime combat combines them into one `UnitState` without rewriting any `.tres` definition.
+- Authored developed recruits can carry normal `JobProgressDefinition` Resources. Roger Spellsword demonstrates a level-3 job whose shared standalone feature Resources are referenced by both the job and loadout.
 - The current demo still keeps the fixed 3v3 roster list in code; jobs, gear, and tactics now live in editor-editable unit/loadout Resources.
 
 Manual test:

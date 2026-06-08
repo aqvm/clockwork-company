@@ -3,15 +3,27 @@ class_name TacticResolver
 
 const CombatConstantsScript := preload("res://scripts/combat/combat_constants.gd")
 const TargetingRulesScript := preload("res://scripts/combat/rules/targeting_rules.gd")
+const StatusResolverScript := preload("res://scripts/combat/rules/status_resolver.gd")
 
 static func choose_action(actor, units: Array) -> Dictionary:
 	var skipped_reasons: Array[String] = []
+	var confusion_can_skip: bool = actor.has_status(StatusResolverScript.STATUS_CONFUSION)
 	for tactic: TacticDefinition in actor.tactics:
 		if not _condition_matches(tactic.condition, actor, units):
+			continue
+		if tactic.action == CombatConstantsScript.ACTION_JOB_SKILL and actor.current_skill == null:
+			skipped_reasons.append("Tactic skipped: %s. Current job skill is not unlocked." % _describe_tactic(tactic))
+			continue
+		if tactic.action == CombatConstantsScript.ACTION_ASSIGNED_SKILL and actor.assigned_skill == null:
+			skipped_reasons.append("Tactic skipped: %s. No eligible learned skill is assigned." % _describe_tactic(tactic))
 			continue
 		var target = _find_tactic_target(tactic.target, actor, units)
 		if target == null:
 			skipped_reasons.append("Tactic skipped: %s. No valid target." % _describe_tactic(tactic))
+			continue
+		if confusion_can_skip:
+			confusion_can_skip = false
+			skipped_reasons.append("Confusion skips the first otherwise-valid tactic: %s." % _describe_tactic(tactic))
 			continue
 		return {
 			"action": tactic.action,

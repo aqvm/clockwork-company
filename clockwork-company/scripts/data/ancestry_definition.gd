@@ -23,5 +23,9 @@ class_name AncestryDefinition
 @export var magic_damage_growth := 0
 @export var armor_growth := 0
 @export var action_interval_growth := 0
+@export var forbid_weapon := false
+@export var forbid_armor := false
+@export var forbid_helmet := false
+@export var forbid_trinket := false
 @export var feature: Resource = null
 @export_multiline var notes := ""

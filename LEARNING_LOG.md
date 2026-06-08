@@ -13,6 +13,307 @@ Each entry should include:
 - Manual exercise
 - Open questions
 
+## 2026-06-05 - Learned ability assignment and Assigned Skill tactics
+
+Feature worked on:
+
+- Added planning selectors for freely changing current jobs and assigning unlocked learned skills, passives, and reactions.
+- Split tactic skill actions into `Job Skill` and `Assigned Skill`.
+- Locked combat ability use behind permanent per-job unlock flags.
+- Persisted assigned ability provenance through source job ids.
+- Added strict job/ancestry equipment blacklists and automatic return of newly illegal gear to campaign inventory after a job change.
+
+Godot concepts introduced:
+
+- `OptionButton` can present Resource-backed planning choices while signals pass the selected Resource back to the campaign owner.
+- Resource identity is local to a loaded object graph, so save data restores nested abilities through stable source job ids rather than nested subresource identity.
+
+Game architecture concepts introduced:
+
+- Per-job progress owns permanent learned features; the loadout owns current between-scenario assignments.
+- Current-job skills and assigned cross-job skills are separate tactic actions, so ordered tactics remain combat authority.
+- Equipment legality is a strict blacklist composed from current job and ancestry rules.
+
+Files touched:
+
+- `clockwork-company/scripts/campaign/campaign_roster_state.gd`
+- `clockwork-company/scripts/campaign/campaign_manager.gd`
+- `clockwork-company/scripts/combat/combat_constants.gd`
+- `clockwork-company/scripts/combat/combat_simulator.gd`
+- `clockwork-company/scripts/combat/rules/tactic_resolver.gd`
+- `clockwork-company/scripts/combat/runtime/unit_state.gd`
+- `clockwork-company/scripts/data/ancestry_definition.gd`
+- `clockwork-company/scripts/data/tactic_definition.gd`
+- `clockwork-company/scripts/modding/json_content_loader.gd`
+- `clockwork-company/scripts/run/run_state.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `clockwork-company/scripts/ui/planning_workbench_panel.gd`
+- `clockwork-company/scripts/ui/unit_action_panel.gd`
+- `clockwork-company/scripts/ui/unit_detail_panel.gd`
+- `clockwork-company/scripts/ui/resource_tooltip_builder.gd`
+- `clockwork-company/modding/reference/base_content.options.md`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `CONTENT_HOOK_AUDIT.md`
+- `TODO.md`
+- `MODDING.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why an assigned skill must come from a job other than the current job.
+- How a tactic distinguishes `Job Skill` from `Assigned Skill`.
+- Why save data records an assigned feature's source job id.
+- Why changing jobs may move equipment back into campaign inventory.
+
+Manual exercise:
+
+- Unlock a skill in one job, change the unit to another job, assign the prior skill, and inspect the unit detail panel. Author or select an `Assigned Skill` tactic to make that second skill fire.
+
+Open questions:
+
+- What is the smallest useful tactic-list editing UI for ordering and changing `Job Skill` versus `Assigned Skill` tactics?
+
+## 2026-06-05 - Post-scenario unit and job progression
+
+Feature worked on:
+
+- Replaced per-encounter XP with one post-scenario campaign level.
+- Added scenario tiers that prevent easy scenarios from advancing units beyond the authored tier.
+- A successful campaign scenario now levels one surviving deployed unit tied for the lowest total level.
+- Added the three-level job schedule: choose skill/reaction at level 1, passive at level 2, remaining feature at level 3.
+- Added planning buttons for the pending level-1 choice and blocked new campaign scenarios until it is resolved.
+- Removed XP and configurable unlock-level fields from Resource, save, and JSON contracts.
+
+Godot concepts introduced:
+
+- Runtime campaign state can apply deterministic pseudo-random selection by hashing stable authored/runtime ids without introducing combat randomness.
+- A Resource's exported range can communicate a hard content cap directly in the Inspector.
+
+Game architecture concepts introduced:
+
+- Scenario completion, not individual encounters, owns durable character progression.
+- Scenario tier is a progression ceiling, separate from recommended combat level.
+- `CampaignRosterState` owns permanent character-sheet unlocks while `RunState` remains disposable until victory.
+
+Files touched:
+
+- `clockwork-company/scripts/campaign/campaign_roster_state.gd`
+- `clockwork-company/scripts/campaign/campaign_manager.gd`
+- `clockwork-company/scripts/run/run_state.gd`
+- `clockwork-company/scripts/data/scenario_definition.gd`
+- `clockwork-company/scripts/data/job_progress_definition.gd`
+- `clockwork-company/scripts/data/job_definition.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `clockwork-company/scripts/ui/planning_workbench_panel.gd`
+- `clockwork-company/scripts/ui/unit_action_panel.gd`
+- `clockwork-company/scripts/ui/scenario_detail_panel.gd`
+- `clockwork-company/scripts/ui/unit_detail_panel.gd`
+- `clockwork-company/scripts/ui/resource_tooltip_builder.gd`
+- `clockwork-company/scripts/modding/json_content_loader.gd`
+- `clockwork-company/scripts/tools/content_validation_check.gd`
+- `clockwork-company/resources/scenarios/*.tres`
+- `clockwork-company/modding/reference/base_content.options.md`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `MODDING.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why scenario tiers prevent low-tier farming without forbidding easy scenario replays.
+- Why knocked-out units cannot receive the post-scenario level.
+- Why the recipient selection is stable despite feeling random.
+- Why pending unlock choices live in durable campaign roster state.
+
+Manual exercise:
+
+- Complete Roadside Ambush, find the one unit with a pending level-1 choice, confirm another campaign scenario cannot start, choose skill or reaction, then confirm the next scenario becomes startable.
+
+Open questions:
+
+- When roster selection exists, should the progression summary explicitly list every deployed survivor that was eligible for the tie?
+
+## 2026-06-05 - Project-wide content hook audit
+
+Feature worked on:
+
+- Audited how current tactics, item effects, job abilities, ancestry features, enemy builds, scenario rules, logs, replay snapshots, tooltips, saves, validation, and JSON content connect.
+- Added `CONTENT_HOOK_AUDIT.md` as the current support matrix and decision record.
+- Removed the completed audit items from `TODO.md` without adding a generic mechanic framework.
+
+Godot concepts introduced:
+
+- Exported typed Resources and enums provide a useful authoring contract, but runtime resolver support can intentionally remain narrower while content is still small.
+
+Game architecture concepts introduced:
+
+- A mechanic content hook is broader than its resolver: it also needs inspection, explanation, response, persistence boundaries, validation, and modding documentation where relevant.
+- Unsupported authored combinations should be visible during iteration and only become hard validation errors once the supported matrix is stable.
+
+Files touched:
+
+- `CONTENT_HOOK_AUDIT.md`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Which scripts own tactic, item, job, and ancestry mechanic resolution.
+- Why scenario rules currently remain visible data without a generic runtime DSL.
+- Which current mechanics appear in structured events versus replay snapshots.
+- Why `pending_unlock_choice` is scaffolding rather than a complete progression contract.
+
+Manual exercise:
+
+- Pick one existing item effect and trace it from its `.tres` Resource through `ItemEffectResolver`, its combat event, its tooltip, and the JSON options documentation.
+
+Open questions:
+
+- Which concrete new mechanic will first justify stronger mechanics-content validation?
+
+## 2026-06-05 - Campaign graph reachability validation
+
+Feature worked on:
+
+- Extended the content validation check so every campaign node must be reachable from at least one starting scenario.
+- Kept malformed and out-of-campaign links handled by the existing structural validation.
+
+Godot concepts introduced:
+
+- Typed arrays can hold the small pending and visited sets needed for a straightforward graph walk in a tool script.
+
+Game architecture concepts introduced:
+
+- A campaign graph can contain valid-looking nodes and links that are still impossible for the player to reach.
+- Authoring validation should reject unreachable campaign content before runtime progression depends on it.
+
+Files touched:
+
+- `clockwork-company/scripts/tools/content_validation_check.gd`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why graph membership validation does not prove graph reachability.
+- How the validator walks outward from all starting scenarios.
+- Why invalid unlock links are not added to the reachability walk.
+
+Manual exercise:
+
+- Temporarily remove the unlock of `clocktower_claim` from the Iron Tollgate campaign node, run `tools/check_content.ps1`, then restore the link and confirm validation passes.
+
+Open questions:
+
+- Should future validation require at least one reachable campaign-completing node?
+
+## 2026-06-05 - Retired the Iron Tollgate armor stat patch
+
+Feature worked on:
+
+- Removed the hardcoded `iron_tollgate_armored_enemies` runtime armor bonus from `RunState`.
+- Kept the scenario rule Resource as a visible authoring note.
+- Updated the architecture and design notes to make enemy builds, gear, jobs, tactics, and encounter composition responsible for armor pressure.
+
+Godot concepts introduced:
+
+- No new Godot API. This pass clarified the boundary between authored Resource notes and runtime rule execution.
+
+Game architecture concepts introduced:
+
+- A scenario rule should represent a broad battlefield condition, not quietly patch individual enemy stats.
+- A visible data Resource can remain useful as an authoring note even when it no longer drives runtime behavior.
+
+Files touched:
+
+- `clockwork-company/scripts/run/run_state.gd`
+- `clockwork-company/resources/scenario_rules/iron_tollgate_armored_enemies.tres`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why armor pressure belongs in normal enemy content rather than a hidden scenario-specific stat bonus.
+- Why the Iron Tollgate rule Resource remains referenced by the scenario.
+- Why removing a one-off rule path makes future scenario-rule design easier to reason about.
+
+Manual exercise:
+
+- Practice Iron Tollgate, inspect its rule description, then inspect the enemy units and identify which normal builds create the scenario's armor pressure.
+
+Open questions:
+
+- Which future broad battlefield condition should become the next mechanical scenario rule?
+
+## 2026-06-05 - First campaign roster persistence slice
+
+Feature worked on:
+
+- Added campaign-owned roster state through `CampaignRosterState`.
+- Campaign scenarios now start from the campaign roster instead of freshly loaded demo allies.
+- Winning a campaign scenario commits the mutated `RunState` party and inventory back into campaign state.
+- Standalone practice scenarios still avoid the campaign commit path.
+- Campaign saves now include roster units, job progress, equipped gear, and unequipped campaign inventory.
+- Added scenario-local knockout tracking so defeated allies sit out later encounters in the same active scenario.
+- Replaced knockout's display-name key with a stable campaign unit instance id carried through simulator snapshots.
+- Added campaign attempted-scenario tracking so failed attempts persist knowledge without granting rewards, unlocks, XP, or roster progression.
+- Campaign losses now reload the visible planning party from durable campaign roster state instead of the failed run's disposable clones.
+- Content validation now checks campaign starting roster ids and rejects missing or enemy-only starter units.
+
+Godot concepts introduced:
+
+- Runtime `Resource` instances can carry lightweight metadata with `set_meta(...)`, which this patch uses for stable content ids after JSON/.tres reconstruction.
+- `RefCounted` state objects are useful for gameplay state that should not be editor-authored `.tres` content.
+
+Game architecture concepts introduced:
+
+- Campaign state and scenario-run state are separate ownership layers.
+- A run can mutate cloned units freely, then only become durable if the campaign explicitly commits it after scenario victory.
+- Practice mode can reuse scenario execution without writing long-term campaign state.
+- Knockout is active-scenario state, not campaign biography state yet.
+- Stable long-term unit identity and battle-local replay identity are related but not the same thing.
+- Campaign progress can remember knowledge state separately from reward/progression state.
+- Retry planning should read from campaign state, while an active attempt can mutate `RunState` clones.
+- Validation should cover new data references as soon as runtime code depends on them.
+
+Files touched:
+
+- `clockwork-company/scripts/campaign/campaign_roster_state.gd`
+- `clockwork-company/scripts/campaign/campaign_manager.gd`
+- `clockwork-company/scripts/run/run_state.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `clockwork-company/scripts/modding/json_content_loader.gd`
+- `ARCHITECTURE.md`
+- `DESIGN_NOTES.md`
+- `TODO.md`
+- `LEARNING_LOG.md`
+
+What I should now be able to explain:
+
+- Why `CampaignRosterState` owns durable roster/inventory data instead of `RunState`.
+- Why job XP from a failed campaign scenario is not committed to the campaign roster.
+- How content ids survive Resource cloning through metadata.
+- Why scenario-local knockout should reset after scenario end.
+- Why a campaign unit id is safer than display name once duplicate recruits or renaming are possible.
+- Why failed attempts mark a scenario as attempted but do not call `commit_completed_run(...)`.
+- Why reloading campaign roster after a loss protects against accidental failed-run persistence.
+- Why campaign starting roster ids should be validated through the content loader.
+
+Manual exercise:
+
+- Start Roadside Ambush from the campaign, change a unit's planning equipment before starting, clear the scenario, save the campaign, restart, load the campaign, and confirm the unit's gear/job progress is still visible in the campaign roster summary. Then try a harder scenario and watch the run summary for `Scenario knockouts` after an ally is defeated in a won encounter.
+
+Open questions:
+
+- Should scenario-local knockout be tracked by roster unit id or by a future explicit campaign unit instance id once recruits can duplicate the same base unit template?
+
 ## 2026-06-04 - Campaign graph content validation
 
 Feature worked on:
@@ -3963,3 +4264,197 @@ Manual exercise:
 Open questions:
 
 - If Codex usage guidance grows, which workflow details should move into a smaller linked document?
+
+## 2026-06-06 - Campaign tactic-list planning
+
+Feature worked on:
+
+- Added campaign planning controls that add, remove, and reorder authored loadout tactics.
+- Added an authored `Use Assigned Skill` tactic so the cross-job skill channel can be deliberately placed in the priority list.
+- Persisted ordered tactic content IDs in campaign saves and raised the compatible save version to 4.
+
+Godot concepts introduced:
+
+- Resource instances reconstructed by separate loader calls are not identity-equal, so planning compares their stable `content_id` metadata.
+- Dynamic `HBoxContainer`, `Button`, and `OptionButton` controls can present an ordered Resource list while signals keep mutation outside the panel.
+
+Game architecture concepts introduced:
+
+- `UnitActionPanel` presents tactic controls, `combat_test_scene.gd` coordinates planning, and `CampaignRosterState` owns durable tactic mutation and persistence.
+- The job default tactic remains read-only because `UnitState` appends it at combat initialization rather than storing it in the loadout's editable list.
+
+Files touched:
+
+- `clockwork-company/scripts/ui/unit_action_panel.gd`
+- `clockwork-company/scripts/ui/planning_workbench_panel.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `clockwork-company/scripts/campaign/campaign_manager.gd`
+- `clockwork-company/scripts/campaign/campaign_roster_state.gd`
+- `clockwork-company/scripts/modding/json_content_loader.gd`
+- `clockwork-company/resources/tactics/use_assigned_skill.tres`
+
+What I should now be able to explain:
+
+- Why tactic ordering belongs to the durable campaign loadout while tactic evaluation remains combat-only.
+- Why the planning UI offers authored tactics instead of editing arbitrary tactic rule fields.
+
+Manual exercise:
+
+- Select a campaign unit, add `Use Assigned Skill`, move it above an attack tactic, save/load the campaign, and confirm the order remains visible.
+
+Open questions:
+
+- Should a later progression or content-unlock system restrict which authored tactics appear in the planning library?
+
+## 2026-06-06 - Roger Spellsword progression migration
+
+Feature worked on:
+
+- Re-authored Roger's Sparkblade, Sword Memory, and Ward Flare as normal `Spellsword` job features.
+- Added authored level-3 Spellsword progress to Roger and removed his loadout-only feature copies.
+- Taught the base `.tres` content loader to preserve equipped-feature provenance when a loadout and job share the same feature Resource.
+
+Godot concepts introduced:
+
+- Standalone Resources can be referenced by multiple other Resources, preserving identity through normal editor-authored content.
+- Resource-based unit definitions can embed `JobProgressDefinition` subresources for developed recruits.
+
+Game architecture concepts introduced:
+
+- Developed recruits should use the same job-progress and unlock model as campaign-developed units.
+- The loader converts authored Resource references into source-job IDs before rebuilding the merged content graph.
+
+Files touched:
+
+- `clockwork-company/resources/jobs/spellsword.tres`
+- `clockwork-company/resources/job_features/spellsword/*.tres`
+- `clockwork-company/resources/loadouts/roger_spellsword.tres`
+- `clockwork-company/resources/units/roger_spellsword.tres`
+- `clockwork-company/scripts/modding/json_content_loader.gd`
+
+What I should now be able to explain:
+
+- Why Roger's job and loadout reference the same passive/reaction Resources.
+- Why a developed recruit needs authored job progress in addition to equipped feature references.
+
+Manual exercise:
+
+- Inspect Roger Spellsword's unit, loadout, and job Resources in Godot, then identify which file owns each part of his build.
+
+Open questions:
+
+- Which future campaign scenario should introduce Roger or another partially developed recruit?
+
+## 2026-06-06 - Learned-feature content validation
+
+Feature worked on:
+
+- Added merged-content validation for authored equipped learned features.
+- Rejects missing source-job progress, locked assigned features, and current-job skills incorrectly placed in the cross-job skill slot.
+
+Godot concepts introduced:
+
+- `assert` in the headless content-loading path turns invalid authored Resource/JSON relationships into immediate development failures.
+
+Game architecture concepts introduced:
+
+- A loadout assignment is only valid when the unit's durable job progress proves that feature was learned.
+- The cross-job assigned-skill slot remains distinct from the current-job skill channel.
+
+Files touched:
+
+- `clockwork-company/scripts/modding/json_content_loader.gd`
+- `CONTENT_HOOK_AUDIT.md`
+- `ARCHITECTURE.md`
+
+What I should now be able to explain:
+
+- Why equipping a feature and unlocking a feature are separate pieces of state.
+- Why validation runs on merged content rather than only checking base `.tres` files.
+
+Manual exercise:
+
+- Temporarily set Roger's `reaction_unlocked` to false, run `tools/check_content.ps1`, read the failure, then restore it.
+
+Open questions:
+
+- Which unsupported item-effect combinations are stable enough to validate next?
+
+## 2026-06-06 - Owned campaign gear swapping
+
+Feature worked on:
+
+- Replaced the campaign planning full-item-catalog browser with options based on owned inventory and current equipment.
+- Added durable equip, swap, and unequip transactions to `CampaignRosterState`.
+- Verified that moving gear between units survives campaign save/load.
+
+Godot concepts introduced:
+
+- UI option dictionaries can carry stable transaction data such as slot and inventory index without giving the UI ownership of mutation.
+
+Game architecture concepts introduced:
+
+- Planning party units are snapshots; durable roster and inventory mutations belong to `CampaignRosterState`.
+- Inventory and equipped slots form one ownership pool, so an item moves between them instead of being copied from a global catalog.
+
+Files touched:
+
+- `clockwork-company/scripts/campaign/campaign_roster_state.gd`
+- `clockwork-company/scripts/campaign/campaign_manager.gd`
+- `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `clockwork-company/scripts/ui/planning_workbench_panel.gd`
+- `clockwork-company/scripts/ui/unit_action_panel.gd`
+
+What I should now be able to explain:
+
+- Why selecting `None` creates an inventory item instead of deleting equipment.
+- Why the planning UI sends an option token back to campaign state rather than editing its unit snapshot.
+
+Manual exercise:
+
+- Unequip Alden's Horncap, equip it on Mira, save/load the campaign, and confirm Alden remains bareheaded while Mira keeps the Horncap.
+
+Open questions:
+
+- When duplicate item copies exist, what player-facing identity or history should distinguish them?
+
+## 2026-06-06 - Burned Chapel Confusion
+
+Feature worked on:
+
+- Replaced Burned Chapel's vague healing-pressure placeholder with the visible `Ash-Choked Rites` scenario rule.
+- Added battle-long Confusion as the first simulator-owned status.
+- Confusion skips the first otherwise-valid tactic each turn, with battle-start/tactic logs, replay snapshot state, and runtime tooltip explanation.
+
+Godot concepts introduced:
+
+- Runtime-only status state belongs on `UnitState`, not authored unit Resources or campaign saves.
+- Optional scenario-rule arrays can enter deterministic simulation without coupling the simulator to campaign state.
+
+Game architecture concepts introduced:
+
+- `StatusResolver` owns focused status application; `TacticResolver` owns the rule pressure Confusion creates.
+- The first status avoids a general duration/stacking/purge framework because its only source is battle-long scenario content.
+
+Files touched:
+
+- `clockwork-company/scripts/combat/rules/status_resolver.gd`
+- `clockwork-company/scripts/combat/rules/tactic_resolver.gd`
+- `clockwork-company/scripts/combat/runtime/unit_state.gd`
+- `clockwork-company/scripts/combat/combat_simulator.gd`
+- `clockwork-company/scripts/ui/resource_tooltip_builder.gd`
+- `clockwork-company/resources/scenario_rules/ash_chapel_confusion.tres`
+- `clockwork-company/resources/scenarios/burned_chapel.tres`
+
+What I should now be able to explain:
+
+- Exactly which tactic Confusion skips and why invalid tactics do not consume the skip.
+- Why Confusion resets between encounters and is absent from campaign saves.
+
+Manual exercise:
+
+- In Burned Chapel planning, reorder one unit's tactics so its least valuable valid tactic is first, run an encounter, and confirm the log shows Confusion skipping that tactic.
+
+Open questions:
+
+- Which second concrete status source should force the project to decide duration, refresh, stacking, purge, or immunity behavior?

@@ -9,6 +9,7 @@ class_name ScenarioDefinition
 @export_range(1, 6, 1) var party_size := 3
 @export var encounters: Array[Resource] = []
 @export var scenario_rules: Array[Resource] = []
+@export_range(1, 5, 1) var tier := 1
 @export_range(1, 99, 1) var recommended_level_min := 1
 @export_range(1, 99, 1) var recommended_level_max := 1
 @export var tags: Array[String] = []

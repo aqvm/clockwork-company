@@ -2,6 +2,7 @@ extends RefCounted
 class_name CampaignProgress
 
 var current_scenario_id := ""
+var attempted_scenario_ids: Array[String] = []
 var completed_scenario_ids: Array[String] = []
 var unlocked_scenario_ids: Array[String] = []
 var unlocked_content_ids: Array[String] = []
@@ -10,6 +11,7 @@ var campaign_completed := false
 
 func reset(starting_scenario_ids: Array[String], starting_unlocks: Array[String]) -> void:
 	current_scenario_id = ""
+	attempted_scenario_ids.clear()
 	completed_scenario_ids.clear()
 	unlocked_scenario_ids = starting_scenario_ids.duplicate()
 	unlocked_content_ids = starting_unlocks.duplicate()
@@ -24,7 +26,14 @@ func mark_scenario_started(scenario_id: String) -> void:
 	current_scenario_id = scenario_id
 
 
+func mark_scenario_attempted(scenario_id: String) -> void:
+	if not scenario_id.is_empty() and not attempted_scenario_ids.has(scenario_id):
+		attempted_scenario_ids.append(scenario_id)
+	current_scenario_id = ""
+
+
 func mark_scenario_completed(scenario_id: String) -> void:
+	mark_scenario_attempted(scenario_id)
 	if not completed_scenario_ids.has(scenario_id):
 		completed_scenario_ids.append(scenario_id)
 	current_scenario_id = ""
@@ -45,6 +54,7 @@ func unlock_content(content_id: String) -> void:
 func to_save_data() -> Dictionary:
 	return {
 		"current_scenario_id": "",
+		"attempted_scenario_ids": attempted_scenario_ids.duplicate(),
 		"completed_scenario_ids": completed_scenario_ids.duplicate(),
 		"unlocked_scenario_ids": unlocked_scenario_ids.duplicate(),
 		"unlocked_content_ids": unlocked_content_ids.duplicate(),
@@ -54,6 +64,7 @@ func to_save_data() -> Dictionary:
 
 func apply_save_data(data: Dictionary, valid_scenario_ids: Array[String]) -> void:
 	current_scenario_id = ""
+	attempted_scenario_ids = _valid_scenario_id_array(data.get("attempted_scenario_ids", []), valid_scenario_ids)
 	completed_scenario_ids = _valid_scenario_id_array(data.get("completed_scenario_ids", []), valid_scenario_ids)
 	unlocked_scenario_ids = _valid_scenario_id_array(data.get("unlocked_scenario_ids", []), valid_scenario_ids)
 	unlocked_content_ids = _string_array(data.get("unlocked_content_ids", []))

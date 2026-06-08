@@ -3,6 +3,7 @@ class_name UnitState
 
 var unit_name := ""
 var unit_id := ""
+var campaign_unit_id := ""
 var tags: Array[String] = []
 var team := ""
 var ancestry: Resource = null
@@ -18,6 +19,7 @@ var slot_index := 0
 var loadout: UnitLoadoutDefinition = null
 var current_job: JobDefinition = null
 var current_skill: SkillDefinition = null
+var assigned_skill: SkillDefinition = null
 var current_passive: PassiveDefinition = null
 var current_reaction: ReactionDefinition = null
 var equipped_items: Array[ItemDefinition] = []
@@ -26,11 +28,13 @@ var tactics: Array[TacticDefinition] = []
 var guard_armor := 0
 var effect_usage_counts := {}
 var ability_cooldowns := {}
+var statuses: Array[String] = []
 
 
 func _init(definition: UnitDefinition, unit_slot_index: int) -> void:
 	unit_name = definition.display_name
 	unit_id = _build_unit_id(definition.team, unit_slot_index, definition.display_name)
+	campaign_unit_id = String(definition.get_meta("campaign_unit_id", definition.display_name))
 	tags = definition.tags.duplicate()
 	team = definition.team
 	ancestry = definition.ancestry
@@ -50,9 +54,10 @@ func _init(definition: UnitDefinition, unit_slot_index: int) -> void:
 		tactics = loadout.tactics.duplicate()
 
 	if current_job != null:
-		current_skill = loadout.equipped_skill if loadout.equipped_skill != null else current_job.skill
-		current_passive = loadout.equipped_passive if loadout.equipped_passive != null else current_job.passive
-		current_reaction = loadout.equipped_reaction if loadout.equipped_reaction != null else current_job.reaction
+		current_skill = current_job.skill if _job_feature_unlocked(definition.job_progress, current_job, "skill") else null
+		assigned_skill = loadout.equipped_skill if _feature_is_unlocked(definition.job_progress, loadout.equipped_skill, "skill") else null
+		current_passive = loadout.equipped_passive if _feature_is_unlocked(definition.job_progress, loadout.equipped_passive, "passive") else null
+		current_reaction = loadout.equipped_reaction if _feature_is_unlocked(definition.job_progress, loadout.equipped_reaction, "reaction") else null
 		if current_job.default_tactic != null:
 			tactics.append(current_job.default_tactic)
 
@@ -72,6 +77,15 @@ func _init(definition: UnitDefinition, unit_slot_index: int) -> void:
 
 func is_alive() -> bool:
 	return hp > 0
+
+
+func add_status(status_name: String) -> void:
+	if not status_name.is_empty() and not statuses.has(status_name):
+		statuses.append(status_name)
+
+
+func has_status(status_name: String) -> bool:
+	return statuses.has(status_name)
 
 
 func total_armor() -> int:
@@ -112,6 +126,12 @@ func skill_name() -> String:
 	if current_skill == null:
 		return "none"
 	return current_skill.display_name
+
+
+func assigned_skill_name() -> String:
+	if assigned_skill == null:
+		return "none"
+	return assigned_skill.display_name
 
 
 func reaction_name() -> String:
@@ -187,21 +207,47 @@ func _can_equip_item(item: ItemDefinition) -> bool:
 	if item == null:
 		return false
 
-	if current_job == null:
-		return true
-
 	if item.slot == "Weapon":
-		return not current_job.forbid_weapon
-
+		return not _slot_forbidden("forbid_weapon")
 	if item.slot == "Armor":
-		return not current_job.forbid_armor
-
+		return not _slot_forbidden("forbid_armor")
 	if item.slot == "Helmet":
-		return not current_job.forbid_helmet
-
+		return not _slot_forbidden("forbid_helmet")
 	if item.slot == "Trinket":
-		return not current_job.forbid_trinket
+		return not _slot_forbidden("forbid_trinket")
 
+	return false
+
+
+func _slot_forbidden(property_name: String) -> bool:
+	return (current_job != null and bool(current_job.get(property_name))) or (ancestry != null and bool(ancestry.get(property_name)))
+
+
+func _job_feature_unlocked(job_progress: Array[JobProgressDefinition], job: JobDefinition, feature_type: String) -> bool:
+	for progress in job_progress:
+		if progress == null or progress.job != job:
+			continue
+		if feature_type == "skill":
+			return progress.skill_unlocked
+		if feature_type == "passive":
+			return progress.passive_unlocked
+		if feature_type == "reaction":
+			return progress.reaction_unlocked
+	return false
+
+
+func _feature_is_unlocked(job_progress: Array[JobProgressDefinition], feature: Resource, feature_type: String) -> bool:
+	if feature == null:
+		return false
+	for progress in job_progress:
+		if progress == null or progress.job == null:
+			continue
+		if feature_type == "skill" and progress.job.skill == feature:
+			return progress.skill_unlocked
+		if feature_type == "passive" and progress.job.passive == feature:
+			return progress.passive_unlocked
+		if feature_type == "reaction" and progress.job.reaction == feature:
+			return progress.reaction_unlocked
 	return false
 
 

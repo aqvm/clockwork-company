@@ -58,6 +58,8 @@ func _validate_scenario(path: String, scenario, scenarios_by_id: Dictionary, err
 		errors.append("Scenario '%s' has empty display_name." % scenario.scenario_id)
 	if scenario.encounters.is_empty():
 		errors.append("Scenario '%s' has no encounters." % scenario.scenario_id)
+	if int(scenario.tier) < 1 or int(scenario.tier) > 5:
+		errors.append("Scenario '%s' has invalid tier %d." % [scenario.scenario_id, scenario.tier])
 	for encounter in scenario.encounters:
 		if encounter == null:
 			errors.append("Scenario '%s' has a missing encounter reference." % scenario.scenario_id)
@@ -133,6 +135,49 @@ func _validate_campaign(scenarios_by_id: Dictionary, errors: Array[String]) -> v
 			errors.append("Campaign starts with unknown scenario_id '%s'." % starting_id)
 		elif not node_scenario_ids.has(starting_id):
 			errors.append("Campaign starts with scenario_id '%s' that is not part of this campaign." % starting_id)
+
+	_validate_campaign_reachability(campaign, node_scenario_ids, errors)
+	_validate_campaign_starting_roster(campaign, errors)
+
+
+func _validate_campaign_reachability(campaign, node_scenario_ids: Array[String], errors: Array[String]) -> void:
+	var reachable_ids: Array[String] = []
+	var pending_ids: Array[String] = []
+	for starting_id in campaign.starting_scenario_ids:
+		if node_scenario_ids.has(starting_id) and not pending_ids.has(starting_id):
+			pending_ids.append(starting_id)
+
+	while not pending_ids.is_empty():
+		var scenario_id := String(pending_ids.pop_front())
+		if reachable_ids.has(scenario_id):
+			continue
+		reachable_ids.append(scenario_id)
+		for node in campaign.scenario_nodes:
+			if node == null or node.scenario == null or node.scenario.scenario_id != scenario_id:
+				continue
+			for unlock_id in node.unlock_scenario_ids_on_completion:
+				if node_scenario_ids.has(unlock_id) and not reachable_ids.has(unlock_id):
+					pending_ids.append(unlock_id)
+			break
+
+	for scenario_id in node_scenario_ids:
+		if not reachable_ids.has(scenario_id):
+			errors.append("Campaign node '%s' is unreachable from the starting scenarios." % scenario_id)
+
+
+func _validate_campaign_starting_roster(campaign, errors: Array[String]) -> void:
+	if campaign.starting_roster_ids.is_empty():
+		errors.append("Campaign '%s' has no starting roster ids." % String(campaign.campaign_id))
+		return
+	for unit_id in campaign.starting_roster_ids:
+		var id_text := String(unit_id)
+		var units := JsonContentLoaderScript.load_unit_definitions_by_ids([id_text], [])
+		if units.is_empty():
+			errors.append("Campaign '%s' starts with unknown unit id '%s'." % [String(campaign.campaign_id), id_text])
+			continue
+		var unit: UnitDefinition = units[0]
+		if unit.team != "Allies":
+			errors.append("Campaign '%s' starting roster id '%s' is not an ally unit." % [String(campaign.campaign_id), id_text])
 
 
 func _validate_json_packs(errors: Array[String]) -> int:

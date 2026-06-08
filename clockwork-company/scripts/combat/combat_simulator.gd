@@ -10,6 +10,7 @@ const TacticResolverScript := preload("res://scripts/combat/rules/tactic_resolve
 const JobEffectResolverScript := preload("res://scripts/combat/rules/job_effect_resolver.gd")
 const AncestryFeatureResolverScript := preload("res://scripts/combat/rules/ancestry_feature_resolver.gd")
 const ItemEffectResolverScript := preload("res://scripts/combat/rules/item_effect_resolver.gd")
+const StatusResolverScript := preload("res://scripts/combat/rules/status_resolver.gd")
 const TargetingRulesScript := preload("res://scripts/combat/rules/targeting_rules.gd")
 const DemoBattleFactoryScript := preload("res://scripts/combat/scenarios/demo_battle_factory.gd")
 const LOG_VERSION := 1
@@ -24,12 +25,12 @@ func run_demo_battle_report(enabled_mod_pack_ids: Variant = null) -> Dictionary:
 	return run_battle_report_from_units(units, "Phase 6 demo battle")
 
 
-func run_battle_report(definitions: Array[UnitDefinition], battle_title := "Run battle") -> Dictionary:
+func run_battle_report(definitions: Array[UnitDefinition], battle_title := "Run battle", scenario_rules: Array = []) -> Dictionary:
 	var units: Array = DemoBattleFactoryScript.create_units_from_definitions(definitions)
-	return run_battle_report_from_units(units, battle_title)
+	return run_battle_report_from_units(units, battle_title, scenario_rules)
 
 
-func run_battle_report_from_units(units: Array, battle_title := "Run battle") -> Dictionary:
+func run_battle_report_from_units(units: Array, battle_title := "Run battle", scenario_rules: Array = []) -> Dictionary:
 	var log = CombatLogScript.new()
 	var actions_taken := 0
 	var replay_snapshots: Array[Dictionary] = []
@@ -53,6 +54,7 @@ func run_battle_report_from_units(units: Array, battle_title := "Run battle") ->
 	var battle_start_entry_id: int = log.add_event("Battle starts.", battle_start_event["event_type"], 0, CombatLogScript.NO_PARENT, battle_start_event["payload"], battle_start_event["tags"])
 	ItemEffectResolverScript.apply_battle_start_item_effects(log, units, battle_start_entry_id)
 	AncestryFeatureResolverScript.apply_battle_start_features(log, units, battle_start_entry_id)
+	StatusResolverScript.apply_scenario_rule_statuses(log, units, scenario_rules, battle_start_entry_id)
 	replay_snapshots.append(_build_replay_snapshot(battle_start_entry_id, 0, units))
 	log.add("")
 	_append_roster(log, units)
@@ -96,7 +98,7 @@ func run_battle_report_from_units(units: Array, battle_title := "Run battle") ->
 func _append_jobs_summary(log, units: Array) -> void:
 	var jobs_entry_id: int = log.add("Jobs:")
 	for unit in units:
-		log.add_child(jobs_entry_id, "%s: %s ancestry (%s), %s loadout, %s job. Skill: %s. Passive: %s. Reaction: %s. Final stats before battle-start effects: HP %d, physical %d, magic %d, armor %d, interval %d." % [unit.unit_name, unit.ancestry_name(), unit.ancestry_feature_name(), unit.loadout_name(), unit.current_job_name(), unit.skill_name(), unit.job_effect(), unit.reaction_name(), unit.max_hp, unit.physical_damage, unit.magic_damage, unit.total_armor(), unit.action_interval])
+		log.add_child(jobs_entry_id, "%s: %s ancestry (%s), %s loadout, %s job. Job skill: %s. Assigned skill: %s. Passive: %s. Reaction: %s. Final stats before battle-start effects: HP %d, physical %d, magic %d, armor %d, interval %d." % [unit.unit_name, unit.ancestry_name(), unit.ancestry_feature_name(), unit.loadout_name(), unit.current_job_name(), unit.skill_name(), unit.assigned_skill_name(), unit.job_effect(), unit.reaction_name(), unit.max_hp, unit.physical_damage, unit.magic_damage, unit.total_armor(), unit.action_interval])
 
 
 func _append_gear_summary(log, units: Array) -> void:
@@ -148,7 +150,10 @@ func _take_tactical_action(log, turn_entry_id: int, actor, units: Array) -> void
 
 func _resolve_tactic_action(log, turn_entry_id: int, actor, target, action: String) -> void:
 	if action == CombatConstantsScript.ACTION_JOB_SKILL:
-		_resolve_job_skill(log, turn_entry_id, actor, target)
+		_resolve_skill(log, turn_entry_id, actor, target, actor.current_skill, "job skill")
+		return
+	if action == CombatConstantsScript.ACTION_ASSIGNED_SKILL:
+		_resolve_skill(log, turn_entry_id, actor, target, actor.assigned_skill, "assigned skill")
 		return
 	if action == CombatConstantsScript.ACTION_HEAL:
 		_resolve_heal(log, turn_entry_id, actor, target)
@@ -159,14 +164,13 @@ func _resolve_tactic_action(log, turn_entry_id: int, actor, target, action: Stri
 	_resolve_attack(log, turn_entry_id, actor, target)
 
 
-func _resolve_job_skill(log, turn_entry_id: int, actor, target) -> void:
-	if actor.current_skill == null:
-		log.add_child(turn_entry_id, "%s has no job skill; default attack used." % actor.unit_name)
+func _resolve_skill(log, turn_entry_id: int, actor, target, skill: SkillDefinition, skill_source: String) -> void:
+	if skill == null:
+		log.add_child(turn_entry_id, "%s has no available %s; default attack used." % [actor.unit_name, skill_source])
 		_resolve_attack(log, turn_entry_id, actor, target)
 		return
-	var skill: SkillDefinition = actor.current_skill
 	var event := CombatEventsScript.job_effect(actor, skill.display_name, "uses %s" % skill.action.to_lower())
-	log.add_event("%s uses job skill %s." % [actor.unit_name, skill.display_name], event["event_type"], -1, turn_entry_id, event["payload"], event["tags"])
+	log.add_event("%s uses %s %s." % [actor.unit_name, skill_source, skill.display_name], event["event_type"], -1, turn_entry_id, event["payload"], event["tags"])
 	if skill.action == CombatConstantsScript.ACTION_HEAL:
 		_resolve_heal(log, turn_entry_id, actor, target, skill.amount_modifier)
 		return
@@ -243,10 +247,12 @@ func _build_roster_units(units: Array) -> Array[Dictionary]:
 	for unit in units:
 		roster_units.append({
 			"id": unit.unit_id,
+			"campaign_unit_id": unit.campaign_unit_id,
 			"name": unit.unit_name,
 			"team": unit.team,
 			"max_hp": unit.max_hp,
 			"action_interval": unit.action_interval,
+			"statuses": unit.statuses.duplicate(),
 		})
 	return roster_units
 
@@ -256,6 +262,7 @@ func _build_replay_snapshot(root_event_id: int, time: int, units: Array) -> Dict
 	for unit in units:
 		unit_snapshots.append({
 			"id": unit.unit_id,
+			"campaign_unit_id": unit.campaign_unit_id,
 			"name": unit.unit_name,
 			"team": unit.team,
 			"max_hp": unit.max_hp,
@@ -264,6 +271,7 @@ func _build_replay_snapshot(root_event_id: int, time: int, units: Array) -> Dict
 			"next_action_time": unit.next_action_time,
 			"is_alive": unit.is_alive(),
 			"is_defeated": not unit.is_alive(),
+			"statuses": unit.statuses.duplicate(),
 		})
 	return {
 		"root_event_id": root_event_id,

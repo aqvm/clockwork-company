@@ -14,8 +14,6 @@ const STATUS_EQUIPMENT := "equipment"
 const STATUS_WON := "won"
 const STATUS_LOST := "lost"
 const FIGHT_COUNT := 5
-const MAX_UNIT_JOB_LEVELS := 5
-const JOB_XP_PER_LEVEL := 1
 const ENCOUNTER_PATHS := [
 	"res://resources/encounters/phase7_fight_01_street_corner.tres",
 	"res://resources/encounters/phase7_fight_02_toll_gate.tres",
@@ -28,8 +26,8 @@ const REWARD_PATHS := [
 	"res://resources/rewards/honed_blade_for_mira.tres",
 	"res://resources/rewards/focus_lens_for_sol.tres",
 ]
-const RULE_IRON_TOLLGATE_ARMORED_ENEMIES := "iron_tollgate_armored_enemies"
-const IRON_TOLLGATE_ARMOR_BONUS := 2
+const META_CAMPAIGN_UNIT_ID := "campaign_unit_id"
+const META_CONTENT_ID := "content_id"
 
 var fight_index := 0
 var status := STATUS_ACTIVE
@@ -38,6 +36,7 @@ var encounter_definitions: Array = []
 var reward_definitions: Array = []
 var inventory_items: Array[ItemDefinition] = []
 var reward_history: Array[String] = []
+var knocked_out_unit_ids: Array[String] = []
 var last_result_summary := ""
 var loss_test_mode := false
 var active_scenario: Resource = null
@@ -50,8 +49,8 @@ func start(enabled_mod_pack_ids: Array[String], should_force_loss := false) -> v
 	reward_definitions = _load_reward_definitions()
 
 
-func start_scenario(enabled_mod_pack_ids: Array[String], scenario: Resource, should_force_loss := false, starting_allies: Array = []) -> void:
-	_start_common(enabled_mod_pack_ids, should_force_loss, starting_allies)
+func start_scenario(enabled_mod_pack_ids: Array[String], scenario: Resource, should_force_loss := false, starting_allies: Array = [], starting_inventory: Array = []) -> void:
+	_start_common(enabled_mod_pack_ids, should_force_loss, starting_allies, starting_inventory)
 	active_scenario = scenario
 	scenario_runner = ScenarioRunnerScript.new()
 	scenario_runner.start(scenario)
@@ -62,11 +61,12 @@ func start_scenario(enabled_mod_pack_ids: Array[String], scenario: Resource, sho
 	last_result_summary = "Ready to enter encounter %d: %s." % [current_fight_number(), current_encounter_name()]
 
 
-func _start_common(enabled_mod_pack_ids: Array[String], should_force_loss := false, starting_allies: Array = []) -> void:
+func _start_common(enabled_mod_pack_ids: Array[String], should_force_loss := false, starting_allies: Array = [], starting_inventory: Array = []) -> void:
 	fight_index = 0
 	status = STATUS_ACTIVE
 	inventory_items.clear()
 	reward_history.clear()
+	knocked_out_unit_ids.clear()
 	last_result_summary = ""
 	loss_test_mode = should_force_loss
 	active_scenario = null
@@ -90,6 +90,9 @@ func _start_common(enabled_mod_pack_ids: Array[String], should_force_loss := fal
 			ally.physical_damage = 1
 			ally.magic_damage = 0
 			ally.armor = 0
+
+	for item: ItemDefinition in starting_inventory:
+		inventory_items.append(_clone_item_definition(item))
 
 
 func current_fight_number() -> int:
@@ -119,6 +122,8 @@ func current_encounter_name() -> String:
 func build_current_fight_definitions() -> Array[UnitDefinition]:
 	var definitions: Array[UnitDefinition] = []
 	for ally in ally_definitions:
+		if knocked_out_unit_ids.has(_campaign_unit_id(ally)):
+			continue
 		definitions.append(_clone_unit_definition(ally))
 	var encounter = _current_encounter()
 	if encounter == null:
@@ -126,7 +131,6 @@ func build_current_fight_definitions() -> Array[UnitDefinition]:
 	for enemy in encounter.enemy_units:
 		var enemy_copy := _clone_unit_definition(enemy)
 		_apply_loss_test_enemy_pressure(enemy_copy)
-		_apply_scenario_enemy_rules(enemy_copy)
 		definitions.append(enemy_copy)
 	return definitions
 
@@ -138,8 +142,8 @@ func complete_fight(report: Dictionary) -> void:
 		last_result_summary = "Run lost on fight %d. The enemy team survived the battle." % current_fight_number()
 		return
 
+	_record_scenario_knockouts(report)
 	if fight_index >= current_fight_count() - 1:
-		_award_current_job_levels()
 		if scenario_runner != null:
 			scenario_runner.complete_current_encounter()
 		status = STATUS_WON
@@ -149,7 +153,6 @@ func complete_fight(report: Dictionary) -> void:
 			last_result_summary = "Run won after fight %d. The party cleared the five-fight slice." % current_fight_number()
 		return
 
-	_award_current_job_levels()
 	status = STATUS_REWARD
 	last_result_summary = "Encounter %d cleared. Choose one reward before encounter %d: %s." % [current_fight_number(), current_fight_number() + 1, _next_encounter_name()]
 
@@ -258,8 +261,6 @@ func status_lines() -> Array[String]:
 		lines.append("Scout note: %s" % encounter.scout_text)
 	if not last_result_summary.is_empty():
 		lines.append(last_result_summary)
-	for rule_line in _scenario_rule_effect_lines():
-		lines.append(rule_line)
 	if reward_history.is_empty():
 		lines.append("Reward history: none yet")
 	else:
@@ -275,6 +276,10 @@ func status_lines() -> Array[String]:
 	lines.append("Party equipment:")
 	for ally in ally_definitions:
 		lines.append("- %s: %s" % [ally.display_name, _equipment_summary(ally)])
+	if knocked_out_unit_ids.is_empty():
+		lines.append("Scenario knockouts: none")
+	else:
+		lines.append("Scenario knockouts: %s" % _join_string_parts(_knockout_display_names(), ", "))
 	lines.append("Job progress:")
 	for ally in ally_definitions:
 		lines.append("- %s: %s" % [ally.display_name, _job_progress_summary(ally)])
@@ -328,62 +333,26 @@ func _apply_loss_test_enemy_pressure(enemy: UnitDefinition) -> void:
 	enemy.action_interval = max(1, enemy.action_interval - 3)
 
 
-func _apply_scenario_enemy_rules(enemy: UnitDefinition) -> void:
-	if _scenario_has_rule(RULE_IRON_TOLLGATE_ARMORED_ENEMIES):
-		enemy.armor += IRON_TOLLGATE_ARMOR_BONUS
-
-
-func _scenario_rule_effect_lines() -> Array[String]:
-	var lines: Array[String] = []
-	if _scenario_has_rule(RULE_IRON_TOLLGATE_ARMORED_ENEMIES):
-		lines.append("Rule effect: Iron Tollgate Armor gives each enemy +%d armor for this scenario." % IRON_TOLLGATE_ARMOR_BONUS)
-	return lines
-
-
-func _scenario_has_rule(rule_id: String) -> bool:
+func _record_scenario_knockouts(report: Dictionary) -> void:
 	if active_scenario == null:
-		return false
-	for rule in active_scenario.scenario_rules:
-		if rule != null and rule.rule_id == rule_id:
-			return true
-	return false
-
-
-func _award_current_job_levels() -> void:
-	for ally in ally_definitions:
-		if ally.loadout == null or ally.loadout.current_job == null:
-			continue
-		if _total_job_levels(ally) >= MAX_UNIT_JOB_LEVELS:
-			continue
-		var progress := _ensure_job_progress(ally, ally.loadout.current_job)
-		progress.xp += 1
-		while progress.xp >= JOB_XP_PER_LEVEL and progress.level < 5 and _total_job_levels(ally) < MAX_UNIT_JOB_LEVELS:
-			progress.xp -= JOB_XP_PER_LEVEL
-			progress.level += 1
-			_apply_job_unlocks(progress)
-
-
-func _ensure_job_progress(unit: UnitDefinition, job: JobDefinition) -> JobProgressDefinition:
-	for progress: JobProgressDefinition in unit.job_progress:
-		if progress != null and progress.job == job:
-			return progress
-	var progress: JobProgressDefinition = JobProgressDefinitionScript.new()
-	progress.job = job
-	unit.job_progress.append(progress)
-	return progress
-
-
-func _apply_job_unlocks(progress: JobProgressDefinition) -> void:
-	var job := progress.job
-	if job == null:
 		return
-	if progress.level >= job.skill_unlock_level:
-		progress.skill_unlocked = true
-	if progress.level >= job.passive_unlock_level:
-		progress.passive_unlocked = true
-	if progress.level >= job.reaction_unlock_level:
-		progress.reaction_unlocked = true
-	progress.pending_unlock_choice = false
+	var snapshots: Array = report.get("replay_snapshots", [])
+	if snapshots.is_empty():
+		return
+	var final_snapshot = snapshots[snapshots.size() - 1]
+	if not (final_snapshot is Dictionary):
+		return
+	for raw_unit in final_snapshot.get("units", []):
+		if not (raw_unit is Dictionary):
+			continue
+		var unit_snapshot: Dictionary = raw_unit
+		if String(unit_snapshot.get("team", "")) != CombatConstantsScript.TEAM_ALLY:
+			continue
+		if bool(unit_snapshot.get("is_alive", true)):
+			continue
+		var campaign_unit_id := String(unit_snapshot.get("campaign_unit_id", ""))
+		if not campaign_unit_id.is_empty() and not knocked_out_unit_ids.has(campaign_unit_id):
+			knocked_out_unit_ids.append(campaign_unit_id)
 
 
 func _total_job_levels(unit: UnitDefinition) -> int:
@@ -409,7 +378,7 @@ func _job_progress_summary(unit: UnitDefinition) -> String:
 		if progress.reaction_unlocked:
 			unlocks.append("reaction")
 		var unlock_text := "no unlocks" if unlocks.is_empty() else _join_string_parts(unlocks, ",")
-		parts.append("%s L%d XP%d [%s]" % [progress.job.display_name, progress.level, progress.xp, unlock_text])
+		parts.append("%s L%d [%s%s]" % [progress.job.display_name, progress.level, unlock_text, ", choice pending" if progress.pending_unlock_choice else ""])
 	if parts.is_empty():
 		return "none"
 	return _join_string_parts(parts, "; ")
@@ -425,18 +394,8 @@ func _find_ally(unit_name: String) -> UnitDefinition:
 func _can_equip_item(unit: UnitDefinition, item: ItemDefinition) -> bool:
 	if item == null:
 		return false
-	if unit.loadout == null or unit.loadout.current_job == null:
-		return true
-	var job := unit.loadout.current_job
-	if item.slot == "Weapon":
-		return not job.forbid_weapon
-	if item.slot == "Armor":
-		return not job.forbid_armor
-	if item.slot == "Helmet":
-		return not job.forbid_helmet
-	if item.slot == "Trinket":
-		return not job.forbid_trinket
-	return false
+	var property_name := "forbid_%s" % item.slot.to_lower()
+	return not ((unit.loadout != null and unit.loadout.current_job != null and bool(unit.loadout.current_job.get(property_name))) or (unit.ancestry != null and bool(unit.ancestry.get(property_name))))
 
 
 func _equipment_summary(unit: UnitDefinition) -> String:
@@ -467,6 +426,8 @@ func _ensure_loadout_clone(unit: UnitDefinition) -> UnitLoadoutDefinition:
 
 func _clone_unit_definition(source: UnitDefinition) -> UnitDefinition:
 	var copy: UnitDefinition = UnitDefinitionScript.new()
+	_copy_content_id(source, copy)
+	_copy_campaign_unit_id(source, copy)
 	copy.display_name = source.display_name
 	copy.tags = source.tags.duplicate()
 	copy.team = source.team
@@ -483,6 +444,7 @@ func _clone_unit_definition(source: UnitDefinition) -> UnitDefinition:
 
 func _clone_loadout_definition(source: UnitLoadoutDefinition) -> UnitLoadoutDefinition:
 	var copy: UnitLoadoutDefinition = UnitLoadoutDefinitionScript.new()
+	_copy_content_id(source, copy)
 	copy.display_name = source.display_name
 	copy.current_job = source.current_job
 	copy.equipped_skill = source.equipped_skill
@@ -498,6 +460,7 @@ func _clone_loadout_definition(source: UnitLoadoutDefinition) -> UnitLoadoutDefi
 
 func _clone_item_definition(source: ItemDefinition) -> ItemDefinition:
 	var copy: ItemDefinition = ItemDefinitionScript.new()
+	_copy_content_id(source, copy)
 	copy.display_name = source.display_name
 	copy.tags = source.tags.duplicate()
 	copy.slot = source.slot
@@ -518,13 +481,57 @@ func _clone_job_progress(source: Array[JobProgressDefinition]) -> Array[JobProgr
 		var copy: JobProgressDefinition = JobProgressDefinitionScript.new()
 		copy.job = progress.job
 		copy.level = progress.level
-		copy.xp = progress.xp
 		copy.skill_unlocked = progress.skill_unlocked
 		copy.passive_unlocked = progress.passive_unlocked
 		copy.reaction_unlocked = progress.reaction_unlocked
 		copy.pending_unlock_choice = progress.pending_unlock_choice
 		results.append(copy)
 	return results
+
+
+func _content_id(resource: Resource) -> String:
+	if resource == null:
+		return ""
+	if resource.has_meta(META_CONTENT_ID):
+		return String(resource.get_meta(META_CONTENT_ID))
+	if not resource.resource_path.is_empty():
+		return resource.resource_path.get_file().get_basename()
+	return ""
+
+
+func _copy_content_id(source: Resource, target: Resource) -> void:
+	var id := _content_id(source)
+	if not id.is_empty():
+		target.set_meta(META_CONTENT_ID, id)
+
+
+func _campaign_unit_id(unit: UnitDefinition) -> String:
+	if unit == null:
+		return ""
+	if unit.has_meta(META_CAMPAIGN_UNIT_ID):
+		return String(unit.get_meta(META_CAMPAIGN_UNIT_ID))
+	return unit.display_name
+
+
+func _copy_campaign_unit_id(source: UnitDefinition, target: UnitDefinition) -> void:
+	var id := _campaign_unit_id(source)
+	if not id.is_empty():
+		target.set_meta(META_CAMPAIGN_UNIT_ID, id)
+
+
+func _knockout_display_names() -> Array[String]:
+	var names: Array[String] = []
+	for id in knocked_out_unit_ids:
+		var unit := _find_ally_by_campaign_unit_id(id)
+		names.append(unit.display_name if unit != null else id)
+	return names
+
+
+func _find_ally_by_campaign_unit_id(id: String) -> UnitDefinition:
+	for ally in ally_definitions:
+		if _campaign_unit_id(ally) == id:
+			return ally
+	return null
 
 
 func _join_string_parts(parts: Array[String], separator: String) -> String:

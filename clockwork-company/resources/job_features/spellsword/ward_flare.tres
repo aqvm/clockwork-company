@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ReactionDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/reaction_definition.gd" id="1_reaction"]
+
+[resource]
+script = ExtResource("1_reaction")
+display_name = "Ward Flare"
+tags = Array[String](["spellblade", "reaction", "ward"])
+trigger = "HP Below Threshold"
+condition = "Self HP Below Percent"
+reaction_type = "Gain Armor"
+amount = 4
+threshold_percent = 50
+cooldown_turns = 4

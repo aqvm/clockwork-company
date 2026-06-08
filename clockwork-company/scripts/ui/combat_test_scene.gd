@@ -47,7 +47,6 @@ var active_campaign_scenario_id := ""
 var selected_scenario: Resource = null
 var selected_unit_name := ""
 var planning_party: Array[UnitDefinition] = []
-var available_items: Array[ItemDefinition] = []
 
 
 func _ready() -> void:
@@ -72,7 +71,6 @@ func _ready() -> void:
 	_setup_run_controls()
 	_setup_planning_panel()
 	_setup_tooltip_presenter()
-	_load_item_catalog()
 	_start_first_road_campaign()
 
 
@@ -115,7 +113,8 @@ func _load_combat_preview() -> void:
 		return
 
 	var simulator: CombatSimulator = CombatSimulatorScript.new()
-	var report: Dictionary = simulator.run_battle_report(run_state.build_current_fight_definitions(), run_state.current_fight_title())
+	var scenario_rules: Array = run_state.active_scenario.scenario_rules if run_state.active_scenario != null else []
+	var report: Dictionary = simulator.run_battle_report(run_state.build_current_fight_definitions(), run_state.current_fight_title(), scenario_rules)
 	var log_lines: Array[String] = report.get("lines", [])
 	var static_lines: Array[String] = []
 
@@ -216,6 +215,12 @@ func _setup_planning_panel() -> void:
 	planning_panel.connect("unit_selected", _on_party_unit_pressed)
 	planning_panel.connect("planning_item_requested", _on_planning_item_requested)
 	planning_panel.connect("equip_option_requested", _on_planning_equip_pressed)
+	planning_panel.connect("unlock_choice_requested", _on_unlock_choice_requested)
+	planning_panel.connect("planning_job_requested", _on_planning_job_requested)
+	planning_panel.connect("planning_feature_requested", _on_planning_feature_requested)
+	planning_panel.connect("planning_tactic_add_requested", _on_planning_tactic_add_requested)
+	planning_panel.connect("planning_tactic_remove_requested", _on_planning_tactic_remove_requested)
+	planning_panel.connect("planning_tactic_move_requested", _on_planning_tactic_move_requested)
 	_connect_panel_tooltips(planning_panel)
 	parent_vbox.add_child(planning_panel)
 	parent_vbox.move_child(planning_panel, log_split.get_index())
@@ -241,7 +246,7 @@ func _start_new_run(should_force_loss: bool) -> void:
 func _start_first_road_campaign() -> void:
 	_stop_log_replay()
 	campaign_manager = CampaignManagerScript.new()
-	campaign_manager.start(FIRST_ROAD_CAMPAIGN)
+	campaign_manager.start(FIRST_ROAD_CAMPAIGN, _enabled_mod_pack_ids_array())
 	active_campaign_scenario_id = ""
 	run_state = null
 	selected_scenario = null
@@ -254,7 +259,9 @@ func _start_scenario_run(scenario: Resource, should_mutate_campaign := true) -> 
 	_stop_log_replay()
 	run_state = RunStateScript.new()
 	active_campaign_scenario_id = scenario.scenario_id if should_mutate_campaign else ""
-	run_state.start_scenario(_enabled_mod_pack_ids_array(), scenario, false, planning_party)
+	var starting_party: Array = campaign_manager.campaign_party_snapshot() if should_mutate_campaign and campaign_manager != null else planning_party
+	var starting_inventory: Array = campaign_manager.campaign_inventory_snapshot() if should_mutate_campaign and campaign_manager != null else []
+	run_state.start_scenario(_enabled_mod_pack_ids_array(), scenario, false, starting_party, starting_inventory)
 	_load_planning_party_from_run()
 	_refresh_planning_panel()
 	_show_run_state_without_combat_preview()
@@ -397,28 +404,16 @@ func _on_scenario_selected(scenario: Resource) -> void:
 
 func _load_planning_party() -> void:
 	planning_party.clear()
+	if campaign_manager != null:
+		planning_party = campaign_manager.campaign_party_snapshot()
+		if selected_unit_name.is_empty() and not planning_party.is_empty():
+			selected_unit_name = planning_party[0].display_name
+		return
 	for definition: UnitDefinition in JsonContentLoaderScript.load_demo_unit_definitions(_enabled_mod_pack_ids_array()):
 		if definition.team == "Allies":
 			planning_party.append(definition)
 	if selected_unit_name.is_empty() and not planning_party.is_empty():
 		selected_unit_name = planning_party[0].display_name
-
-
-func _load_item_catalog() -> void:
-	available_items.clear()
-	var directory := DirAccess.open("res://resources/items")
-	if directory == null:
-		return
-	directory.list_dir_begin()
-	var file_name := directory.get_next()
-	while not file_name.is_empty():
-		if not directory.current_is_dir() and file_name.ends_with(".tres"):
-			var item = load("res://resources/items/%s" % file_name)
-			if item is ItemDefinition:
-				available_items.append(item)
-		file_name = directory.get_next()
-	directory.list_dir_end()
-	available_items.sort_custom(func(a, b): return a.display_name < b.display_name)
 
 
 func _load_planning_party_from_run() -> void:
@@ -448,6 +443,17 @@ func _render_unit_actions() -> void:
 	var is_equipment_state: bool = run_state != null and run_state.status == RunStateScript.STATUS_EQUIPMENT
 	var equip_options: Array = run_state.equip_options() if is_equipment_state else []
 	var planning_item_options := _planning_item_options(selected_unit)
+	var unlock_options: Array = []
+	var job_options: Array = []
+	var learned_feature_options := {}
+	var tactic_options: Array = []
+	if campaign_manager != null and selected_unit != null:
+		var unit_id := _campaign_unit_id(selected_unit)
+		unlock_options = campaign_manager.pending_unlock_options_for_unit(unit_id)
+		job_options = _planning_job_options(selected_unit)
+		for feature_type in ["skill", "passive", "reaction"]:
+			learned_feature_options[feature_type] = campaign_manager.learned_feature_options(unit_id, feature_type)
+		tactic_options = _planning_tactic_options(selected_unit)
 	planning_panel.call(
 		"show_actions",
 		selected_scenario,
@@ -460,7 +466,11 @@ func _render_unit_actions() -> void:
 		replay_is_active,
 		is_equipment_state,
 		planning_item_options,
-		equip_options
+		equip_options,
+		unlock_options,
+		job_options,
+		learned_feature_options,
+		tactic_options
 	)
 
 
@@ -468,6 +478,8 @@ func _selected_scenario_can_start() -> bool:
 	if selected_scenario == null or campaign_manager == null:
 		return false
 	if _has_active_scenario_run():
+		return false
+	if campaign_manager.has_pending_unlock_choices():
 		return false
 	if campaign_manager.progress.completed_scenario_ids.has(selected_scenario.scenario_id):
 		return false
@@ -503,6 +515,8 @@ func _scenario_campaign_status(scenario: Resource) -> String:
 		return "practice"
 	if campaign_manager.progress.completed_scenario_ids.has(scenario.scenario_id):
 		return "complete"
+	if campaign_manager.progress.attempted_scenario_ids.has(scenario.scenario_id):
+		return "attempted"
 	if campaign_manager.progress.is_scenario_unlocked(scenario.scenario_id):
 		return "available"
 	return "locked"
@@ -511,6 +525,101 @@ func _scenario_campaign_status(scenario: Resource) -> String:
 func _on_party_unit_pressed(unit_name: String) -> void:
 	selected_unit_name = unit_name
 	_refresh_planning_panel()
+
+
+func _on_unlock_choice_requested(choice: String) -> void:
+	if campaign_manager == null:
+		return
+	var unit := _find_planning_unit(selected_unit_name)
+	if unit == null:
+		return
+	if campaign_manager.resolve_pending_unlock(_campaign_unit_id(unit), choice):
+		_load_planning_party()
+		_show_campaign_landing()
+
+
+func _on_planning_job_requested(job: JobDefinition) -> void:
+	if campaign_manager == null or _has_active_scenario_run():
+		return
+	var unit := _find_planning_unit(selected_unit_name)
+	if unit != null and campaign_manager.set_current_job(_campaign_unit_id(unit), job):
+		_load_planning_party()
+		_refresh_planning_panel()
+
+
+func _on_planning_feature_requested(feature_type: String, feature: Resource) -> void:
+	if campaign_manager == null or _has_active_scenario_run():
+		return
+	var unit := _find_planning_unit(selected_unit_name)
+	if unit != null and campaign_manager.assign_learned_feature(_campaign_unit_id(unit), feature_type, feature):
+		_load_planning_party()
+		_refresh_planning_panel()
+
+
+func _planning_job_options(unit: UnitDefinition) -> Array:
+	var options: Array = []
+	if campaign_manager == null or unit == null:
+		return options
+	var current_job = unit.loadout.current_job if unit.loadout != null else null
+	for job in campaign_manager.available_jobs():
+		options.append({"job": job, "label": job.display_name, "equipped": _content_id(job) == _content_id(current_job)})
+	return options
+
+
+func _planning_tactic_options(unit: UnitDefinition) -> Array:
+	var options: Array = []
+	if campaign_manager == null or unit == null:
+		return options
+	var loadout = _ensure_planning_loadout(unit)
+	for tactic in loadout.tactics:
+		options.append({"tactic": tactic, "label": tactic.display_name, "equipped": true})
+	for tactic in campaign_manager.available_tactics():
+		if not _resources_include_id(loadout.tactics, tactic):
+			options.append({"tactic": tactic, "label": tactic.display_name, "equipped": false})
+	return options
+
+
+func _on_planning_tactic_add_requested(tactic: TacticDefinition) -> void:
+	var unit := _editable_planning_unit()
+	if unit == null or tactic == null:
+		return
+	var loadout = _ensure_planning_loadout(unit)
+	if not _resources_include_id(loadout.tactics, tactic):
+		loadout.tactics.append(tactic)
+		_commit_planning_tactics(unit)
+
+
+func _on_planning_tactic_remove_requested(index: int) -> void:
+	var unit := _editable_planning_unit()
+	if unit == null or unit.loadout == null or index < 0 or index >= unit.loadout.tactics.size():
+		return
+	unit.loadout.tactics.remove_at(index)
+	_commit_planning_tactics(unit)
+
+
+func _on_planning_tactic_move_requested(index: int, direction: int) -> void:
+	var unit := _editable_planning_unit()
+	if unit == null or unit.loadout == null:
+		return
+	var destination := index + direction
+	if index < 0 or index >= unit.loadout.tactics.size() or destination < 0 or destination >= unit.loadout.tactics.size():
+		return
+	var tactic := unit.loadout.tactics[index]
+	unit.loadout.tactics.remove_at(index)
+	unit.loadout.tactics.insert(destination, tactic)
+	_commit_planning_tactics(unit)
+
+
+func _editable_planning_unit() -> UnitDefinition:
+	if campaign_manager == null or _has_active_scenario_run():
+		return null
+	return _find_planning_unit(selected_unit_name)
+
+
+func _commit_planning_tactics(unit: UnitDefinition) -> void:
+	if campaign_manager.set_tactics(_campaign_unit_id(unit), unit.loadout.tactics):
+		_load_planning_party()
+		_refresh_planning_panel()
 
 
 func _on_planning_equip_pressed(index: int) -> void:
@@ -560,32 +669,20 @@ func _on_tooltip_exited() -> void:
 
 
 func _planning_item_options(unit: UnitDefinition) -> Array:
-	var options := []
-	if unit == null:
-		return options
-	var loadout = _ensure_planning_loadout(unit)
-	for item: ItemDefinition in available_items:
-		if not _item_allowed_for_planning_unit(unit, item):
-			continue
-		var current_item = _current_slot_item(loadout, item.slot)
-		options.append({
-			"slot": item.slot,
-			"item": item,
-			"label": "%s%s" % [item.display_name, " [Equipped]" if item == current_item else ""],
-			"equipped": item == current_item,
-		})
-	return options
+	if campaign_manager == null or unit == null or _has_active_scenario_run():
+		return []
+	return campaign_manager.planning_item_options(_campaign_unit_id(unit))
 
 
-func _on_planning_item_requested(slot: String, item: ItemDefinition) -> void:
+func _on_planning_item_requested(option: Dictionary) -> void:
+	if campaign_manager == null or _has_active_scenario_run():
+		return
 	var unit := _find_planning_unit(selected_unit_name)
-	if unit == null or item == null:
+	if unit == null:
 		return
-	if item.slot != slot or not _item_allowed_for_planning_unit(unit, item):
-		return
-	var loadout = _ensure_planning_loadout(unit)
-	_set_slot_item(loadout, slot, item)
-	_refresh_planning_panel()
+	if campaign_manager.equip_planning_item(_campaign_unit_id(unit), String(option.get("slot", "")), int(option.get("inventory_index", -1))):
+		_load_planning_party()
+		_refresh_planning_panel()
 
 
 func _ensure_planning_loadout(unit: UnitDefinition):
@@ -595,49 +692,35 @@ func _ensure_planning_loadout(unit: UnitDefinition):
 	return unit.loadout
 
 
-func _current_slot_item(loadout, slot: String):
-	if slot == "Weapon":
-		return loadout.weapon
-	if slot == "Armor":
-		return loadout.armor
-	if slot == "Helmet":
-		return loadout.helmet
-	if slot == "Trinket":
-		return loadout.trinket
-	return null
-
-
-func _set_slot_item(loadout, slot: String, item: ItemDefinition) -> void:
-	if slot == "Weapon":
-		loadout.weapon = item
-	elif slot == "Armor":
-		loadout.armor = item
-	elif slot == "Helmet":
-		loadout.helmet = item
-	elif slot == "Trinket":
-		loadout.trinket = item
-
-
-func _item_allowed_for_planning_unit(unit: UnitDefinition, item: ItemDefinition) -> bool:
-	if item == null or unit.loadout == null or unit.loadout.current_job == null:
-		return true
-	var job := unit.loadout.current_job
-	if item.slot == "Weapon":
-		return not job.forbid_weapon
-	if item.slot == "Armor":
-		return not job.forbid_armor
-	if item.slot == "Helmet":
-		return not job.forbid_helmet
-	if item.slot == "Trinket":
-		return not job.forbid_trinket
-	return false
-
-
 func _find_planning_unit(unit_name: String) -> UnitDefinition:
 	for unit: UnitDefinition in planning_party:
 		if unit.display_name == unit_name:
 			return unit
 	return null
+
+
+func _campaign_unit_id(unit: UnitDefinition) -> String:
+	if unit == null:
+		return ""
+	return String(unit.get_meta("campaign_unit_id", unit.display_name))
+
+
+func _content_id(resource: Resource) -> String:
+	if resource == null:
+		return ""
+	if resource.has_meta("content_id"):
+		return String(resource.get_meta("content_id"))
+	if not resource.resource_path.is_empty():
+		return resource.resource_path.get_file().get_basename()
+	return ""
+
+
+func _resources_include_id(resources: Array, candidate: Resource) -> bool:
+	var candidate_id := _content_id(candidate)
+	for resource in resources:
+		if _content_id(resource) == candidate_id:
+			return true
+	return false
 
 
 func _show_campaign_landing() -> void:
@@ -820,11 +903,21 @@ func _on_replay_finished() -> void:
 	replay_is_active = false
 	if run_state != null and run_state.status == RunStateScript.STATUS_ACTIVE:
 		run_state.complete_fight(cached_battle_report)
+		var should_reload_campaign_party := false
 		if run_state.status == RunStateScript.STATUS_WON and campaign_manager != null and not active_campaign_scenario_id.is_empty():
+			campaign_manager.commit_completed_run(run_state)
 			campaign_manager.complete_scenario(active_campaign_scenario_id)
 			active_campaign_scenario_id = ""
 			selected_scenario = null
-		_load_planning_party_from_run()
+			should_reload_campaign_party = true
+		elif run_state.status == RunStateScript.STATUS_LOST and campaign_manager != null and not active_campaign_scenario_id.is_empty():
+			campaign_manager.fail_scenario(active_campaign_scenario_id)
+			active_campaign_scenario_id = ""
+			should_reload_campaign_party = true
+		if should_reload_campaign_party:
+			_load_planning_party()
+		else:
+			_load_planning_party_from_run()
 		combat_summary.clear()
 		cached_static_lines = _build_run_static_lines([])
 		_append_lines(combat_summary, cached_static_lines)
