@@ -6,6 +6,8 @@ const TargetingRulesScript := preload("res://scripts/combat/rules/targeting_rule
 
 static func describe_tactic(tactic: TacticDefinition) -> String:
 	var rules_text := "%s -> %s -> %s" % [tactic.condition, tactic.action, tactic.target]
+	if tactic.foretell_enabled:
+		rules_text = "Foretell: %s" % rules_text
 	if tactic.display_name.is_empty():
 		return rules_text
 	return "%s (%s)" % [tactic.display_name, rules_text]

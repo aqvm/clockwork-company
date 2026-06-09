@@ -210,7 +210,7 @@ Optional fields:
 - `amount` (`int`)
 - `cooldown_turns` (`int`): unit-turn cooldown after the passive fires. `0` means no cooldown.
 
-`Forecast` is a capability rather than an automatic passive effect. It makes forecast-aware tactics available while equipped.
+`Forecast` is a capability rather than an automatic passive effect. It makes tactics with `foretell_enabled: true` available while equipped.
 
 ## `jobs[].reaction` keys
 
@@ -235,9 +235,10 @@ Currently implemented reaction timing:
 Optional fields:
 - `display_name` (`String`)
 - `tags` (`Array[String]`)
-- `condition` (`String enum`): `Always`, `Self HP Below Half`, `Ally HP Below Half`, `Enemy Alive`, `Ally Would Be Defeated Before Next Turn`
+- `condition` (`String enum`): `Always`, `Self HP Below Half`, `Ally HP Below Half`, `Enemy Alive`
 - `action` (`String enum`): `Attack`, `Heal`, `Guard`, `Job Skill`, `Assigned Skill`
-- `target` (`String enum`): `Self`, `Lowest HP Ally`, `Frontmost Enemy`, `First Foreseen Ally`
+- `target` (`String enum`): `Self`, `Lowest HP Ally`, `Frontmost Enemy`
+- `foretell_enabled` (`Boolean`, default `false`)
 
 ## `tactics[]` keys
 
@@ -247,11 +248,12 @@ Required:
 Optional fields:
 - `display_name` (`String`)
 - `tags` (`Array[String]`)
-- `condition` (`String enum`): `Always`, `Self HP Below Half`, `Ally HP Below Half`, `Enemy Alive`, `Ally Would Be Defeated Before Next Turn`
+- `condition` (`String enum`): `Always`, `Self HP Below Half`, `Ally HP Below Half`, `Enemy Alive`
 - `action` (`String enum`): `Attack`, `Heal`, `Guard`, `Job Skill`, `Assigned Skill`
-- `target` (`String enum`): `Self`, `Lowest HP Ally`, `Frontmost Enemy`, `First Foreseen Ally`
+- `target` (`String enum`): `Self`, `Lowest HP Ally`, `Frontmost Enemy`
+- `foretell_enabled` (`Boolean`, default `false`)
 
-Forecast-aware tactics require an equipped `Forecast` passive. Forecasting speculates one deterministic future using the actor's first eligible non-forecast tactic, stops before another living forecaster acts, and ends before the actor's next turn.
+Foretell tactics require an equipped `Forecast` passive. Foretell follows one deterministic baseline where all Foretell toggles are ignored and tactics evaluate normally, selects the first future state where the tactic's normal condition is true, evaluates its normal target there, and ends before the actor's next turn.
 
 ## `loadouts[]` keys
 

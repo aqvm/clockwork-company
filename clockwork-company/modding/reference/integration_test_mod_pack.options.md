@@ -27,8 +27,8 @@ Purpose: exercise as many modding code paths as possible in one toggleable pack.
 - Tests updated job modifiers/effect behavior in existing units.
 
 6. Tactic add:
-- Adds `guard_then_attack_it` and `avert_foreseen_defeat_it`.
-- Tests custom tactic id flow plus forecast-aware condition and target reconstruction.
+- Adds `guard_then_attack_it` and `foretell_heal_it`.
+- Tests custom tactic id flow plus normal condition/target and `foretell_enabled` reconstruction.
 
 7. Tactic override:
 - Overrides existing `attack_frontmost`.

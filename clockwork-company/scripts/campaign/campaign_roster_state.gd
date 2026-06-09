@@ -7,6 +7,7 @@ const UnitDefinitionScript := preload("res://scripts/data/unit_definition.gd")
 const UnitLoadoutDefinitionScript := preload("res://scripts/data/unit_loadout_definition.gd")
 const ItemDefinitionScript := preload("res://scripts/data/item_definition.gd")
 const JobProgressDefinitionScript := preload("res://scripts/data/job_progress_definition.gd")
+const TacticDefinitionScript := preload("res://scripts/data/tactic_definition.gd")
 const META_CAMPAIGN_UNIT_ID := "campaign_unit_id"
 const META_CONTENT_ID := "content_id"
 const MAX_UNIT_LEVEL := 5
@@ -205,7 +206,7 @@ func set_tactics(campaign_unit_id: String, tactics: Array[TacticDefinition]) -> 
 	if unit.loadout == null:
 		unit.loadout = UnitLoadoutDefinitionScript.new()
 		unit.loadout.display_name = "%s Campaign Loadout" % unit.display_name
-	unit.loadout.tactics = tactics.duplicate()
+	unit.loadout.tactics = _clone_tactics(tactics)
 	return true
 
 
@@ -358,7 +359,7 @@ func _unit_to_save_data(unit: UnitDefinition) -> Dictionary:
 			"armor_id": _content_id(unit.loadout.armor),
 			"helmet_id": _content_id(unit.loadout.helmet),
 			"trinket_id": _content_id(unit.loadout.trinket),
-			"tactic_ids": _content_ids(unit.loadout.tactics),
+			"tactics": _tactics_to_save_data(unit.loadout.tactics),
 		}
 	return {
 		"campaign_unit_id": _campaign_unit_id(unit),
@@ -386,14 +387,21 @@ func _apply_loadout_save_data(unit: UnitDefinition, raw_loadout: Variant, enable
 	unit.loadout.armor = _load_item_or_keep(data, "armor_id", unit.loadout.armor, enabled_mod_pack_ids)
 	unit.loadout.helmet = _load_item_or_keep(data, "helmet_id", unit.loadout.helmet, enabled_mod_pack_ids)
 	unit.loadout.trinket = _load_item_or_keep(data, "trinket_id", unit.loadout.trinket, enabled_mod_pack_ids)
-	var saved_tactics = data.get("tactic_ids", null)
+	var saved_tactics = data.get("tactics", null)
 	if saved_tactics is Array:
 		var tactics: Array[TacticDefinition] = []
-		for raw_tactic_id in saved_tactics:
-			var tactic := JsonContentLoaderScript.load_tactic_definition_by_id(String(raw_tactic_id), enabled_mod_pack_ids)
+		for raw_tactic in saved_tactics:
+			var tactic := _tactic_from_save_data(raw_tactic, enabled_mod_pack_ids)
 			if tactic != null:
 				tactics.append(tactic)
 		unit.loadout.tactics = tactics
+	elif data.get("tactic_ids", null) is Array:
+		var legacy_tactics: Array[TacticDefinition] = []
+		for raw_tactic_id in data["tactic_ids"]:
+			var tactic := JsonContentLoaderScript.load_tactic_definition_by_id(String(raw_tactic_id), enabled_mod_pack_ids)
+			if tactic != null:
+				legacy_tactics.append(_clone_tactic(tactic))
+		unit.loadout.tactics = legacy_tactics
 
 
 func _load_item_or_keep(data: Dictionary, key: String, current: ItemDefinition, enabled_mod_pack_ids: Array[String]) -> ItemDefinition:
@@ -513,8 +521,56 @@ func _clone_loadout_definition(source: UnitLoadoutDefinition) -> UnitLoadoutDefi
 	copy.armor = _clone_item_definition(source.armor) if source.armor != null else null
 	copy.helmet = _clone_item_definition(source.helmet) if source.helmet != null else null
 	copy.trinket = _clone_item_definition(source.trinket) if source.trinket != null else null
-	copy.tactics = source.tactics.duplicate()
+	copy.tactics = _clone_tactics(source.tactics)
 	return copy
+
+
+func _clone_tactics(source: Array[TacticDefinition]) -> Array[TacticDefinition]:
+	var results: Array[TacticDefinition] = []
+	for tactic in source:
+		if tactic != null:
+			results.append(_clone_tactic(tactic))
+	return results
+
+
+func _clone_tactic(source: TacticDefinition) -> TacticDefinition:
+	var copy: TacticDefinition = TacticDefinitionScript.new()
+	_copy_content_id(source, copy)
+	copy.display_name = source.display_name
+	copy.tags = source.tags.duplicate()
+	copy.condition = source.condition
+	copy.action = source.action
+	copy.target = source.target
+	copy.foretell_enabled = source.foretell_enabled
+	return copy
+
+
+func _tactics_to_save_data(tactics: Array[TacticDefinition]) -> Array[Dictionary]:
+	var results: Array[Dictionary] = []
+	for tactic in tactics:
+		results.append({
+			"tactic_id": _content_id(tactic),
+			"display_name": tactic.display_name,
+			"condition": tactic.condition,
+			"action": tactic.action,
+			"target": tactic.target,
+			"foretell_enabled": tactic.foretell_enabled,
+		})
+	return results
+
+
+func _tactic_from_save_data(raw: Variant, enabled_mod_pack_ids: Array[String]) -> TacticDefinition:
+	if not (raw is Dictionary):
+		return null
+	var data: Dictionary = raw
+	var base := JsonContentLoaderScript.load_tactic_definition_by_id(String(data.get("tactic_id", "")), enabled_mod_pack_ids)
+	var tactic := _clone_tactic(base) if base != null else TacticDefinitionScript.new()
+	tactic.display_name = String(data.get("display_name", tactic.display_name))
+	tactic.condition = String(data.get("condition", tactic.condition))
+	tactic.action = String(data.get("action", tactic.action))
+	tactic.target = String(data.get("target", tactic.target))
+	tactic.foretell_enabled = bool(data.get("foretell_enabled", tactic.foretell_enabled))
+	return tactic
 
 
 func _clone_item_definition(source: ItemDefinition) -> ItemDefinition:
@@ -704,15 +760,6 @@ func _campaign_unit_ids(units: Array[UnitDefinition]) -> Array[String]:
 	var ids: Array[String] = []
 	for unit in units:
 		ids.append(_campaign_unit_id(unit))
-	return ids
-
-
-func _content_ids(resources: Array) -> Array[String]:
-	var ids: Array[String] = []
-	for resource in resources:
-		var id := _content_id(resource)
-		if not id.is_empty():
-			ids.append(id)
 	return ids
 
 

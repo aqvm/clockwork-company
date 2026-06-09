@@ -93,8 +93,8 @@ func clone_runtime_state():
 	clone.campaign_unit_id = campaign_unit_id
 	clone.tags = tags.duplicate()
 	clone.team = team
-	clone.ancestry = ancestry
-	clone.current_ancestry_feature = current_ancestry_feature
+	clone.ancestry = _duplicate_resource(ancestry)
+	clone.current_ancestry_feature = _duplicate_resource(current_ancestry_feature)
 	clone.max_hp = max_hp
 	clone.hp = hp
 	clone.physical_damage = physical_damage
@@ -103,21 +103,50 @@ func clone_runtime_state():
 	clone.action_interval = action_interval
 	clone.next_action_time = next_action_time
 	clone.slot_index = slot_index
-	clone.loadout = loadout
-	clone.current_job = current_job
-	clone.current_skill = current_skill
-	clone.assigned_skill = assigned_skill
-	clone.current_passive = current_passive
-	clone.current_reaction = current_reaction
-	clone.equipped_items = equipped_items.duplicate()
-	clone.skipped_items = skipped_items.duplicate()
-	clone.tactics = tactics.duplicate()
+	clone.loadout = _duplicate_resource(loadout)
+	clone.current_job = _duplicate_resource(current_job)
+	clone.current_skill = _duplicate_resource(current_skill)
+	clone.assigned_skill = _duplicate_resource(assigned_skill)
+	clone.current_passive = _duplicate_resource(current_passive)
+	clone.current_reaction = _duplicate_resource(current_reaction)
+	clone.equipped_items = _duplicate_items(equipped_items)
+	clone.skipped_items = _duplicate_items(skipped_items)
+	clone.tactics = _duplicate_tactics(tactics)
 	clone.guard_armor = guard_armor
 	clone.effect_usage_counts = effect_usage_counts.duplicate(true)
 	clone.ability_cooldowns = ability_cooldowns.duplicate(true)
-	clone.statuses = statuses.duplicate(true)
+	clone.statuses = _duplicate_statuses(statuses)
 	clone.next_status_instance_id = next_status_instance_id
 	return clone
+
+
+func _duplicate_resource(resource: Resource):
+	if resource == null:
+		return null
+	return resource.duplicate(true)
+
+
+func _duplicate_items(items: Array[ItemDefinition]) -> Array[ItemDefinition]:
+	var copies: Array[ItemDefinition] = []
+	for item in items:
+		copies.append(_duplicate_resource(item))
+	return copies
+
+
+func _duplicate_tactics(source_tactics: Array[TacticDefinition]) -> Array[TacticDefinition]:
+	var copies: Array[TacticDefinition] = []
+	for tactic in source_tactics:
+		copies.append(_duplicate_resource(tactic))
+	return copies
+
+
+func _duplicate_statuses(source_statuses: Array[Dictionary]) -> Array[Dictionary]:
+	var copies: Array[Dictionary] = []
+	for source in source_statuses:
+		var copy := source.duplicate(true)
+		copy["definition"] = _duplicate_resource(source.get("definition", null))
+		copies.append(copy)
+	return copies
 
 
 func add_status(status: Resource, source_name: String, duration_turns: int, is_permanent: bool) -> String:

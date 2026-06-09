@@ -52,9 +52,9 @@ const REACTION_TYPE_VALUES := {"Gain Armor": true, "Heal Self": true, "Damage At
 const ANCESTRY_FEATURE_TRIGGER_VALUES := {"Battle Start": true, "Attack": true, "Kill": true, "Damaged": true, "HP Below Threshold": true}
 const ANCESTRY_FEATURE_CONDITION_VALUES := {"Always": true, "Self HP Below Percent": true}
 const ANCESTRY_FEATURE_TYPE_VALUES := {"Gain Armor": true, "Bonus Damage": true, "Heal Self": true, "Damage Attacker": true, "Hasten Self": true, "Gain Physical Damage": true}
-const TACTIC_CONDITION_VALUES := {"Always": true, "Self HP Below Half": true, "Ally HP Below Half": true, "Enemy Alive": true, "Ally Would Be Defeated Before Next Turn": true}
+const TACTIC_CONDITION_VALUES := {"Always": true, "Self HP Below Half": true, "Ally HP Below Half": true, "Enemy Alive": true}
 const TACTIC_ACTION_VALUES := {"Attack": true, "Heal": true, "Guard": true, "Job Skill": true, "Assigned Skill": true}
-const TACTIC_TARGET_VALUES := {"Self": true, "Lowest HP Ally": true, "Frontmost Enemy": true, "First Foreseen Ally": true}
+const TACTIC_TARGET_VALUES := {"Self": true, "Lowest HP Ally": true, "Frontmost Enemy": true}
 
 
 static func load_demo_unit_definitions(enabled_mod_pack_ids: Variant = null) -> Array[UnitDefinition]:
@@ -696,6 +696,7 @@ static func _build_tactic_resource(raw: Variant) -> TacticDefinition:
 	tactic.condition = String(src.get("condition", "Enemy Alive"))
 	tactic.action = String(src.get("action", "Job Skill"))
 	tactic.target = String(src.get("target", "Frontmost Enemy"))
+	tactic.foretell_enabled = bool(src.get("foretell_enabled", false))
 	return tactic
 
 
@@ -789,6 +790,7 @@ static func _tactic_resource_to_data(tactic: TacticDefinition) -> Dictionary:
 		"condition": tactic.condition,
 		"action": tactic.action,
 		"target": tactic.target,
+		"foretell_enabled": tactic.foretell_enabled,
 	}
 
 
@@ -848,6 +850,7 @@ static func _build_tactic_resources(tactics_data: Dictionary) -> Dictionary:
 		tactic.condition = String(src.get("condition", "Always"))
 		tactic.action = String(src.get("action", "Attack"))
 		tactic.target = String(src.get("target", "Frontmost Enemy"))
+		tactic.foretell_enabled = bool(src.get("foretell_enabled", false))
 		out[id] = tactic
 	return out
 

@@ -61,7 +61,8 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 - Add debuff purge options eventually, but keep them specific and intentionally scarce. Avoid a universal, always-accessible cleanse that erases ailment matchup pressure.
 - Avoid generic ailment resistance stats. Occasional authored immunities are acceptable when they make a unit, enemy, item, or scenario identity clearer.
 - Keep statuses small. Finite owner-turn duration, explicit permanent application, and authored `Ignore`/`Refresh`/`Intensify` stack rules are implemented; do not add independent layered instances, purge, or immunity rules until focused content needs them.
-- Keep forecasting narrow. The first deterministic single-baseline forecast and ally-defeat heal tactic are implemented; do not add alternative-future search, arbitrary timeline rewriting, or continuous forecasting until focused content needs them.
+- Keep Foretell narrow. The deterministic single-baseline, first-future-match evaluation mode is implemented; do not add event predicates, alternative futures, per-target horizons, arbitrary timeline rewriting, or continuous forecasting until focused content needs them.
+- Periodically profile and review Foretell's speculative clone boundary as combat mechanics expand. Deep Resource duplication is intentionally conservative while future mechanics may alter tactics, jobs, loadouts, statuses, or whole unit forms during combat; revisit allocation cost and possible baseline reuse when larger teams, heavily Foretell-configured units, or transformation mechanics make the tradeoff measurable.
 - Consider collapsible structured combat log groups instead of plain indented text.
 
 ## Replay and Presentation
@@ -75,7 +76,7 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 
 ## Units, Jobs, Progression, and Roster
 
-- Keep tactic planning library-based for now: planning can add, remove, and order authored tactics, while creating or editing tactic rules remains a content-authoring task.
+- Keep tactic planning template-based for now: planning can add, remove, order, and alter the current condition/action/target/Foretell fields, but should not grow a larger predicate/action language without focused design work.
 - Keep the first authored job unlock schedule small: level 1 chooses skill or reaction, level 2 unlocks the passive, and level 3 unlocks the remaining skill or reaction.
 - Keep the first real progression implementation content-small: build the unlock tracking, choice, equip, persistence, and UI plumbing around the current one-skill/one-passive/one-reaction job scaffold before adding larger job ability catalogs.
 - Add persistent unit careers across scenarios.

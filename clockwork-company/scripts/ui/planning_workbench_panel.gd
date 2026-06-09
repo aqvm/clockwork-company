@@ -13,6 +13,7 @@ signal planning_feature_requested(feature_type: String, feature: Resource)
 signal planning_tactic_add_requested(tactic: TacticDefinition)
 signal planning_tactic_remove_requested(index: int)
 signal planning_tactic_move_requested(index: int, direction: int)
+signal planning_tactic_changed(index: int, field: String, value: Variant)
 signal resource_tooltip_requested(source: Control, resource: Resource)
 signal glossary_tooltip_requested(source: Control, term: String)
 signal tooltip_cleared
@@ -41,6 +42,7 @@ func _ready() -> void:
 	unit_action_panel.connect("planning_tactic_add_requested", func(tactic): planning_tactic_add_requested.emit(tactic))
 	unit_action_panel.connect("planning_tactic_remove_requested", func(index): planning_tactic_remove_requested.emit(index))
 	unit_action_panel.connect("planning_tactic_move_requested", func(index, direction): planning_tactic_move_requested.emit(index, direction))
+	unit_action_panel.connect("planning_tactic_changed", func(index, field, value): planning_tactic_changed.emit(index, field, value))
 	_forward_tooltip_signals(unit_action_panel)
 
 

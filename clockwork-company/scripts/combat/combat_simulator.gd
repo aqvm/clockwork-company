@@ -139,22 +139,27 @@ func _append_roster(log, units: Array) -> void:
 
 
 func _take_tactical_action(log, turn_entry_id: int, actor, units: Array) -> void:
-	var forecast := forecast_for_actor(actor, units)
-	if forecast.has("first_defeated_ally"):
-		var foreseen_ally = forecast["first_defeated_ally"]
-		log.add_child(turn_entry_id, "Forecast %s: %s foresees %s defeated before their next turn." % [actor.current_passive.display_name, actor.unit_name, foreseen_ally.unit_name])
-	var decision: Dictionary = TacticResolverScript.choose_action(actor, units, forecast)
+	var decision: Dictionary = TacticResolverScript.choose_action(actor, units, func(tactic): return foretell_target_for_tactic(actor, units, tactic))
 	_log_and_resolve_decision(log, turn_entry_id, actor, decision)
 
 
-func forecast_for_actor(actor, units: Array) -> Dictionary:
-	return ForecastServiceScript.forecast(
+func foretell_target_for_tactic(actor, units: Array, tactic: TacticDefinition):
+	return ForecastServiceScript.foretell_target(
 		actor,
 		units,
+		tactic,
 		_execute_speculative_current_action,
-		_execute_speculative_future_turn
+		_execute_speculative_future_turn,
+		_evaluate_speculative_tactic_target
 	)
 
+func _evaluate_speculative_tactic_target(tactic: TacticDefinition, actor, units: Array):
+	if not TacticResolverScript.condition_matches(tactic.condition, actor, units):
+		return {"matched": false}
+	return {
+		"matched": true,
+		"target": TacticResolverScript.find_tactic_target(tactic.target, actor, units),
+	}
 
 func _log_and_resolve_decision(log, turn_entry_id: int, actor, decision: Dictionary) -> void:
 	for skipped_reason: String in decision.get("skipped_reasons", []):
@@ -173,7 +178,7 @@ func _execute_speculative_current_action(actor, units: Array) -> void:
 	var log = CombatLogScript.new()
 	var turn_entry_id: int = log.add("Speculative current action")
 	var active_status_instance_ids: Array[int] = actor.status_instance_ids()
-	var decision: Dictionary = TacticResolverScript.choose_action(actor, units, {}, false)
+	var decision: Dictionary = TacticResolverScript.choose_action(actor, units, Callable(), false)
 	_resolve_tactic_action(log, turn_entry_id, actor, decision["target"], decision["action"])
 	StatusResolverScript.elapse_turn_statuses(log, turn_entry_id, actor, active_status_instance_ids)
 
@@ -185,7 +190,7 @@ func _execute_speculative_future_turn(actor, units: Array) -> void:
 	_clear_guard_if_needed(log, turn_entry_id, actor)
 	var active_status_instance_ids: Array[int] = actor.status_instance_ids()
 	StatusResolverScript.apply_turn_start_statuses(log, turn_entry_id, actor)
-	var decision: Dictionary = TacticResolverScript.choose_action(actor, units, {}, false)
+	var decision: Dictionary = TacticResolverScript.choose_action(actor, units, Callable(), false)
 	_resolve_tactic_action(log, turn_entry_id, actor, decision["target"], decision["action"])
 	StatusResolverScript.elapse_turn_statuses(log, turn_entry_id, actor, active_status_instance_ids)
 	if actor.is_alive():

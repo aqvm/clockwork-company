@@ -124,12 +124,13 @@
   ],
   "tactics": [
     {
-      "id": "avert_foreseen_defeat_it",
-      "display_name": "Avert Foreseen Defeat IT",
+      "id": "foretell_heal_it",
+      "display_name": "Foretell Heal IT",
       "tags": ["forecast", "heal"],
-      "condition": "Ally Would Be Defeated Before Next Turn",
+      "condition": "Ally HP Below Half",
       "action": "Heal",
-      "target": "First Foreseen Ally"
+      "target": "Lowest HP Ally",
+      "foretell_enabled": true
     },
     {
       "id": "guard_then_attack_it",

@@ -4547,3 +4547,25 @@ Manual exercise:
 ### Exercise
 
 - Move `Avert Foreseen Defeat` below Marra's first eligible non-forecast tactic, predict which baseline action the forecast will simulate, then run the focused forecast check after restoring the intended order.
+
+## 2026-06-09 - Player-authored tactics and Foretell correction
+
+### What changed
+
+- Replaced forecast-specific tactic conditions and targets with `foretell_enabled` on any normal tactic.
+- Added planning controls for condition, action, target, and Foretell, plus durable authored tactic save records.
+- Removed Marra's automatically granted `Avert Foreseen Defeat` tactic while preserving her Forecast passive.
+- Updated speculation to use the first future condition match, select its target in speculative state, map that target to real state, and execute the action now.
+- Changed speculative turns to ignore Foretell toggles and evaluate the complete tactic list normally instead of skipping Foretell tactics.
+- Duplicated every Resource held by speculative `UnitState` clones, including nested loadout Resources and status definitions.
+
+### What I learned
+
+- A future-evaluation mode composes better than forecast-only predicates because the same small tactic vocabulary serves normal and speculative decisions.
+- Player-alterable Resources must be deep-cloned before editing; duplicating only the tactic array still shares each tactic object.
+- The first matching future state and the first future state with a valid target are different rules. Foretell intentionally stops at the first condition match, even if its target selector yields no target.
+- Runtime dictionaries and scalar fields were already isolated, so speculative status application did not leak. Shared definition Resources were the remaining risk because future simulation code might mutate them.
+
+### Exercise
+
+- Give Marra `Ally HP Below Half -> Heal -> Lowest HP Ally`, enable Foretell, run a fight with Forecast equipped, then unequip Forecast and confirm the configured tactic remains but is reported unavailable.
