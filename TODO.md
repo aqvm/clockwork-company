@@ -54,13 +54,13 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 
 ## Combat and Rules
 
-- Add more status effects only when focused content needs them. Burned Chapel now supplies the first narrow status through its battle-long Confusion rule.
+- Add more status effects only when focused content needs them. Confusion is the first ailment and Reconstitution is the first boon.
 - Design ailments as distinct rule pressures, not generic damage-over-time variants. Each ailment should create a readable tactical question or matchup hook.
 - Good ailment directions to explore: bleed that punishes faster units or future movement, confusion that skips the first tactic the unit would have used, armor corrosion that changes mitigation math, silence-like effects that disrupt skill use, or panic effects that alter targeting.
 - Ailments may either punish a unit's strengths or exploit a unit's weaknesses. Both paradigms are valid and can coexist.
 - Add debuff purge options eventually, but keep them specific and intentionally scarce. Avoid a universal, always-accessible cleanse that erases ailment matchup pressure.
 - Avoid generic ailment resistance stats. Occasional authored immunities are acceptable when they make a unit, enemy, item, or scenario identity clearer.
-- Keep ailments small. Confusion has clear logs, battle-long scenario scope, runtime tooltip support, and simulator-owned state; do not generalize duration, stacking, purge, immunity, or application rules until another concrete status needs them.
+- Keep statuses small. Finite owner-turn duration, explicit permanent application, and authored `Ignore`/`Refresh`/`Intensify` stack rules are implemented; do not add independent layered instances, purge, or immunity rules until focused content needs them.
 - Consider collapsible structured combat log groups instead of plain indented text.
 
 ## Replay and Presentation

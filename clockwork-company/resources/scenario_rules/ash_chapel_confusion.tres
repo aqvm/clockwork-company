@@ -6,5 +6,5 @@
 script = ExtResource("1_rule")
 rule_id = "ash_chapel_confusion"
 display_name = "Ash-Choked Rites"
-description = "Every unit has Confusion for each encounter: the first otherwise-valid tactic it would use each turn is skipped."
+description = "Every unit permanently has Confusion for each encounter: the first otherwise-valid tactic it would use each turn is skipped."
 tags = ["status", "confusion", "ritual"]

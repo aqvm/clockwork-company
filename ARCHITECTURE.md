@@ -18,7 +18,7 @@ Responsible for:
 - discrete-event clock
 - targeting
 - damage/healing
-- status effects eventually
+- authored boons and ailments
 - win/loss detection
 - combat log generation
 
@@ -186,7 +186,7 @@ The first playable test now opens as a scenario workbench with the older combat 
 - `clockwork-company/scripts/scenario/scenario_runner.gd` owns the current scenario progress wrapper: active scenario id, encounter index, completion, and scenario summary lines.
 - `clockwork-company/scripts/campaign/campaign_manager.gd` owns campaign unlock progression: available scenarios, attempted scenarios, completed scenarios, unlocked content ids, and campaign completion.
 - `clockwork-company/scripts/campaign/campaign_roster_state.gd` owns durable campaign roster state: starting roster construction from campaign unit ids, stable campaign unit instance ids, campaign-party snapshots for scenario starts, victory commits from `RunState`, campaign inventory, and roster/inventory JSON save data.
-- `clockwork-company/scripts/modding/json_content_loader.gd` owns JSON pack loading/merging/validation and runtime Resource reconstruction for ancestries, items, jobs, tactics, loadouts, and units.
+- `clockwork-company/scripts/modding/json_content_loader.gd` owns JSON pack loading/merging/validation and runtime Resource reconstruction for statuses, ancestries, items, jobs, tactics, loadouts, and units.
 - Base `.tres` loadouts can author equipped learned passives/reactions/skills by referencing the same standalone feature Resource as the owning job; `JsonContentLoader` infers that job provenance before reconstructing content.
 - `clockwork-company/scripts/tools/content_validation_check.gd` owns repository content sanity checks for scenarios, scenario rules, scenario rewards, campaign identity/graph reachability/starting-roster references, JSON pack loading, and required JSON sidecar docs. The loader validation it invokes also rejects equipped learned features without matching unlocked job progress.
 - `CombatLog` and `CombatLogEntry` are dedicated helper classes in `scripts/combat/logging/combat_log.gd` that build readable text logs and structured event metadata.
@@ -201,9 +201,10 @@ The first playable test now opens as a scenario workbench with the older combat 
 - `clockwork-company/scripts/data/ancestry_feature_definition.gd` defines the limited ancestry feature payload, including trigger, condition, feature type, amount, cooldown, and notes.
 - `clockwork-company/scripts/data/item_definition.gd` defines the editable item data Resource type, including flat modifiers, tags, and authored effect references.
 - `clockwork-company/scripts/data/effect_definition.gd` defines the first declarative effect payload for data-authored triggers, conditions, target selectors, amounts, limits, and tags.
+- `clockwork-company/scripts/data/status_definition.gd` defines authored battle-local statuses, including boon/ailment polarity, stacking rule/cap, and the small implemented status-type vocabulary.
 - `clockwork-company/scripts/data/job_definition.gd` defines the editable job data Resource type, including per-level stat growth, optional equipment forbids, unlock levels, and skill/passive/reaction/default-tactic references.
 - `clockwork-company/scripts/data/job_progress_definition.gd` defines one unit's progress in one job: level, XP, unlocked feature flags, and future choice scaffolding.
-- `clockwork-company/scripts/data/skill_definition.gd` defines the limited active action payload a job can grant.
+- `clockwork-company/scripts/data/skill_definition.gd` defines the limited active action payload a job can grant, including status-application skills.
 - `clockwork-company/scripts/data/passive_definition.gd` defines the limited passive combat hook a job can grant, including cooldown turns.
 - `clockwork-company/scripts/data/reaction_definition.gd` defines the limited reaction hook a job can grant, including trigger, condition, and cooldown turns.
 - `clockwork-company/scripts/data/unit_loadout_definition.gd` defines a reusable build package with a current job, optional equipped learned abilities, weapon, armor, helmet, trinket, and tactic list.
@@ -317,11 +318,11 @@ Combat log responsibility split:
 - Battle-start item and ancestry effects are grouped under a timed `t=000` battle-start event for replay, while the static setup summary skips that event block and keeps the final roster after battle-start effects.
 - The replay shows one timestamped parent combat event per second. Child explanation lines without their own timestamp appear with the most recent parent event.
 - The combat test scene sizes the game window to roughly three quarters of the current monitor's usable area and stacks setup above replay in a vertical split. The setup pane is resized after each run to use the smaller of its content height or half the available log area.
-- The replay and setup panes now apply UI-layer keyword highlighting to plain simulator lines by wrapping BBCode-safe text in color tags by category (timestamp, attacks, damage, healing, guard, tactics, job effects, item triggers, defeats, and result).
+- The replay and setup panes now apply UI-layer keyword highlighting to plain simulator lines by wrapping BBCode-safe text in color tags by category (timestamp, attacks, damage, healing, guard, tactics, job effects, item triggers, boons, ailments, defeats, and result).
 - The replay pane now has a left/right split: left is the existing text replay, right is a lightweight unit visualization panel separated by a vertical rule.
 - The visualization panel is still presentation-only: it reads initial roster snapshots, simulator-authored replay unit-state snapshots, and structured replay events from the simulator report, then draws unit circles, health arcs, cooldown bars, and lightweight VFX without changing simulator rules.
 - Structured replay events still drive text grouping, turn pulses, and floating HP changes; replay snapshots are the authoritative source for current unit HP, timing, and defeated state when present.
-- Replay snapshots also carry battle-local status names so runtime tooltips can explain Confusion without presentation code inferring combat state.
+- Replay snapshots also carry battle-local status summaries so runtime tooltips can explain polarity, rules text, source, and Reconstitution's stored damage without presentation code inferring combat state.
 - Highlight colors are configured in a dedicated `CombatLogHighlightPalette` Resource so color tuning stays editor-visible and does not require editing code constants.
 - The scenario workbench includes a default/colorblind highlight palette toggle using separate `CombatLogHighlightPalette` Resources.
 - This is presentation only: `run_demo_battle()` still finishes the deterministic simulation before replay starts.
@@ -340,7 +341,7 @@ Tactic responsibility split:
 - Campaign planning can add, remove, and reorder authored tactic Resources in that loadout list; the current job's default tactic remains read-only and is appended later by `UnitState`.
 - `CampaignRosterState` owns durable campaign tactic ordering and serializes stable tactic content IDs; `JsonContentLoader` reconstructs those Resources when loading a save.
 - `UnitState` owns the runtime copy of that priority-ordered tactic list for this combat copy.
-- `UnitState` owns battle-local status names; `StatusResolver` applies concrete scenario-sourced statuses, and `TacticResolver` owns Confusion's tactic-selection pressure.
+- `UnitState` owns battle-local status instances, stacks, remaining owner-turn duration, and mechanic state; `StatusResolver` applies/refreshes/intensifies/expires authored statuses and resolves Reconstitution, while `TacticResolver` owns Confusion's tactic-selection pressure.
 - `CombatSimulator` owns tactic evaluation, target validation, and action resolution.
 - The current planning UI selects from an authored tactic library rather than constructing arbitrary tactic rules.
 - The UI still receives plain rendered log lines and does not know how tactics are evaluated.

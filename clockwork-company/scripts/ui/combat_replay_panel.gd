@@ -320,6 +320,7 @@ func _build_visual_replay_model() -> void:
 			"floating_text_pulse_started_at": -9999.0,
 			"defeat_time": -9999.0,
 			"is_defeated": false,
+			"statuses": unit.get("statuses", []).duplicate(true),
 		}
 		units_by_name[name] = state
 		if not unit_id.is_empty():
@@ -375,6 +376,7 @@ func _apply_snapshot_for_root_event(root_event_id: int) -> bool:
 		state["next_action_time"] = float(unit_snapshot.get("next_action_time", state.get("next_action_time", 0.0)))
 		state["is_alive"] = bool(unit_snapshot.get("is_alive", state.get("is_alive", true)))
 		state["is_defeated"] = bool(unit_snapshot.get("is_defeated", not bool(state["is_alive"])))
+		state["statuses"] = unit_snapshot.get("statuses", state.get("statuses", [])).duplicate(true)
 		if bool(state["is_defeated"]):
 			state["defeat_time"] = displayed_sim_time
 	active_event_actor_name = actor_name
@@ -399,7 +401,7 @@ func _apply_structured_events_to_visual_model(events: Array) -> void:
 		if event_type == "turn_start":
 			_apply_turn_start_event(payload)
 			continue
-		if event_type == "damage" or event_type == "heal":
+		if event_type == "damage" or event_type == "heal" or event_type == "status_triggered":
 			_apply_hp_change_event(payload)
 			continue
 		if event_type == "defeat":

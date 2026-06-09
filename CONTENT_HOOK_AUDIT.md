@@ -14,7 +14,7 @@ This audit checks whether current mechanics can be authored, applied, inspected,
 | Ancestry growth and features | `AncestryDefinition` with one feature Resource; JSON ancestries | `UnitState` applies growth; `AncestryFeatureResolver` applies supported hooks | Unit detail/tooltips, setup logs, and ancestry-feature combat events |
 | Enemy builds | Normal unit/loadout/job/item/tactic/ancestry Resources and JSON units | Same `UnitState` and simulator paths as allies | Scenario/encounter traversal, unit detail/tooltips, setup logs, replay |
 | Scenario rules | `ScenarioRuleDefinition` Resources referenced by scenarios | `StatusResolver` implements Burned Chapel's broad Confusion rule; Iron Tollgate remains an authoring note | Scenario detail, Resource tooltips, battle-start logs, and replay runtime tooltips expose the rule |
-| Statuses | Concrete simulator-owned status names applied by focused resolvers | `StatusResolver` applies Confusion; `TacticResolver` enforces its selection pressure | Battle-start/tactic logs, replay snapshots, and runtime unit tooltips expose current statuses |
+| Statuses | `StatusDefinition` Resources and JSON statuses; skills and declarative item effects reference authored statuses | `StatusResolver` applies statuses and resolves Reconstitution; `TacticResolver` enforces Confusion's selection pressure | Status events, battle-start/tactic logs, replay snapshots, Resource tooltips, and runtime unit tooltips expose current statuses |
 | Combat state | Simulator-owned `UnitState`, structured events, and snapshots | `CombatSimulator` is authoritative | Logs explain rule outcomes; replay snapshots expose HP, timing, alive state, statuses, and stable ids |
 
 ## Cross-Cutting Findings
@@ -31,7 +31,7 @@ This audit checks whether current mechanics can be authored, applied, inspected,
 - Tactics, jobs, ancestry features, and item effects use focused resolver scripts instead of unrelated UI or run-flow code.
 - Enemy mechanics use the same content vocabulary as allied builds, so the player can inspect and eventually reuse the ideas that defeated them.
 - Current response hooks are the small existing buildcraft vocabulary: armor, physical versus magic damage, healing, guard, action timing, targeting priorities, tags, and equipment/job tradeoffs.
-- Broader statuses, purge rules, and targeting vocabulary should wait for focused content that needs them.
+- Status application now has focused skill and battle-start item-effect hooks with finite owner-turn duration by default, explicit permanent application, and authored ignore/refresh/intensify stacking. Broader triggers, independent layered instances, purge rules, and targeting vocabulary should wait for focused content that needs them.
 
 ### Logs, Replay, and Tooltips
 
@@ -61,7 +61,7 @@ This audit checks whether current mechanics can be authored, applied, inspected,
 
 The audit does not add new systems. Existing backlog items already cover the meaningful gaps:
 
-- add broader status duration/stacking/purge/application hooks only when focused content needs them
+- add independent layered status instances, purge, or broader application hooks only when focused content needs them
 - extend replay snapshots only when richer visuals need additional authoritative state
 - update JSON sidecars and repository-level modding docs whenever mechanic schemas or keywords change
 - strengthen mechanics-content validation once unsupported versus intentionally placeholder combinations become stable enough to enforce

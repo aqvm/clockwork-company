@@ -73,7 +73,10 @@ func run_battle_report_from_units(units: Array, battle_title := "Run battle", sc
 
 		actor.tick_ability_cooldowns()
 		_clear_guard_if_needed(log, turn_entry_id, actor)
+		var active_status_instance_ids: Array[int] = actor.status_instance_ids()
+		StatusResolverScript.apply_turn_start_statuses(log, turn_entry_id, actor)
 		_take_tactical_action(log, turn_entry_id, actor, units)
+		StatusResolverScript.elapse_turn_statuses(log, turn_entry_id, actor, active_status_instance_ids)
 		actions_taken += 1
 		if actor.is_alive():
 			TurnSchedulerScript.schedule_next_turn(actor)
@@ -177,6 +180,9 @@ func _resolve_skill(log, turn_entry_id: int, actor, target, skill: SkillDefiniti
 	if skill.action == CombatConstantsScript.ACTION_GUARD:
 		_resolve_guard(log, turn_entry_id, actor, skill.amount_modifier)
 		return
+	if skill.action == CombatConstantsScript.ACTION_APPLY_STATUS:
+		StatusResolverScript.apply_status(log, turn_entry_id, target, skill.status, skill.display_name, skill.status_duration_turns, skill.status_is_permanent)
+		return
 	_resolve_attack(log, turn_entry_id, actor, target, skill.amount_modifier, skill.tags)
 
 
@@ -201,6 +207,7 @@ func _resolve_attack(log, turn_entry_id: int, actor, target, skill_damage_bonus 
 	var damage_taken: int = max(1, physical_damage_taken + magic_component)
 	var previous_hp: int = target.hp
 	target.hp = max(0, target.hp - damage_taken)
+	StatusResolverScript.record_damage(target, previous_hp - target.hp)
 	_assert_damage_event_consistency(damage_taken, previous_hp, target.hp)
 	var damage_event := CombatEventsScript.damage(actor, target, damage_taken, target_armor, previous_hp, target.hp)
 	log.add_event("Damage dealt: %d. Physical %d after armor %d, magic %d. HP: %d -> %d." % [damage_taken, physical_damage_taken, target_armor, magic_component, previous_hp, target.hp], damage_event["event_type"], CombatLogScript.NO_TIME, attack_entry_id, damage_event["payload"], damage_event["tags"])
@@ -252,7 +259,7 @@ func _build_roster_units(units: Array) -> Array[Dictionary]:
 			"team": unit.team,
 			"max_hp": unit.max_hp,
 			"action_interval": unit.action_interval,
-			"statuses": unit.statuses.duplicate(),
+			"statuses": unit.status_snapshots(),
 		})
 	return roster_units
 
@@ -271,7 +278,7 @@ func _build_replay_snapshot(root_event_id: int, time: int, units: Array) -> Dict
 			"next_action_time": unit.next_action_time,
 			"is_alive": unit.is_alive(),
 			"is_defeated": not unit.is_alive(),
-			"statuses": unit.statuses.duplicate(),
+			"statuses": unit.status_snapshots(),
 		})
 	return {
 		"root_event_id": root_event_id,

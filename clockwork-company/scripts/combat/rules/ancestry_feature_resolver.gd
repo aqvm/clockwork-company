@@ -2,6 +2,7 @@ extends RefCounted
 class_name AncestryFeatureResolver
 
 const CombatEventsScript := preload("res://scripts/combat/logging/combat_events.gd")
+const StatusResolverScript := preload("res://scripts/combat/rules/status_resolver.gd")
 
 const TRIGGER_BATTLE_START := "Battle Start"
 const TRIGGER_ATTACK := "Attack"
@@ -70,6 +71,7 @@ static func _apply_feature(log, parent_entry_id: int, owner, other, feature) -> 
 	elif feature.feature_type == FEATURE_DAMAGE_ATTACKER and other != null:
 		var previous_other_hp: int = other.hp
 		other.hp = max(0, other.hp - feature.amount)
+		StatusResolverScript.record_damage(other, previous_other_hp - other.hp)
 		var damage_event := CombatEventsScript.ancestry_feature(owner, feature.display_name, "%s HP %d -> %d" % [other.unit_name, previous_other_hp, other.hp])
 		log.add_event("Ancestry feature %s: %s HP %d -> %d." % [feature.display_name, other.unit_name, previous_other_hp, other.hp], damage_event["event_type"], -1, parent_entry_id, damage_event["payload"], damage_event["tags"])
 		if not other.is_alive():

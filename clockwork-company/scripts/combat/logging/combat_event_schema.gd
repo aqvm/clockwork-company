@@ -16,6 +16,9 @@ const EVENT_DEFEAT := "defeat"
 const EVENT_JOB_EFFECT := "job_effect"
 const EVENT_ANCESTRY_FEATURE := "ancestry_feature"
 const EVENT_ITEM_TRIGGER := "item_trigger"
+const EVENT_STATUS_APPLIED := "status_applied"
+const EVENT_STATUS_TRIGGERED := "status_triggered"
+const EVENT_STATUS_EXPIRED := "status_expired"
 const EVENT_RESULT := "result"
 
 const REQUIRED_KEYS := {
@@ -34,6 +37,9 @@ const REQUIRED_KEYS := {
 	EVENT_JOB_EFFECT: ["actor_id", "actor", "effect"],
 	EVENT_ANCESTRY_FEATURE: ["actor_id", "actor", "feature"],
 	EVENT_ITEM_TRIGGER: ["actor_id", "actor", "item", "trigger", "effect"],
+	EVENT_STATUS_APPLIED: ["target_id", "target", "status", "polarity", "source", "duration_turns", "is_permanent", "application_result", "stack_count"],
+	EVENT_STATUS_TRIGGERED: ["target_id", "target", "status", "polarity", "amount", "previous_hp", "new_hp", "stack_count", "remaining_stacks"],
+	EVENT_STATUS_EXPIRED: ["target_id", "target", "status", "polarity"],
 	EVENT_RESULT: ["result_text"],
 }
 

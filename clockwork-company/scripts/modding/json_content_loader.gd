@@ -13,6 +13,7 @@ const ReactionDefinitionScript := preload("res://scripts/data/reaction_definitio
 const JobProgressDefinitionScript := preload("res://scripts/data/job_progress_definition.gd")
 const AncestryDefinitionScript := preload("res://scripts/data/ancestry_definition.gd")
 const AncestryFeatureDefinitionScript := preload("res://scripts/data/ancestry_feature_definition.gd")
+const StatusDefinitionScript := preload("res://scripts/data/status_definition.gd")
 
 const BASE_ITEMS_DIR := "res://resources/items"
 const BASE_JOBS_DIR := "res://resources/jobs"
@@ -20,6 +21,7 @@ const BASE_TACTICS_DIR := "res://resources/tactics"
 const BASE_LOADOUTS_DIR := "res://resources/loadouts"
 const BASE_UNITS_DIR := "res://resources/units"
 const BASE_ANCESTRIES_DIR := "res://resources/ancestries"
+const BASE_STATUSES_DIR := "res://resources/statuses"
 const MODS_DIR := "res://mods"
 const MODDING_REFERENCE_DIR := "res://modding/reference"
 
@@ -37,9 +39,12 @@ const ITEM_SLOT_VALUES := {"Weapon": true, "Armor": true, "Helmet": true, "Trink
 const EFFECT_TRIGGER_VALUES := {"Battle Start": true, "Attack": true, "Hit": true, "Kill": true, "Death": true, "Damaged": true, "HP Below Threshold": true, "Every N Ticks": true}
 const EFFECT_CONDITION_VALUES := {"Always": true, "Self HP Below Percent": true, "Target Has Tag": true, "Target Missing Tag": true}
 const EFFECT_TARGET_VALUES := {"Self": true, "Attack Target": true, "Attacker": true, "Killer": true, "All Allies": true, "All Enemies": true, "Adjacent Allies": true}
-const EFFECT_TYPE_VALUES := {"Gain Armor": true, "Bonus Damage": true, "Reduce Target Armor": true, "Heal": true, "Heal Self": true, "Damage": true, "Damage Killer": true, "Increase Max HP": true}
-const SKILL_ACTION_VALUES := {"Attack": true, "Heal": true, "Guard": true}
+const EFFECT_TYPE_VALUES := {"Gain Armor": true, "Bonus Damage": true, "Reduce Target Armor": true, "Heal": true, "Heal Self": true, "Damage": true, "Damage Killer": true, "Increase Max HP": true, "Apply Status": true}
+const SKILL_ACTION_VALUES := {"Attack": true, "Heal": true, "Guard": true, "Apply Status": true}
 const SKILL_TARGET_VALUES := {"Self": true, "Lowest HP Ally": true, "Frontmost Enemy": true}
+const STATUS_POLARITY_VALUES := {"Boon": true, "Ailment": true}
+const STATUS_TYPE_VALUES := {"Confusion": true, "Reconstitution": true}
+const STATUS_STACKING_RULE_VALUES := {"Ignore": true, "Refresh": true, "Intensify": true}
 const PASSIVE_TYPE_VALUES := {"None": true, "Attack Damage Bonus": true, "Heal Bonus": true, "Guard Armor Bonus": true}
 const REACTION_TRIGGER_VALUES := {"Damaged": true, "HP Below Threshold": true}
 const REACTION_CONDITION_VALUES := {"Always": true, "Self HP Below Percent": true}
@@ -134,6 +139,7 @@ static func list_available_mod_packs() -> Array[Dictionary]:
 static func _load_base_data_from_resources() -> Dictionary:
 	return {
 		"ancestries": _load_base_ancestries(),
+		"statuses": _load_base_statuses(),
 		"items": _load_base_items(),
 		"jobs": _load_base_jobs(),
 		"tactics": _load_base_tactics(),
@@ -141,6 +147,24 @@ static func _load_base_data_from_resources() -> Dictionary:
 		"units": _load_base_units(),
 		"demo_roster": DEFAULT_DEMO_ROSTER_IDS.duplicate(),
 	}
+
+
+static func _load_base_statuses() -> Dictionary:
+	var out := {}
+	for resource in _load_resources_in_dir(BASE_STATUSES_DIR):
+		var id := _resource_id(resource.resource_path)
+		out[id] = {
+			"id": id,
+			"display_name": resource.display_name,
+			"polarity": resource.polarity,
+			"status_type": resource.status_type,
+			"stacking_rule": resource.stacking_rule,
+			"max_stacks": resource.max_stacks,
+			"tags": resource.tags.duplicate(),
+			"amount_percent": resource.amount_percent,
+			"description": resource.description,
+		}
+	return out
 
 
 static func _load_base_ancestries() -> Dictionary:
@@ -288,6 +312,7 @@ static func _load_base_units() -> Dictionary:
 static func _apply_mod_packs(base_data: Dictionary, enabled_mod_pack_ids: Variant = null) -> Dictionary:
 	var merged := {
 		"ancestries": base_data["ancestries"].duplicate(true),
+		"statuses": base_data["statuses"].duplicate(true),
 		"items": base_data["items"].duplicate(true),
 		"jobs": base_data["jobs"].duplicate(true),
 		"tactics": base_data["tactics"].duplicate(true),
@@ -298,6 +323,7 @@ static func _apply_mod_packs(base_data: Dictionary, enabled_mod_pack_ids: Varian
 
 	for pack in _load_mod_packs(enabled_mod_pack_ids):
 		_apply_collection_overrides(merged["ancestries"], pack.get("ancestries", []))
+		_apply_collection_overrides(merged["statuses"], pack.get("statuses", []))
 		_apply_collection_overrides(merged["items"], pack.get("items", []))
 		_apply_collection_overrides(merged["jobs"], pack.get("jobs", []))
 		_apply_collection_overrides(merged["tactics"], pack.get("tactics", []))
@@ -328,6 +354,13 @@ static func _apply_collection_overrides(target: Dictionary, entries: Array) -> v
 
 
 static func _validate_merged_data(data: Dictionary) -> void:
+	for status_id in data["statuses"].keys():
+		var status: Dictionary = data["statuses"][status_id]
+		assert(STATUS_POLARITY_VALUES.has(status.get("polarity", "")), "Invalid status polarity for id %s" % status_id)
+		assert(STATUS_TYPE_VALUES.has(status.get("status_type", "")), "Invalid status type for id %s" % status_id)
+		assert(STATUS_STACKING_RULE_VALUES.has(status.get("stacking_rule", "")), "Invalid status stacking rule for id %s" % status_id)
+		assert(int(status.get("max_stacks", 1)) >= 1, "Status max_stacks must be at least 1 for id %s" % status_id)
+
 	for ancestry_id in data["ancestries"].keys():
 		var ancestry: Dictionary = data["ancestries"][ancestry_id]
 		var feature: Dictionary = ancestry.get("feature", {})
@@ -345,6 +378,10 @@ static func _validate_merged_data(data: Dictionary) -> void:
 			assert(EFFECT_CONDITION_VALUES.has(effect_data.get("condition", "")), "Invalid authored effect condition for item id %s" % item_id)
 			assert(EFFECT_TARGET_VALUES.has(effect_data.get("target_selector", "")), "Invalid authored effect target selector for item id %s" % item_id)
 			assert(EFFECT_TYPE_VALUES.has(effect_data.get("effect_type", "")), "Invalid authored effect type for item id %s" % item_id)
+			var effect_status_id := String(effect_data.get("status_id", ""))
+			if effect_data.get("effect_type", "") == "Apply Status":
+				assert(data["statuses"].has(effect_status_id), "Unknown status id '%s' in item %s" % [effect_status_id, item_id])
+				assert(int(effect_data.get("status_duration_turns", 3)) >= 1, "Status duration must be at least 1 turn in item %s" % item_id)
 
 	for job_id in data["jobs"].keys():
 		var job: Dictionary = data["jobs"][job_id]
@@ -352,6 +389,10 @@ static func _validate_merged_data(data: Dictionary) -> void:
 		if not skill.is_empty():
 			assert(SKILL_ACTION_VALUES.has(skill.get("action", "")), "Invalid skill action for job id %s" % job_id)
 			assert(SKILL_TARGET_VALUES.has(skill.get("default_target", "")), "Invalid skill default target for job id %s" % job_id)
+			var skill_status_id := String(skill.get("status_id", ""))
+			if skill.get("action", "") == "Apply Status":
+				assert(data["statuses"].has(skill_status_id), "Unknown status id '%s' in skill for job %s" % [skill_status_id, job_id])
+				assert(int(skill.get("status_duration_turns", 3)) >= 1, "Status duration must be at least 1 turn in skill for job %s" % job_id)
 		var passive: Dictionary = job.get("passive", {})
 		if not passive.is_empty():
 			assert(PASSIVE_TYPE_VALUES.has(passive.get("passive_type", "")), "Invalid passive type for job id %s" % job_id)
@@ -442,13 +483,15 @@ static func _build_demo_unit_definitions(merged_data: Dictionary) -> Array[UnitD
 
 
 static func _build_content_resources(merged_data: Dictionary) -> Dictionary:
+	var statuses_by_id := _build_status_resources(merged_data["statuses"])
 	var ancestries_by_id := _build_ancestry_resources(merged_data["ancestries"])
-	var items_by_id := _build_item_resources(merged_data["items"])
-	var jobs_by_id := _build_job_resources(merged_data["jobs"])
+	var items_by_id := _build_item_resources(merged_data["items"], statuses_by_id)
+	var jobs_by_id := _build_job_resources(merged_data["jobs"], statuses_by_id)
 	var tactics_by_id := _build_tactic_resources(merged_data["tactics"])
 	var loadouts_by_id := _build_loadout_resources(merged_data["loadouts"], jobs_by_id, items_by_id, tactics_by_id)
 	var units_by_id := _build_unit_resources(merged_data["units"], loadouts_by_id, jobs_by_id, ancestries_by_id)
 	return {
+		"statuses": statuses_by_id,
 		"ancestries": ancestries_by_id,
 		"items": items_by_id,
 		"jobs": jobs_by_id,
@@ -456,6 +499,24 @@ static func _build_content_resources(merged_data: Dictionary) -> Dictionary:
 		"loadouts": loadouts_by_id,
 		"units": units_by_id,
 	}
+
+
+static func _build_status_resources(statuses_data: Dictionary) -> Dictionary:
+	var out := {}
+	for id in statuses_data.keys():
+		var src: Dictionary = statuses_data[id]
+		var status: Resource = StatusDefinitionScript.new()
+		_set_content_id(status, id)
+		status.display_name = String(src.get("display_name", id))
+		status.polarity = String(src.get("polarity", "Boon"))
+		status.status_type = String(src.get("status_type", "Reconstitution"))
+		status.stacking_rule = String(src.get("stacking_rule", "Refresh"))
+		status.max_stacks = int(src.get("max_stacks", 1))
+		status.tags = _string_array(src.get("tags", []))
+		status.amount_percent = int(src.get("amount_percent", 50))
+		status.description = String(src.get("description", ""))
+		out[id] = status
+	return out
 
 
 static func _build_ancestry_resources(ancestries_data: Dictionary) -> Dictionary:
@@ -509,7 +570,7 @@ static func _build_ancestry_feature_resource(raw: Variant):
 	return feature
 
 
-static func _build_item_resources(items_data: Dictionary) -> Dictionary:
+static func _build_item_resources(items_data: Dictionary, statuses_by_id: Dictionary) -> Dictionary:
 	var out := {}
 	for id in items_data.keys():
 		var src: Dictionary = items_data[id]
@@ -523,12 +584,12 @@ static func _build_item_resources(items_data: Dictionary) -> Dictionary:
 		item.magic_damage_modifier = int(src.get("magic_damage_modifier", 0))
 		item.armor_modifier = int(src.get("armor_modifier", 0))
 		item.action_interval_modifier = int(src.get("action_interval_modifier", 0))
-		item.effects = _build_effect_resources(src.get("effects", []))
+		item.effects = _build_effect_resources(src.get("effects", []), statuses_by_id)
 		out[id] = item
 	return out
 
 
-static func _build_effect_resources(effects_data: Array) -> Array[EffectDefinition]:
+static func _build_effect_resources(effects_data: Array, statuses_by_id: Dictionary) -> Array[EffectDefinition]:
 	var effects: Array[EffectDefinition] = []
 	for raw in effects_data:
 		var src: Dictionary = raw
@@ -540,6 +601,9 @@ static func _build_effect_resources(effects_data: Array) -> Array[EffectDefiniti
 		effect.condition = String(src.get("condition", "Always"))
 		effect.target_selector = String(src.get("target_selector", "Self"))
 		effect.effect_type = String(src.get("effect_type", "Gain Armor"))
+		effect.status = statuses_by_id.get(String(src.get("status_id", "")), null)
+		effect.status_duration_turns = int(src.get("status_duration_turns", 3))
+		effect.status_is_permanent = bool(src.get("status_is_permanent", false))
 		effect.amount = int(src.get("amount", 0))
 		effect.threshold_percent = int(src.get("threshold_percent", 50))
 		effect.interval_ticks = int(src.get("interval_ticks", 0))
@@ -548,7 +612,7 @@ static func _build_effect_resources(effects_data: Array) -> Array[EffectDefiniti
 	return effects
 
 
-static func _build_job_resources(jobs_data: Dictionary) -> Dictionary:
+static func _build_job_resources(jobs_data: Dictionary, statuses_by_id: Dictionary) -> Dictionary:
 	var out := {}
 	for id in jobs_data.keys():
 		var src: Dictionary = jobs_data[id]
@@ -565,7 +629,7 @@ static func _build_job_resources(jobs_data: Dictionary) -> Dictionary:
 		job.forbid_armor = bool(src.get("forbid_armor", false))
 		job.forbid_helmet = bool(src.get("forbid_helmet", false))
 		job.forbid_trinket = bool(src.get("forbid_trinket", false))
-		job.skill = _build_skill_resource(src.get("skill", {}))
+		job.skill = _build_skill_resource(src.get("skill", {}), statuses_by_id)
 		job.passive = _build_passive_resource(src.get("passive", {}))
 		job.reaction = _build_reaction_resource(src.get("reaction", {}))
 		job.default_tactic = _build_tactic_resource(src.get("default_tactic", {}))
@@ -573,7 +637,7 @@ static func _build_job_resources(jobs_data: Dictionary) -> Dictionary:
 	return out
 
 
-static func _build_skill_resource(raw: Variant) -> SkillDefinition:
+static func _build_skill_resource(raw: Variant, statuses_by_id: Dictionary) -> SkillDefinition:
 	if typeof(raw) != TYPE_DICTIONARY or Dictionary(raw).is_empty():
 		return null
 	var src: Dictionary = raw
@@ -583,6 +647,9 @@ static func _build_skill_resource(raw: Variant) -> SkillDefinition:
 	skill.tags = _string_array(src.get("tags", []))
 	skill.action = String(src.get("action", "Attack"))
 	skill.default_target = String(src.get("default_target", "Frontmost Enemy"))
+	skill.status = statuses_by_id.get(String(src.get("status_id", "")), null)
+	skill.status_duration_turns = int(src.get("status_duration_turns", 3))
+	skill.status_is_permanent = bool(src.get("status_is_permanent", false))
 	skill.amount_modifier = int(src.get("amount_modifier", 0))
 	return skill
 
@@ -644,6 +711,9 @@ static func _effect_resources_to_data(effects: Array[EffectDefinition]) -> Array
 			"condition": effect.condition,
 			"target_selector": effect.target_selector,
 			"effect_type": effect.effect_type,
+			"status_id": _resource_ref_id(effect.status),
+			"status_duration_turns": effect.status_duration_turns,
+			"status_is_permanent": effect.status_is_permanent,
 			"amount": effect.amount,
 			"threshold_percent": effect.threshold_percent,
 			"interval_ticks": effect.interval_ticks,
@@ -660,6 +730,9 @@ static func _skill_resource_to_data(skill: SkillDefinition) -> Dictionary:
 		"tags": skill.tags.duplicate(),
 		"action": skill.action,
 		"default_target": skill.default_target,
+		"status_id": _resource_ref_id(skill.status),
+		"status_duration_turns": skill.status_duration_turns,
+		"status_is_permanent": skill.status_is_permanent,
 		"amount_modifier": skill.amount_modifier,
 	}
 

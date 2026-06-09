@@ -4458,3 +4458,66 @@ Manual exercise:
 Open questions:
 
 - Which second concrete status source should force the project to decide duration, refresh, stacking, purge, or immunity behavior?
+
+## 2026-06-08 - Authored status definitions and Reconstitution boon
+
+Feature worked on:
+
+- Added `StatusDefinition` Resources with `Boon` and `Ailment` polarity.
+- Replaced runtime status-name strings with battle-local status instances that retain their authored definition, source, and mechanic state.
+- Added Reconstitution as the first boon. At turn start it restores 50% of damage received since the owner's previous turn, rounded down, then clears that damage ledger.
+- Added shared status-application hooks for skills and battle-start item effects.
+- Added structured status events, replay snapshot status summaries, runtime tooltip details, JSON status definitions/references, and a focused mechanics check.
+
+Why it changed:
+
+- Confusion proved that statuses can create rule pressure, but its string-only scenario hook could not support reusable content authoring.
+- Reconstitution needs per-unit runtime state, while its name, polarity, percentage, tags, and description should remain inspectable authored data.
+- Skills, tactics that invoke skills, items, and future content sources should reference the same status definition instead of adding one-off Reconstitution branches.
+
+Godot concepts introduced:
+
+- A custom `Resource` can describe reusable authored status data while a runtime `Dictionary` stores one combat instance's mutable state.
+- Exported Resource references let `SkillDefinition` and `EffectDefinition` point to the same status asset.
+- Structured replay snapshots can serialize small status summaries without exposing live Resource objects to presentation.
+
+Game architecture concepts introduced:
+
+- `StatusDefinition` owns authored identity and tuning; `UnitState` owns battle-local instances; `StatusResolver` owns application and status timing.
+- Status remains the umbrella term, boon means positive status, and ailment means negative status.
+- Reconstitution records all current direct combat damage paths, creating a protect-until-next-turn versus finish-before-next-turn pressure.
+- Status application sources own duration. Applications are finite by default, may explicitly be permanent, and reuse one runtime instance according to the authored stacking rule.
+
+Files to inspect closely:
+
+- `clockwork-company/scripts/data/status_definition.gd`
+- `clockwork-company/scripts/combat/rules/status_resolver.gd`
+- `clockwork-company/scripts/combat/runtime/unit_state.gd`
+- `clockwork-company/scripts/tools/status_mechanics_check.gd`
+
+Manual test:
+
+- Enable `Integration Test Mod Pack [ref]`, start a fight, and confirm Borin Anchor IT gains the Reconstitution IT boon from Tower Shield IT.
+- Let Borin take damage and reach another turn. Confirm the log reports the stored damage and restores half, rounded down.
+- Hover Borin during replay and confirm the runtime tooltip labels Reconstitution as a boon and shows stored damage before it resolves.
+
+Manual exercise:
+
+- Change `amount_percent` in `resources/statuses/reconstitution.tres` from `50` to `25`, run `status_mechanics_check.gd`, update its expected result, and explain why the percentage belongs in authored data while the damage ledger belongs in `UnitState`.
+
+Tradeoffs and risks:
+
+- Reconstitution defaults to three affected owner turns; reapplication intensifies it up to three stacks and keeps the longer duration.
+- Only self-targeted battle-start item `Apply Status` effects are implemented. Skills can apply a status to their tactic-selected target.
+- Status type behavior is still implemented explicitly in `StatusResolver`; adding arbitrary scripted status behavior or a broad status DSL is intentionally deferred.
+
+Stacking follow-up:
+
+- Added authored `Ignore`, `Refresh`, and `Intensify` stacking rules with an authored maximum stack count.
+- Reconstitution uses `Intensify` with a three-stack cap. Its explicit potency curve is 50%/75%/100% recovery at 1/2/3 stacks.
+- Reconstitution consumes one stack only when it actually restores HP; consuming the final stack removes the boon. All stacks share one damage ledger and one duration.
+- Refresh and intensify keep the longer existing/incoming duration, so a shorter reapplication cannot reduce remaining duration.
+
+Manual exercise:
+
+- Change Reconstitution's `max_stacks` to `2`, update its description and the mechanics-check expectations, then explain why the potency curve remains in `StatusResolver` instead of being inferred from `max_stacks`.

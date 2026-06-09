@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="StatusDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/status_definition.gd" id="1_status"]
+
+[resource]
+script = ExtResource("1_status")
+display_name = "Reconstitution"
+polarity = "Boon"
+status_type = "Reconstitution"
+stacking_rule = "Intensify"
+max_stacks = 3
+tags = Array[String](["boon", "healing", "retaliatory"])
+amount_percent = 50
+description = "At the start of its turn, the unit heals 50%/75%/100% of damage received since its previous turn at 1/2/3 stacks, rounded down, then consumes one stack if HP was restored."

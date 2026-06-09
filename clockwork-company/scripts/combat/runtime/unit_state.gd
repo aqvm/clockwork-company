@@ -28,7 +28,8 @@ var tactics: Array[TacticDefinition] = []
 var guard_armor := 0
 var effect_usage_counts := {}
 var ability_cooldowns := {}
-var statuses: Array[String] = []
+var statuses: Array[Dictionary] = []
+var next_status_instance_id := 1
 
 
 func _init(definition: UnitDefinition, unit_slot_index: int) -> void:
@@ -79,13 +80,115 @@ func is_alive() -> bool:
 	return hp > 0
 
 
-func add_status(status_name: String) -> void:
-	if not status_name.is_empty() and not statuses.has(status_name):
-		statuses.append(status_name)
+func add_status(status: Resource, source_name: String, duration_turns: int, is_permanent: bool) -> String:
+	if status == null or status.display_name.is_empty():
+		return "invalid"
+	var existing := status_instance_by_name(status.display_name)
+	if not existing.is_empty():
+		if status.stacking_rule == "Ignore":
+			return "ignored"
+		existing["source_name"] = source_name
+		existing["remaining_turns"] = max(int(existing.get("remaining_turns", 1)), max(1, duration_turns))
+		existing["is_permanent"] = bool(existing.get("is_permanent", false)) or is_permanent
+		if status.stacking_rule == "Intensify":
+			var previous_stacks := int(existing.get("stack_count", 1))
+			existing["stack_count"] = min(status.max_stacks, previous_stacks + 1)
+			return "intensified" if int(existing["stack_count"]) > previous_stacks else "refreshed"
+		return "refreshed"
+	statuses.append({
+		"instance_id": next_status_instance_id,
+		"definition": status,
+		"source_name": source_name,
+		"remaining_turns": max(1, duration_turns),
+		"is_permanent": is_permanent,
+		"stack_count": 1,
+		"damage_since_last_turn": 0,
+	})
+	next_status_instance_id += 1
+	return "added"
 
 
 func has_status(status_name: String) -> bool:
-	return statuses.has(status_name)
+	return not status_instance_by_name(status_name).is_empty()
+
+
+func status_instance_by_name(status_name: String) -> Dictionary:
+	for instance: Dictionary in statuses:
+		var definition: Resource = instance.get("definition", null)
+		if definition != null and definition.display_name == status_name:
+			return instance
+	return {}
+
+
+func status_instance(status_type: String) -> Dictionary:
+	for instance: Dictionary in statuses:
+		var definition: Resource = instance.get("definition", null)
+		if definition != null and definition.status_type == status_type:
+			return instance
+	return {}
+
+
+func status_names() -> Array[String]:
+	var names: Array[String] = []
+	for instance: Dictionary in statuses:
+		var definition: Resource = instance.get("definition", null)
+		if definition != null:
+			names.append(definition.display_name)
+	return names
+
+
+func status_instance_ids() -> Array[int]:
+	var ids: Array[int] = []
+	for instance: Dictionary in statuses:
+		ids.append(int(instance.get("instance_id", -1)))
+	return ids
+
+
+func consume_status_stack(status_name: String) -> int:
+	for index in range(statuses.size()):
+		var instance: Dictionary = statuses[index]
+		var definition: Resource = instance.get("definition", null)
+		if definition == null or definition.display_name != status_name:
+			continue
+		var remaining_stacks := int(instance.get("stack_count", 1)) - 1
+		if remaining_stacks <= 0:
+			statuses.remove_at(index)
+			return 0
+		instance["stack_count"] = remaining_stacks
+		return remaining_stacks
+	return 0
+
+
+func elapse_status_turns(instance_ids: Array[int]) -> Array[Dictionary]:
+	var expired: Array[Dictionary] = []
+	for index in range(statuses.size() - 1, -1, -1):
+		var instance: Dictionary = statuses[index]
+		if not instance_ids.has(int(instance.get("instance_id", -1))) or bool(instance.get("is_permanent", false)):
+			continue
+		instance["remaining_turns"] = int(instance.get("remaining_turns", 1)) - 1
+		if int(instance["remaining_turns"]) <= 0:
+			expired.append(instance)
+			statuses.remove_at(index)
+	return expired
+
+
+func status_snapshots() -> Array[Dictionary]:
+	var snapshots: Array[Dictionary] = []
+	for instance: Dictionary in statuses:
+		var definition: Resource = instance.get("definition", null)
+		if definition == null:
+			continue
+		snapshots.append({
+			"name": definition.display_name,
+			"polarity": definition.polarity,
+			"description": definition.description,
+			"source_name": String(instance.get("source_name", "")),
+			"remaining_turns": int(instance.get("remaining_turns", 0)),
+			"is_permanent": bool(instance.get("is_permanent", false)),
+			"stack_count": int(instance.get("stack_count", 1)),
+			"damage_since_last_turn": int(instance.get("damage_since_last_turn", 0)),
+		})
+	return snapshots
 
 
 func total_armor() -> int:
