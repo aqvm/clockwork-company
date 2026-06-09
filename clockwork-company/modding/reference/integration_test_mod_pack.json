@@ -101,7 +101,7 @@
       "passive": {
         "display_name": "Warden IT Habit",
         "tags": [],
-        "passive_type": "None",
+        "passive_type": "Forecast",
         "amount": 0,
         "cooldown_turns": 0
       }
@@ -123,6 +123,15 @@
     }
   ],
   "tactics": [
+    {
+      "id": "foretell_heal_it",
+      "display_name": "Foretell Heal IT",
+      "tags": ["forecast", "heal"],
+      "condition": "Ally HP Below Half",
+      "action": "Heal",
+      "target": "Lowest HP Ally",
+      "foretell_enabled": true
+    },
     {
       "id": "guard_then_attack_it",
       "condition": "Enemy Alive",

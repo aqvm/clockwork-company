@@ -275,7 +275,7 @@ static func _reaction_text(reaction: ReactionDefinition) -> String:
 
 
 static func _tactic_text(tactic: TacticDefinition) -> String:
-	return "%s\nTags: %s\nRule: %s -> %s -> %s" % [_title(tactic), _join(tactic.tags), tactic.condition, tactic.action, tactic.target]
+	return "%s\nTags: %s\nForetell: %s\nRule: %s -> %s -> %s" % [_title(tactic), _join(tactic.tags), "enabled" if tactic.foretell_enabled else "disabled", tactic.condition, tactic.action, tactic.target]
 
 
 static func _effect_text(effect: EffectDefinition) -> String:

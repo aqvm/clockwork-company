@@ -4521,3 +4521,51 @@ Stacking follow-up:
 Manual exercise:
 
 - Change Reconstitution's `max_stacks` to `2`, update its description and the mechanics-check expectations, then explain why the potency curve remains in `StatusResolver` instead of being inferred from `max_stacks`.
+## 2026-06-09 - First future-aware combat tactics pass
+
+### What changed
+
+- Added an equipped `Forecast` passive capability and the first forecast-aware tactic: `Avert Foreseen Defeat`.
+- Added a narrow deterministic `ForecastService` that clones runtime combat state, follows one non-forecast baseline, stops before another living forecaster, and ends before the original forecaster's next turn.
+- Made Archivist's `Read Ahead` passive and Marra's ordered tactics the first inspectable Resource-authored example.
+- Added focused checks for capability gating, forecast horizons, real-state immutability, and JSON reconstruction.
+
+### What I learned
+
+- Authored Resources can be shared by speculative copies because combat must not mutate them, while runtime arrays and dictionaries need explicit copies.
+- A passive can grant permission to use a tactic vocabulary without firing as an automatic combat effect.
+- Reusing real action resolution keeps forecasts deterministic, but recursive forecasting and presentation logs must be explicitly disabled.
+
+### Files to inspect
+
+- `clockwork-company/scripts/combat/rules/forecast_service.gd`
+- `clockwork-company/scripts/combat/combat_simulator.gd`
+- `clockwork-company/scripts/combat/rules/tactic_resolver.gd`
+- `clockwork-company/scripts/combat/runtime/unit_state.gd`
+- `clockwork-company/scripts/tools/forecast_mechanics_check.gd`
+
+### Exercise
+
+- Move `Avert Foreseen Defeat` below Marra's first eligible non-forecast tactic, predict which baseline action the forecast will simulate, then run the focused forecast check after restoring the intended order.
+
+## 2026-06-09 - Player-authored tactics and Foretell correction
+
+### What changed
+
+- Replaced forecast-specific tactic conditions and targets with `foretell_enabled` on any normal tactic.
+- Added planning controls for condition, action, target, and Foretell, plus durable authored tactic save records.
+- Removed Marra's automatically granted `Avert Foreseen Defeat` tactic while preserving her Forecast passive.
+- Updated speculation to use the first future condition match, select its target in speculative state, map that target to real state, and execute the action now.
+- Changed speculative turns to ignore Foretell toggles and evaluate the complete tactic list normally instead of skipping Foretell tactics.
+- Duplicated every Resource held by speculative `UnitState` clones, including nested loadout Resources and status definitions.
+
+### What I learned
+
+- A future-evaluation mode composes better than forecast-only predicates because the same small tactic vocabulary serves normal and speculative decisions.
+- Player-alterable Resources must be deep-cloned before editing; duplicating only the tactic array still shares each tactic object.
+- The first matching future state and the first future state with a valid target are different rules. Foretell intentionally stops at the first condition match, even if its target selector yields no target.
+- Runtime dictionaries and scalar fields were already isolated, so speculative status application did not leak. Shared definition Resources were the remaining risk because future simulation code might mutate them.
+
+### Exercise
+
+- Give Marra `Ally HP Below Half -> Heal -> Lowest HP Ally`, enable Foretell, run a fight with Forecast equipped, then unequip Forecast and confirm the configured tactic remains but is reported unavailable.

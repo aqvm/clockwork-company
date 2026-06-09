@@ -5,6 +5,7 @@ const CombatConstantsScript := preload("res://scripts/combat/combat_constants.gd
 const JsonContentLoaderScript := preload("res://scripts/modding/json_content_loader.gd")
 const UnitDefinitionScript := preload("res://scripts/data/unit_definition.gd")
 const UnitLoadoutDefinitionScript := preload("res://scripts/data/unit_loadout_definition.gd")
+const TacticDefinitionScript := preload("res://scripts/data/tactic_definition.gd")
 const ItemDefinitionScript := preload("res://scripts/data/item_definition.gd")
 const JobProgressDefinitionScript := preload("res://scripts/data/job_progress_definition.gd")
 const ScenarioRunnerScript := preload("res://scripts/scenario/scenario_runner.gd")
@@ -454,7 +455,20 @@ func _clone_loadout_definition(source: UnitLoadoutDefinition) -> UnitLoadoutDefi
 	copy.armor = _clone_item_definition(source.armor) if source.armor != null else null
 	copy.helmet = _clone_item_definition(source.helmet) if source.helmet != null else null
 	copy.trinket = _clone_item_definition(source.trinket) if source.trinket != null else null
-	copy.tactics = source.tactics.duplicate()
+	var tactics: Array[TacticDefinition] = []
+	for source_tactic in source.tactics:
+		if source_tactic == null:
+			continue
+		var tactic: TacticDefinition = TacticDefinitionScript.new()
+		_copy_content_id(source_tactic, tactic)
+		tactic.display_name = source_tactic.display_name
+		tactic.tags = source_tactic.tags.duplicate()
+		tactic.condition = source_tactic.condition
+		tactic.action = source_tactic.action
+		tactic.target = source_tactic.target
+		tactic.foretell_enabled = source_tactic.foretell_enabled
+		tactics.append(tactic)
+	copy.tactics = tactics
 	return copy
 
 

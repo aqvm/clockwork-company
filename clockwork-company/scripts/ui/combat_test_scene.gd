@@ -221,6 +221,7 @@ func _setup_planning_panel() -> void:
 	planning_panel.connect("planning_tactic_add_requested", _on_planning_tactic_add_requested)
 	planning_panel.connect("planning_tactic_remove_requested", _on_planning_tactic_remove_requested)
 	planning_panel.connect("planning_tactic_move_requested", _on_planning_tactic_move_requested)
+	planning_panel.connect("planning_tactic_changed", _on_planning_tactic_changed)
 	_connect_panel_tooltips(planning_panel)
 	parent_vbox.add_child(planning_panel)
 	parent_vbox.move_child(planning_panel, log_split.get_index())
@@ -607,6 +608,24 @@ func _on_planning_tactic_move_requested(index: int, direction: int) -> void:
 	var tactic := unit.loadout.tactics[index]
 	unit.loadout.tactics.remove_at(index)
 	unit.loadout.tactics.insert(destination, tactic)
+	_commit_planning_tactics(unit)
+
+
+func _on_planning_tactic_changed(index: int, field: String, value: Variant) -> void:
+	var unit := _editable_planning_unit()
+	if unit == null or unit.loadout == null or index < 0 or index >= unit.loadout.tactics.size():
+		return
+	var tactic: TacticDefinition = unit.loadout.tactics[index]
+	if field == "condition":
+		tactic.condition = String(value)
+	elif field == "action":
+		tactic.action = String(value)
+	elif field == "target":
+		tactic.target = String(value)
+	elif field == "foretell_enabled":
+		tactic.foretell_enabled = bool(value)
+	else:
+		return
 	_commit_planning_tactics(unit)
 
 

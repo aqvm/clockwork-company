@@ -11,6 +11,7 @@ signal planning_feature_requested(feature_type: String, feature: Resource)
 signal planning_tactic_add_requested(tactic: TacticDefinition)
 signal planning_tactic_remove_requested(index: int)
 signal planning_tactic_move_requested(index: int, direction: int)
+signal planning_tactic_changed(index: int, field: String, value: Variant)
 signal resource_tooltip_requested(source: Control, resource: Resource)
 signal tooltip_cleared
 
@@ -148,25 +149,52 @@ func _show_tactic_editor(options: Array) -> void:
 
 
 func _add_tactic_row(index: int, option: Dictionary, tactic_count: int) -> void:
-	var row := HBoxContainer.new()
+	var row := VBoxContainer.new()
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	add_child(row)
 	var tactic: TacticDefinition = option["tactic"]
+	var header := HBoxContainer.new()
+	row.add_child(header)
 	var name_button := Button.new()
 	name_button.text = "%d. %s" % [index + 1, tactic.display_name]
 	name_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_bind_resource_tooltip(name_button, tactic)
-	row.add_child(name_button)
+	header.add_child(name_button)
 	for spec in [["Up", -1, index == 0], ["Down", 1, index == tactic_count - 1]]:
 		var button := Button.new()
 		button.text = spec[0]
 		button.disabled = spec[2]
 		button.pressed.connect(func(): planning_tactic_move_requested.emit(index, spec[1]))
-		row.add_child(button)
+		header.add_child(button)
 	var remove_button := Button.new()
 	remove_button.text = "Remove"
 	remove_button.pressed.connect(func(): planning_tactic_remove_requested.emit(index))
-	row.add_child(remove_button)
+	header.add_child(remove_button)
+	var editors := HBoxContainer.new()
+	row.add_child(editors)
+	_add_tactic_selector(editors, index, "condition", tactic.condition, ["Always", "Self HP Below Half", "Ally HP Below Half", "Enemy Alive"])
+	_add_tactic_selector(editors, index, "action", tactic.action, ["Attack", "Heal", "Guard", "Job Skill", "Assigned Skill"])
+	_add_tactic_selector(editors, index, "target", tactic.target, ["Self", "Lowest HP Ally", "Frontmost Enemy"])
+	var foretell := CheckButton.new()
+	foretell.text = "Foretell"
+	foretell.button_pressed = tactic.foretell_enabled
+	foretell.toggled.connect(func(enabled): planning_tactic_changed.emit(index, "foretell_enabled", enabled))
+	editors.add_child(foretell)
+
+
+func _add_tactic_selector(parent: Control, tactic_index: int, field: String, selected_value: String, values: Array[String]) -> void:
+	var column := VBoxContainer.new()
+	var label := Label.new()
+	label.text = field.capitalize()
+	column.add_child(label)
+	var selector := OptionButton.new()
+	for value in values:
+		selector.add_item(value)
+		if value == selected_value:
+			selector.select(selector.item_count - 1)
+	selector.item_selected.connect(func(selected_index): planning_tactic_changed.emit(tactic_index, field, selector.get_item_text(selected_index)))
+	column.add_child(selector)
+	parent.add_child(column)
 
 
 func _show_job_selector(job_options: Array) -> void:

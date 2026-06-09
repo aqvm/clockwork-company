@@ -178,6 +178,7 @@ The first playable test now opens as a scenario workbench with the older combat 
 - `clockwork-company/scripts/combat/runtime/turn_scheduler.gd` owns deterministic next-actor selection and action re-scheduling.
 - `clockwork-company/scripts/combat/rules/targeting_rules.gd` owns team and target selection helpers.
 - `clockwork-company/scripts/combat/rules/tactic_resolver.gd` owns tactic evaluation/selection decisions.
+- `clockwork-company/scripts/combat/rules/forecast_service.gd` owns narrow deterministic speculative timelines and maps the target selected in the first matching future state back to real runtime state.
 - `clockwork-company/scripts/combat/rules/job_effect_resolver.gd` owns current-job combat bonus hooks.
 - `clockwork-company/scripts/combat/rules/ancestry_feature_resolver.gd` owns always-on ancestry combat hooks.
 - `clockwork-company/scripts/combat/rules/item_effect_resolver.gd` owns triggered item effect resolution.
@@ -275,6 +276,7 @@ Current combat rules:
 - current job passives are deterministic combat hooks such as attack damage, healing, or guard armor bonuses
 - current job reactions are deterministic damaged/low-HP hooks such as temporary armor, self-healing, or damaging the attacker
 - passive and reaction cooldowns are tracked as combat-only unit-turn counters
+- an equipped `Forecast` passive grants forecast capability; it does not fire as an automatic passive effect
 - physical damage is reduced by armor; magic-tagged damage uses magic damage and ignores armor
 - every unit starts with `next_action_time = action_interval`
 - the living unit with the lowest `next_action_time` acts next
@@ -284,6 +286,9 @@ Current combat rules:
 - the first tactic with a true condition and valid target is selected
 - if no tactic matches, the simulator falls back to attacking the frontmost living enemy
 - current supported tactic actions are attack, heal, guard, job skill, and assigned skill
+- any tactic can enable `foretell_enabled`; configured Foretell tactics remain stored but are unavailable without forecast capability
+- Foretell clones runtime unit state, follows one deterministic baseline where Foretell toggles are ignored and every tactic evaluates normally, uses the first future state where the tactic's normal condition is true, evaluates its normal target selector in that state, and ends before the forecasting unit's next turn
+- speculative turns reuse simulator action resolution but write only to a discarded private log and cannot recursively forecast; speculative `UnitState` clones also duplicate held Resources so later speculative mutations cannot leak into real runtime state
 - heal restores a fixed 5 HP without exceeding max HP
 - guard grants 2 temporary armor until that unit's next turn
 - runtime armor is split into base battle armor and temporary guard armor
@@ -336,14 +341,14 @@ Triggered item responsibility split:
 
 Tactic responsibility split:
 
-- `TacticDefinition` owns inspectable source data: a display name, one condition, one action, and one target rule.
+- `TacticDefinition` owns inspectable source data: a display name, one condition, one action, one target rule, and a Foretell toggle.
 - `UnitLoadoutDefinition` owns the source tactic list for a reusable build.
-- Campaign planning can add, remove, and reorder authored tactic Resources in that loadout list; the current job's default tactic remains read-only and is appended later by `UnitState`.
-- `CampaignRosterState` owns durable campaign tactic ordering and serializes stable tactic content IDs; `JsonContentLoader` reconstructs those Resources when loading a save.
+- Campaign planning can add, remove, reorder, and edit the condition/action/target/Foretell fields of loadout tactics; the current job's default tactic remains read-only and is appended later by `UnitState`.
+- `CampaignRosterState` owns durable campaign tactic ordering and serializes player-authored tactic records, while still accepting legacy content-ID-only save data.
 - `UnitState` owns the runtime copy of that priority-ordered tactic list for this combat copy.
 - `UnitState` owns battle-local status instances, stacks, remaining owner-turn duration, and mechanic state; `StatusResolver` applies/refreshes/intensifies/expires authored statuses and resolves Reconstitution, while `TacticResolver` owns Confusion's tactic-selection pressure.
 - `CombatSimulator` owns tactic evaluation, target validation, and action resolution.
-- The current planning UI selects from an authored tactic library rather than constructing arbitrary tactic rules.
+- The current planning UI uses the authored tactic library as templates, then lets the player alter equipped tactic rules.
 - The UI still receives plain rendered log lines and does not know how tactics are evaluated.
 
 Job responsibility split:

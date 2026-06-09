@@ -29,20 +29,9 @@ Act as a tutor and pair-programmer, not a ghostwriter. The goal is that the huma
 
 Prefer chats that stay coherent as one reviewable unit of work. A good chat scope might be one project phase, one logging improvement pass, one focused combat-system change, or one documentation/design discussion.
 
-If the human appears to be continuing into a new unrelated phase, piling a second substantial feature onto a chat whose earlier context is no longer relevant, or asking for work that would be easier to review in a clean conversation, pause before implementing and recommend starting a new chat.
+If the human appears to be continuing into a clearly unrelated phase or substantial feature whose earlier context is no longer relevant, pause before implementing and recommend starting a new chat.
 
-When recommending a new chat, provide a handoff prompt that includes:
-
-- the current phase or topic name
-- what was just completed or decided
-- the next goal
-- relevant files to inspect first
-- non-goals and scope boundaries
-- important design or architecture decisions to preserve
-- documentation update expectations
-- manual test expectations
-- final-response requirements from this file
-- a reminder to inspect the repository before trusting the handoff text
+When recommending a new chat, provide a short handoff containing the next goal, relevant files to inspect first, important constraints or decisions to preserve, and validation expectations. Remind the next chat to inspect the repository before trusting the handoff text.
 
 Do not force a new chat for small follow-ups, clarifying questions, bug fixes directly related to the current change, or review feedback on the same patch. The heuristic is whether the chat still reads as one relevant whole.
 
@@ -70,25 +59,20 @@ Do not introduce these unless explicitly requested:
 
 ## Required explanation after code changes
 
-Whenever you change code, include:
-
-1. What changed.
-2. Why it changed.
-3. Which Godot concepts are involved.
-4. Which files/classes own which responsibilities.
-5. How I can manually test the change.
-6. One small exercise I should do myself to verify understanding.
-7. Any tradeoffs or risks.
+After code changes, briefly explain what changed, why it changed, how to test it, and one important tradeoff or learning point. Include deeper tutoring detail when requested or when introducing a genuinely new concept.
 
 ## Documentation upkeep
 
-- Update `LEARNING_LOG.md` after meaningful changes.
-- Update `ARCHITECTURE.md` when responsibilities or structure change.
-- Update `DESIGN_NOTES.md` when design decisions are made or revised.
-- Update `TODO.md` when planned work is added, completed, abandoned, or substantially changed.
-- Update `GODOT_BEST_PRACTICES_AUDIT.md` when the project deliberately adopts, rejects, or revises a documented Godot practice.
-- For JSON content/modding files, keep adjacent `*.options.md` docs fully up to date with every field/enum/keyword/reference rule change.
-- If JSON schema/keywords change in loader or data scripts, update both the sidecar docs next to affected JSON files and any repository-level modding docs in the same patch.
+Update documentation only when a change directly invalidates or materially changes that document. Do not update documents merely to record that implementation occurred.
+
+- Update `ARCHITECTURE.md` only for meaningful responsibility or structural changes.
+- Update `DESIGN_NOTES.md` only for durable design decisions.
+- Update `TODO.md` only when backlog commitments change.
+- Update `ROADMAP.md` only when phase plans change.
+- Update `LEARNING_LOG.md` only during requested retrospectives or phase reviews.
+- Update `GODOT_BEST_PRACTICES_AUDIT.md` only during focused audit work.
+- Update adjacent `*.options.md` sidecars only when the externally authorable JSON contract changes, such as fields, enum/keyword values, reference rules, validation rules, or merge semantics.
+- Update `MODDING.md` only when the overall modding workflow changes. Keep detailed schema rules in the relevant sidecar documentation.
 
 ## Godot command-line checks
 
@@ -129,6 +113,4 @@ A task is not done until:
 - the project still opens/runs if applicable
 - changed behavior is manually testable
 - you summarize the diff
-- you explain new concepts introduced
-- you point out one file I should inspect closely
-- you give me one manual follow-up exercise
+- you explain important new concepts, tradeoffs, or risks when applicable

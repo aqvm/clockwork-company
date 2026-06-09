@@ -4,7 +4,7 @@ class_name CampaignManager
 const CampaignProgressScript := preload("res://scripts/campaign/campaign_progress.gd")
 const CampaignRosterStateScript := preload("res://scripts/campaign/campaign_roster_state.gd")
 const JsonContentLoaderScript := preload("res://scripts/modding/json_content_loader.gd")
-const SAVE_VERSION := 4
+const SAVE_VERSION := 5
 
 var campaign: Resource = null
 var progress = CampaignProgressScript.new()

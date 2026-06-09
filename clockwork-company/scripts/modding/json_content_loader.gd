@@ -45,7 +45,7 @@ const SKILL_TARGET_VALUES := {"Self": true, "Lowest HP Ally": true, "Frontmost E
 const STATUS_POLARITY_VALUES := {"Boon": true, "Ailment": true}
 const STATUS_TYPE_VALUES := {"Confusion": true, "Reconstitution": true}
 const STATUS_STACKING_RULE_VALUES := {"Ignore": true, "Refresh": true, "Intensify": true}
-const PASSIVE_TYPE_VALUES := {"None": true, "Attack Damage Bonus": true, "Heal Bonus": true, "Guard Armor Bonus": true}
+const PASSIVE_TYPE_VALUES := {"None": true, "Attack Damage Bonus": true, "Heal Bonus": true, "Guard Armor Bonus": true, "Forecast": true}
 const REACTION_TRIGGER_VALUES := {"Damaged": true, "HP Below Threshold": true}
 const REACTION_CONDITION_VALUES := {"Always": true, "Self HP Below Percent": true}
 const REACTION_TYPE_VALUES := {"Gain Armor": true, "Heal Self": true, "Damage Attacker": true}
@@ -696,6 +696,7 @@ static func _build_tactic_resource(raw: Variant) -> TacticDefinition:
 	tactic.condition = String(src.get("condition", "Enemy Alive"))
 	tactic.action = String(src.get("action", "Job Skill"))
 	tactic.target = String(src.get("target", "Frontmost Enemy"))
+	tactic.foretell_enabled = bool(src.get("foretell_enabled", false))
 	return tactic
 
 
@@ -789,6 +790,7 @@ static func _tactic_resource_to_data(tactic: TacticDefinition) -> Dictionary:
 		"condition": tactic.condition,
 		"action": tactic.action,
 		"target": tactic.target,
+		"foretell_enabled": tactic.foretell_enabled,
 	}
 
 
@@ -848,6 +850,7 @@ static func _build_tactic_resources(tactics_data: Dictionary) -> Dictionary:
 		tactic.condition = String(src.get("condition", "Always"))
 		tactic.action = String(src.get("action", "Attack"))
 		tactic.target = String(src.get("target", "Frontmost Enemy"))
+		tactic.foretell_enabled = bool(src.get("foretell_enabled", false))
 		out[id] = tactic
 	return out
 
