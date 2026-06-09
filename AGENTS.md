@@ -112,6 +112,15 @@ Why this matters:
 - Never commit to `main`.
 - Before committing changes, resync with `main`.
 - If local work is on `main`, create a helpfully named branch before committing.
+- Keep commit-and-push wrap-up compact. Unless the tree changes or a check fails, use one straightforward sequence:
+  1. Fetch and resync with `origin/main`.
+  2. Run the relevant established validation checks once.
+  3. Stage changes, inspect the staged diff/status once, and remove any accidental artifacts.
+  4. Commit on the feature branch.
+  5. Push the feature branch.
+  6. Confirm the final worktree status once.
+- Do not repeatedly recheck unchanged facts, rerun passing validations after no tree changes, or split simple Git inspections into excessive tool calls.
+- Reuse the prescribed `godot-check.log` scratch file instead of creating additional temporary validation logs.
 
 ## Done means
 
