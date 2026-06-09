@@ -189,6 +189,56 @@ static func item_trigger(actor, item_name: String, trigger_name: String, effect_
 	}
 
 
+static func status_applied(target, status: Resource, source_name: String, duration_turns: int, is_permanent: bool, application_result: String, stack_count: int) -> Dictionary:
+	return {
+		"event_type": Schema.EVENT_STATUS_APPLIED,
+		"payload": {
+			"target_id": target.unit_id,
+			"target": target.unit_name,
+			"status": status.display_name,
+			"polarity": status.polarity,
+			"source": source_name,
+			"duration_turns": duration_turns,
+			"is_permanent": is_permanent,
+			"application_result": application_result,
+			"stack_count": stack_count,
+		},
+		"tags": ["replay", "status", status.polarity.to_lower()],
+	}
+
+
+static func status_expired(target, status: Resource) -> Dictionary:
+	return {
+		"event_type": Schema.EVENT_STATUS_EXPIRED,
+		"payload": {
+			"target_id": target.unit_id,
+			"target": target.unit_name,
+			"status": status.display_name,
+			"polarity": status.polarity,
+		},
+		"tags": ["replay", "status", status.polarity.to_lower()],
+	}
+
+
+static func status_triggered(target, status: Resource, amount: int, previous_hp: int, new_hp: int, damage_received: int, stack_count: int, remaining_stacks: int) -> Dictionary:
+	return {
+		"event_type": Schema.EVENT_STATUS_TRIGGERED,
+		"payload": {
+			"target_id": target.unit_id,
+			"target": target.unit_name,
+			"status": status.display_name,
+			"polarity": status.polarity,
+			"amount": amount,
+			"previous_hp": previous_hp,
+			"new_hp": new_hp,
+			"damage_received": damage_received,
+			"stack_count": stack_count,
+			"remaining_stacks": remaining_stacks,
+		},
+		"tags": ["replay", "status", "hp_change", status.polarity.to_lower()],
+	}
+
+
 static func result(result_text: String) -> Dictionary:
 	return {
 		"event_type": Schema.EVENT_RESULT,

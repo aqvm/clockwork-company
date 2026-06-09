@@ -9,5 +9,7 @@ class_name CombatLogHighlightPalette
 @export var tactic_color: Color = Color("d4a017")
 @export var job_effect_color: Color = Color("9b5de5")
 @export var item_trigger_color: Color = Color("00a9a5")
+@export var boon_color: Color = Color("55c97a")
+@export var ailment_color: Color = Color("c86bd8")
 @export var defeat_color: Color = Color("8b1e3f")
 @export var result_color: Color = Color("ff6f91")

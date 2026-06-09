@@ -12,6 +12,7 @@ Keep this document and adjacent JSON examples updated whenever:
 
 - `pack_id` (`String`, optional): human-readable identifier for the pack.
 - `pack_version` (`int`, optional): pack author version.
+- `statuses` (`Array[Dictionary]`, optional)
 - `ancestries` (`Array[Dictionary]`, optional)
 - `items` (`Array[Dictionary]`, optional)
 - `jobs` (`Array[Dictionary]`, optional)
@@ -28,6 +29,31 @@ Unknown top-level keys are ignored by the current loader.
 - Later JSON files in `res://mods/` override earlier/base values key-by-key.
 - Omitting a field preserves the previous value for that id.
 - `demo_roster`, if present, fully replaces previous roster order.
+
+## `statuses[]` keys
+
+Required:
+- `id` (`String`): stable reference used by skills and effects.
+
+Optional fields:
+- `display_name` (`String`)
+- `polarity` (`String enum`): `Boon`, `Ailment`
+- `status_type` (`String enum`): `Confusion`, `Reconstitution`
+- `stacking_rule` (`String enum`): `Ignore`, `Refresh`, `Intensify`
+- `max_stacks` (`int`, minimum `1`)
+- `tags` (`Array[String]`)
+- `amount_percent` (`int`, 1-100): Reconstitution healing percentage.
+- `description` (`String`)
+
+Current status behavior:
+- Statuses are battle-local, keep one runtime instance per status identity, and reset between encounters.
+- Applications are finite by default. Finite duration counts owner turns on which the status was active at turn start.
+- `Ignore` rejects reapplication.
+- `Refresh` keeps one stack and refreshes duration to the longer existing/incoming duration.
+- `Intensify` adds one stack up to `max_stacks` and refreshes duration to the longer existing/incoming duration.
+- Sources can explicitly apply a permanent status; Burned Chapel's scenario rule does this for Confusion.
+- `Confusion` skips the first otherwise-valid tactic each turn.
+- `Reconstitution` intensifies to three stacks. At turn start it restores 50%/75%/100% of damage received since the previous turn at 1/2/3 stacks, rounded down, then consumes one stack only if HP was restored. Consuming the final stack removes the boon.
 
 ## `ancestries[]` keys
 
@@ -107,7 +133,10 @@ Optional fields:
 - `trigger` (`String enum`): `Battle Start`, `Attack`, `Hit`, `Kill`, `Death`, `Damaged`, `HP Below Threshold`, `Every N Ticks`
 - `condition` (`String enum`): `Always`, `Self HP Below Percent`, `Target Has Tag`, `Target Missing Tag`
 - `target_selector` (`String enum`): `Self`, `Attack Target`, `Attacker`, `Killer`, `All Allies`, `All Enemies`, `Adjacent Allies`
-- `effect_type` (`String enum`): `Gain Armor`, `Bonus Damage`, `Reduce Target Armor`, `Heal`, `Heal Self`, `Damage`, `Damage Killer`, `Increase Max HP`
+- `effect_type` (`String enum`): `Gain Armor`, `Bonus Damage`, `Reduce Target Armor`, `Heal`, `Heal Self`, `Damage`, `Damage Killer`, `Increase Max HP`, `Apply Status`
+- `status_id` (`String`): required when `effect_type` is `Apply Status`; references a `statuses[].id`.
+- `status_duration_turns` (`int`, default `3`): affected owner turns before expiration.
+- `status_is_permanent` (`bool`, default `false`): when true, ignores `status_duration_turns`.
 - `amount` (`int`)
 - `threshold_percent` (`int`, 1-100): used by `Self HP Below Percent` and `HP Below Threshold`.
 - `interval_ticks` (`int`): reserved for `Every N Ticks`.
@@ -115,6 +144,7 @@ Optional fields:
 
 Currently implemented item effect combinations:
 - `Battle Start` + `Gain Armor`
+- `Battle Start` + `Apply Status` targeting `Self`
 - `Attack` + `Bonus Damage`
 - `Hit` + `Reduce Target Armor`
 - `Kill` + `Heal` or `Heal Self`
@@ -158,14 +188,18 @@ Equipment note:
 Optional fields:
 - `display_name` (`String`)
 - `tags` (`Array[String]`)
-- `action` (`String enum`): `Attack`, `Heal`, `Guard`
+- `action` (`String enum`): `Attack`, `Heal`, `Guard`, `Apply Status`
 - `default_target` (`String enum`): `Self`, `Lowest HP Ally`, `Frontmost Enemy`
+- `status_id` (`String`): required when `action` is `Apply Status`; references a `statuses[].id`.
+- `status_duration_turns` (`int`, default `3`): affected owner turns before expiration.
+- `status_is_permanent` (`bool`, default `false`): when true, ignores `status_duration_turns`.
 - `amount_modifier` (`int`): added to the base action amount when the skill is used.
 
 Currently implemented skill actions:
 - `Attack`: performs a normal attack with `amount_modifier` as bonus damage.
 - `Heal`: performs a normal heal with `amount_modifier` as bonus healing.
 - `Guard`: performs a normal guard with `amount_modifier` as bonus temporary armor.
+- `Apply Status`: applies the referenced authored boon or ailment to the tactic-selected target.
 
 ## `jobs[].passive` keys
 

@@ -26,6 +26,8 @@ static func text_for_resource(resource) -> String:
 		text = _tactic_text(resource)
 	elif resource is EffectDefinition:
 		text = _effect_text(resource)
+	elif "polarity" in resource and "status_type" in resource:
+		text = _status_text(resource)
 	elif resource is EncounterDefinition:
 		text = _encounter_text(resource)
 	elif resource is RewardDefinition:
@@ -67,11 +69,15 @@ static func related_resources_for_resource(resource) -> Array:
 	elif resource is ItemDefinition:
 		for effect in resource.effects:
 			_append_related(related, "Effect", effect)
+	elif resource is EffectDefinition:
+		_append_related(related, "Status", resource.status)
 	elif resource is JobDefinition:
 		_append_related(related, "Skill", resource.skill)
 		_append_related(related, "Passive", resource.passive)
 		_append_related(related, "Reaction", resource.reaction)
 		_append_related(related, "Default Tactic", resource.default_tactic)
+	elif resource is SkillDefinition:
+		_append_related(related, "Status", resource.status)
 	elif resource is AncestryDefinition:
 		_append_related(related, "Feature", resource.feature)
 	elif resource is EncounterDefinition:
@@ -106,9 +112,20 @@ static func text_for_runtime_unit(snapshot: Dictionary) -> String:
 	var statuses: Array = snapshot.get("statuses", [])
 	var status_text := "none"
 	if not statuses.is_empty():
-		status_text = _join(statuses, ", ")
-		if statuses.has("Confusion"):
-			status_text += "\n- Confusion: skips the first otherwise-valid tactic each turn."
+		var status_lines: Array[String] = []
+		for raw_status in statuses:
+			if raw_status is Dictionary:
+				var status: Dictionary = raw_status
+				var line := "%s %s: %s" % [String(status.get("polarity", "Status")), String(status.get("name", "Unknown")), String(status.get("description", ""))]
+				line += " Permanent." if bool(status.get("is_permanent", false)) else " Remaining owner turns: %d." % int(status.get("remaining_turns", 0))
+				line += " Stacks: %d." % int(status.get("stack_count", 1))
+				var stored_damage := int(status.get("damage_since_last_turn", 0))
+				if stored_damage > 0:
+					line += " Stored damage: %d." % stored_damage
+				status_lines.append(line)
+			else:
+				status_lines.append(String(raw_status))
+		status_text = "\n- %s" % _join(status_lines, "\n- ")
 	return _with_source_note("%s\nTeam: %s\nHP: %d/%d\nAction interval: %d\nNext action in: %.1f\nStatuses: %s" % [name, team, hp, max_hp, action_interval, remaining, status_text], "Source: runtime combat state")
 
 
@@ -246,7 +263,7 @@ static func _ancestry_text(ancestry: AncestryDefinition) -> String:
 
 
 static func _skill_text(skill: SkillDefinition) -> String:
-	return "%s\nTags: %s\nAction: %s\nTarget: %s\nAmount modifier: %+d" % [_title(skill), _join(skill.tags), skill.action, skill.default_target, skill.amount_modifier]
+	return "%s\nTags: %s\nAction: %s\nTarget: %s\nStatus: %s\nStatus duration: %s\nAmount modifier: %+d" % [_title(skill), _join(skill.tags), skill.action, skill.default_target, _name_or_none(skill.status), _status_duration_text(skill.status_duration_turns, skill.status_is_permanent), skill.amount_modifier]
 
 
 static func _passive_text(passive: PassiveDefinition) -> String:
@@ -263,6 +280,10 @@ static func _tactic_text(tactic: TacticDefinition) -> String:
 
 static func _effect_text(effect: EffectDefinition) -> String:
 	return "%s\n%s\nResolver: %s" % [_title(effect), _effect_summary(effect), _effect_support_note(effect)]
+
+
+static func _status_text(status: Resource) -> String:
+	return "%s\nPolarity: %s\nType: %s\nStacking: %s, maximum %d\nTags: %s\nAmount percent: %d%%\n%s" % [_title(status), status.polarity, status.status_type, status.stacking_rule, status.max_stacks, _join(status.tags), status.amount_percent, status.description]
 
 
 static func _encounter_text(encounter: EncounterDefinition) -> String:
@@ -354,11 +375,15 @@ static func _generic_resource_text(resource) -> String:
 
 static func _effect_summary(effect: EffectDefinition) -> String:
 	var limit_text := ", once per battle" if effect.once_per_battle else ""
-	return "%s when %s: %s %d to %s%s" % [effect.effect_type, effect.trigger, effect.condition, effect.amount, effect.target_selector, limit_text]
+	var status_text := " (%s)" % _name_or_none(effect.status) if effect.status != null else ""
+	var duration_text := ", %s" % _status_duration_text(effect.status_duration_turns, effect.status_is_permanent) if effect.status != null else ""
+	return "%s%s when %s: %s %d to %s%s%s" % [effect.effect_type, status_text, effect.trigger, effect.condition, effect.amount, effect.target_selector, duration_text, limit_text]
 
 
 static func _effect_support_note(effect: EffectDefinition) -> String:
 	if effect.trigger == "Battle Start" and effect.effect_type == "Gain Armor":
+		return "supported"
+	if effect.trigger == "Battle Start" and effect.effect_type == "Apply Status" and effect.target_selector == "Self" and effect.status != null:
 		return "supported"
 	if effect.trigger == "Attack" and effect.effect_type == "Bonus Damage":
 		return "supported"
@@ -381,6 +406,10 @@ static func _item_stats(item: ItemDefinition) -> String:
 	_append_amount(parts, "armor", item.armor_modifier)
 	_append_amount(parts, "interval", item.action_interval_modifier)
 	return _join(parts) if not parts.is_empty() else "no stat changes"
+
+
+static func _status_duration_text(duration_turns: int, is_permanent: bool) -> String:
+	return "permanent" if is_permanent else "%d owner turns" % duration_turns
 
 
 static func _append_amount(parts: Array[String], label: String, amount: int) -> void:

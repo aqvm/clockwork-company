@@ -2,6 +2,19 @@
   "pack_id": "integration_test_mod_pack",
   "display_name": "Integration Test Mod Pack",
   "pack_version": 1,
+  "statuses": [
+    {
+      "id": "reconstitution_it",
+      "display_name": "Reconstitution IT",
+      "polarity": "Boon",
+      "status_type": "Reconstitution",
+      "stacking_rule": "Intensify",
+      "max_stacks": 3,
+      "tags": ["boon", "healing", "integration_test"],
+      "amount_percent": 50,
+      "description": "At turn start, restore half the damage received since the previous turn."
+    }
+  ],
   "items": [
     {
       "id": "tower_shield_it",
@@ -19,6 +32,21 @@
           "target_selector": "Self",
           "effect_type": "Gain Armor",
           "amount": 2,
+          "threshold_percent": 50,
+          "interval_ticks": 0,
+          "once_per_battle": false
+        },
+        {
+          "display_name": "Tower Shield IT Reconstitution",
+          "tags": ["boon", "status", "integration_test"],
+          "trigger": "Battle Start",
+          "condition": "Always",
+          "target_selector": "Self",
+          "effect_type": "Apply Status",
+          "status_id": "reconstitution_it",
+          "status_duration_turns": 3,
+          "status_is_permanent": false,
+          "amount": 0,
           "threshold_percent": 50,
           "interval_ticks": 0,
           "once_per_battle": false
@@ -60,6 +88,16 @@
       "forbid_armor": false,
       "forbid_helmet": false,
       "forbid_trinket": false,
+      "skill": {
+        "display_name": "Warden IT Reconstitution",
+        "tags": ["boon", "status", "integration_test"],
+        "action": "Apply Status",
+        "default_target": "Self",
+        "status_id": "reconstitution_it",
+        "status_duration_turns": 5,
+        "status_is_permanent": false,
+        "amount_modifier": 0
+      },
       "passive": {
         "display_name": "Warden IT Habit",
         "tags": [],

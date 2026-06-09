@@ -1,6 +1,19 @@
 {
   "pack_id": "base_reference_pack",
   "pack_version": 1,
+  "statuses": [
+    {
+      "id": "reconstitution",
+      "display_name": "Reconstitution",
+      "polarity": "Boon",
+      "status_type": "Reconstitution",
+      "stacking_rule": "Intensify",
+      "max_stacks": 3,
+      "tags": ["boon", "healing", "retaliatory"],
+      "amount_percent": 50,
+      "description": "At turn start, heal 50%/75%/100% of damage received since the previous turn at 1/2/3 stacks, then consume one stack if HP was restored."
+    }
+  ],
   "ancestries": [
 	{
 	  "id": "brassbound",

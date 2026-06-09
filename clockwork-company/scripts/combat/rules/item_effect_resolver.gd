@@ -3,6 +3,7 @@ class_name ItemEffectResolver
 
 const CombatConstantsScript := preload("res://scripts/combat/combat_constants.gd")
 const CombatEventsScript := preload("res://scripts/combat/logging/combat_events.gd")
+const StatusResolverScript := preload("res://scripts/combat/rules/status_resolver.gd")
 const TRIGGER_DAMAGED := "Damaged"
 const TRIGGER_HP_BELOW_THRESHOLD := "HP Below Threshold"
 const EFFECT_HEAL := "Heal"
@@ -32,6 +33,9 @@ static func apply_battle_start_item_effects(log, units: Array, battle_start_entr
 					unit.armor = max(0, unit.armor + effect.amount)
 					var event := CombatEventsScript.item_trigger(unit, item.display_name, CombatConstantsScript.TRIGGER_BATTLE_START, effect.effect_type, "gains %d armor for this battle" % effect.amount)
 					log.add_event("%s triggers %s: gains %d armor for this battle." % [unit.unit_name, item.display_name, effect.amount], event["event_type"], -1, battle_start_entry_id, event["payload"], event["tags"])
+				elif effect.effect_type == CombatConstantsScript.EFFECT_APPLY_STATUS and effect.target_selector == TARGET_SELF:
+					_mark_effect_fired(unit, effect)
+					StatusResolverScript.apply_status(log, battle_start_entry_id, unit, effect.status, item.display_name, effect.status_duration_turns, effect.status_is_permanent)
 				else:
 					log.add_child(battle_start_entry_id, _unsupported_effect_text(unit, item, effect))
 	if not any_effects:
@@ -112,6 +116,7 @@ static func apply_death_item_effects(log, parent_entry_id: int, defeated_unit, k
 				_mark_effect_fired(defeated_unit, effect)
 				var previous_hp: int = killer.hp
 				killer.hp = max(0, killer.hp - effect.amount)
+				StatusResolverScript.record_damage(killer, previous_hp - killer.hp)
 				var event := CombatEventsScript.item_trigger(defeated_unit, item.display_name, CombatConstantsScript.TRIGGER_DEATH, effect.effect_type, "%s HP %d -> %d" % [killer.unit_name, previous_hp, killer.hp])
 				log.add_event("%s triggers %s on death: %s HP %d -> %d." % [defeated_unit.unit_name, item.display_name, killer.unit_name, previous_hp, killer.hp], event["event_type"], -1, parent_entry_id, event["payload"], event["tags"])
 				if not killer.is_alive():
@@ -145,7 +150,7 @@ static func _effects_for_trigger(item: ItemDefinition, trigger: String) -> Array
 	if item == null:
 		return effects
 	for effect in item.effects:
-		if effect != null and effect.trigger == trigger and effect.amount != 0:
+		if effect != null and effect.trigger == trigger and (effect.amount != 0 or effect.effect_type == CombatConstantsScript.EFFECT_APPLY_STATUS):
 			effects.append(effect)
 	return effects
 

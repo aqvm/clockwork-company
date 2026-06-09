@@ -3,6 +3,7 @@ class_name JobEffectResolver
 
 const CombatConstantsScript := preload("res://scripts/combat/combat_constants.gd")
 const CombatEventsScript := preload("res://scripts/combat/logging/combat_events.gd")
+const StatusResolverScript := preload("res://scripts/combat/rules/status_resolver.gd")
 
 const PASSIVE_ATTACK_DAMAGE_BONUS := "Attack Damage Bonus"
 const PASSIVE_HEAL_BONUS := "Heal Bonus"
@@ -60,6 +61,7 @@ static func apply_damaged_reaction(log, parent_entry_id: int, damaged_unit, atta
 	elif reaction.reaction_type == REACTION_DAMAGE_ATTACKER and attacker != null:
 		var previous_attacker_hp: int = attacker.hp
 		attacker.hp = max(0, attacker.hp - reaction.amount)
+		StatusResolverScript.record_damage(attacker, previous_attacker_hp - attacker.hp)
 		var damage_event := CombatEventsScript.job_effect(damaged_unit, reaction.display_name, "%s HP %d -> %d" % [attacker.unit_name, previous_attacker_hp, attacker.hp])
 		log.add_event("Reaction %s: %s HP %d -> %d." % [reaction.display_name, attacker.unit_name, previous_attacker_hp, attacker.hp], damage_event["event_type"], -1, parent_entry_id, damage_event["payload"], damage_event["tags"])
 		if not attacker.is_alive():

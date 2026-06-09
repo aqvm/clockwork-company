@@ -39,6 +39,10 @@ static func highlight_color_for_line(line: String, highlight_palette) -> String:
 		return bbcode_color_text(highlight_palette.job_effect_color)
 	if " triggers " in line:
 		return bbcode_color_text(highlight_palette.item_trigger_color)
+	if " gains boon " in line or " refreshes boon " in line or " intensifies boon " in line or line.begins_with("Boon "):
+		return bbcode_color_text(highlight_palette.boon_color)
+	if " gains ailment " in line or " refreshes ailment " in line or " intensifies ailment " in line or line.begins_with("Ailment "):
+		return bbcode_color_text(highlight_palette.ailment_color)
 	if " is defeated" in line:
 		return bbcode_color_text(highlight_palette.defeat_color)
 	return ""
