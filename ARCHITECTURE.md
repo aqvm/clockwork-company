@@ -178,6 +178,7 @@ The first playable test now opens as a scenario workbench with the older combat 
 - `clockwork-company/scripts/combat/runtime/turn_scheduler.gd` owns deterministic next-actor selection and action re-scheduling.
 - `clockwork-company/scripts/combat/rules/targeting_rules.gd` owns team and target selection helpers.
 - `clockwork-company/scripts/combat/rules/tactic_resolver.gd` owns tactic evaluation/selection decisions.
+- `clockwork-company/scripts/combat/rules/forecast_service.gd` owns narrow deterministic speculative timelines and returns only the first allied defeat foreseen before the horizon.
 - `clockwork-company/scripts/combat/rules/job_effect_resolver.gd` owns current-job combat bonus hooks.
 - `clockwork-company/scripts/combat/rules/ancestry_feature_resolver.gd` owns always-on ancestry combat hooks.
 - `clockwork-company/scripts/combat/rules/item_effect_resolver.gd` owns triggered item effect resolution.
@@ -275,6 +276,7 @@ Current combat rules:
 - current job passives are deterministic combat hooks such as attack damage, healing, or guard armor bonuses
 - current job reactions are deterministic damaged/low-HP hooks such as temporary armor, self-healing, or damaging the attacker
 - passive and reaction cooldowns are tracked as combat-only unit-turn counters
+- an equipped `Forecast` passive grants forecast capability; it does not fire as an automatic passive effect
 - physical damage is reduced by armor; magic-tagged damage uses magic damage and ignores armor
 - every unit starts with `next_action_time = action_interval`
 - the living unit with the lowest `next_action_time` acts next
@@ -284,6 +286,9 @@ Current combat rules:
 - the first tactic with a true condition and valid target is selected
 - if no tactic matches, the simulator falls back to attacking the frontmost living enemy
 - current supported tactic actions are attack, heal, guard, job skill, and assigned skill
+- forecast-aware tactics are unavailable without forecast capability; the first implementation heals the first ally foreseen to be defeated
+- a forecast clones runtime unit state, uses the actor's first eligible non-forecast tactic as its baseline action, stops before another living forecaster acts, and ends before the forecasting unit's next turn
+- speculative turns reuse simulator action resolution but write only to a discarded private log and cannot recursively forecast
 - heal restores a fixed 5 HP without exceeding max HP
 - guard grants 2 temporary armor until that unit's next turn
 - runtime armor is split into base battle armor and temporary guard armor

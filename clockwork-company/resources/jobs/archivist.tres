@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/data/job_definition.gd" id="1_job"]
 [ext_resource type="Script" path="res://scripts/data/skill_definition.gd" id="2_skill"]
-[ext_resource type="Script" path="res://scripts/data/passive_definition.gd" id="3_passive"]
+[ext_resource type="Resource" path="res://resources/job_features/archivist/read_ahead.tres" id="3_passive"]
 [ext_resource type="Script" path="res://scripts/data/reaction_definition.gd" id="4_reaction"]
 [ext_resource type="Script" path="res://scripts/data/tactic_definition.gd" id="5_tactic"]
 
@@ -13,14 +13,6 @@ tags = ["paper", "heal", "magic"]
 action = "Heal"
 default_target = "Lowest HP Ally"
 amount_modifier = 1
-
-[sub_resource type="Resource" id="Resource_archivist_passive"]
-script = ExtResource("3_passive")
-display_name = "Cross-Reference"
-tags = ["support"]
-passive_type = "Heal Bonus"
-amount = 1
-cooldown_turns = 1
 
 [sub_resource type="Resource" id="Resource_archivist_reaction"]
 script = ExtResource("4_reaction")
@@ -51,6 +43,6 @@ magic_damage_growth = 1
 armor_growth = 0
 action_interval_growth = -1
 skill = SubResource("Resource_archivist_skill")
-passive = SubResource("Resource_archivist_passive")
+passive = ExtResource("3_passive")
 reaction = SubResource("Resource_archivist_reaction")
 default_tactic = SubResource("Resource_archivist_default_tactic")

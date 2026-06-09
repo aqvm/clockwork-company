@@ -61,6 +61,7 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 - Add debuff purge options eventually, but keep them specific and intentionally scarce. Avoid a universal, always-accessible cleanse that erases ailment matchup pressure.
 - Avoid generic ailment resistance stats. Occasional authored immunities are acceptable when they make a unit, enemy, item, or scenario identity clearer.
 - Keep statuses small. Finite owner-turn duration, explicit permanent application, and authored `Ignore`/`Refresh`/`Intensify` stack rules are implemented; do not add independent layered instances, purge, or immunity rules until focused content needs them.
+- Keep forecasting narrow. The first deterministic single-baseline forecast and ally-defeat heal tactic are implemented; do not add alternative-future search, arbitrary timeline rewriting, or continuous forecasting until focused content needs them.
 - Consider collapsible structured combat log groups instead of plain indented text.
 
 ## Replay and Presentation
@@ -128,7 +129,6 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 
 - Fully remove or replace obsolete combat-test harness concepts as the scenario workbench matures. The old Phase 7/loss-test controls now live behind a Debug toggle.
 - Watch for duplicated UI logic in `combat_test_scene.gd`; extract components only when duplication becomes painful.
-- Keep `GODOT_BEST_PRACTICES_AUDIT.md` current when a documented practice is adopted, rejected, or substantially reconsidered.
+- Periodically run a focused documentation synchronization and broad review pass. Reconcile durable architecture/design decisions, backlog and roadmap state, learning retrospectives, the Godot practices audit, and modding contract docs without requiring routine feature patches to update every document.
 - Keep `RunState` scenario-backed and old debug-run paths both working until the debug run is intentionally retired.
 - Avoid adding more one-off strings for Resources now that `ResourceTooltipBuilder` exists.
-- Keep `TODO.md`, `ROADMAP.md`, `DESIGN_NOTES.md`, `ARCHITECTURE.md`, and `LEARNING_LOG.md` synchronized when plans change.

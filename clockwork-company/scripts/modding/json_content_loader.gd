@@ -45,16 +45,16 @@ const SKILL_TARGET_VALUES := {"Self": true, "Lowest HP Ally": true, "Frontmost E
 const STATUS_POLARITY_VALUES := {"Boon": true, "Ailment": true}
 const STATUS_TYPE_VALUES := {"Confusion": true, "Reconstitution": true}
 const STATUS_STACKING_RULE_VALUES := {"Ignore": true, "Refresh": true, "Intensify": true}
-const PASSIVE_TYPE_VALUES := {"None": true, "Attack Damage Bonus": true, "Heal Bonus": true, "Guard Armor Bonus": true}
+const PASSIVE_TYPE_VALUES := {"None": true, "Attack Damage Bonus": true, "Heal Bonus": true, "Guard Armor Bonus": true, "Forecast": true}
 const REACTION_TRIGGER_VALUES := {"Damaged": true, "HP Below Threshold": true}
 const REACTION_CONDITION_VALUES := {"Always": true, "Self HP Below Percent": true}
 const REACTION_TYPE_VALUES := {"Gain Armor": true, "Heal Self": true, "Damage Attacker": true}
 const ANCESTRY_FEATURE_TRIGGER_VALUES := {"Battle Start": true, "Attack": true, "Kill": true, "Damaged": true, "HP Below Threshold": true}
 const ANCESTRY_FEATURE_CONDITION_VALUES := {"Always": true, "Self HP Below Percent": true}
 const ANCESTRY_FEATURE_TYPE_VALUES := {"Gain Armor": true, "Bonus Damage": true, "Heal Self": true, "Damage Attacker": true, "Hasten Self": true, "Gain Physical Damage": true}
-const TACTIC_CONDITION_VALUES := {"Always": true, "Self HP Below Half": true, "Ally HP Below Half": true, "Enemy Alive": true}
+const TACTIC_CONDITION_VALUES := {"Always": true, "Self HP Below Half": true, "Ally HP Below Half": true, "Enemy Alive": true, "Ally Would Be Defeated Before Next Turn": true}
 const TACTIC_ACTION_VALUES := {"Attack": true, "Heal": true, "Guard": true, "Job Skill": true, "Assigned Skill": true}
-const TACTIC_TARGET_VALUES := {"Self": true, "Lowest HP Ally": true, "Frontmost Enemy": true}
+const TACTIC_TARGET_VALUES := {"Self": true, "Lowest HP Ally": true, "Frontmost Enemy": true, "First Foreseen Ally": true}
 
 
 static func load_demo_unit_definitions(enabled_mod_pack_ids: Variant = null) -> Array[UnitDefinition]:

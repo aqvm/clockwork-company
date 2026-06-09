@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="UnitLoadoutDefinition" load_steps=7 format=3]
+[gd_resource type="Resource" script_class="UnitLoadoutDefinition" load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/unit_loadout_definition.gd" id="1_loadout"]
 [ext_resource type="Resource" path="res://resources/jobs/archivist.tres" id="2_job"]
@@ -6,11 +6,13 @@
 [ext_resource type="Resource" path="res://resources/items/surgeons_loupe.tres" id="helmet_item"]
 [ext_resource type="Resource" path="res://resources/tactics/mercy_first.tres" id="4_tactic"]
 [ext_resource type="Resource" path="res://resources/tactics/steady_strike.tres" id="5_tactic"]
+[ext_resource type="Resource" path="res://resources/job_features/archivist/read_ahead.tres" id="6_passive"]
+[ext_resource type="Resource" path="res://resources/tactics/avert_foreseen_defeat.tres" id="7_tactic"]
 
 [resource]
 script = ExtResource("1_loadout")
 display_name = "Archivist Last-Candle"
 current_job = ExtResource("2_job")
+equipped_passive = ExtResource("6_passive")
 trinket = ExtResource("3_trinket")
-tactics = [ExtResource("4_tactic"), ExtResource("5_tactic")]
-
+tactics = [ExtResource("7_tactic"), ExtResource("4_tactic"), ExtResource("5_tactic")]

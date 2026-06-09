@@ -206,9 +206,11 @@ Currently implemented skill actions:
 Optional fields:
 - `display_name` (`String`)
 - `tags` (`Array[String]`)
-- `passive_type` (`String enum`): `None`, `Attack Damage Bonus`, `Heal Bonus`, `Guard Armor Bonus`
+- `passive_type` (`String enum`): `None`, `Attack Damage Bonus`, `Heal Bonus`, `Guard Armor Bonus`, `Forecast`
 - `amount` (`int`)
 - `cooldown_turns` (`int`): unit-turn cooldown after the passive fires. `0` means no cooldown.
+
+`Forecast` is a capability rather than an automatic passive effect. It makes forecast-aware tactics available while equipped.
 
 ## `jobs[].reaction` keys
 
@@ -233,9 +235,9 @@ Currently implemented reaction timing:
 Optional fields:
 - `display_name` (`String`)
 - `tags` (`Array[String]`)
-- `condition` (`String enum`): `Always`, `Self HP Below Half`, `Ally HP Below Half`, `Enemy Alive`
+- `condition` (`String enum`): `Always`, `Self HP Below Half`, `Ally HP Below Half`, `Enemy Alive`, `Ally Would Be Defeated Before Next Turn`
 - `action` (`String enum`): `Attack`, `Heal`, `Guard`, `Job Skill`, `Assigned Skill`
-- `target` (`String enum`): `Self`, `Lowest HP Ally`, `Frontmost Enemy`
+- `target` (`String enum`): `Self`, `Lowest HP Ally`, `Frontmost Enemy`, `First Foreseen Ally`
 
 ## `tactics[]` keys
 
@@ -245,9 +247,11 @@ Required:
 Optional fields:
 - `display_name` (`String`)
 - `tags` (`Array[String]`)
-- `condition` (`String enum`): `Always`, `Self HP Below Half`, `Ally HP Below Half`, `Enemy Alive`
+- `condition` (`String enum`): `Always`, `Self HP Below Half`, `Ally HP Below Half`, `Enemy Alive`, `Ally Would Be Defeated Before Next Turn`
 - `action` (`String enum`): `Attack`, `Heal`, `Guard`, `Job Skill`, `Assigned Skill`
-- `target` (`String enum`): `Self`, `Lowest HP Ally`, `Frontmost Enemy`
+- `target` (`String enum`): `Self`, `Lowest HP Ally`, `Frontmost Enemy`, `First Foreseen Ally`
+
+Forecast-aware tactics require an equipped `Forecast` passive. Forecasting speculates one deterministic future using the actor's first eligible non-forecast tactic, stops before another living forecaster acts, and ends before the actor's next turn.
 
 ## `loadouts[]` keys
 

@@ -20,15 +20,15 @@ Purpose: exercise as many modding code paths as possible in one toggleable pack.
 
 4. Job add:
 - Adds `warden_it`.
-- Tests new job creation, loadout linkage, and a five-turn status-applying skill.
+- Tests new job creation, loadout linkage, a five-turn status-applying skill, and the `Forecast` passive capability.
 
 5. Job override:
 - Overrides existing `apprentice`.
 - Tests updated job modifiers/effect behavior in existing units.
 
 6. Tactic add:
-- Adds `guard_then_attack_it`.
-- Tests custom tactic id flow into loadouts and combat logs.
+- Adds `guard_then_attack_it` and `avert_foreseen_defeat_it`.
+- Tests custom tactic id flow plus forecast-aware condition and target reconstruction.
 
 7. Tactic override:
 - Overrides existing `attack_frontmost`.

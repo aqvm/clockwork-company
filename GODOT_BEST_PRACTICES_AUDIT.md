@@ -125,6 +125,7 @@ Adopted:
 - Sync nested `EffectDefinition` names into `resource_name` so item effects stay readable in the Inspector without an editor plugin.
 - Add `tools/check_godot.ps1` as the standard wrapper for the project-local headless Godot script check.
 - Add a lightweight Godot content validation script for scenario/campaign references now that sample content has expanded.
+- Keep speculative combat state in explicit runtime clones that share authored Resources but deep-copy mutable battle collections.
 
 Adopt soon:
 

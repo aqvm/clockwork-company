@@ -32,7 +32,9 @@ var statuses: Array[Dictionary] = []
 var next_status_instance_id := 1
 
 
-func _init(definition: UnitDefinition, unit_slot_index: int) -> void:
+func _init(definition: UnitDefinition = null, unit_slot_index: int = 0) -> void:
+	if definition == null:
+		return
 	unit_name = definition.display_name
 	unit_id = _build_unit_id(definition.team, unit_slot_index, definition.display_name)
 	campaign_unit_id = String(definition.get_meta("campaign_unit_id", definition.display_name))
@@ -78,6 +80,44 @@ func _init(definition: UnitDefinition, unit_slot_index: int) -> void:
 
 func is_alive() -> bool:
 	return hp > 0
+
+
+func forecast_capable() -> bool:
+	return current_passive != null and current_passive.passive_type == "Forecast"
+
+
+func clone_runtime_state():
+	var clone = get_script().new()
+	clone.unit_name = unit_name
+	clone.unit_id = unit_id
+	clone.campaign_unit_id = campaign_unit_id
+	clone.tags = tags.duplicate()
+	clone.team = team
+	clone.ancestry = ancestry
+	clone.current_ancestry_feature = current_ancestry_feature
+	clone.max_hp = max_hp
+	clone.hp = hp
+	clone.physical_damage = physical_damage
+	clone.magic_damage = magic_damage
+	clone.armor = armor
+	clone.action_interval = action_interval
+	clone.next_action_time = next_action_time
+	clone.slot_index = slot_index
+	clone.loadout = loadout
+	clone.current_job = current_job
+	clone.current_skill = current_skill
+	clone.assigned_skill = assigned_skill
+	clone.current_passive = current_passive
+	clone.current_reaction = current_reaction
+	clone.equipped_items = equipped_items.duplicate()
+	clone.skipped_items = skipped_items.duplicate()
+	clone.tactics = tactics.duplicate()
+	clone.guard_armor = guard_armor
+	clone.effect_usage_counts = effect_usage_counts.duplicate(true)
+	clone.ability_cooldowns = ability_cooldowns.duplicate(true)
+	clone.statuses = statuses.duplicate(true)
+	clone.next_status_instance_id = next_status_instance_id
+	return clone
 
 
 func add_status(status: Resource, source_name: String, duration_turns: int, is_permanent: bool) -> String:

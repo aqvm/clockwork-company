@@ -7,6 +7,7 @@ const CombatTextFormatterScript := preload("res://scripts/combat/logging/combat_
 const CombatEventsScript := preload("res://scripts/combat/logging/combat_events.gd")
 const TurnSchedulerScript := preload("res://scripts/combat/runtime/turn_scheduler.gd")
 const TacticResolverScript := preload("res://scripts/combat/rules/tactic_resolver.gd")
+const ForecastServiceScript := preload("res://scripts/combat/rules/forecast_service.gd")
 const JobEffectResolverScript := preload("res://scripts/combat/rules/job_effect_resolver.gd")
 const AncestryFeatureResolverScript := preload("res://scripts/combat/rules/ancestry_feature_resolver.gd")
 const ItemEffectResolverScript := preload("res://scripts/combat/rules/item_effect_resolver.gd")
@@ -138,7 +139,24 @@ func _append_roster(log, units: Array) -> void:
 
 
 func _take_tactical_action(log, turn_entry_id: int, actor, units: Array) -> void:
-	var decision: Dictionary = TacticResolverScript.choose_action(actor, units)
+	var forecast := forecast_for_actor(actor, units)
+	if forecast.has("first_defeated_ally"):
+		var foreseen_ally = forecast["first_defeated_ally"]
+		log.add_child(turn_entry_id, "Forecast %s: %s foresees %s defeated before their next turn." % [actor.current_passive.display_name, actor.unit_name, foreseen_ally.unit_name])
+	var decision: Dictionary = TacticResolverScript.choose_action(actor, units, forecast)
+	_log_and_resolve_decision(log, turn_entry_id, actor, decision)
+
+
+func forecast_for_actor(actor, units: Array) -> Dictionary:
+	return ForecastServiceScript.forecast(
+		actor,
+		units,
+		_execute_speculative_current_action,
+		_execute_speculative_future_turn
+	)
+
+
+func _log_and_resolve_decision(log, turn_entry_id: int, actor, decision: Dictionary) -> void:
 	for skipped_reason: String in decision.get("skipped_reasons", []):
 		var skipped_event := CombatEventsScript.tactic_skipped(actor, skipped_reason)
 		log.add_event(skipped_reason, skipped_event["event_type"], CombatLogScript.NO_TIME, turn_entry_id, skipped_event["payload"], skipped_event["tags"])
@@ -149,6 +167,29 @@ func _take_tactical_action(log, turn_entry_id: int, actor, units: Array) -> void
 		var fallback_event := CombatEventsScript.tactic_fallback(actor, decision["target"])
 		log.add_event(decision["reason"], fallback_event["event_type"], CombatLogScript.NO_TIME, turn_entry_id, fallback_event["payload"], fallback_event["tags"])
 	_resolve_tactic_action(log, turn_entry_id, actor, decision["target"], decision["action"])
+
+
+func _execute_speculative_current_action(actor, units: Array) -> void:
+	var log = CombatLogScript.new()
+	var turn_entry_id: int = log.add("Speculative current action")
+	var active_status_instance_ids: Array[int] = actor.status_instance_ids()
+	var decision: Dictionary = TacticResolverScript.choose_action(actor, units, {}, false)
+	_resolve_tactic_action(log, turn_entry_id, actor, decision["target"], decision["action"])
+	StatusResolverScript.elapse_turn_statuses(log, turn_entry_id, actor, active_status_instance_ids)
+
+
+func _execute_speculative_future_turn(actor, units: Array) -> void:
+	var log = CombatLogScript.new()
+	var turn_entry_id: int = log.add("Speculative future turn")
+	actor.tick_ability_cooldowns()
+	_clear_guard_if_needed(log, turn_entry_id, actor)
+	var active_status_instance_ids: Array[int] = actor.status_instance_ids()
+	StatusResolverScript.apply_turn_start_statuses(log, turn_entry_id, actor)
+	var decision: Dictionary = TacticResolverScript.choose_action(actor, units, {}, false)
+	_resolve_tactic_action(log, turn_entry_id, actor, decision["target"], decision["action"])
+	StatusResolverScript.elapse_turn_statuses(log, turn_entry_id, actor, active_status_instance_ids)
+	if actor.is_alive():
+		TurnSchedulerScript.schedule_next_turn(actor)
 
 
 func _resolve_tactic_action(log, turn_entry_id: int, actor, target, action: String) -> void:

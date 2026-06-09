@@ -4521,3 +4521,29 @@ Stacking follow-up:
 Manual exercise:
 
 - Change Reconstitution's `max_stacks` to `2`, update its description and the mechanics-check expectations, then explain why the potency curve remains in `StatusResolver` instead of being inferred from `max_stacks`.
+## 2026-06-09 - First future-aware combat tactics pass
+
+### What changed
+
+- Added an equipped `Forecast` passive capability and the first forecast-aware tactic: `Avert Foreseen Defeat`.
+- Added a narrow deterministic `ForecastService` that clones runtime combat state, follows one non-forecast baseline, stops before another living forecaster, and ends before the original forecaster's next turn.
+- Made Archivist's `Read Ahead` passive and Marra's ordered tactics the first inspectable Resource-authored example.
+- Added focused checks for capability gating, forecast horizons, real-state immutability, and JSON reconstruction.
+
+### What I learned
+
+- Authored Resources can be shared by speculative copies because combat must not mutate them, while runtime arrays and dictionaries need explicit copies.
+- A passive can grant permission to use a tactic vocabulary without firing as an automatic combat effect.
+- Reusing real action resolution keeps forecasts deterministic, but recursive forecasting and presentation logs must be explicitly disabled.
+
+### Files to inspect
+
+- `clockwork-company/scripts/combat/rules/forecast_service.gd`
+- `clockwork-company/scripts/combat/combat_simulator.gd`
+- `clockwork-company/scripts/combat/rules/tactic_resolver.gd`
+- `clockwork-company/scripts/combat/runtime/unit_state.gd`
+- `clockwork-company/scripts/tools/forecast_mechanics_check.gd`
+
+### Exercise
+
+- Move `Avert Foreseen Defeat` below Marra's first eligible non-forecast tactic, predict which baseline action the forecast will simulate, then run the focused forecast check after restoring the intended order.

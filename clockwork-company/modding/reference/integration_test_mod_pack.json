@@ -101,7 +101,7 @@
       "passive": {
         "display_name": "Warden IT Habit",
         "tags": [],
-        "passive_type": "None",
+        "passive_type": "Forecast",
         "amount": 0,
         "cooldown_turns": 0
       }
@@ -123,6 +123,14 @@
     }
   ],
   "tactics": [
+    {
+      "id": "avert_foreseen_defeat_it",
+      "display_name": "Avert Foreseen Defeat IT",
+      "tags": ["forecast", "heal"],
+      "condition": "Ally Would Be Defeated Before Next Turn",
+      "action": "Heal",
+      "target": "First Foreseen Ally"
+    },
     {
       "id": "guard_then_attack_it",
       "condition": "Enemy Alive",

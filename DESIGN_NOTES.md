@@ -215,6 +215,8 @@ Current tactic design rules:
 - campaign planning edits tactics as an ordered library: players can add/remove/reorder authored tactics, but do not construct arbitrary condition/action/target rules in the planning UI
 - the current job's default tactic remains appended at combat initialization and is not part of the editable loadout list
 
+The first future-aware tactic pass treats forecasting as an equipped passive capability, not an automatic passive effect. A forecast-aware tactic is unavailable without that capability. Forecasting follows one deterministic baseline rather than searching alternatives: the forecasting actor uses its first eligible non-forecast tactic, subsequent units use normal non-forecast tactics, prediction stops before another living forecaster would act, and the horizon ends before the original forecaster's next turn. The first authored use is `Avert Foreseen Defeat`, which heals the first ally predicted to be defeated within that horizon. Speculation stays presentation-silent and cannot recursively forecast.
+
 Armor reduction should stay readable when temporary armor exists. Base battle armor cannot go below zero. Effects such as Shortblade reduce base armor first; if a target has no base armor left, the same reduction can reduce temporary guard armor instead.
 
 Future fully-blocked hits should not trigger normal hit effects unless the effect explicitly says it triggers on contact. The current combat formula still deals at least 1 damage, so this is a future-proofing decision for possible zero-damage armor rules.
