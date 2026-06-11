@@ -13,6 +13,7 @@ Purpose: exercise as many modding code paths as possible in one toggleable pack.
 2. Item add:
 - Adds `tower_shield_it` (new id).
 - Tests new content creation, reference usage by loadouts, and finite three-turn battle-start `Apply Status`.
+- Adds `resolver_vocabulary_it` to validate JSON temporary modifiers and specific-status removal.
 
 3. Item override:
 - Overrides existing `glass_focus`.
@@ -21,6 +22,7 @@ Purpose: exercise as many modding code paths as possible in one toggleable pack.
 4. Job add:
 - Adds `warden_it`.
 - Tests new job creation, loadout linkage, a five-turn status-applying skill, and the `Forecast` passive capability.
+- Adds `cleanser_it` to validate an `Effects Only` skill with deterministic ailment removal.
 
 5. Job override:
 - Overrides existing `apprentice`.

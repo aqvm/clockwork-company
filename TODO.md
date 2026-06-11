@@ -54,7 +54,7 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 
 ## Combat and Rules
 
-- Add more status effects only when focused content needs them. Confusion is the first ailment and Reconstitution is the first boon.
+- Add more status effects only when focused content needs them. Confusion, Bleed, Numb, and Frost are implemented ailments; Reconstitution is the first boon.
 - Design ailments as distinct rule pressures, not generic damage-over-time variants. Each ailment should create a readable tactical question or matchup hook.
 - Good ailment directions to explore: bleed that punishes faster units or future movement, confusion that skips the first tactic the unit would have used, armor corrosion that changes mitigation math, silence-like effects that disrupt skill use, or panic effects that alter targeting.
 - Ailments may either punish a unit's strengths or exploit a unit's weaknesses. Both paradigms are valid and can coexist.

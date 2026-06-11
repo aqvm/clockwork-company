@@ -46,8 +46,8 @@ func _ready() -> void:
 	_forward_tooltip_signals(unit_action_panel)
 
 
-func show_scenarios(scenarios: Array, progress, selected_scenario: Resource, active_scenario_id: String) -> void:
-	scenario_list_panel.call("show_scenarios", scenarios, progress, selected_scenario, active_scenario_id)
+func show_scenarios(scenarios: Array, progress, selected_scenario: Resource, active_scenario_id: String, campaign_scenario_ids: Array[String]) -> void:
+	scenario_list_panel.call("show_scenarios", scenarios, progress, selected_scenario, active_scenario_id, campaign_scenario_ids)
 
 
 func show_scenario(scenario: Resource, status_text: String, campaign_progress = null) -> void:

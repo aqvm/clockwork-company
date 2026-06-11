@@ -82,8 +82,8 @@ static func damage(actor, target, amount: int, target_armor: int, previous_hp: i
 	return {
 		"event_type": Schema.EVENT_DAMAGE,
 		"payload": {
-			"actor_id": actor.unit_id,
-			"actor": actor.unit_name,
+			"actor_id": actor.unit_id if actor != null else "",
+			"actor": actor.unit_name if actor != null else "Environment",
 			"target_id": target.unit_id,
 			"target": target.unit_name,
 			"amount": amount,

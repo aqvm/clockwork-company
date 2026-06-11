@@ -13,9 +13,9 @@ This audit checks whether current mechanics can be authored, applied, inspected,
 | Job skills, passives, and reactions | `JobDefinition` with nested ability Resources; JSON jobs | `UnitState`, `CombatSimulator`, and `JobEffectResolver` | Unit detail/tooltips and job-effect combat events |
 | Ancestry growth and features | `AncestryDefinition` with one feature Resource; JSON ancestries | `UnitState` applies growth; `AncestryFeatureResolver` applies supported hooks | Unit detail/tooltips, setup logs, and ancestry-feature combat events |
 | Enemy builds | Normal unit/loadout/job/item/tactic/ancestry Resources and JSON units | Same `UnitState` and simulator paths as allies | Scenario/encounter traversal, unit detail/tooltips, setup logs, replay |
-| Scenario rules | `ScenarioRuleDefinition` Resources referenced by scenarios | `StatusResolver` implements Burned Chapel's broad Confusion rule; Iron Tollgate remains an authoring note | Scenario detail, Resource tooltips, battle-start logs, and replay runtime tooltips expose the rule |
-| Statuses | `StatusDefinition` Resources and JSON statuses; skills and declarative item effects reference authored statuses | `StatusResolver` applies statuses and resolves Reconstitution; `TacticResolver` enforces Confusion's selection pressure | Status events, battle-start/tactic logs, replay snapshots, Resource tooltips, and runtime unit tooltips expose current statuses |
-| Combat state | Simulator-owned `UnitState`, structured events, and snapshots | `CombatSimulator` is authoritative | Logs explain rule outcomes; replay snapshots expose HP, timing, alive state, statuses, and stable ids |
+| Scenario rules | `ScenarioRuleDefinition` Resources referenced by scenarios, with shared triggered effects | `TriggeredEffectResolver` resolves authored scenario hooks; Iron Tollgate remains an authoring note | Scenario detail, Resource tooltips, combat logs, and replay runtime tooltips expose the rule and its consequences |
+| Statuses | `StatusDefinition` Resources and JSON statuses; skills and declarative item effects reference authored statuses | `StatusResolver` applies statuses and resolves Reconstitution; `TacticResolver` enforces Confusion; the combat hook pipeline resolves Bleed and Numb | Status events, battle-start/tactic logs, replay snapshots, Resource tooltips, and runtime unit tooltips expose current statuses |
+| Combat state | Simulator-owned `UnitState`, `CombatContext`, structured events, and snapshots | `CombatSimulator` and its `CombatContext` are authoritative | Logs explain rule outcomes; causal combat events and replay snapshots expose HP, timing, alive state, statuses, and stable ids |
 
 ## Cross-Cutting Findings
 
@@ -31,7 +31,7 @@ This audit checks whether current mechanics can be authored, applied, inspected,
 - Tactics, jobs, ancestry features, and item effects use focused resolver scripts instead of unrelated UI or run-flow code.
 - Enemy mechanics use the same content vocabulary as allied builds, so the player can inspect and eventually reuse the ideas that defeated them.
 - Current response hooks are the small existing buildcraft vocabulary: armor, physical versus magic damage, healing, guard, action timing, targeting priorities, tags, and equipment/job tradeoffs.
-- Status application now has focused skill and battle-start item-effect hooks with finite owner-turn duration by default, explicit permanent application, and authored ignore/refresh/intensify stacking. Broader triggers, independent layered instances, purge rules, and targeting vocabulary should wait for focused content that needs them.
+- Status application and removal now use shared triggered effects with event-relative, team-wide, and deterministic-random targeting. Applications retain finite owner-turn duration by default, explicit permanence, authored ignore/refresh/intensify stacking, and request/fact hooks. Independent layered instances and immunity rules should wait for focused content that needs them.
 
 ### Logs, Replay, and Tooltips
 

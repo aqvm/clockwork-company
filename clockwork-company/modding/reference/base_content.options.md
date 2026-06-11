@@ -38,11 +38,13 @@ Required:
 Optional fields:
 - `display_name` (`String`)
 - `polarity` (`String enum`): `Boon`, `Ailment`
-- `status_type` (`String enum`): `Confusion`, `Reconstitution`
+- `status_type` (`String enum`): `Confusion`, `Reconstitution`, `Bleed`, `Numb`, `Frost`
 - `stacking_rule` (`String enum`): `Ignore`, `Refresh`, `Intensify`
 - `max_stacks` (`int`, minimum `1`)
 - `tags` (`Array[String]`)
+- `amount` (`int`, minimum `0`): flat amount used by statuses such as Bleed.
 - `amount_percent` (`int`, 1-100): Reconstitution healing percentage.
+- `elapses_naturally` (`bool`, default `true`): when false, owner turns do not reduce finite duration; explicit removal is required.
 - `description` (`String`)
 
 Current status behavior:
@@ -54,6 +56,9 @@ Current status behavior:
 - Sources can explicitly apply a permanent status; Burned Chapel's scenario rule does this for Confusion.
 - `Confusion` skips the first otherwise-valid tactic each turn.
 - `Reconstitution` intensifies to three stacks. At turn start it restores 50%/75%/100% of damage received since the previous turn at 1/2/3 stacks, rounded down, then consumes one stack only if HP was restored. Consuming the final stack removes the boon.
+- `Bleed` intensifies to five stacks and deals its authored `amount` per stack after the afflicted unit completes an action. It does not expire naturally.
+- `Numb` prevents the afflicted unit's reactions from triggering.
+- `Frost` intensifies to five stacks. The next physical damage request against the afflicted unit gains the authored `amount` per stack, then Frost is removed. Nonphysical damage does not consume it.
 
 ## `ancestries[]` keys
 
@@ -130,16 +135,19 @@ Item effects must be authored in `effects[]`. The old top-level `trigger`, `effe
 Optional fields:
 - `display_name` (`String`)
 - `tags` (`Array[String]`): effect labels used by tag conditions and future content tools.
-- `trigger` (`String enum`): `Battle Start`, `Attack`, `Hit`, `Kill`, `Death`, `Damaged`, `HP Below Threshold`, `Every N Ticks`
+- `trigger` (`String enum`): `Battle Start`, `Turn Start`, `Turn Complete`, `Skill Used`, `Attack`, `Hit`, `Kill`, `Death`, `Damaged`, `HP Below Threshold`, `Status Applied`, `Status Removed`, `Reaction Triggered`
 - `condition` (`String enum`): `Always`, `Self HP Below Percent`, `Target Has Tag`, `Target Missing Tag`
-- `target_selector` (`String enum`): `Self`, `Attack Target`, `Attacker`, `Killer`, `All Allies`, `All Enemies`, `Adjacent Allies`
-- `effect_type` (`String enum`): `Gain Armor`, `Bonus Damage`, `Reduce Target Armor`, `Heal`, `Heal Self`, `Damage`, `Damage Killer`, `Increase Max HP`, `Apply Status`
-- `status_id` (`String`): required when `effect_type` is `Apply Status`; references a `statuses[].id`.
+- `target_selector` (`String enum`): `Self`, `Event Source`, `Event Target`, `Attack Target`, `Attacker`, `Killer`, `All Units`, `Allied Units`, `Enemy Units`, `Random Allied Unit`, `Random Enemy Unit`
+- `effect_type` (`String enum`): `Gain Armor`, `Bonus Damage`, `Reduce Target Armor`, `Heal Self`, `Damage Killer`, `Increase Max HP`, `Apply Status`, `Remove Status`, `Modify Stat`
+- `status_id` (`String`): required for `Apply Status` and `Specific Status` removal; references a `statuses[].id`.
 - `status_duration_turns` (`int`, default `3`): affected owner turns before expiration.
 - `status_is_permanent` (`bool`, default `false`): when true, ignores `status_duration_turns`.
+- `status_polarity` (`String enum`): `Any`, `Boon`, `Ailment`; filters `Remove Status`.
+- `status_removal_mode` (`String enum`): `Random Matching`, `Specific Status`.
+- `modified_stat` (`String enum`): `Max HP`, `Physical Damage`, `Magic Damage`, `Armor`, `Action Interval`.
+- `modifier_duration_turns` (`int`, default `1`): target completed turns before a temporary modifier expires.
 - `amount` (`int`)
 - `threshold_percent` (`int`, 1-100): used by `Self HP Below Percent` and `HP Below Threshold`.
-- `interval_ticks` (`int`): reserved for `Every N Ticks`.
 - `once_per_battle` (`bool`)
 
 Currently implemented item effect combinations:
@@ -147,14 +155,14 @@ Currently implemented item effect combinations:
 - `Battle Start` + `Apply Status` targeting `Self`
 - `Attack` + `Bonus Damage`
 - `Hit` + `Reduce Target Armor`
-- `Kill` + `Heal` or `Heal Self`
+- `Kill` + `Heal Self`
 - `Death` + `Damage Killer`
-- `Damaged` or `HP Below Threshold` + `Heal`, `Heal Self`, or `Increase Max HP`
+- `Damaged` or `HP Below Threshold` + `Heal Self` or `Increase Max HP`
+- `Apply Status`, `Remove Status`, and `Modify Stat` on any trigger that supplies the selected target.
 
-Reserved but not fully implemented yet:
-- `Every N Ticks` needs periodic scheduler support.
-- `Adjacent Allies` needs formation/adjacency support.
-- `All Allies`, `All Enemies`, and direct `Damage` need multi-target/effect application support.
+Unsupported trigger/effect/target combinations are rejected during content validation rather than accepted as inert content.
+
+Deterministic-random selectors and `Random Matching` removal use combat event order, so identical combats make identical choices. Shared effects are limited to one activation per causal event chain to prevent recursive loops.
 
 ## `jobs[]` keys
 
@@ -188,18 +196,20 @@ Equipment note:
 Optional fields:
 - `display_name` (`String`)
 - `tags` (`Array[String]`)
-- `action` (`String enum`): `Attack`, `Heal`, `Guard`, `Apply Status`
+- `action` (`String enum`): `Attack`, `Heal`, `Guard`, `Apply Status`, `Effects Only`
 - `default_target` (`String enum`): `Self`, `Lowest HP Ally`, `Frontmost Enemy`
 - `status_id` (`String`): required when `action` is `Apply Status`; references a `statuses[].id`.
 - `status_duration_turns` (`int`, default `3`): affected owner turns before expiration.
 - `status_is_permanent` (`bool`, default `false`): when true, ignores `status_duration_turns`.
 - `amount_modifier` (`int`): added to the base action amount when the skill is used.
+- `effects` (`Array[Dictionary]`): shared effects using the `Skill Used` trigger. `Effects Only` requires at least one effect.
 
 Currently implemented skill actions:
 - `Attack`: performs a normal attack with `amount_modifier` as bonus damage.
 - `Heal`: performs a normal heal with `amount_modifier` as bonus healing.
 - `Guard`: performs a normal guard with `amount_modifier` as bonus temporary armor.
 - `Apply Status`: applies the referenced authored boon or ailment to the tactic-selected target.
+- `Effects Only`: resolves the skill's shared effects without also attacking, healing, or guarding.
 
 ## `jobs[].passive` keys
 

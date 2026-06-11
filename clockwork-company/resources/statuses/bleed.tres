@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="StatusDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/status_definition.gd" id="1_status"]
+
+[resource]
+script = ExtResource("1_status")
+display_name = "Bleed"
+polarity = "Ailment"
+status_type = "Bleed"
+stacking_rule = "Intensify"
+max_stacks = 5
+tags = Array[String](["ailment", "damage", "action"])
+amount = 1
+elapses_naturally = false
+description = "After this unit completes an action, it takes 1 damage per stack. Bleed does not expire naturally."

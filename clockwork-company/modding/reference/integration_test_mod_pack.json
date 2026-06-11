@@ -33,7 +33,6 @@
           "effect_type": "Gain Armor",
           "amount": 2,
           "threshold_percent": 50,
-          "interval_ticks": 0,
           "once_per_battle": false
         },
         {
@@ -48,12 +47,39 @@
           "status_is_permanent": false,
           "amount": 0,
           "threshold_percent": 50,
-          "interval_ticks": 0,
           "once_per_battle": false
         }
       ],
       "physical_damage_modifier": 0,
       "magic_damage_modifier": 0
+    },
+    {
+      "id": "resolver_vocabulary_it",
+      "display_name": "Resolver Vocabulary IT",
+      "slot": "Trinket",
+      "effects": [
+        {
+          "display_name": "Resolver IT Tempo",
+          "trigger": "Turn Start",
+          "condition": "Always",
+          "target_selector": "Self",
+          "effect_type": "Modify Stat",
+          "modified_stat": "Action Interval",
+          "modifier_duration_turns": 2,
+          "amount": -1
+        },
+        {
+          "display_name": "Resolver IT Dispel",
+          "trigger": "Damaged",
+          "condition": "Always",
+          "target_selector": "Self",
+          "effect_type": "Remove Status",
+          "status_id": "reconstitution_it",
+          "status_polarity": "Boon",
+          "status_removal_mode": "Specific Status",
+          "amount": 0
+        }
+      ]
     },
     {
       "id": "glass_focus",
@@ -72,7 +98,6 @@
           "effect_type": "Bonus Damage",
           "amount": 4,
           "threshold_percent": 50,
-          "interval_ticks": 0,
           "once_per_battle": false
         }
       ],
@@ -119,6 +144,27 @@
         "passive_type": "None",
         "amount": 0,
         "cooldown_turns": 0
+      }
+    },
+    {
+      "id": "cleanser_it",
+      "display_name": "Cleanser IT",
+      "skill": {
+        "display_name": "Cleanser IT Purge",
+        "tags": ["cleanse", "integration_test"],
+        "action": "Effects Only",
+        "default_target": "Self",
+        "effects": [
+          {
+            "display_name": "Cleanser IT Remove Ailment",
+            "trigger": "Skill Used",
+            "condition": "Always",
+            "target_selector": "Self",
+            "effect_type": "Remove Status",
+            "status_polarity": "Ailment",
+            "status_removal_mode": "Random Matching"
+          }
+        ]
       }
     }
   ],

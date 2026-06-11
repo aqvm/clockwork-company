@@ -321,6 +321,7 @@ func _build_visual_replay_model() -> void:
 			"defeat_time": -9999.0,
 			"is_defeated": false,
 			"statuses": unit.get("statuses", []).duplicate(true),
+			"temporary_modifiers": unit.get("temporary_modifiers", []).duplicate(true),
 		}
 		units_by_name[name] = state
 		if not unit_id.is_empty():
@@ -377,6 +378,7 @@ func _apply_snapshot_for_root_event(root_event_id: int) -> bool:
 		state["is_alive"] = bool(unit_snapshot.get("is_alive", state.get("is_alive", true)))
 		state["is_defeated"] = bool(unit_snapshot.get("is_defeated", not bool(state["is_alive"])))
 		state["statuses"] = unit_snapshot.get("statuses", state.get("statuses", [])).duplicate(true)
+		state["temporary_modifiers"] = unit_snapshot.get("temporary_modifiers", state.get("temporary_modifiers", [])).duplicate(true)
 		if bool(state["is_defeated"]):
 			state["defeat_time"] = displayed_sim_time
 	active_event_actor_name = actor_name

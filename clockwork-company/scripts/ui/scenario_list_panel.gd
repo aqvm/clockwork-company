@@ -6,7 +6,7 @@ signal resource_tooltip_requested(source: Control, resource: Resource)
 signal tooltip_cleared
 
 
-func show_scenarios(scenarios: Array, campaign_progress, selected_scenario: Resource, active_scenario_id := "") -> void:
+func show_scenarios(scenarios: Array, campaign_progress, selected_scenario: Resource, active_scenario_id := "", campaign_scenario_ids: Array[String] = []) -> void:
 	_clear_children()
 
 	var title := Label.new()
@@ -17,7 +17,7 @@ func show_scenarios(scenarios: Array, campaign_progress, selected_scenario: Reso
 		if scenario == null:
 			continue
 		var button := Button.new()
-		button.text = "%s [%s]" % [scenario.display_name, _scenario_label(scenario, campaign_progress, active_scenario_id)]
+		button.text = "%s [%s]" % [scenario.display_name, _scenario_label(scenario, campaign_progress, active_scenario_id, campaign_scenario_ids)]
 		button.toggle_mode = true
 		button.button_pressed = selected_scenario != null and selected_scenario.scenario_id == scenario.scenario_id
 		button.pressed.connect(_on_scenario_button_pressed.bind(scenario))
@@ -29,7 +29,7 @@ func _on_scenario_button_pressed(scenario: Resource) -> void:
 	scenario_selected.emit(scenario)
 
 
-func _state_label(scenario: Resource, campaign_progress, active_scenario_id: String) -> String:
+func _state_label(scenario: Resource, campaign_progress, active_scenario_id: String, campaign_scenario_ids: Array[String]) -> String:
 	if campaign_progress == null:
 		return "debug"
 	if active_scenario_id == scenario.scenario_id or campaign_progress.current_scenario_id == scenario.scenario_id:
@@ -40,11 +40,13 @@ func _state_label(scenario: Resource, campaign_progress, active_scenario_id: Str
 		return "attempted"
 	if campaign_progress.is_scenario_unlocked(scenario.scenario_id):
 		return "available"
+	if not campaign_scenario_ids.has(String(scenario.scenario_id)):
+		return "practice"
 	return "locked"
 
 
-func _scenario_label(scenario: Resource, campaign_progress, active_scenario_id: String) -> String:
-	var label := _state_label(scenario, campaign_progress, active_scenario_id)
+func _scenario_label(scenario: Resource, campaign_progress, active_scenario_id: String, campaign_scenario_ids: Array[String]) -> String:
+	var label := _state_label(scenario, campaign_progress, active_scenario_id, campaign_scenario_ids)
 	var content_label := _content_unlock_label(scenario, campaign_progress)
 	if content_label.is_empty():
 		return label

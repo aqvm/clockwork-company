@@ -179,6 +179,7 @@ The first playable test now opens as a scenario workbench with the older combat 
 - `clockwork-company/scripts/combat/rules/targeting_rules.gd` owns team and target selection helpers.
 - `clockwork-company/scripts/combat/rules/tactic_resolver.gd` owns tactic evaluation/selection decisions.
 - `clockwork-company/scripts/combat/rules/forecast_service.gd` owns narrow deterministic speculative timelines and maps the target selected in the first matching future state back to real runtime state.
+- `clockwork-company/scripts/combat/runtime/combat_context.gd` owns the deterministic gameplay request/fact pipeline, causal event history, responder order, and triggered-chain safety limits. `clockwork-company/scripts/combat/rules/combat_hook_resolver.gd` is the central responder that dispatches current item, ancestry, reaction, status, kill, and death consequences. `COMBAT_EVENTS.md` documents the event contract.
 - `clockwork-company/scripts/combat/rules/job_effect_resolver.gd` owns current-job combat bonus hooks.
 - `clockwork-company/scripts/combat/rules/ancestry_feature_resolver.gd` owns always-on ancestry combat hooks.
 - `clockwork-company/scripts/combat/rules/item_effect_resolver.gd` owns triggered item effect resolution.
@@ -194,7 +195,7 @@ The first playable test now opens as a scenario workbench with the older combat 
 - `scripts/combat/logging/combat_event_schema.gd` defines known event types and required payload keys as the structured logging contract.
 - `scripts/combat/logging/combat_events.gd` provides typed event-construction helpers so simulator/rule code does not handcraft payload dictionaries ad hoc.
 - `combat_simulator.gd` now orchestrates a battle by delegating logging, targeting, tactic selection, effect resolution, scheduling, and demo roster setup to dedicated scripts.
-- `combat_simulator.gd` now also provides structured battle report APIs (`run_demo_battle_report` and `run_battle_report`) that return rendered lines, structured events, initial roster snapshots, replay unit-state snapshots, winner, and action count.
+- `combat_simulator.gd` now also provides structured battle report APIs (`run_demo_battle_report` and `run_battle_report`) that return rendered lines, presentation-oriented structured events, authoritative causal `combat_events`, initial roster snapshots, replay unit-state snapshots, winner, and action count.
 - Base game content remains authored in `.tres` Resources; the loader derives JSON-like dictionaries from those Resources, then applies mod JSON overrides from `res://mods/*.json` before constructing runtime Resources.
 - Structured report payloads now include a `log_version` field for format evolution safety.
 - `clockwork-company/scripts/data/unit_definition.gd` defines the editable unit data Resource type, including ancestry, base physical/magic damage, and per-job progress.
@@ -212,8 +213,8 @@ The first playable test now opens as a scenario workbench with the older combat 
 - `clockwork-company/scripts/data/tactic_definition.gd` defines the small tactic rule Resource type.
 - `clockwork-company/scripts/data/encounter_definition.gd` defines a run encounter as a named enemy party made from normal `UnitDefinition` Resources.
 - `clockwork-company/scripts/data/reward_definition.gd` defines a run reward as a named offer with a suggested recipient and a normal `ItemDefinition` payload.
-- `clockwork-company/scripts/data/scenario_definition.gd` defines a handcrafted mission as story text, ordered encounter references, optional data-only scenario rules, rewards, tags, and unlock ids.
-- `clockwork-company/scripts/data/scenario_rule_definition.gd` defines a named scenario rule that can exist as readable data before combat mechanics implement it.
+- `clockwork-company/scripts/data/scenario_definition.gd` defines a handcrafted mission as story text, ordered encounter references, optional scenario rules with shared triggered effects, rewards, tags, and unlock ids.
+- `clockwork-company/scripts/data/scenario_rule_definition.gd` defines a named scenario rule with optional shared triggered effects.
 - `clockwork-company/scripts/data/campaign_definition.gd` and `campaign_scenario_node_definition.gd` define a lightweight scenario chain and starting roster ids.
 - `clockwork-company/resources/ancestries/*.tres` stores the current ancestry catalog.
 - `clockwork-company/resources/units/*.tres` stores the current demo unit definitions and a wider catalog of future ally/enemy build bodies.
@@ -346,7 +347,7 @@ Tactic responsibility split:
 - Campaign planning can add, remove, reorder, and edit the condition/action/target/Foretell fields of loadout tactics; the current job's default tactic remains read-only and is appended later by `UnitState`.
 - `CampaignRosterState` owns durable campaign tactic ordering and serializes player-authored tactic records, while still accepting legacy content-ID-only save data.
 - `UnitState` owns the runtime copy of that priority-ordered tactic list for this combat copy.
-- `UnitState` owns battle-local status instances, stacks, remaining owner-turn duration, and mechanic state; `StatusResolver` applies/refreshes/intensifies/expires authored statuses and resolves Reconstitution, while `TacticResolver` owns Confusion's tactic-selection pressure.
+- `UnitState` owns battle-local status instances, temporary stat modifiers, remaining owner-turn duration, and mechanic state. `TriggeredEffectResolver` resolves shared item, skill, and scenario-rule status application/removal and temporary stat changes through combat events. `StatusResolver` applies/refreshes/intensifies/removes/expires statuses and resolves Reconstitution, while `TacticResolver` owns Confusion's tactic-selection pressure. Bleed responds to action-completed facts, Numb prevents reaction requests, and Frost modifies physical-damage requests through the combat hook pipeline.
 - `CombatSimulator` owns tactic evaluation, target validation, and action resolution.
 - The current planning UI uses the authored tactic library as templates, then lets the player alter equipped tactic rules.
 - The UI still receives plain rendered log lines and does not know how tactics are evaluated.

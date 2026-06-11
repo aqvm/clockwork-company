@@ -391,7 +391,8 @@ func _update_campaign_controls() -> void:
 		scenarios = campaign_manager.all_scenarios()
 	if planning_panel != null:
 		var progress = campaign_manager.progress if campaign_manager != null else null
-		planning_panel.call("show_scenarios", scenarios, progress, selected_scenario, _active_scenario_id())
+		var campaign_scenario_ids: Array[String] = campaign_manager.campaign_scenario_ids() if campaign_manager != null else []
+		planning_panel.call("show_scenarios", scenarios, progress, selected_scenario, _active_scenario_id(), campaign_scenario_ids)
 
 
 func _select_scenario(scenario: Resource) -> void:
@@ -492,7 +493,7 @@ func _selected_scenario_can_practice() -> bool:
 		return false
 	if _has_active_scenario_run():
 		return false
-	return campaign_manager.progress.is_scenario_unlocked(selected_scenario.scenario_id)
+	return true
 
 
 func _has_active_scenario_run() -> bool:
@@ -520,6 +521,8 @@ func _scenario_campaign_status(scenario: Resource) -> String:
 		return "attempted"
 	if campaign_manager.progress.is_scenario_unlocked(scenario.scenario_id):
 		return "available"
+	if not campaign_manager.scenario_is_in_campaign(scenario.scenario_id):
+		return "practice only"
 	return "locked"
 
 
