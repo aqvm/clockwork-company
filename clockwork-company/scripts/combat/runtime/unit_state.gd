@@ -30,6 +30,8 @@ var effect_usage_counts := {}
 var ability_cooldowns := {}
 var statuses: Array[Dictionary] = []
 var next_status_instance_id := 1
+var temporary_modifiers: Array[Dictionary] = []
+var next_temporary_modifier_id := 1
 
 
 func _init(definition: UnitDefinition = null, unit_slot_index: int = 0) -> void:
@@ -117,6 +119,8 @@ func clone_runtime_state():
 	clone.ability_cooldowns = ability_cooldowns.duplicate(true)
 	clone.statuses = _duplicate_statuses(statuses)
 	clone.next_status_instance_id = next_status_instance_id
+	clone.temporary_modifiers = temporary_modifiers.duplicate(true)
+	clone.next_temporary_modifier_id = next_temporary_modifier_id
 	return clone
 
 
@@ -228,11 +232,25 @@ func consume_status_stack(status_name: String) -> int:
 	return 0
 
 
+func remove_status(status_name: String) -> Dictionary:
+	for index in range(statuses.size()):
+		var instance: Dictionary = statuses[index]
+		var definition: Resource = instance.get("definition", null)
+		if definition == null or definition.display_name != status_name:
+			continue
+		statuses.remove_at(index)
+		return instance
+	return {}
+
+
 func elapse_status_turns(instance_ids: Array[int]) -> Array[Dictionary]:
 	var expired: Array[Dictionary] = []
 	for index in range(statuses.size() - 1, -1, -1):
 		var instance: Dictionary = statuses[index]
+		var definition: Resource = instance.get("definition", null)
 		if not instance_ids.has(int(instance.get("instance_id", -1))) or bool(instance.get("is_permanent", false)):
+			continue
+		if definition != null and not bool(definition.elapses_naturally):
 			continue
 		instance["remaining_turns"] = int(instance.get("remaining_turns", 1)) - 1
 		if int(instance["remaining_turns"]) <= 0:
@@ -258,6 +276,73 @@ func status_snapshots() -> Array[Dictionary]:
 			"damage_since_last_turn": int(instance.get("damage_since_last_turn", 0)),
 		})
 	return snapshots
+
+
+func add_temporary_modifier(stat_name: String, amount: int, duration_turns: int, source_name: String) -> Dictionary:
+	if amount == 0:
+		return {}
+	var previous_value := stat_value(stat_name)
+	_apply_stat_delta(stat_name, amount)
+	var applied_amount := stat_value(stat_name) - previous_value
+	if applied_amount == 0:
+		return {}
+	var modifier := {
+		"instance_id": next_temporary_modifier_id,
+		"stat": stat_name,
+		"amount": applied_amount,
+		"remaining_turns": max(1, duration_turns),
+		"source_name": source_name,
+	}
+	next_temporary_modifier_id += 1
+	temporary_modifiers.append(modifier)
+	return modifier
+
+
+func elapse_temporary_modifiers() -> Array[Dictionary]:
+	var expired: Array[Dictionary] = []
+	for index in range(temporary_modifiers.size() - 1, -1, -1):
+		var modifier: Dictionary = temporary_modifiers[index]
+		modifier["remaining_turns"] = int(modifier.get("remaining_turns", 1)) - 1
+		if int(modifier["remaining_turns"]) > 0:
+			continue
+		_apply_stat_delta(String(modifier.get("stat", "")), -int(modifier.get("amount", 0)))
+		expired.append(modifier)
+		temporary_modifiers.remove_at(index)
+	return expired
+
+
+func temporary_modifier_snapshots() -> Array[Dictionary]:
+	return temporary_modifiers.duplicate(true)
+
+
+func stat_value(stat_name: String) -> int:
+	match stat_name:
+		"Max HP":
+			return max_hp
+		"Physical Damage":
+			return physical_damage
+		"Magic Damage":
+			return magic_damage
+		"Armor":
+			return armor
+		"Action Interval":
+			return action_interval
+	return 0
+
+
+func _apply_stat_delta(stat_name: String, amount: int) -> void:
+	match stat_name:
+		"Max HP":
+			max_hp = max(1, max_hp + amount)
+			hp = min(hp, max_hp)
+		"Physical Damage":
+			physical_damage = max(1, physical_damage + amount)
+		"Magic Damage":
+			magic_damage = max(0, magic_damage + amount)
+		"Armor":
+			armor = max(0, armor + amount)
+		"Action Interval":
+			action_interval = max(1, action_interval + amount)
 
 
 func total_armor() -> int:

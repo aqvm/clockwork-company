@@ -3,6 +3,7 @@ class_name CampaignManager
 
 const CampaignProgressScript := preload("res://scripts/campaign/campaign_progress.gd")
 const CampaignRosterStateScript := preload("res://scripts/campaign/campaign_roster_state.gd")
+const ContentCatalogScript := preload("res://scripts/content/content_catalog.gd")
 const JsonContentLoaderScript := preload("res://scripts/modding/json_content_loader.gd")
 const SAVE_VERSION := 5
 
@@ -38,12 +39,24 @@ func available_scenarios() -> Array:
 
 func all_scenarios() -> Array:
 	var scenarios: Array = []
-	if campaign == null:
-		return scenarios
-	for node in campaign.scenario_nodes:
-		if node != null and node.scenario != null:
-			scenarios.append(node.scenario)
+	var included_ids: Array[String] = []
+	if campaign != null:
+		for node in campaign.scenario_nodes:
+			if node != null and node.scenario != null:
+				scenarios.append(node.scenario)
+				included_ids.append(String(node.scenario.scenario_id))
+	for scenario in ContentCatalogScript.load_scenarios():
+		if not included_ids.has(String(scenario.scenario_id)):
+			scenarios.append(scenario)
 	return scenarios
+
+
+func scenario_is_in_campaign(scenario_id: String) -> bool:
+	return _find_node(scenario_id) != null
+
+
+func campaign_scenario_ids() -> Array[String]:
+	return _scenario_ids()
 
 
 func start_scenario(scenario_id: String):

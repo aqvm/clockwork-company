@@ -229,6 +229,8 @@ Future ailments should not be generic damage-over-time skins. A status should cr
 
 The first ailment implementation should stay tiny and content-led: add one or two statuses only when a scenario, job, enemy, or item needs them. Status state should be simulator-owned, deterministic, visible in logs, and tooltip-readable. Do not build a broad status framework until several concrete ailments prove what common duration, stacking, purge, immunity, and UI rules are actually needed.
 
+Combat causality uses a simulator-owned deterministic request/fact pipeline. Requests such as damage, healing, status application/removal, and reaction triggering may be modified or prevented before resolution. Facts describe completed outcomes and may create queued consequences. Gameplay responds to this pipeline rather than combat-log entries or Godot signals, preserving deterministic ordering, Foretell compatibility, and readable causal chains.
+
 Confusion is the first implemented ailment. Burned Chapel's `Ash-Choked Rites` rule explicitly gives every unit permanent Confusion for each encounter. On each turn, Confusion skips the first tactic with a true condition, available action, and valid target; evaluation then continues down the ordered list, and normal fallback attack still applies if nothing later selects.
 
 Positive statuses use the term boon; negative statuses use ailment; status remains the umbrella term. Reconstitution is the first authored boon. At the start of its owner's turn, it restores 50% of damage received since that unit's previous turn, rounded down, then clears the recorded damage. This creates pressure to protect a damaged unit long enough to act again while giving opponents a reason to finish it before its next turn. Authored status Resources are shared references that skills and declarative effects can apply, while each unit's accumulated damage and remaining duration remain battle-local runtime state.
@@ -238,6 +240,8 @@ Status duration belongs to the application source rather than the status definit
 Stack behavior belongs to the status definition because different statuses should ask different tactical questions. The first supported rules are `Ignore`, `Refresh`, and `Intensify`. All keep one runtime status instance: `Ignore` rejects reapplication, `Refresh` preserves one stack and keeps the longer duration, and `Intensify` adds a stack up to an authored cap while also keeping the longer duration. Reconstitution intensifies to three stacks: one stack restores 50% of recently received damage, two restore 75%, and three restore 100%. A successful Reconstitution heal consumes one stack and consuming the final stack removes the boon; no restored HP means no stack is consumed. This creates a repeated-investment boon without multiplying independent damage ledgers.
 
 Debuff purges should eventually exist, but they should be specific tools rather than a universal, always-accessible cleanse. Purge options should create buildcraft and matchup decisions, not erase ailment pressure by default. Generic ailment resistance stats should not be part of the core model; occasional authored immunities are acceptable when they make a unit, enemy, item, or scenario identity clearer.
+
+Bleed is an action-frequency ailment: after the afflicted unit completes an action, it takes one damage per stack. Bleed intensifies, does not expire naturally, and requires explicit removal. Numb is a short reaction-counter ailment that prevents reaction requests while active. Frost is a physical setup/payoff ailment: its stacks add damage to the next physical damage request against the afflicted unit, then Frost is removed.
 
 ### Content catalog rules
 
@@ -291,6 +295,8 @@ The first mechanical scenario rule, `iron_tollgate_armored_enemies`, was intenti
 Scenario rules are better suited to broad scenario-wide conditions: weather, terrain, visibility, ritual pressure, environmental hazards, or other global modifiers that affect the battlefield. A rainstorm that makes attacks less reliable is a more natural scenario rule than a rule that quietly changes one team's armor. Keep these rules visible, deterministic, and easy to explain before combat starts.
 
 Burned Chapel's `Ash-Choked Rites` is the first current mechanical scenario rule. It applies Confusion equally to all units at battle start, creating a planning-order puzzle rather than quietly patching one side's stats.
+
+Shared triggered effects are the first reusable cross-content resolver vocabulary. Items, effect-only or augmented skills, and scenario rules can apply statuses, remove one deterministic-random matching status or a referenced specific status type, and apply temporary stat modifiers. Random selection is derived from deterministic combat event order, and each shared effect can fire only once per causal event root to prevent recursive hook loops.
 
 Scenario and encounter design should intentionally test specific mechanics, matchup questions, or synergy patterns. Enemy parties should be self-synergistic where possible, using normal unit/loadout/job/item/tactic/ancestry tools to demonstrate coherent buildcraft. This makes losses educational: when the player loses, they should be able to inspect the fight and learn what kind of synergy beat them.
 

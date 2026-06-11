@@ -1,12 +1,17 @@
 extends SceneTree
 
 const CombatLogScript := preload("res://scripts/combat/logging/combat_log.gd")
-const ItemEffectResolverScript := preload("res://scripts/combat/rules/item_effect_resolver.gd")
 const JsonContentLoaderScript := preload("res://scripts/modding/json_content_loader.gd")
 const StatusResolverScript := preload("res://scripts/combat/rules/status_resolver.gd")
 const UnitStateScript := preload("res://scripts/combat/runtime/unit_state.gd")
+const CombatContextScript := preload("res://scripts/combat/runtime/combat_context.gd")
+const CombatHookResolverScript := preload("res://scripts/combat/rules/combat_hook_resolver.gd")
+const ReactionDefinitionScript := preload("res://scripts/data/reaction_definition.gd")
 const ReconstitutionStatus := preload("res://resources/statuses/reconstitution.tres")
 const ConfusionStatus := preload("res://resources/statuses/confusion.tres")
+const BleedStatus := preload("res://resources/statuses/bleed.tres")
+const NumbStatus := preload("res://resources/statuses/numb.tres")
+const FrostStatus := preload("res://resources/statuses/frost.tres")
 const TEST_UNIT := preload("res://resources/units/alden_guard.tres")
 
 
@@ -72,9 +77,69 @@ func _init() -> void:
 	assert(mod_job.skill.status_duration_turns == 5 and not mod_job.skill.status_is_permanent, "JSON skills should preserve authored finite duration.")
 	assert(mod_job.skill.status.stacking_rule == "Intensify" and mod_job.skill.status.max_stacks == 3, "JSON statuses should preserve authored stacking rules and caps.")
 	var mod_unit = UnitStateScript.new(mod_units[0], 0)
-	ItemEffectResolverScript.apply_battle_start_item_effects(log, [mod_unit], root_entry_id)
+	var mod_context = CombatContextScript.new([mod_unit], log)
+	mod_context.add_responder(CombatHookResolverScript.respond)
+	mod_context.publish("battle_started", null, null, {}, -1, root_entry_id)
 	assert(mod_unit.has_status("Reconstitution IT"), "Battle-start Apply Status should resolve a JSON status_id reference.")
 	assert(int(mod_unit.status_instance("Reconstitution").get("remaining_turns", 0)) == 3, "JSON status applications should default to finite three-turn duration.")
 
-	print("Status mechanics validation passed: intensify stacks, stack consumption, duration, permanent application, healing, and JSON status application worked.")
+	_assert_hook_driven_statuses()
+
+	print("Status mechanics validation passed: stacking, duration, hook events, Bleed action damage, Numb reaction suppression, Frost request modification, and JSON status application worked.")
 	quit(0)
+
+
+func _assert_hook_driven_statuses() -> void:
+	var bleeding_unit = UnitStateScript.new(TEST_UNIT, 0)
+	var log = CombatLogScript.new()
+	var context = CombatContextScript.new([bleeding_unit], log)
+	context.add_responder(CombatHookResolverScript.respond)
+	var root_entry_id: int = log.add("Hook-driven status check")
+	assert(StatusResolverScript.apply_status(log, root_entry_id, bleeding_unit, BleedStatus, "Test", 2, false, context))
+	assert(StatusResolverScript.apply_status(log, root_entry_id, bleeding_unit, BleedStatus, "Test", 2, false, context))
+	var hp_before_bleed: int = bleeding_unit.hp
+	context.publish("action_completed", bleeding_unit, bleeding_unit, {"action": "Test"}, -1, root_entry_id, ["action"])
+	assert(bleeding_unit.hp == hp_before_bleed - 2, "Two Bleed stacks should deal two damage after the afflicted unit completes an action.")
+	assert(context.events_of_type("damage_dealt").size() == 1, "Bleed damage should use the shared damage event pipeline.")
+	StatusResolverScript.elapse_turn_statuses(log, root_entry_id, bleeding_unit, bleeding_unit.status_instance_ids(), context)
+	assert(bleeding_unit.has_status("Bleed"), "Bleed should not expire naturally.")
+
+	var attacker = UnitStateScript.new(TEST_UNIT, 1)
+	var reaction := ReactionDefinitionScript.new()
+	reaction.display_name = "Test Counter"
+	reaction.trigger = "Damaged"
+	reaction.reaction_type = "Damage Attacker"
+	reaction.amount = 1
+	bleeding_unit.current_reaction = reaction
+	assert(StatusResolverScript.apply_status(log, root_entry_id, bleeding_unit, NumbStatus, "Test", 2, false, context))
+	context.apply_direct_damage(attacker, bleeding_unit, 1, -1, root_entry_id, ["test"])
+	assert(context.events_of_type("reaction_suppressed").size() == 1, "Numb should suppress and explain an otherwise-valid reaction.")
+	assert(StatusResolverScript.remove_status(log, root_entry_id, bleeding_unit, "Numb", "test removal", context, attacker))
+	var attacker_hp_before: int = attacker.hp
+	context.apply_direct_damage(attacker, bleeding_unit, 1, -1, root_entry_id, ["test"])
+	assert(attacker.hp == attacker_hp_before - 1, "Removing Numb should allow the reaction to trigger again.")
+	assert(context.events_of_type("reaction_triggered").size() == 1, "Reaction triggering should emit a shared hook event.")
+	assert(context.events_of_type("status_removed").size() >= 1, "Explicit status removal should emit a shared hook event.")
+
+	assert(StatusResolverScript.apply_status(log, root_entry_id, bleeding_unit, FrostStatus, "Test", 2, false, context))
+	assert(StatusResolverScript.apply_status(log, root_entry_id, bleeding_unit, FrostStatus, "Test", 2, false, context))
+	var physical_request: Dictionary = context.request("damage_requested", attacker, bleeding_unit, {
+		"physical_amount": 3,
+		"magic_amount": 0,
+		"amount": 3,
+		"prevented": false,
+	}, -1, root_entry_id, ["damage", "physical"])
+	assert(int(physical_request["payload"]["amount"]) == 7, "Two Frost stacks should add four damage to the next physical damage request.")
+	assert(bleeding_unit.has_status("Frost"), "Frost should remain until the modified physical damage actually resolves.")
+	var previous_frost_target_hp: int = bleeding_unit.hp
+	bleeding_unit.hp -= int(physical_request["payload"]["amount"])
+	context.record_damage(attacker, bleeding_unit, int(physical_request["payload"]["amount"]), previous_frost_target_hp, int(physical_request["payload"]["physical_amount"]), 0, int(physical_request["id"]), root_entry_id, ["damage", "physical"])
+	assert(not bleeding_unit.has_status("Frost"), "Frost should be removed after modified physical damage resolves.")
+	assert(StatusResolverScript.apply_status(log, root_entry_id, bleeding_unit, FrostStatus, "Test", 2, false, context))
+	var magic_request: Dictionary = context.request("damage_requested", attacker, bleeding_unit, {
+		"physical_amount": 0,
+		"magic_amount": 3,
+		"amount": 3,
+		"prevented": false,
+	}, -1, root_entry_id, ["damage", "magic"])
+	assert(int(magic_request["payload"]["amount"]) == 3 and bleeding_unit.has_status("Frost"), "Nonphysical damage should not consume or benefit from Frost.")

@@ -5,7 +5,7 @@ class_name UnitDefinition
 @export var display_name := ""
 @export var tags: Array[String] = []
 @export_enum("Allies", "Enemies") var team := "Allies"
-@export var ancestry: Resource = null
+@export var ancestry: AncestryDefinition = null
 @export var max_hp := 1
 @export var physical_damage := 1
 @export var magic_damage := 0

@@ -12,6 +12,39 @@
       "tags": ["boon", "healing", "retaliatory"],
       "amount_percent": 50,
       "description": "At turn start, heal 50%/75%/100% of damage received since the previous turn at 1/2/3 stacks, then consume one stack if HP was restored."
+    },
+    {
+      "id": "bleed",
+      "display_name": "Bleed",
+      "polarity": "Ailment",
+      "status_type": "Bleed",
+      "stacking_rule": "Intensify",
+      "max_stacks": 5,
+      "tags": ["ailment", "damage", "action"],
+      "amount": 1,
+      "elapses_naturally": false,
+      "description": "After this unit completes an action, it takes 1 damage per stack. Bleed does not expire naturally."
+    },
+    {
+      "id": "numb",
+      "display_name": "Numb",
+      "polarity": "Ailment",
+      "status_type": "Numb",
+      "stacking_rule": "Refresh",
+      "max_stacks": 1,
+      "tags": ["ailment", "reaction"],
+      "description": "This unit cannot trigger reactions."
+    },
+    {
+      "id": "frost",
+      "display_name": "Frost",
+      "polarity": "Ailment",
+      "status_type": "Frost",
+      "stacking_rule": "Intensify",
+      "max_stacks": 5,
+      "tags": ["ailment", "physical", "setup"],
+      "amount": 2,
+      "description": "The next physical hit against this unit deals 2 additional damage per stack, then removes Frost."
     }
   ],
   "ancestries": [
@@ -81,7 +114,6 @@
 		  "effect_type": "Bonus Damage",
 		  "amount": 2,
 		  "threshold_percent": 50,
-		  "interval_ticks": 0,
 		  "once_per_battle": false
 		}
 	  ],
@@ -125,7 +157,6 @@
 		  "effect_type": "Gain Armor",
 		  "amount": 1,
 		  "threshold_percent": 50,
-		  "interval_ticks": 0,
 		  "once_per_battle": false
 		}
 	  ],
@@ -157,7 +188,6 @@
 		  "effect_type": "Reduce Target Armor",
 		  "amount": 1,
 		  "threshold_percent": 50,
-		  "interval_ticks": 0,
 		  "once_per_battle": false
 		}
 	  ],
@@ -188,7 +218,6 @@
 		  "effect_type": "Increase Max HP",
 		  "amount": 6,
 		  "threshold_percent": 50,
-		  "interval_ticks": 0,
 		  "once_per_battle": true
 		}
 	  ],

@@ -5,3 +5,4 @@ class_name ScenarioRuleDefinition
 @export var display_name := ""
 @export_multiline var description := ""
 @export var tags: Array[String] = []
+@export var effects: Array[EffectDefinition] = []

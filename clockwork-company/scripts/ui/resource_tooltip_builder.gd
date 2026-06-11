@@ -78,6 +78,8 @@ static func related_resources_for_resource(resource) -> Array:
 		_append_related(related, "Default Tactic", resource.default_tactic)
 	elif resource is SkillDefinition:
 		_append_related(related, "Status", resource.status)
+		for effect in resource.effects:
+			_append_related(related, "Effect", effect)
 	elif resource is AncestryDefinition:
 		_append_related(related, "Feature", resource.feature)
 	elif resource is EncounterDefinition:
@@ -92,6 +94,9 @@ static func related_resources_for_resource(resource) -> Array:
 			_append_related(related, "Rule", rule)
 		for reward in resource.rewards:
 			_append_related(related, "Reward", reward)
+	elif resource is ScenarioRuleDefinition:
+		for effect in resource.effects:
+			_append_related(related, "Effect", effect)
 	elif resource is CampaignDefinition:
 		for node in resource.scenario_nodes:
 			_append_related(related, "Scenario Node", node)
@@ -110,6 +115,7 @@ static func text_for_runtime_unit(snapshot: Dictionary) -> String:
 	var display_time: float = float(snapshot.get("display_time", 0.0))
 	var remaining: float = max(0.0, next_action_time - display_time)
 	var statuses: Array = snapshot.get("statuses", [])
+	var temporary_modifiers: Array = snapshot.get("temporary_modifiers", [])
 	var status_text := "none"
 	if not statuses.is_empty():
 		var status_lines: Array[String] = []
@@ -126,7 +132,20 @@ static func text_for_runtime_unit(snapshot: Dictionary) -> String:
 			else:
 				status_lines.append(String(raw_status))
 		status_text = "\n- %s" % _join(status_lines, "\n- ")
-	return _with_source_note("%s\nTeam: %s\nHP: %d/%d\nAction interval: %d\nNext action in: %.1f\nStatuses: %s" % [name, team, hp, max_hp, action_interval, remaining, status_text], "Source: runtime combat state")
+	var modifier_text := "none"
+	if not temporary_modifiers.is_empty():
+		var modifier_lines: Array[String] = []
+		for raw_modifier in temporary_modifiers:
+			if raw_modifier is Dictionary:
+				var modifier: Dictionary = raw_modifier
+				modifier_lines.append("%s %+d from %s. Remaining owner turns: %d." % [
+					String(modifier.get("stat", "Stat")),
+					int(modifier.get("amount", 0)),
+					String(modifier.get("source_name", "effect")),
+					int(modifier.get("remaining_turns", 0)),
+				])
+		modifier_text = "\n- %s" % _join(modifier_lines, "\n- ")
+	return _with_source_note("%s\nTeam: %s\nHP: %d/%d\nAction interval: %d\nNext action in: %.1f\nStatuses: %s\nTemporary modifiers: %s" % [name, team, hp, max_hp, action_interval, remaining, status_text, modifier_text], "Source: runtime combat state")
 
 
 static func text_for_glossary_term(term: String) -> String:
@@ -263,7 +282,7 @@ static func _ancestry_text(ancestry: AncestryDefinition) -> String:
 
 
 static func _skill_text(skill: SkillDefinition) -> String:
-	return "%s\nTags: %s\nAction: %s\nTarget: %s\nStatus: %s\nStatus duration: %s\nAmount modifier: %+d" % [_title(skill), _join(skill.tags), skill.action, skill.default_target, _name_or_none(skill.status), _status_duration_text(skill.status_duration_turns, skill.status_is_permanent), skill.amount_modifier]
+	return "%s\nTags: %s\nAction: %s\nTarget: %s\nStatus: %s\nStatus duration: %s\nAmount modifier: %+d\nEffects: %s" % [_title(skill), _join(skill.tags), skill.action, skill.default_target, _name_or_none(skill.status), _status_duration_text(skill.status_duration_turns, skill.status_is_permanent), skill.amount_modifier, _join(_effect_summaries(skill.effects))]
 
 
 static func _passive_text(passive: PassiveDefinition) -> String:
@@ -283,7 +302,21 @@ static func _effect_text(effect: EffectDefinition) -> String:
 
 
 static func _status_text(status: Resource) -> String:
-	return "%s\nPolarity: %s\nType: %s\nStacking: %s, maximum %d\nTags: %s\nAmount percent: %d%%\n%s" % [_title(status), status.polarity, status.status_type, status.stacking_rule, status.max_stacks, _join(status.tags), status.amount_percent, status.description]
+	var lines: Array[String] = [
+		_title(status),
+		"Polarity: %s" % status.polarity,
+		"Type: %s" % status.status_type,
+		"Stacking: %s, maximum %d" % [status.stacking_rule, status.max_stacks],
+		"Tags: %s" % _join(status.tags),
+	]
+	if status.amount != 0:
+		lines.append("Amount: %d" % status.amount)
+	if status.status_type == "Reconstitution":
+		lines.append("Amount percent: %d%%" % status.amount_percent)
+	if not status.elapses_naturally:
+		lines.append("Duration: requires explicit removal")
+	lines.append(status.description)
+	return "\n".join(lines)
 
 
 static func _encounter_text(encounter: EncounterDefinition) -> String:
@@ -334,6 +367,7 @@ static func _scenario_rule_text(rule: ScenarioRuleDefinition) -> String:
 		lines.append(rule.description)
 	lines.append("Rule id: %s" % rule.rule_id)
 	lines.append("Tags: %s" % _join(rule.tags))
+	lines.append("Effects: %s" % _join(_effect_summaries(rule.effects)))
 	return _join(lines, "\n")
 
 
@@ -375,27 +409,27 @@ static func _generic_resource_text(resource) -> String:
 
 static func _effect_summary(effect: EffectDefinition) -> String:
 	var limit_text := ", once per battle" if effect.once_per_battle else ""
-	var status_text := " (%s)" % _name_or_none(effect.status) if effect.status != null else ""
-	var duration_text := ", %s" % _status_duration_text(effect.status_duration_turns, effect.status_is_permanent) if effect.status != null else ""
-	return "%s%s when %s: %s %d to %s%s%s" % [effect.effect_type, status_text, effect.trigger, effect.condition, effect.amount, effect.target_selector, duration_text, limit_text]
+	if effect.effect_type == "Apply Status":
+		return "Apply %s when %s to %s, %s%s" % [_name_or_none(effect.status), effect.trigger, effect.target_selector, _status_duration_text(effect.status_duration_turns, effect.status_is_permanent), limit_text]
+	if effect.effect_type == "Remove Status":
+		var filter_text := effect.status.display_name if effect.status_removal_mode == "Specific Status" and effect.status != null else "%s %s" % [effect.status_removal_mode, effect.status_polarity]
+		return "Remove %s when %s from %s%s" % [filter_text, effect.trigger, effect.target_selector, limit_text]
+	if effect.effect_type == "Modify Stat":
+		return "Modify %s %+d when %s on %s for %d turns%s" % [effect.modified_stat, effect.amount, effect.trigger, effect.target_selector, effect.modifier_duration_turns, limit_text]
+	return "%s when %s: %s %d to %s%s" % [effect.effect_type, effect.trigger, effect.condition, effect.amount, effect.target_selector, limit_text]
+
+
+static func _effect_summaries(effects: Array[EffectDefinition]) -> Array[String]:
+	var summaries: Array[String] = []
+	for effect in effects:
+		if effect != null:
+			summaries.append(_effect_summary(effect))
+	return summaries
 
 
 static func _effect_support_note(effect: EffectDefinition) -> String:
-	if effect.trigger == "Battle Start" and effect.effect_type == "Gain Armor":
-		return "supported"
-	if effect.trigger == "Battle Start" and effect.effect_type == "Apply Status" and effect.target_selector == "Self" and effect.status != null:
-		return "supported"
-	if effect.trigger == "Attack" and effect.effect_type == "Bonus Damage":
-		return "supported"
-	if effect.trigger == "Hit" and effect.effect_type == "Reduce Target Armor":
-		return "supported"
-	if (effect.trigger == "Damaged" or effect.trigger == "HP Below Threshold") and (effect.effect_type == "Heal" or effect.effect_type == "Heal Self" or effect.effect_type == "Increase Max HP"):
-		return "supported"
-	if effect.trigger == "Kill" and (effect.effect_type == "Heal" or effect.effect_type == "Heal Self"):
-		return "supported"
-	if effect.trigger == "Death" and effect.effect_type == "Damage Killer":
-		return "supported"
-	return "not implemented for this trigger/effect pair; combat logs will say so if it triggers"
+	var error := effect.support_error()
+	return "supported" if error.is_empty() else error
 
 
 static func _item_stats(item: ItemDefinition) -> String:

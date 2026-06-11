@@ -2,8 +2,8 @@ extends RefCounted
 
 const CombatLogScript := preload("res://scripts/combat/logging/combat_log.gd")
 const UnitStateScript := preload("res://scripts/combat/runtime/unit_state.gd")
-const ItemEffectResolverScript := preload("res://scripts/combat/rules/item_effect_resolver.gd")
-const AncestryFeatureResolverScript := preload("res://scripts/combat/rules/ancestry_feature_resolver.gd")
+const CombatContextScript := preload("res://scripts/combat/runtime/combat_context.gd")
+const CombatHookResolverScript := preload("res://scripts/combat/rules/combat_hook_resolver.gd")
 
 
 static func build_party_preview_by_name(units: Array[UnitDefinition]) -> Dictionary:
@@ -20,8 +20,10 @@ static func build_party_preview_by_name(units: Array[UnitDefinition]) -> Diction
 		}
 
 	var log = CombatLogScript.new()
-	ItemEffectResolverScript.apply_battle_start_item_effects(log, unit_states)
-	AncestryFeatureResolverScript.apply_battle_start_features(log, unit_states)
+	var battle_start_entry_id: int = log.add("Planning battle-start preview")
+	var context = CombatContextScript.new(unit_states, log, [], true)
+	context.add_responder(CombatHookResolverScript.respond)
+	context.publish("battle_started", null, null, {}, -1, battle_start_entry_id, ["battle", "preview"])
 
 	for state in unit_states:
 		var preview: Dictionary = previews[state.unit_name]

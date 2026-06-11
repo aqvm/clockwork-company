@@ -2,13 +2,20 @@ extends SceneTree
 
 const CAMPAIGN_PATH := "res://resources/campaigns/first_road_campaign.tres"
 const SCENARIO_DIR := "res://resources/scenarios"
+const ITEM_DIR := "res://resources/items"
+const ANCESTRY_DIR := "res://resources/ancestries"
+const JOB_DIR := "res://resources/jobs"
+const UNIT_DIR := "res://resources/units"
+const ContentCatalogScript := preload("res://scripts/content/content_catalog.gd")
 const JsonContentLoaderScript := preload("res://scripts/modding/json_content_loader.gd")
 
 
 func _init() -> void:
 	var errors: Array[String] = []
 	var scenarios_by_id := _load_scenarios_by_id(errors)
+	_validate_scenario_catalog(scenarios_by_id, errors)
 	_validate_campaign(scenarios_by_id, errors)
+	_validate_authored_resources(errors)
 	var pack_count := _validate_json_packs(errors)
 
 	if errors.is_empty():
@@ -69,6 +76,15 @@ func _validate_scenario(path: String, scenario, scenarios_by_id: Dictionary, err
 		_validate_scenario_reward(scenario.scenario_id, reward, errors)
 
 
+func _validate_scenario_catalog(scenarios_by_id: Dictionary, errors: Array[String]) -> void:
+	var catalog_ids: Array[String] = []
+	for scenario in ContentCatalogScript.load_scenarios():
+		catalog_ids.append(String(scenario.scenario_id))
+	for scenario_id in scenarios_by_id:
+		if not catalog_ids.has(String(scenario_id)):
+			errors.append("Runtime scenario catalog did not discover scenario_id '%s'." % scenario_id)
+
+
 func _validate_scenario_rule(scenario_id: String, rule, errors: Array[String]) -> void:
 	if rule == null:
 		errors.append("Scenario '%s' has a missing rule reference." % scenario_id)
@@ -80,6 +96,18 @@ func _validate_scenario_rule(scenario_id: String, rule, errors: Array[String]) -
 		errors.append("Scenario '%s' has a scenario rule with empty rule_id." % scenario_id)
 	if String(rule.display_name).is_empty():
 		errors.append("Scenario '%s' has scenario rule '%s' with empty display_name." % [scenario_id, rule.rule_id])
+	for effect_index in rule.effects.size():
+		var effect: EffectDefinition = rule.effects[effect_index]
+		if effect == null:
+			errors.append("Scenario '%s' rule '%s' has a missing effect at index %d." % [scenario_id, rule.rule_id, effect_index])
+			continue
+		if effect.target_selector == "Self":
+			errors.append("Scenario '%s' rule '%s' effect %d cannot target Self because scenario rules have no owner." % [scenario_id, rule.rule_id, effect_index])
+		if effect.condition == "Self HP Below Percent":
+			errors.append("Scenario '%s' rule '%s' effect %d cannot use Self HP Below Percent because scenario rules have no owner." % [scenario_id, rule.rule_id, effect_index])
+		var support_error: String = effect.support_error()
+		if not support_error.is_empty():
+			errors.append("Scenario '%s' rule '%s' effect %d is unsupported: %s" % [scenario_id, rule.rule_id, effect_index, support_error])
 
 
 func _validate_scenario_reward(scenario_id: String, reward, errors: Array[String]) -> void:
@@ -178,6 +206,85 @@ func _validate_campaign_starting_roster(campaign, errors: Array[String]) -> void
 		var unit: UnitDefinition = units[0]
 		if unit.team != "Allies":
 			errors.append("Campaign '%s' starting roster id '%s' is not an ally unit." % [String(campaign.campaign_id), id_text])
+
+
+func _validate_authored_resources(errors: Array[String]) -> void:
+	for entry in _load_resources(ITEM_DIR, errors):
+		var item := entry["resource"] as ItemDefinition
+		if item == null:
+			errors.append("Resource is not an ItemDefinition: %s" % entry["path"])
+			continue
+		for effect_index in item.effects.size():
+			var effect := item.effects[effect_index]
+			if effect == null:
+				errors.append("Item '%s' has a missing effect at index %d." % [item.display_name, effect_index])
+				continue
+			var support_error := effect.support_error()
+			if not support_error.is_empty():
+				errors.append("Item '%s' effect %d is unsupported: %s" % [item.display_name, effect_index, support_error])
+
+	for entry in _load_resources(ANCESTRY_DIR, errors):
+		var ancestry := entry["resource"] as AncestryDefinition
+		if ancestry == null:
+			errors.append("Resource is not an AncestryDefinition: %s" % entry["path"])
+			continue
+		if ancestry.feature != null and not ancestry.feature.support_error().is_empty():
+			errors.append("Ancestry '%s' feature is unsupported: %s" % [ancestry.display_name, ancestry.feature.support_error()])
+
+	for entry in _load_resources(JOB_DIR, errors):
+		var job := entry["resource"] as JobDefinition
+		if job == null:
+			errors.append("Resource is not a JobDefinition: %s" % entry["path"])
+			continue
+		if job.skill != null and job.skill.action == "Apply Status" and job.skill.status == null:
+			errors.append("Job '%s' has an Apply Status skill with no status." % job.display_name)
+		if job.skill != null and job.skill.action == "Effects Only" and job.skill.effects.is_empty():
+			errors.append("Job '%s' has an Effects Only skill with no effects." % job.display_name)
+		if job.skill != null:
+			for effect_index in job.skill.effects.size():
+				var effect: EffectDefinition = job.skill.effects[effect_index]
+				if effect == null:
+					errors.append("Job '%s' skill has a missing effect at index %d." % [job.display_name, effect_index])
+					continue
+				if effect.trigger != "Skill Used":
+					errors.append("Job '%s' skill effect %d must use the Skill Used trigger." % [job.display_name, effect_index])
+				var support_error: String = effect.support_error()
+				if not support_error.is_empty():
+					errors.append("Job '%s' skill effect %d is unsupported: %s" % [job.display_name, effect_index, support_error])
+
+	for entry in _load_resources(UNIT_DIR, errors):
+		var unit := entry["resource"] as UnitDefinition
+		if unit == null:
+			errors.append("Resource is not a UnitDefinition: %s" % entry["path"])
+			continue
+		if unit.loadout == null:
+			errors.append("Unit '%s' has no loadout." % unit.display_name)
+			continue
+		_validate_item_slot(unit, "weapon", unit.loadout.weapon, "Weapon", errors)
+		_validate_item_slot(unit, "armor", unit.loadout.armor, "Armor", errors)
+		_validate_item_slot(unit, "helmet", unit.loadout.helmet, "Helmet", errors)
+		_validate_item_slot(unit, "trinket", unit.loadout.trinket, "Trinket", errors)
+
+
+func _validate_item_slot(unit: UnitDefinition, slot_name: String, item: ItemDefinition, expected_slot: String, errors: Array[String]) -> void:
+	if item != null and item.slot != expected_slot:
+		errors.append("Unit '%s' equips %s item '%s' in its %s slot." % [unit.display_name, item.slot, item.display_name, slot_name])
+
+
+func _load_resources(directory_path: String, errors: Array[String]) -> Array[Dictionary]:
+	var entries: Array[Dictionary] = []
+	var directory := DirAccess.open(directory_path)
+	if directory == null:
+		errors.append("Missing resource directory: %s" % directory_path)
+		return entries
+	var file_names := directory.get_files()
+	file_names.sort()
+	for file_name in file_names:
+		if not file_name.ends_with(".tres"):
+			continue
+		var path := "%s/%s" % [directory_path, file_name]
+		entries.append({"path": path, "resource": load(path)})
+	return entries
 
 
 func _validate_json_packs(errors: Array[String]) -> int:

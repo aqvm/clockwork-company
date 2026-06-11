@@ -27,5 +27,5 @@ class_name AncestryDefinition
 @export var forbid_armor := false
 @export var forbid_helmet := false
 @export var forbid_trinket := false
-@export var feature: Resource = null
+@export var feature: AncestryFeatureDefinition = null
 @export_multiline var notes := ""
