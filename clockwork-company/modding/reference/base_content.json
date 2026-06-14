@@ -41,10 +41,12 @@
       "polarity": "Ailment",
       "status_type": "Frost",
       "stacking_rule": "Intensify",
+      "stack_cap_enabled": false,
       "max_stacks": 5,
       "tags": ["ailment", "physical", "setup"],
-      "amount": 2,
-      "description": "The next physical hit against this unit deals 2 additional damage per stack, then removes Frost."
+      "amount": 0,
+      "amount_percent": 20,
+      "description": "The next physical hit against this unit deals 20% more post-armor physical damage per stack, rounded up, then removes Frost."
     }
   ],
   "ancestries": [

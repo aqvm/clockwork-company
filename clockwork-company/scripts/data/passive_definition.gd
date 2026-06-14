@@ -10,6 +10,7 @@ class_name PassiveDefinition
 @export_enum("None", "Attack Damage Bonus", "Heal Bonus", "Guard Armor Bonus", "Forecast") var passive_type := "None"
 @export var amount := 0
 @export var cooldown_turns := 0
+@export var effects: Array[EffectDefinition] = []
 
 
 func _to_string() -> String:

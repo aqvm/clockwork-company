@@ -143,6 +143,10 @@ func available_tactics() -> Array[TacticDefinition]:
 	return JsonContentLoaderScript.load_tactic_definitions(enabled_mod_pack_ids)
 
 
+func available_statuses() -> Array[StatusDefinition]:
+	return JsonContentLoaderScript.load_status_definitions(enabled_mod_pack_ids)
+
+
 func set_tactics(campaign_unit_id: String, tactics: Array[TacticDefinition]) -> bool:
 	return roster_state.set_tactics(campaign_unit_id, tactics)
 

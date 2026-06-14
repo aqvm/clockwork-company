@@ -82,6 +82,37 @@
       ]
     },
     {
+      "id": "formula_counter_probe_it",
+      "display_name": "Formula Counter Probe IT",
+      "slot": "Trinket",
+      "effects": [
+        {
+          "display_name": "Count Turns IT",
+          "trigger": "Turn Start",
+          "condition": "Always",
+          "target_selector": "Self",
+          "effect_type": "Modify Counter",
+          "counter_name": "probe_turns",
+          "repeat_within_event_chain": true,
+          "amount": 1
+        },
+        {
+          "display_name": "Apply Counter Burning IT",
+          "trigger": "Turn Start",
+          "condition": "Owner Counter At Least",
+          "target_selector": "Self",
+          "effect_type": "Apply Status",
+          "status_id": "burning",
+          "status_stacks": 3,
+          "counter_name": "probe_turns",
+          "counter_threshold": 2,
+          "amount_source": "Target Counter",
+          "amount_multiplier": 2,
+          "amount_divisor": 1
+        }
+      ]
+    },
+    {
       "id": "glass_focus",
       "display_name": "Glass Focus (IT Override)",
       "slot": "Trinket",
@@ -153,6 +184,7 @@
         "display_name": "Cleanser IT Purge",
         "tags": ["cleanse", "integration_test"],
         "action": "Effects Only",
+        "attack_count": 2,
         "default_target": "Self",
         "effects": [
           {
@@ -165,6 +197,62 @@
             "status_removal_mode": "Random Matching"
           }
         ]
+      },
+      "passive": {
+        "display_name": "Bloodless IT",
+        "passive_type": "None",
+        "effects": [
+          {
+            "display_name": "Prevent Bleed IT",
+            "trigger": "Status Application Requested",
+            "condition": "Requested Status Matches",
+            "target_selector": "Self",
+            "effect_type": "Prevent Request",
+            "status_id": "bleed"
+          },
+          {
+            "display_name": "Prevent Damage IT",
+            "trigger": "Damage Requested",
+            "condition": "Always",
+            "target_selector": "Self",
+            "effect_type": "Prevent Request"
+          }
+        ]
+      },
+      "reaction": {
+        "display_name": "Cauterize IT",
+        "trigger": "Damaged",
+        "condition": "Self Status Stacks At Least",
+        "reaction_type": "Effects Only",
+        "status_id": "burning",
+        "status_stack_threshold": 3,
+        "effects": [
+          {
+            "display_name": "Heal Burning IT",
+            "trigger": "Reaction Triggered",
+            "condition": "Always",
+            "target_selector": "Self",
+            "effect_type": "Heal",
+            "status_id": "burning",
+            "amount_source": "Target Pending Status Damage"
+          },
+          {
+            "display_name": "Consume Burning IT",
+            "trigger": "Reaction Triggered",
+            "condition": "Always",
+            "target_selector": "Self",
+            "effect_type": "Consume Status",
+            "status_id": "burning",
+            "amount_source": "Target Status Stacks"
+          }
+        ]
+      },
+      "default_tactic": {
+        "display_name": "Finish Burning IT",
+        "condition": "Target Pending Status Damage At Least HP",
+        "action": "Job Skill",
+        "target": "Frontmost Enemy",
+        "status_id": "burning"
       }
     }
   ],
@@ -187,6 +275,12 @@
     {
       "id": "attack_frontmost",
       "condition": "Always",
+      "action": "Attack",
+      "target": "Frontmost Enemy"
+    },
+    {
+      "id": "attack_slow_target_it",
+      "condition": "Target Slower Than Self",
       "action": "Attack",
       "target": "Frontmost Enemy"
     }

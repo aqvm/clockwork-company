@@ -3,19 +3,21 @@ class_name StatusResolver
 
 const STATUS_CONFUSION := "Confusion"
 const STATUS_TYPE_RECONSTITUTION := "Reconstitution"
+const STATUS_TYPE_REGENERATION := "Regeneration"
 const STATUS_TYPE_BLEED := "Bleed"
 const STATUS_TYPE_NUMB := "Numb"
 const STATUS_TYPE_FROST := "Frost"
 const CombatEventsScript := preload("res://scripts/combat/logging/combat_events.gd")
 
 
-static func apply_status(log, parent_entry_id: int, target, status: Resource, source_name: String, duration_turns := 3, is_permanent := false, context = null, source = null, parent_event_id := -1) -> bool:
+static func apply_status(log, parent_entry_id: int, target, status: Resource, source_name: String, duration_turns := 3, is_permanent := false, context = null, source = null, parent_event_id := -1, stack_count := 1) -> bool:
 	if target == null:
 		return false
 	if status == null:
 		log.add_child(parent_entry_id, "%s cannot apply a missing status definition." % source_name)
 		return false
 	var request_event_id := -1
+	var previous_stack_count: int = int(target.status_stack_count(status.status_type))
 	if context != null:
 		var request: Dictionary = context.request("status_application_requested", source, target, {
 			"status": status.display_name,
@@ -30,20 +32,30 @@ static func apply_status(log, parent_entry_id: int, target, status: Resource, so
 			}, int(request["id"]), parent_entry_id, ["status", "prevented"])
 			return false
 		request_event_id = int(request["id"])
-	var result: String = target.add_status(status, source_name, duration_turns, is_permanent)
+	var result := "invalid"
+	for _stack in range(max(1, stack_count)):
+		var application_result: String = target.add_status(status, source_name, duration_turns, is_permanent)
+		if application_result == "ignored":
+			if result == "invalid":
+				result = application_result
+			break
+		result = application_result
 	if result == "invalid":
 		return false
 	if result == "ignored":
 		log.add_child(parent_entry_id, "%s already has %s; this status ignores reapplication." % [target.unit_name, status.display_name])
 		return false
 	var instance: Dictionary = target.status_instance_by_name(status.display_name)
-	var stack_count := int(instance.get("stack_count", 1))
+	var resulting_stack_count := int(instance.get("stack_count", 1))
+	var added_stack_count: int = max(0, resulting_stack_count - previous_stack_count)
 	var resulting_duration := int(instance.get("remaining_turns", duration_turns))
 	var resulting_permanent := bool(instance.get("is_permanent", is_permanent))
-	var event := CombatEventsScript.status_applied(target, status, source_name, resulting_duration, resulting_permanent, result, stack_count)
+	var event := CombatEventsScript.status_applied(target, status, source_name, resulting_duration, resulting_permanent, result, resulting_stack_count)
 	var duration_text := "permanently" if resulting_permanent else "for %d turns" % resulting_duration
 	var verb := "intensifies" if result == "intensified" else ("refreshes" if result == "refreshed" else "gains")
-	var stack_text := " at %d/%d stacks" % [stack_count, status.max_stacks] if status.max_stacks > 1 else ""
+	var stack_text := ""
+	if status.stacking_rule == "Intensify":
+		stack_text = " at %d/%d stacks" % [resulting_stack_count, status.max_stacks] if status.stack_cap_enabled else " at %d stacks" % resulting_stack_count
 	log.add_event("%s %s %s %s%s from %s %s." % [target.unit_name, verb, status.polarity.to_lower(), status.display_name, stack_text, source_name, duration_text], event["event_type"], -1, parent_entry_id, event["payload"], event["tags"])
 	if context != null:
 		context.publish("status_applied", source, target, {
@@ -51,16 +63,22 @@ static func apply_status(log, parent_entry_id: int, target, status: Resource, so
 			"status_type": status.status_type,
 			"polarity": status.polarity,
 			"application_result": result,
-			"stack_count": stack_count,
+			"stack_count": resulting_stack_count,
+			"added_stack_count": added_stack_count,
+			"source_name": source_name,
 		}, request_event_id, parent_entry_id, ["status", status.polarity.to_lower()])
 	return true
 
 
 static func remove_status(log, parent_entry_id: int, target, status_name: String, reason: String, context = null, source = null, parent_event_id := -1) -> bool:
 	var request_event_id := parent_event_id
+	var requested_instance: Dictionary = target.status_instance_by_name(status_name)
+	var requested_status: Resource = requested_instance.get("definition", null)
 	if context != null:
 		var request: Dictionary = context.request("status_removal_requested", source, target, {
 			"status": status_name,
+			"status_type": requested_status.status_type if requested_status != null else "",
+			"polarity": requested_status.polarity if requested_status != null else "",
 			"reason": reason,
 			"prevented": false,
 		}, parent_event_id, parent_entry_id, ["status", "request"])
@@ -95,6 +113,15 @@ static func record_damage(target, damage_taken: int) -> void:
 
 
 static func apply_turn_start_statuses(log, turn_entry_id: int, actor, context = null) -> void:
+	var regeneration: Dictionary = actor.status_instance(STATUS_TYPE_REGENERATION)
+	if not regeneration.is_empty():
+		var regeneration_status: Resource = regeneration.get("definition", null)
+		var regeneration_amount := int(regeneration_status.amount) * int(regeneration.get("stack_count", 1)) if regeneration_status != null else 0
+		if regeneration_amount > 0:
+			if context != null:
+				context.apply_healing(actor, actor, regeneration_amount, -1, turn_entry_id, ["status", "regeneration"])
+			else:
+				actor.hp = min(actor.max_hp, actor.hp + regeneration_amount)
 	var instance: Dictionary = actor.status_instance(STATUS_TYPE_RECONSTITUTION)
 	if instance.is_empty():
 		return

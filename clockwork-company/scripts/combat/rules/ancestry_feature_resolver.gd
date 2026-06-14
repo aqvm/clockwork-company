@@ -88,7 +88,8 @@ static func _apply_feature(log, parent_entry_id: int, owner, other, feature, con
 			log.add_event("Ancestry feature %s: %s HP %d -> %d." % [feature.display_name, other.unit_name, previous_other_hp, other.hp], damage_event["event_type"], -1, parent_entry_id, damage_event["payload"], damage_event["tags"])
 	elif feature.feature_type == FEATURE_HASTEN_SELF:
 		var previous_interval: int = owner.action_interval
-		owner.action_interval = max(1, owner.action_interval - feature.amount)
+		var floor_interval: int = max(1, int(ceil(float(owner.base_action_interval * owner.action_interval_floor_percent) / 100.0)))
+		owner.action_interval = max(floor_interval, owner.action_interval - feature.amount)
 		var haste_event := CombatEventsScript.ancestry_feature(owner, feature.display_name, "interval %d -> %d" % [previous_interval, owner.action_interval])
 		log.add_event("Ancestry feature %s: %s interval %d -> %d." % [feature.display_name, owner.unit_name, previous_interval, owner.action_interval], haste_event["event_type"], -1, parent_entry_id, haste_event["payload"], haste_event["tags"])
 		if context != null:

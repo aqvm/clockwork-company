@@ -136,6 +136,10 @@ func _show_tactic_editor(options: Array) -> void:
 			_add_tactic_row(index, option, equipped_count)
 		else:
 			add_options.append(option)
+	var create_button := Button.new()
+	create_button.text = "New Tactic"
+	create_button.pressed.connect(func(): planning_tactic_add_requested.emit(null))
+	add_child(create_button)
 	if add_options.is_empty():
 		return
 	var selector := OptionButton.new()
@@ -172,9 +176,19 @@ func _add_tactic_row(index: int, option: Dictionary, tactic_count: int) -> void:
 	header.add_child(remove_button)
 	var editors := HBoxContainer.new()
 	row.add_child(editors)
-	_add_tactic_selector(editors, index, "condition", tactic.condition, ["Always", "Self HP Below Half", "Ally HP Below Half", "Enemy Alive"])
+	var name_edit := LineEdit.new()
+	name_edit.placeholder_text = "Tactic name"
+	name_edit.tooltip_text = "Press Enter to rename this tactic."
+	name_edit.text = tactic.display_name
+	name_edit.text_submitted.connect(func(value): planning_tactic_changed.emit(index, "display_name", value))
+	editors.add_child(name_edit)
+	_add_tactic_selector(editors, index, "condition", tactic.condition, ["Always", "Self HP Below Half", "Ally HP Below Half", "Enemy Alive", "Target Has Status", "Target Status Stacks At Least", "Target Pending Status Damage At Least HP", "Target Slower Than Self"])
 	_add_tactic_selector(editors, index, "action", tactic.action, ["Attack", "Heal", "Guard", "Job Skill", "Assigned Skill"])
-	_add_tactic_selector(editors, index, "target", tactic.target, ["Self", "Lowest HP Ally", "Frontmost Enemy"])
+	_add_tactic_selector(editors, index, "target", tactic.target, ["Self", "Lowest HP Ally", "Lowest HP Ally With Status", "Frontmost Enemy"])
+	if tactic.condition in ["Target Has Status", "Target Status Stacks At Least", "Target Pending Status Damage At Least HP"] or tactic.target == "Lowest HP Ally With Status":
+		_add_tactic_status_selector(editors, index, tactic.status, option.get("statuses", []))
+	if tactic.condition == "Target Status Stacks At Least":
+		_add_tactic_threshold_editor(editors, index, tactic.status_stack_threshold)
 	var foretell := CheckButton.new()
 	foretell.text = "Foretell"
 	foretell.button_pressed = tactic.foretell_enabled
@@ -194,6 +208,39 @@ func _add_tactic_selector(parent: Control, tactic_index: int, field: String, sel
 			selector.select(selector.item_count - 1)
 	selector.item_selected.connect(func(selected_index): planning_tactic_changed.emit(tactic_index, field, selector.get_item_text(selected_index)))
 	column.add_child(selector)
+	parent.add_child(column)
+
+
+func _add_tactic_status_selector(parent: Control, tactic_index: int, selected_status: StatusDefinition, statuses: Array) -> void:
+	var column := VBoxContainer.new()
+	var label := Label.new()
+	label.text = "Status"
+	column.add_child(label)
+	var selector := OptionButton.new()
+	for status in statuses:
+		if status == null:
+			continue
+		selector.add_item(status.display_name)
+		selector.set_item_metadata(selector.item_count - 1, status)
+		if selected_status != null and status.status_type == selected_status.status_type:
+			selector.select(selector.item_count - 1)
+	selector.item_selected.connect(func(selected_index): planning_tactic_changed.emit(tactic_index, "status", selector.get_item_metadata(selected_index)))
+	column.add_child(selector)
+	parent.add_child(column)
+
+
+func _add_tactic_threshold_editor(parent: Control, tactic_index: int, threshold: int) -> void:
+	var column := VBoxContainer.new()
+	var label := Label.new()
+	label.text = "Stacks"
+	column.add_child(label)
+	var editor := SpinBox.new()
+	editor.min_value = 1
+	editor.max_value = 99
+	editor.step = 1
+	editor.value = threshold
+	editor.value_changed.connect(func(value): planning_tactic_changed.emit(tactic_index, "status_stack_threshold", int(value)))
+	column.add_child(editor)
 	parent.add_child(column)
 
 

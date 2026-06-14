@@ -14,6 +14,8 @@ Purpose: exercise as many modding code paths as possible in one toggleable pack.
 - Adds `tower_shield_it` (new id).
 - Tests new content creation, reference usage by loadouts, and finite three-turn battle-start `Apply Status`.
 - Adds `resolver_vocabulary_it` to validate JSON temporary modifiers and specific-status removal.
+- Adds `formula_counter_probe_it` to validate counter modification, counter-threshold conditions, multi-stack application fields, and formula scaling reconstruction.
+- Covers `attack_count` and opt-in `repeat_within_event_chain` reconstruction.
 
 3. Item override:
 - Overrides existing `glass_focus`.
@@ -23,6 +25,7 @@ Purpose: exercise as many modding code paths as possible in one toggleable pack.
 - Adds `warden_it`.
 - Tests new job creation, loadout linkage, a five-turn status-applying skill, and the `Forecast` passive capability.
 - Adds `cleanser_it` to validate an `Effects Only` skill with deterministic ailment removal.
+- `cleanser_it` also validates passive status and damage-request interception, an effect-only stack-gated reaction, formula-driven healing/consumption, and a status-aware default tactic.
 
 5. Job override:
 - Overrides existing `apprentice`.
@@ -30,7 +33,8 @@ Purpose: exercise as many modding code paths as possible in one toggleable pack.
 
 6. Tactic add:
 - Adds `guard_then_attack_it` and `foretell_heal_it`.
-- Tests custom tactic id flow plus normal condition/target and `foretell_enabled` reconstruction.
+- Adds `attack_slow_target_it`.
+- Tests custom tactic id flow, speed-aware targeting conditions, normal condition/target, and `foretell_enabled` reconstruction.
 
 7. Tactic override:
 - Overrides existing `attack_frontmost`.

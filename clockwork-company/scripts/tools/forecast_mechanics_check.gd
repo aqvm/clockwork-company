@@ -53,6 +53,15 @@ func _init() -> void:
 
 	var restored_tactic: TacticDefinition = _round_tripped_tactic(foretell_tactic)
 	assert(restored_tactic != null and restored_tactic.condition == foretell_tactic.condition and restored_tactic.action == foretell_tactic.action and restored_tactic.target == foretell_tactic.target and restored_tactic.foretell_enabled, "Campaign saves should round-trip player-authored tactic fields.")
+	var burning: StatusDefinition = JsonContentLoaderScript.load_status_definition_by_id("burning", [])
+	var status_tactic := _attack_tactic()
+	status_tactic.display_name = "Detonate at Four"
+	status_tactic.condition = "Target Status Stacks At Least"
+	status_tactic.status = burning
+	status_tactic.status_stack_threshold = 4
+	var restored_status_tactic: TacticDefinition = _round_tripped_tactic(status_tactic)
+	assert(restored_status_tactic != null and restored_status_tactic.display_name == "Detonate at Four", "Campaign saves should preserve player-authored tactic names.")
+	assert(restored_status_tactic.status != null and restored_status_tactic.status.status_type == "Burning" and restored_status_tactic.status_stack_threshold == 4, "Campaign saves should round-trip status-aware tactic parameters.")
 	_assert_speculative_clone_isolation(forecaster)
 
 	print("Foretell validation passed: normal speculative tactics, gating, first future match, target mapping, horizon, clone isolation, JSON authoring, campaign save data, and Marra cleanup worked.")

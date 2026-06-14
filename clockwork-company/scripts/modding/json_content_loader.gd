@@ -36,28 +36,35 @@ const DEFAULT_DEMO_ROSTER_IDS := [
 
 const TEAM_VALUES := {"Allies": true, "Enemies": true}
 const ITEM_SLOT_VALUES := {"Weapon": true, "Armor": true, "Helmet": true, "Trinket": true}
-const EFFECT_TRIGGER_VALUES := {"Battle Start": true, "Turn Start": true, "Turn Complete": true, "Skill Used": true, "Attack": true, "Hit": true, "Kill": true, "Death": true, "Damaged": true, "HP Below Threshold": true, "Status Applied": true, "Status Removed": true, "Reaction Triggered": true}
-const EFFECT_CONDITION_VALUES := {"Always": true, "Self HP Below Percent": true, "Target Has Tag": true, "Target Missing Tag": true}
-const EFFECT_TARGET_VALUES := {"Self": true, "Event Source": true, "Event Target": true, "Attack Target": true, "Attacker": true, "Killer": true, "All Units": true, "Allied Units": true, "Enemy Units": true, "Random Allied Unit": true, "Random Enemy Unit": true}
-const EFFECT_TYPE_VALUES := {"Gain Armor": true, "Bonus Damage": true, "Reduce Target Armor": true, "Heal Self": true, "Damage Killer": true, "Increase Max HP": true, "Apply Status": true, "Remove Status": true, "Modify Stat": true}
+const EFFECT_TRIGGER_VALUES := {"Battle Start": true, "Battle State Changed": true, "Turn Start": true, "Turn Complete": true, "Action Completed": true, "Skill Used": true, "Skill Completed": true, "Attack": true, "Consecutive Attack": true, "Enemy Attack Targeted": true, "Hit": true, "Kill": true, "Death": true, "Ailment Damaged": true, "Damaged": true, "Physically Damaged": true, "Magically Damaged": true, "HP Below Threshold": true, "Damage Requested": true, "Healing Requested": true, "Healing Received": true, "Ally Overhealed": true, "Reaction Requested": true, "Status Application Requested": true, "Status Removal Requested": true, "Status Applied": true, "Externally Sourced Status Applied": true, "Enemy Status Applied": true, "Status Removed": true, "Reaction Triggered": true}
+const EFFECT_CONDITION_VALUES := {"Always": true, "Event Source Is Not Owner": true, "Owner Is Unarmed": true, "Event Count At Least": true, "Self HP Below Percent": true, "Target Has Tag": true, "Target Missing Tag": true, "Target Status Stacks At Least": true, "Target Pending Status Damage At Least HP": true, "Owner Counter At Least": true, "Target Counter At Least": true, "Requested Status Matches": true, "Applied Status Matches": true}
+const EFFECT_TARGET_VALUES := {"Self": true, "Event Source": true, "Event Target": true, "Attack Target": true, "Attacker": true, "Killer": true, "All Units": true, "Allied Units": true, "Enemy Units": true, "Lowest HP Allied Unit": true, "Random Allied Unit": true, "Random Damaged Allied Unit": true, "Random Enemy Unit": true}
+const EFFECT_TYPE_VALUES := {"Gain Armor": true, "Bonus Damage": true, "Reduce Target Armor": true, "Heal Self": true, "Damage Killer": true, "Increase Max HP": true, "Apply Status": true, "Maintain Status Aura": true, "Replace Requested Status": true, "Remove Status": true, "Consume Status": true, "Detonate Status": true, "Gather Status": true, "Transfer Statuses": true, "Restore Max HP Lost To Status": true, "Deal Damage": true, "Heal": true, "Grant Armor": true, "Grant Battle Armor": true, "Grant Energy Shield": true, "Disable Armor": true, "Delay Action": true, "Hasten Action": true, "Hasten Action For Battle": true, "Fortify Damage": true, "Redirect Enemy Attacks": true, "Add Attack Damage": true, "Modify Stat": true, "Modify Counter": true, "Reset Counter": true, "Seal Next Attack": true, "Prevent Request": true}
+const EFFECT_AMOUNT_SOURCE_VALUES := {"Fixed": true, "Target Current HP": true, "Target Max HP": true, "Target Max HP Times Event Status Stacks": true, "Target Recent Damage": true, "Target Ailment Stacks": true, "Target Unique Boons": true, "Target Status Stacks": true, "Event Target Status Stacks": true, "Defeated Target Status Stacks": true, "Applied Status Stacks": true, "Total Status Stacks On Selected Group": true, "Total Status Max HP Loss On Selected Group": true, "Target Pending Status Damage": true, "Target Action Interval": true, "Event Amount": true, "Overhealing": true, "Overhealing Diminishing": true, "Owner Counter": true, "Target Counter": true}
+const EFFECT_AMOUNT_ROUNDING_VALUES := {"Floor": true, "Ceil": true}
+const EFFECT_AMOUNT_TARGET_VALUES := {"Self": true, "All Units": true, "Allied Units": true, "Enemy Units": true}
+const EFFECT_MODIFIER_MODE_VALUES := {"Temporary Flat": true, "Dynamic Percent": true}
+const EFFECT_MODIFIER_DIRECTION_VALUES := {"Increase": true, "Decrease": true}
+const EFFECT_DAMAGE_TYPE_VALUES := {"Magic": true, "Physical": true}
 const EFFECT_STATUS_POLARITY_VALUES := {"Any": true, "Boon": true, "Ailment": true}
 const EFFECT_STATUS_REMOVAL_MODE_VALUES := {"Random Matching": true, "Specific Status": true}
 const EFFECT_MODIFIED_STAT_VALUES := {"Max HP": true, "Physical Damage": true, "Magic Damage": true, "Armor": true, "Action Interval": true}
 const SKILL_ACTION_VALUES := {"Attack": true, "Heal": true, "Guard": true, "Apply Status": true, "Effects Only": true}
 const SKILL_TARGET_VALUES := {"Self": true, "Lowest HP Ally": true, "Frontmost Enemy": true}
+const SKILL_ATTACK_DAMAGE_TYPE_VALUES := {"Physical": true, "Magic": true, "Split Evenly": true}
 const STATUS_POLARITY_VALUES := {"Boon": true, "Ailment": true}
-const STATUS_TYPE_VALUES := {"Confusion": true, "Reconstitution": true, "Bleed": true, "Numb": true, "Frost": true}
+const STATUS_TYPE_VALUES := {"Confusion": true, "Reconstitution": true, "Regeneration": true, "Bleed": true, "Burning": true, "Numb": true, "Frost": true, "Ward": true, "Rot": true, "Renewal": true}
 const STATUS_STACKING_RULE_VALUES := {"Ignore": true, "Refresh": true, "Intensify": true}
 const PASSIVE_TYPE_VALUES := {"None": true, "Attack Damage Bonus": true, "Heal Bonus": true, "Guard Armor Bonus": true, "Forecast": true}
-const REACTION_TRIGGER_VALUES := {"Damaged": true, "HP Below Threshold": true}
-const REACTION_CONDITION_VALUES := {"Always": true, "Self HP Below Percent": true}
-const REACTION_TYPE_VALUES := {"Gain Armor": true, "Heal Self": true, "Damage Attacker": true}
+const REACTION_TRIGGER_VALUES := {"Damaged": true, "Physically Damaged": true, "Magically Damaged": true, "HP Below Threshold": true, "Lethal Physical Attack Requested": true, "Attack Targets Another Ally": true, "Status Application Requested": true, "Enemy Healing Requested": true, "Enemy Status Threshold Reached": true, "Enemy Died With Status": true}
+const REACTION_CONDITION_VALUES := {"Always": true, "Self HP Below Percent": true, "Self Status Stacks At Least": true, "Requested Status Is Ailment": true, "Requested Status Matches": true}
+const REACTION_TYPE_VALUES := {"Gain Armor": true, "Heal Self": true, "Damage Attacker": true, "Effects Only": true}
 const ANCESTRY_FEATURE_TRIGGER_VALUES := {"Battle Start": true, "Attack": true, "Kill": true, "Damaged": true, "HP Below Threshold": true}
 const ANCESTRY_FEATURE_CONDITION_VALUES := {"Always": true, "Self HP Below Percent": true}
 const ANCESTRY_FEATURE_TYPE_VALUES := {"Gain Armor": true, "Bonus Damage": true, "Heal Self": true, "Damage Attacker": true, "Hasten Self": true, "Gain Physical Damage": true}
-const TACTIC_CONDITION_VALUES := {"Always": true, "Self HP Below Half": true, "Ally HP Below Half": true, "Enemy Alive": true}
+const TACTIC_CONDITION_VALUES := {"Always": true, "Self HP Below Half": true, "Ally HP Below Half": true, "Enemy Alive": true, "Target Has Status": true, "Target Status Stacks At Least": true, "Target Pending Status Damage At Least HP": true, "Target Slower Than Self": true}
 const TACTIC_ACTION_VALUES := {"Attack": true, "Heal": true, "Guard": true, "Job Skill": true, "Assigned Skill": true}
-const TACTIC_TARGET_VALUES := {"Self": true, "Lowest HP Ally": true, "Frontmost Enemy": true}
+const TACTIC_TARGET_VALUES := {"Self": true, "Lowest HP Ally": true, "Lowest HP Ally With Status": true, "Frontmost Enemy": true}
 
 
 static func load_demo_unit_definitions(enabled_mod_pack_ids: Variant = null) -> Array[UnitDefinition]:
@@ -132,6 +139,27 @@ static func load_tactic_definition_by_id(tactic_id: String, enabled_mod_pack_ids
 	return null
 
 
+static func load_status_definitions(enabled_mod_pack_ids: Variant = null) -> Array[StatusDefinition]:
+	var base_data := _load_base_data_from_resources()
+	var merged_data := _apply_mod_packs(base_data, enabled_mod_pack_ids)
+	var content := _build_content_resources(merged_data)
+	var statuses_by_id: Dictionary = content["statuses"]
+	var results: Array[StatusDefinition] = []
+	for status_id in statuses_by_id.keys():
+		results.append(statuses_by_id[status_id])
+	results.sort_custom(func(a, b): return a.display_name < b.display_name)
+	return results
+
+
+static func load_status_definition_by_id(status_id: String, enabled_mod_pack_ids: Variant = null) -> StatusDefinition:
+	if status_id.is_empty():
+		return null
+	for status in load_status_definitions(enabled_mod_pack_ids):
+		if String(status.get_meta("content_id", "")) == status_id:
+			return status
+	return null
+
+
 static func list_available_mod_packs() -> Array[Dictionary]:
 	var descriptors: Array[Dictionary] = []
 	_collect_pack_descriptors_from_dir(descriptors, MODS_DIR, true)
@@ -162,6 +190,7 @@ static func _load_base_statuses() -> Dictionary:
 			"polarity": resource.polarity,
 			"status_type": resource.status_type,
 			"stacking_rule": resource.stacking_rule,
+			"stack_cap_enabled": resource.stack_cap_enabled,
 			"max_stacks": resource.max_stacks,
 			"tags": resource.tags.duplicate(),
 			"amount": resource.amount,
@@ -384,6 +413,7 @@ static func _validate_merged_data(data: Dictionary) -> void:
 			assert(EFFECT_TARGET_VALUES.has(effect_data.get("target_selector", "")), "Invalid authored effect target selector for item id %s" % item_id)
 			assert(EFFECT_TYPE_VALUES.has(effect_data.get("effect_type", "")), "Invalid authored effect type for item id %s" % item_id)
 			assert(_effect_support_error(effect_data).is_empty(), "Unsupported effect in item %s: %s" % [item_id, _effect_support_error(effect_data)])
+			_validate_formula_fields(data, effect_data, "item %s" % item_id)
 			var effect_status_id := String(effect_data.get("status_id", ""))
 			if effect_data.get("effect_type", "") == "Apply Status":
 				assert(data["statuses"].has(effect_status_id), "Unknown status id '%s' in item %s" % [effect_status_id, item_id])
@@ -406,19 +436,23 @@ static func _validate_merged_data(data: Dictionary) -> void:
 		if not skill.is_empty():
 			assert(SKILL_ACTION_VALUES.has(skill.get("action", "")), "Invalid skill action for job id %s" % job_id)
 			assert(SKILL_TARGET_VALUES.has(skill.get("default_target", "")), "Invalid skill default target for job id %s" % job_id)
+			assert(SKILL_ATTACK_DAMAGE_TYPE_VALUES.has(skill.get("attack_damage_type", "Physical")), "Invalid skill attack damage type for job id %s" % job_id)
 			var skill_status_id := String(skill.get("status_id", ""))
 			if skill.get("action", "") == "Apply Status":
 				assert(data["statuses"].has(skill_status_id), "Unknown status id '%s' in skill for job %s" % [skill_status_id, job_id])
 				assert(int(skill.get("status_duration_turns", 3)) >= 1, "Status duration must be at least 1 turn in skill for job %s" % job_id)
 			if skill.get("action", "") == "Effects Only":
 				assert(not skill.get("effects", []).is_empty(), "Effects Only skill requires at least one effect for job %s" % job_id)
+			assert(int(skill.get("attack_count", 1)) >= 1, "Skill attack_count must be at least 1 for job %s" % job_id)
+			assert(int(skill.get("cooldown_turns", 0)) >= 0, "Skill cooldown_turns cannot be negative for job %s" % job_id)
 			for effect in skill.get("effects", []):
 				var effect_data: Dictionary = effect
-				assert(effect_data.get("trigger", "") == "Skill Used", "Skill effects must use the Skill Used trigger for job %s" % job_id)
+				assert(effect_data.get("trigger", "") in ["Skill Used", "Skill Completed"], "Skill effects must use Skill Used or Skill Completed for job %s" % job_id)
 				assert(EFFECT_CONDITION_VALUES.has(effect_data.get("condition", "")), "Invalid skill effect condition for job %s" % job_id)
 				assert(EFFECT_TARGET_VALUES.has(effect_data.get("target_selector", "")), "Invalid skill effect target for job %s" % job_id)
 				assert(EFFECT_TYPE_VALUES.has(effect_data.get("effect_type", "")), "Invalid skill effect type for job %s" % job_id)
 				assert(_effect_support_error(effect_data).is_empty(), "Unsupported skill effect in job %s: %s" % [job_id, _effect_support_error(effect_data)])
+				_validate_formula_fields(data, effect_data, "skill in job %s" % job_id)
 				var effect_status_id := String(effect_data.get("status_id", ""))
 				if effect_data.get("effect_type", "") == "Apply Status":
 					assert(data["statuses"].has(effect_status_id), "Unknown skill effect status id '%s' in job %s" % [effect_status_id, job_id])
@@ -436,22 +470,40 @@ static func _validate_merged_data(data: Dictionary) -> void:
 		var passive: Dictionary = job.get("passive", {})
 		if not passive.is_empty():
 			assert(PASSIVE_TYPE_VALUES.has(passive.get("passive_type", "")), "Invalid passive type for job id %s" % job_id)
+			for effect in passive.get("effects", []):
+				_validate_shared_effect(data, effect, "passive in job %s" % job_id)
 		var reaction: Dictionary = job.get("reaction", {})
 		if not reaction.is_empty():
 			assert(REACTION_TRIGGER_VALUES.has(reaction.get("trigger", "")), "Invalid reaction trigger for job id %s" % job_id)
 			assert(REACTION_CONDITION_VALUES.has(reaction.get("condition", "")), "Invalid reaction condition for job id %s" % job_id)
 			assert(REACTION_TYPE_VALUES.has(reaction.get("reaction_type", "")), "Invalid reaction type for job id %s" % job_id)
+			assert(not bool(reaction.get("prevents_triggering_request", false)) or reaction.get("trigger", "") in ["Status Application Requested", "Enemy Healing Requested", "Lethal Physical Attack Requested"], "Reaction request prevention requires a request trigger for job id %s" % job_id)
+			if reaction.get("condition", "") == "Self Status Stacks At Least":
+				assert(data["statuses"].has(String(reaction.get("status_id", ""))), "Unknown reaction condition status in job %s" % job_id)
+			if reaction.get("trigger", "") == "Enemy Status Threshold Reached":
+				assert(data["statuses"].has(String(reaction.get("status_id", ""))), "Enemy Status Threshold Reached requires a status in job %s" % job_id)
+			if reaction.get("trigger", "") == "Enemy Died With Status":
+				assert(data["statuses"].has(String(reaction.get("status_id", ""))), "Enemy Died With Status requires a status in job %s" % job_id)
+			if reaction.get("condition", "") == "Requested Status Matches":
+				assert(data["statuses"].has(String(reaction.get("status_id", ""))), "Requested Status Matches requires a status in job %s" % job_id)
+			for replacement_id in reaction.get("replacement_status_ids", []):
+				assert(data["statuses"].has(String(replacement_id)), "Unknown reaction replacement status in job %s" % job_id)
+				assert(String(data["statuses"][String(replacement_id)].get("polarity", "")) == "Boon", "Reaction replacement statuses must be boons in job %s" % job_id)
+			for effect in reaction.get("effects", []):
+				_validate_shared_effect(data, effect, "reaction in job %s" % job_id)
 		var default_tactic: Dictionary = job.get("default_tactic", {})
 		if not default_tactic.is_empty():
 			assert(TACTIC_CONDITION_VALUES.has(default_tactic.get("condition", "")), "Invalid default tactic condition for job id %s" % job_id)
 			assert(TACTIC_ACTION_VALUES.has(default_tactic.get("action", "")), "Invalid default tactic action for job id %s" % job_id)
 			assert(TACTIC_TARGET_VALUES.has(default_tactic.get("target", "")), "Invalid default tactic target for job id %s" % job_id)
+			_validate_tactic_status(data, default_tactic, "default tactic in job %s" % job_id)
 
 	for tactic_id in data["tactics"].keys():
 		var tactic: Dictionary = data["tactics"][tactic_id]
 		assert(TACTIC_CONDITION_VALUES.has(tactic.get("condition", "")), "Invalid tactic condition for id %s" % tactic_id)
 		assert(TACTIC_ACTION_VALUES.has(tactic.get("action", "")), "Invalid tactic action for id %s" % tactic_id)
 		assert(TACTIC_TARGET_VALUES.has(tactic.get("target", "")), "Invalid tactic target for id %s" % tactic_id)
+		_validate_tactic_status(data, tactic, "tactic %s" % tactic_id)
 
 
 	for loadout_id in data["loadouts"].keys():
@@ -499,18 +551,38 @@ static func _effect_support_error(effect: Dictionary) -> String:
 		return "%s has no target during Battle Start" % target
 	if target == "Attack Target" and not ["Attack", "Hit"].has(trigger):
 		return "Attack Target is only available for Attack and Hit"
-	if target == "Attacker" and not ["Damaged", "HP Below Threshold"].has(trigger):
-		return "Attacker is only available for Damaged and HP Below Threshold"
+	if target == "Attacker" and not ["Damaged", "Physically Damaged", "Magically Damaged", "HP Below Threshold"].has(trigger):
+		return "Attacker is only available for damage-received triggers"
 	if target == "Killer" and trigger != "Death":
 		return "Killer is only available for Death"
-	if effect_type == "Apply Status":
-		return "" if not String(effect.get("status_id", "")).is_empty() else "Apply Status requires status_id"
+	if effect_type == "Apply Status" and String(effect.get("status_id", "")).is_empty():
+		return "Apply Status requires status_id"
+	if effect_type == "Maintain Status Aura" and String(effect.get("status_id", "")).is_empty():
+		return "Maintain Status Aura requires status_id"
+	if effect_type == "Maintain Status Aura" and trigger != "Battle State Changed":
+		return "Maintain Status Aura requires Battle State Changed"
+	if effect_type == "Replace Requested Status":
+		if trigger != "Status Application Requested":
+			return "Replace Requested Status requires Status Application Requested"
+		if effect.get("replacement_status_ids", []).is_empty():
+			return "Replace Requested Status requires replacement_status_ids"
+	if effect_type in ["Consume Status", "Detonate Status", "Gather Status", "Restore Max HP Lost To Status"] and String(effect.get("status_id", "")).is_empty():
+		return "%s requires status_id" % effect_type
 	if effect_type == "Remove Status":
 		if effect.get("status_removal_mode", "Random Matching") == "Specific Status" and String(effect.get("status_id", "")).is_empty():
 			return "Specific Status removal requires status_id"
+	if effect_type == "Modify Stat" and int(effect.get("amount", 0)) == 0 and effect.get("amount_source", "Fixed") == "Fixed":
+		return "Modify Stat requires a non-zero amount"
+	if effect.get("modifier_mode", "Temporary Flat") == "Dynamic Percent" and trigger != "Battle State Changed":
+		return "Dynamic Percent modifiers require Battle State Changed"
+	if effect_type == "Prevent Request" and not trigger in ["Damage Requested", "Healing Requested", "Reaction Requested", "Status Application Requested", "Status Removal Requested"]:
+		return "Prevent Request requires a request trigger"
+	if effect.get("condition", "") == "Requested Status Matches" and not trigger in ["Status Application Requested", "Status Removal Requested"]:
+		return "Requested Status Matches requires a status request trigger"
+	if effect.get("condition", "") == "Applied Status Matches" and not trigger in ["Status Applied", "Externally Sourced Status Applied", "Enemy Status Applied"]:
+		return "Applied Status Matches requires a status-applied trigger"
+	if effect_type in ["Apply Status", "Maintain Status Aura", "Replace Requested Status", "Remove Status", "Consume Status", "Detonate Status", "Gather Status", "Transfer Statuses", "Restore Max HP Lost To Status", "Deal Damage", "Heal", "Grant Armor", "Grant Battle Armor", "Grant Energy Shield", "Disable Armor", "Delay Action", "Hasten Action", "Hasten Action For Battle", "Fortify Damage", "Redirect Enemy Attacks", "Add Attack Damage", "Modify Stat", "Modify Counter", "Reset Counter", "Seal Next Attack", "Prevent Request"]:
 		return ""
-	if effect_type == "Modify Stat":
-		return "" if int(effect.get("amount", 0)) != 0 else "Modify Stat requires a non-zero amount"
 	if trigger == "Battle Start" and effect_type == "Gain Armor" and target == "Self":
 		return ""
 	if trigger == "Battle Start" and effect_type == "Apply Status" and target == "Self":
@@ -526,6 +598,52 @@ static func _effect_support_error(effect: Dictionary) -> String:
 	if trigger == "Death" and effect_type == "Damage Killer" and target == "Killer":
 		return ""
 	return "%s + %s + %s is not supported" % [trigger, effect_type, target]
+
+
+static func _validate_shared_effect(data: Dictionary, raw_effect: Variant, label: String) -> void:
+	var effect: Dictionary = raw_effect
+	assert(EFFECT_TRIGGER_VALUES.has(effect.get("trigger", "")), "Invalid effect trigger for %s" % label)
+	assert(EFFECT_CONDITION_VALUES.has(effect.get("condition", "")), "Invalid effect condition for %s" % label)
+	assert(EFFECT_TARGET_VALUES.has(effect.get("target_selector", "")), "Invalid effect target for %s" % label)
+	assert(EFFECT_TYPE_VALUES.has(effect.get("effect_type", "")), "Invalid effect type for %s" % label)
+	assert(_effect_support_error(effect).is_empty(), "Unsupported effect for %s: %s" % [label, _effect_support_error(effect)])
+	_validate_formula_fields(data, effect, label)
+
+
+static func _validate_formula_fields(data: Dictionary, effect: Dictionary, label: String) -> void:
+	var amount_source := String(effect.get("amount_source", "Fixed"))
+	assert(EFFECT_AMOUNT_SOURCE_VALUES.has(amount_source), "Invalid amount source for %s" % label)
+	assert(EFFECT_AMOUNT_TARGET_VALUES.has(effect.get("amount_target_selector", "Self")), "Invalid amount target selector for %s" % label)
+	assert(EFFECT_MODIFIER_MODE_VALUES.has(effect.get("modifier_mode", "Temporary Flat")), "Invalid modifier mode for %s" % label)
+	assert(EFFECT_MODIFIER_DIRECTION_VALUES.has(effect.get("modifier_direction", "Increase")), "Invalid modifier direction for %s" % label)
+	assert(EFFECT_DAMAGE_TYPE_VALUES.has(effect.get("damage_type", "Magic")), "Invalid damage type for %s" % label)
+	assert(EFFECT_AMOUNT_ROUNDING_VALUES.has(effect.get("amount_rounding", "Floor")), "Invalid amount rounding for %s" % label)
+	var status_id := String(effect.get("status_id", ""))
+	var amount_status_id := String(effect.get("amount_status_id", ""))
+	if amount_status_id.is_empty():
+		amount_status_id = status_id
+	if effect.get("effect_type", "") in ["Apply Status", "Maintain Status Aura", "Consume Status", "Detonate Status", "Gather Status", "Restore Max HP Lost To Status"] or effect.get("condition", "") in ["Target Status Stacks At Least", "Target Pending Status Damage At Least HP", "Requested Status Matches"]:
+		assert(data["statuses"].has(status_id), "Unknown required status id '%s' for %s" % [status_id, label])
+	for replacement_id in effect.get("replacement_status_ids", []):
+		assert(data["statuses"].has(String(replacement_id)), "Unknown replacement status id for %s" % label)
+		assert(String(data["statuses"][String(replacement_id)].get("polarity", "")) == "Boon", "Replacement statuses must be boons for %s" % label)
+	if amount_source in ["Target Status Stacks", "Event Target Status Stacks", "Defeated Target Status Stacks", "Total Status Stacks On Selected Group", "Total Status Max HP Loss On Selected Group", "Target Pending Status Damage"]:
+		assert(data["statuses"].has(amount_status_id), "Unknown amount status id for %s" % label)
+	if effect.get("condition", "") == "Applied Status Matches":
+		assert(data["statuses"].has(String(effect.get("condition_status_id", ""))), "Unknown condition status id for %s" % label)
+	if amount_source in ["Overhealing Diminishing", "Owner Counter", "Target Counter"] or effect.get("effect_type", "") in ["Modify Counter", "Reset Counter"] or effect.get("condition", "") in ["Owner Counter At Least", "Target Counter At Least"]:
+		assert(not String(effect.get("counter_name", "")).is_empty(), "Counter name is required for %s" % label)
+	assert(int(effect.get("status_stacks", 1)) >= 1, "Status stacks must be at least 1 for %s" % label)
+	assert(int(effect.get("status_stack_threshold", 1)) >= 1, "Status stack threshold must be at least 1 for %s" % label)
+	assert(int(effect.get("counter_threshold", 1)) >= 1, "Counter threshold must be at least 1 for %s" % label)
+	assert(int(effect.get("amount_multiplier", 1)) >= 1, "Amount multiplier must be at least 1 for %s" % label)
+	assert(int(effect.get("amount_divisor", 1)) >= 1, "Amount divisor must be at least 1 for %s" % label)
+
+
+static func _validate_tactic_status(data: Dictionary, tactic: Dictionary, label: String) -> void:
+	if tactic.get("condition", "") in ["Target Has Status", "Target Status Stacks At Least", "Target Pending Status Damage At Least HP"] or tactic.get("target", "") == "Lowest HP Ally With Status":
+		assert(data["statuses"].has(String(tactic.get("status_id", ""))), "Unknown required status id for %s" % label)
+	assert(int(tactic.get("status_stack_threshold", 1)) >= 1, "Status stack threshold must be at least 1 for %s" % label)
 
 
 static func _validate_unit_feature_assignments(data: Dictionary, unit_id: String, unit: Dictionary) -> void:
@@ -567,7 +685,7 @@ static func _build_content_resources(merged_data: Dictionary) -> Dictionary:
 	var ancestries_by_id := _build_ancestry_resources(merged_data["ancestries"])
 	var items_by_id := _build_item_resources(merged_data["items"], statuses_by_id)
 	var jobs_by_id := _build_job_resources(merged_data["jobs"], statuses_by_id)
-	var tactics_by_id := _build_tactic_resources(merged_data["tactics"])
+	var tactics_by_id := _build_tactic_resources(merged_data["tactics"], statuses_by_id)
 	var loadouts_by_id := _build_loadout_resources(merged_data["loadouts"], jobs_by_id, items_by_id, tactics_by_id)
 	var units_by_id := _build_unit_resources(merged_data["units"], loadouts_by_id, jobs_by_id, ancestries_by_id)
 	return {
@@ -591,6 +709,7 @@ static func _build_status_resources(statuses_data: Dictionary) -> Dictionary:
 		status.polarity = String(src.get("polarity", "Boon"))
 		status.status_type = String(src.get("status_type", "Reconstitution"))
 		status.stacking_rule = String(src.get("stacking_rule", "Refresh"))
+		status.stack_cap_enabled = bool(src.get("stack_cap_enabled", true))
 		status.max_stacks = int(src.get("max_stacks", 1))
 		status.tags = _string_array(src.get("tags", []))
 		status.amount = int(src.get("amount", 0))
@@ -684,14 +803,34 @@ static func _build_effect_resources(effects_data: Array, statuses_by_id: Diction
 		effect.target_selector = String(src.get("target_selector", "Self"))
 		effect.effect_type = String(src.get("effect_type", "Gain Armor"))
 		effect.status = statuses_by_id.get(String(src.get("status_id", "")), null)
+		effect.condition_status = statuses_by_id.get(String(src.get("condition_status_id", "")), null)
+		effect.amount_status = statuses_by_id.get(String(src.get("amount_status_id", "")), null)
+		for replacement_id in src.get("replacement_status_ids", []):
+			var replacement = statuses_by_id.get(String(replacement_id), null)
+			if replacement != null:
+				effect.replacement_statuses.append(replacement)
 		effect.status_duration_turns = int(src.get("status_duration_turns", 3))
 		effect.status_is_permanent = bool(src.get("status_is_permanent", false))
+		effect.status_stacks = int(src.get("status_stacks", 1))
+		effect.status_stack_threshold = int(src.get("status_stack_threshold", 1))
 		effect.status_polarity = String(src.get("status_polarity", "Any"))
 		effect.status_removal_mode = String(src.get("status_removal_mode", "Random Matching"))
 		effect.modified_stat = String(src.get("modified_stat", "Physical Damage"))
+		effect.modifier_mode = String(src.get("modifier_mode", "Temporary Flat"))
+		effect.modifier_direction = String(src.get("modifier_direction", "Increase"))
 		effect.modifier_duration_turns = int(src.get("modifier_duration_turns", 1))
+		effect.amount_source = String(src.get("amount_source", "Fixed"))
+		effect.amount_rounding = String(src.get("amount_rounding", "Floor"))
+		effect.amount_target_selector = String(src.get("amount_target_selector", "Self"))
+		effect.counter_name = String(src.get("counter_name", ""))
+		effect.counter_threshold = int(src.get("counter_threshold", 1))
+		effect.amount_multiplier = int(src.get("amount_multiplier", 1))
+		effect.amount_divisor = int(src.get("amount_divisor", 1))
 		effect.amount = int(src.get("amount", 0))
+		effect.damage_type = String(src.get("damage_type", "Magic"))
 		effect.threshold_percent = int(src.get("threshold_percent", 50))
+		effect.ignore_events_from_same_effect_source = bool(src.get("ignore_events_from_same_effect_source", false))
+		effect.repeat_within_event_chain = bool(src.get("repeat_within_event_chain", false))
 		effect.once_per_battle = bool(src.get("once_per_battle", false))
 		effects.append(effect)
 	return effects
@@ -715,9 +854,9 @@ static func _build_job_resources(jobs_data: Dictionary, statuses_by_id: Dictiona
 		job.forbid_helmet = bool(src.get("forbid_helmet", false))
 		job.forbid_trinket = bool(src.get("forbid_trinket", false))
 		job.skill = _build_skill_resource(src.get("skill", {}), statuses_by_id)
-		job.passive = _build_passive_resource(src.get("passive", {}))
-		job.reaction = _build_reaction_resource(src.get("reaction", {}))
-		job.default_tactic = _build_tactic_resource(src.get("default_tactic", {}))
+		job.passive = _build_passive_resource(src.get("passive", {}), statuses_by_id)
+		job.reaction = _build_reaction_resource(src.get("reaction", {}), statuses_by_id)
+		job.default_tactic = _build_tactic_resource(src.get("default_tactic", {}), statuses_by_id)
 		out[id] = job
 	return out
 
@@ -732,15 +871,18 @@ static func _build_skill_resource(raw: Variant, statuses_by_id: Dictionary) -> S
 	skill.tags = _string_array(src.get("tags", []))
 	skill.action = String(src.get("action", "Attack"))
 	skill.default_target = String(src.get("default_target", "Frontmost Enemy"))
+	skill.attack_damage_type = String(src.get("attack_damage_type", "Physical"))
+	skill.attack_count = int(src.get("attack_count", 1))
 	skill.status = statuses_by_id.get(String(src.get("status_id", "")), null)
 	skill.status_duration_turns = int(src.get("status_duration_turns", 3))
 	skill.status_is_permanent = bool(src.get("status_is_permanent", false))
 	skill.amount_modifier = int(src.get("amount_modifier", 0))
+	skill.cooldown_turns = int(src.get("cooldown_turns", 0))
 	skill.effects = _build_effect_resources(src.get("effects", []), statuses_by_id)
 	return skill
 
 
-static func _build_passive_resource(raw: Variant) -> PassiveDefinition:
+static func _build_passive_resource(raw: Variant, statuses_by_id: Dictionary) -> PassiveDefinition:
 	if typeof(raw) == TYPE_DICTIONARY and not Dictionary(raw).is_empty():
 		var src: Dictionary = raw
 		var passive: PassiveDefinition = PassiveDefinitionScript.new()
@@ -750,11 +892,12 @@ static func _build_passive_resource(raw: Variant) -> PassiveDefinition:
 		passive.passive_type = String(src.get("passive_type", "None"))
 		passive.amount = int(src.get("amount", 0))
 		passive.cooldown_turns = int(src.get("cooldown_turns", 0))
+		passive.effects = _build_effect_resources(src.get("effects", []), statuses_by_id)
 		return passive
 	return null
 
 
-static func _build_reaction_resource(raw: Variant) -> ReactionDefinition:
+static func _build_reaction_resource(raw: Variant, statuses_by_id: Dictionary) -> ReactionDefinition:
 	if typeof(raw) != TYPE_DICTIONARY or Dictionary(raw).is_empty():
 		return null
 	var src: Dictionary = raw
@@ -767,11 +910,19 @@ static func _build_reaction_resource(raw: Variant) -> ReactionDefinition:
 	reaction.reaction_type = String(src.get("reaction_type", "Gain Armor"))
 	reaction.amount = int(src.get("amount", 0))
 	reaction.threshold_percent = int(src.get("threshold_percent", 50))
+	reaction.status = statuses_by_id.get(String(src.get("status_id", "")), null)
+	reaction.status_stack_threshold = int(src.get("status_stack_threshold", 1))
+	reaction.prevents_triggering_request = bool(src.get("prevents_triggering_request", false))
+	for replacement_id in src.get("replacement_status_ids", []):
+		var replacement = statuses_by_id.get(String(replacement_id), null)
+		if replacement != null:
+			reaction.replacement_statuses.append(replacement)
 	reaction.cooldown_turns = int(src.get("cooldown_turns", 0))
+	reaction.effects = _build_effect_resources(src.get("effects", []), statuses_by_id)
 	return reaction
 
 
-static func _build_tactic_resource(raw: Variant) -> TacticDefinition:
+static func _build_tactic_resource(raw: Variant, statuses_by_id: Dictionary) -> TacticDefinition:
 	if typeof(raw) != TYPE_DICTIONARY or Dictionary(raw).is_empty():
 		return null
 	var src: Dictionary = raw
@@ -782,6 +933,8 @@ static func _build_tactic_resource(raw: Variant) -> TacticDefinition:
 	tactic.condition = String(src.get("condition", "Enemy Alive"))
 	tactic.action = String(src.get("action", "Job Skill"))
 	tactic.target = String(src.get("target", "Frontmost Enemy"))
+	tactic.status = statuses_by_id.get(String(src.get("status_id", "")), null)
+	tactic.status_stack_threshold = int(src.get("status_stack_threshold", 1))
 	tactic.foretell_enabled = bool(src.get("foretell_enabled", false))
 	return tactic
 
@@ -799,15 +952,32 @@ static func _effect_resources_to_data(effects: Array[EffectDefinition]) -> Array
 			"target_selector": effect.target_selector,
 			"effect_type": effect.effect_type,
 			"status_id": _resource_ref_id(effect.status),
+			"condition_status_id": _resource_ref_id(effect.condition_status),
+			"amount_status_id": _resource_ref_id(effect.amount_status),
+			"replacement_status_ids": _resource_ref_ids(effect.replacement_statuses),
 			"status_duration_turns": effect.status_duration_turns,
 			"status_is_permanent": effect.status_is_permanent,
+			"status_stacks": effect.status_stacks,
+			"status_stack_threshold": effect.status_stack_threshold,
 			"status_polarity": effect.status_polarity,
 			"status_removal_mode": effect.status_removal_mode,
 			"modified_stat": effect.modified_stat,
+			"modifier_mode": effect.modifier_mode,
+			"modifier_direction": effect.modifier_direction,
 			"modifier_duration_turns": effect.modifier_duration_turns,
+			"amount_source": effect.amount_source,
+			"amount_rounding": effect.amount_rounding,
+			"amount_target_selector": effect.amount_target_selector,
+			"counter_name": effect.counter_name,
+			"counter_threshold": effect.counter_threshold,
+			"amount_multiplier": effect.amount_multiplier,
+			"amount_divisor": effect.amount_divisor,
 			"amount": effect.amount,
+			"damage_type": effect.damage_type,
 			"threshold_percent": effect.threshold_percent,
 			"once_per_battle": effect.once_per_battle,
+			"ignore_events_from_same_effect_source": effect.ignore_events_from_same_effect_source,
+			"repeat_within_event_chain": effect.repeat_within_event_chain,
 		})
 	return out
 
@@ -820,10 +990,13 @@ static func _skill_resource_to_data(skill: SkillDefinition) -> Dictionary:
 		"tags": skill.tags.duplicate(),
 		"action": skill.action,
 		"default_target": skill.default_target,
+		"attack_damage_type": skill.attack_damage_type,
+		"attack_count": skill.attack_count,
 		"status_id": _resource_ref_id(skill.status),
 		"status_duration_turns": skill.status_duration_turns,
 		"status_is_permanent": skill.status_is_permanent,
 		"amount_modifier": skill.amount_modifier,
+		"cooldown_turns": skill.cooldown_turns,
 		"effects": _effect_resources_to_data(skill.effects),
 	}
 
@@ -837,6 +1010,7 @@ static func _passive_resource_to_data(passive: PassiveDefinition) -> Dictionary:
 		"passive_type": passive.passive_type,
 		"amount": passive.amount,
 		"cooldown_turns": passive.cooldown_turns,
+		"effects": _effect_resources_to_data(passive.effects),
 	}
 
 
@@ -851,7 +1025,12 @@ static func _reaction_resource_to_data(reaction: ReactionDefinition) -> Dictiona
 		"reaction_type": reaction.reaction_type,
 		"amount": reaction.amount,
 		"threshold_percent": reaction.threshold_percent,
+		"status_id": _resource_ref_id(reaction.status),
+		"status_stack_threshold": reaction.status_stack_threshold,
+		"prevents_triggering_request": reaction.prevents_triggering_request,
+		"replacement_status_ids": _resource_ref_ids(reaction.replacement_statuses),
 		"cooldown_turns": reaction.cooldown_turns,
+		"effects": _effect_resources_to_data(reaction.effects),
 	}
 
 
@@ -880,6 +1059,8 @@ static func _tactic_resource_to_data(tactic: TacticDefinition) -> Dictionary:
 		"condition": tactic.condition,
 		"action": tactic.action,
 		"target": tactic.target,
+		"status_id": _resource_ref_id(tactic.status),
+		"status_stack_threshold": tactic.status_stack_threshold,
 		"foretell_enabled": tactic.foretell_enabled,
 	}
 
@@ -929,7 +1110,7 @@ static func _string_array(raw_values: Variant) -> Array[String]:
 	return values
 
 
-static func _build_tactic_resources(tactics_data: Dictionary) -> Dictionary:
+static func _build_tactic_resources(tactics_data: Dictionary, statuses_by_id: Dictionary) -> Dictionary:
 	var out := {}
 	for id in tactics_data.keys():
 		var src: Dictionary = tactics_data[id]
@@ -940,6 +1121,8 @@ static func _build_tactic_resources(tactics_data: Dictionary) -> Dictionary:
 		tactic.condition = String(src.get("condition", "Always"))
 		tactic.action = String(src.get("action", "Attack"))
 		tactic.target = String(src.get("target", "Frontmost Enemy"))
+		tactic.status = statuses_by_id.get(String(src.get("status_id", "")), null)
+		tactic.status_stack_threshold = int(src.get("status_stack_threshold", 1))
 		tactic.foretell_enabled = bool(src.get("foretell_enabled", false))
 		out[id] = tactic
 	return out

@@ -20,16 +20,22 @@ static func choose_action(actor, units: Array, evaluate_foretell: Callable = Cal
 			target = evaluate_foretell.call(tactic)
 			if target == null:
 				continue
-		elif not condition_matches(tactic.condition, actor, units):
-			continue
+		else:
+			target = find_tactic_target(tactic.target, actor, units, tactic)
+			if not condition_matches(tactic.condition, actor, units, target, tactic):
+				continue
 		if tactic.action == CombatConstantsScript.ACTION_JOB_SKILL and actor.current_skill == null:
 			skipped_reasons.append("Tactic skipped: %s. Current job skill is not unlocked." % _describe_tactic(tactic))
+			continue
+		if tactic.action == CombatConstantsScript.ACTION_JOB_SKILL and not actor.skill_is_ready(actor.current_skill):
+			skipped_reasons.append("Tactic skipped: %s. Current job skill is on cooldown." % _describe_tactic(tactic))
 			continue
 		if tactic.action == CombatConstantsScript.ACTION_ASSIGNED_SKILL and actor.assigned_skill == null:
 			skipped_reasons.append("Tactic skipped: %s. No eligible learned skill is assigned." % _describe_tactic(tactic))
 			continue
-		if target == null:
-			target = find_tactic_target(tactic.target, actor, units)
+		if tactic.action == CombatConstantsScript.ACTION_ASSIGNED_SKILL and not actor.skill_is_ready(actor.assigned_skill):
+			skipped_reasons.append("Tactic skipped: %s. Assigned skill is on cooldown." % _describe_tactic(tactic))
+			continue
 		if target == null:
 			skipped_reasons.append("Tactic skipped: %s. No valid target." % _describe_tactic(tactic))
 			continue
@@ -55,7 +61,7 @@ static func choose_action(actor, units: Array, evaluate_foretell: Callable = Cal
 		"skipped_reasons": skipped_reasons,
 	}
 
-static func condition_matches(condition: String, actor, units: Array) -> bool:
+static func condition_matches(condition: String, actor, units: Array, target = null, tactic: TacticDefinition = null) -> bool:
 	if condition == CombatConstantsScript.CONDITION_ALWAYS:
 		return true
 	if condition == CombatConstantsScript.CONDITION_SELF_HP_BELOW_HALF:
@@ -64,16 +70,38 @@ static func condition_matches(condition: String, actor, units: Array) -> bool:
 		return TargetingRulesScript.find_lowest_hp_ally_below_half(units, actor.team) != null
 	if condition == CombatConstantsScript.CONDITION_ENEMY_ALIVE:
 		return TargetingRulesScript.team_has_living_unit(units, TargetingRulesScript.opposing_team(actor.team))
+	if condition == "Target Has Status":
+		return target != null and tactic != null and tactic.status != null and target.status_stack_count(tactic.status.status_type) > 0
+	if condition == "Target Status Stacks At Least":
+		return target != null and tactic != null and tactic.status != null and target.status_stack_count(tactic.status.status_type) >= tactic.status_stack_threshold
+	if condition == "Target Pending Status Damage At Least HP":
+		return target != null and tactic != null and tactic.status != null and target.pending_status_damage(tactic.status.status_type) >= target.hp
+	if condition == "Target Slower Than Self":
+		return target != null and target.action_interval > actor.action_interval
 	return false
 
-static func find_tactic_target(target_rule: String, actor, units: Array):
+static func find_tactic_target(target_rule: String, actor, units: Array, tactic: TacticDefinition = null):
 	if target_rule == CombatConstantsScript.TARGET_SELF:
 		return actor
 	if target_rule == CombatConstantsScript.TARGET_LOWEST_HP_ALLY:
 		return TargetingRulesScript.find_lowest_hp_ally_below_half(units, actor.team)
+	if target_rule == "Lowest HP Ally With Status":
+		return _lowest_hp_ally_with_status(units, actor.team, tactic.status if tactic != null else null)
 	if target_rule == CombatConstantsScript.TARGET_FRONTMOST_ENEMY:
 		return TargetingRulesScript.find_frontmost_target(units, TargetingRulesScript.opposing_team(actor.team))
 	return null
+
+
+static func _lowest_hp_ally_with_status(units: Array, team: String, status: StatusDefinition):
+	if status == null:
+		return null
+	var lowest = null
+	for unit in units:
+		if unit.team != team or not unit.is_alive() or unit.status_stack_count(status.status_type) <= 0:
+			continue
+		if lowest == null or unit.hp < lowest.hp:
+			lowest = unit
+	return lowest
 
 
 static func _describe_tactic(tactic: TacticDefinition) -> String:

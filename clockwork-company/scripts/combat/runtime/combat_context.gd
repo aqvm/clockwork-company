@@ -78,6 +78,10 @@ func events_of_type(event_type: String) -> Array[Dictionary]:
 	return matches
 
 
+func event_by_id(event_id: int) -> Dictionary:
+	return _event_by_id(event_id)
+
+
 func event_snapshots() -> Array[Dictionary]:
 	var snapshots: Array[Dictionary] = []
 	for event: Dictionary in history:
@@ -107,6 +111,19 @@ func apply_direct_damage(source, target, amount: int, parent_event_id := -1, par
 	return record_damage(source, target, amount, previous_hp, 0, previous_hp - target.hp, int(damage_request["id"]), parent_log_id, tags)
 
 
+func apply_physical_damage(source, target, amount: int, parent_event_id := -1, parent_log_id := -1, tags: Array = []) -> Dictionary:
+	var physical_amount: int = max(0, amount - int(target.total_armor()))
+	var damage_request: Dictionary = request("damage_requested", source, target, {"amount": physical_amount, "physical_amount": physical_amount, "magic_amount": 0, "prevented": false}, parent_event_id, parent_log_id, tags)
+	if bool(damage_request["payload"].get("prevented", false)):
+		var prevented_event_id := publish("damage_prevented", source, target, damage_request["payload"], int(damage_request["id"]), parent_log_id, ["damage", "prevented"])
+		return {"amount": 0, "event_id": prevented_event_id}
+	physical_amount = max(0, int(damage_request["payload"].get("physical_amount", physical_amount)))
+	var applied_amount: int = max(0, int(damage_request["payload"].get("amount", physical_amount)))
+	var previous_hp: int = target.hp
+	target.hp = max(0, target.hp - applied_amount)
+	return record_damage(source, target, applied_amount, previous_hp, physical_amount, 0, int(damage_request["id"]), parent_log_id, tags + ["physical"])
+
+
 func record_damage(
 	source,
 	target,
@@ -120,6 +137,7 @@ func record_damage(
 ) -> Dictionary:
 	var applied_amount: int = previous_hp - target.hp
 	StatusResolverScript.record_damage(target, applied_amount)
+	target.record_hp_damage(applied_amount)
 	var event := CombatEventsScript.damage(source, target, attempted_amount, target.total_armor(), previous_hp, target.hp)
 	if log != null:
 		log.add_event("Damage dealt: %d. Physical %d, magic %d. HP: %d -> %d." % [attempted_amount, physical_amount, magic_amount, previous_hp, target.hp], event["event_type"], -1, parent_log_id, event["payload"], event["tags"])
@@ -135,7 +153,7 @@ func record_damage(
 		if log != null:
 			var defeat_event := CombatEventsScript.defeat(target)
 			log.add_event("%s is defeated." % target.unit_name, defeat_event["event_type"], -1, parent_log_id, defeat_event["payload"], defeat_event["tags"])
-		publish("unit_defeated", source, target, {}, damage_event_id, parent_log_id, ["defeat"])
+		publish("unit_defeated", source, target, {"statuses": target.status_snapshots()}, damage_event_id, parent_log_id, ["defeat"])
 	return {"amount": applied_amount, "event_id": damage_event_id}
 
 

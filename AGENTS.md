@@ -91,6 +91,13 @@ Why this matters:
 - Passing `--log-file godot-check.log` redirects the log into the Godot project directory, which is writable from Codex, and lets `--check-only` report script diagnostics normally.
 - Keep using the same `godot-check.log` path each run; it can be treated as a reusable scratch log and is git-ignored.
 
+## Validation efficiency
+
+- During implementation, run only the narrowest focused check needed to diagnose the current change or confirm the behavior just edited.
+- Reserve the complete regression/validation suite for the final pre-commit and pre-push gate. Do not repeatedly run the full suite while implementation is still changing.
+- Keep validation command output concise. Prefer pass/fail summaries and inspect detailed logs only when a check fails.
+- After a focused check passes, do not rerun it unless relevant code changes again or the final pre-commit suite is being run.
+
 ## GitHub guidance
 
 - Never commit to `main`.
@@ -98,7 +105,7 @@ Why this matters:
 - If local work is on `main`, create a helpfully named branch before committing.
 - Keep commit-and-push wrap-up compact. Unless the tree changes or a check fails, use one straightforward sequence:
   1. Fetch and resync with `origin/main`.
-  2. Run the relevant established validation checks once.
+  2. Run the relevant established validation checks once as the final pre-commit/pre-push validation gate.
   3. Stage changes, inspect the staged diff/status once, and remove any accidental artifacts.
   4. Commit on the feature branch.
   5. Push the feature branch.

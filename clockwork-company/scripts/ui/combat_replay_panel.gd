@@ -309,6 +309,7 @@ func _build_visual_replay_model() -> void:
 			"team": String(unit.get("team", "Enemies")),
 			"max_hp": max_hp,
 			"hp": max_hp,
+			"energy_shield": int(unit.get("energy_shield", 0)),
 			"previous_hp": max_hp,
 			"action_interval": action_interval,
 			"next_action_time": float(action_interval),
@@ -373,6 +374,7 @@ func _apply_snapshot_for_root_event(root_event_id: int) -> bool:
 			continue
 		state["max_hp"] = max(1, int(unit_snapshot.get("max_hp", state.get("max_hp", 1))))
 		state["hp"] = clamp(int(unit_snapshot.get("hp", state.get("hp", state["max_hp"]))), 0, int(state["max_hp"]))
+		state["energy_shield"] = max(0, int(unit_snapshot.get("energy_shield", state.get("energy_shield", 0))))
 		state["action_interval"] = max(1, int(unit_snapshot.get("action_interval", state.get("action_interval", 1))))
 		state["next_action_time"] = float(unit_snapshot.get("next_action_time", state.get("next_action_time", 0.0)))
 		state["is_alive"] = bool(unit_snapshot.get("is_alive", state.get("is_alive", true)))

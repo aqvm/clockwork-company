@@ -67,9 +67,17 @@ The shared authoring vocabulary is available on every supported trigger:
 
 - `Apply Status`: applies a referenced status to event-relative, team-wide, or deterministic-random targets.
 - `Remove Status`: removes one deterministic-random matching status by polarity, or a referenced specific status type.
-- `Modify Stat`: temporarily modifies max HP, physical damage, magic damage, armor, or action interval for a configured number of the target's completed turns.
+- `Modify Stat`: temporarily modifies max HP, physical damage, magic damage, armor, or action interval for a configured number of the target's completed actions.
+- `Deal Damage`, `Heal`, `Grant Armor`, and `Grant Battle Armor`: apply shared combat outcomes using fixed or authored formula amounts.
+- `Delay Action` and `Hasten Action`: change timeline position; authored haste can also temporarily reduce action interval to a configured baseline floor.
+- Status transfer/consumption effects can consume, detonate, gather, maintain, replace, or restore state recorded by authored statuses.
 
 Supported shared triggers include battle start, turn start/completion, skill use, attack, hit, damaged, kill, death, status application/removal, and reaction triggering. A shared effect can fire at most once within one causal event chain, preventing it from recursively triggering itself forever.
+
+Attack skills can author multiple complete attacks through `attack_count`.
+`Skill Used` effects resolve before the skill action; `Skill Completed` effects
+resolve afterward. Effects that intentionally respond to every event in a
+multi-hit chain can opt into `repeat_within_event_chain`.
 
 Conditions can narrow these triggers. Unsupported combinations and unavailable targets fail content validation instead of silently doing nothing.
 

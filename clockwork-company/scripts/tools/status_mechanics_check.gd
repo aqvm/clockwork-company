@@ -12,6 +12,10 @@ const ConfusionStatus := preload("res://resources/statuses/confusion.tres")
 const BleedStatus := preload("res://resources/statuses/bleed.tres")
 const NumbStatus := preload("res://resources/statuses/numb.tres")
 const FrostStatus := preload("res://resources/statuses/frost.tres")
+const BurningStatus := preload("res://resources/statuses/burning.tres")
+const WardStatus := preload("res://resources/statuses/ward.tres")
+const RotStatus := preload("res://resources/statuses/rot.tres")
+const RenewalStatus := preload("res://resources/statuses/renewal.tres")
 const TEST_UNIT := preload("res://resources/units/alden_guard.tres")
 
 
@@ -84,8 +88,9 @@ func _init() -> void:
 	assert(int(mod_unit.status_instance("Reconstitution").get("remaining_turns", 0)) == 3, "JSON status applications should default to finite three-turn duration.")
 
 	_assert_hook_driven_statuses()
+	_assert_high_value_statuses()
 
-	print("Status mechanics validation passed: stacking, duration, hook events, Bleed action damage, Numb reaction suppression, Frost request modification, and JSON status application worked.")
+	print("Status mechanics validation passed: core hooks plus Burn/Scorched, Ward, Rot, and Renewal worked.")
 	quit(0)
 
 
@@ -129,7 +134,7 @@ func _assert_hook_driven_statuses() -> void:
 		"amount": 3,
 		"prevented": false,
 	}, -1, root_entry_id, ["damage", "physical"])
-	assert(int(physical_request["payload"]["amount"]) == 7, "Two Frost stacks should add four damage to the next physical damage request.")
+	assert(int(physical_request["payload"]["amount"]) == 5, "Two Frost stacks should increase three post-armor physical damage by 40%, rounded up.")
 	assert(bleeding_unit.has_status("Frost"), "Frost should remain until the modified physical damage actually resolves.")
 	var previous_frost_target_hp: int = bleeding_unit.hp
 	bleeding_unit.hp -= int(physical_request["payload"]["amount"])
@@ -143,3 +148,60 @@ func _assert_hook_driven_statuses() -> void:
 		"prevented": false,
 	}, -1, root_entry_id, ["damage", "magic"])
 	assert(int(magic_request["payload"]["amount"]) == 3 and bleeding_unit.has_status("Frost"), "Nonphysical damage should not consume or benefit from Frost.")
+	for _stack in range(4):
+		assert(StatusResolverScript.apply_status(log, root_entry_id, bleeding_unit, FrostStatus, "Test", 2, false, context))
+	var capped_frost_request: Dictionary = context.request("damage_requested", attacker, bleeding_unit, {
+		"physical_amount": 10,
+		"magic_amount": 0,
+		"amount": 10,
+		"prevented": false,
+	}, -1, root_entry_id, ["damage", "physical"])
+	assert(int(capped_frost_request["payload"]["amount"]) == 20, "Five Frost stacks should double the next post-armor physical hit.")
+
+
+func _assert_high_value_statuses() -> void:
+	var loaded_status_types: Array[String] = []
+	for status in JsonContentLoaderScript.load_status_definitions([]):
+		loaded_status_types.append(status.status_type)
+	for required_type in ["Burning", "Ward", "Rot", "Renewal"]:
+		assert(loaded_status_types.has(required_type), "%s should appear in the authorable status library." % required_type)
+	assert(not loaded_status_types.has("Scorched"), "Scorched is an immediate consequence, not a status.")
+
+	var supporter = UnitStateScript.new(TEST_UNIT, 0)
+	supporter.unit_name = "Supporter"
+	supporter.next_action_time = 10
+	var burning_unit = UnitStateScript.new(TEST_UNIT, 1)
+	burning_unit.unit_name = "Burning Unit"
+	var log = CombatLogScript.new()
+	var root_entry_id: int = log.add("High-value status check")
+	var context = CombatContextScript.new([supporter, burning_unit], log)
+	context.add_responder(CombatHookResolverScript.respond)
+
+	assert(StatusResolverScript.apply_status(log, root_entry_id, burning_unit, BurningStatus, "Test", 3, false, context, supporter, -1, 2))
+	var hp_before_burn: int = burning_unit.hp
+	context.publish("action_completed", burning_unit, supporter, {"action": "Test"}, -1, root_entry_id, ["action"])
+	assert(burning_unit.hp == hp_before_burn - 2, "Two Burn stacks should deal two action damage.")
+	assert(burning_unit.status_stack_count("Burning") == 1, "Burn should decay by one stack after triggering.")
+
+	StatusResolverScript.apply_status(log, root_entry_id, burning_unit, BurningStatus, "Test", 3, false, context)
+	burning_unit.hp -= 3
+	var supporter_time_before: int = supporter.next_action_time
+	context.apply_healing(supporter, burning_unit, 2, -1, root_entry_id, ["test"])
+	assert(supporter.next_action_time == supporter_time_before + 4, "Supporting a two-stack Burning unit should apply a four-time Scorched delay.")
+	assert(context.events_of_type("scorched").size() == 1 and not supporter.has_status("Scorched"), "Scorched should be recorded as an immediate consequence, not a status.")
+
+	assert(StatusResolverScript.apply_status(log, root_entry_id, burning_unit, WardStatus, "Test", 3, false, context))
+	assert(not StatusResolverScript.apply_status(log, root_entry_id, burning_unit, RotStatus, "Test", 3, false, context, supporter), "Ward should prevent an incoming ailment.")
+	assert(not burning_unit.has_status("Rot") and not burning_unit.has_status("Ward"), "One Ward charge should be consumed when it blocks an ailment.")
+
+	assert(StatusResolverScript.apply_status(log, root_entry_id, burning_unit, RotStatus, "Test", 3, false, context, supporter, -1, 2))
+	var max_hp_before_rot: int = burning_unit.max_hp
+	burning_unit.hp -= 3
+	context.apply_healing(supporter, burning_unit, 2, -1, root_entry_id, ["test"])
+	assert(burning_unit.max_hp == max_hp_before_rot - 2, "Two Rot stacks should remove two maximum HP when healing lands.")
+
+	assert(StatusResolverScript.apply_status(log, root_entry_id, burning_unit, RenewalStatus, "Test", 3, false, context))
+	burning_unit.hp -= 8
+	var hp_before_renewal: int = burning_unit.hp
+	assert(StatusResolverScript.remove_status(log, root_entry_id, burning_unit, "Rot", "test cleanse", context, supporter))
+	assert(burning_unit.hp == hp_before_renewal + RenewalStatus.amount, "Removing an ailment should trigger Renewal healing.")

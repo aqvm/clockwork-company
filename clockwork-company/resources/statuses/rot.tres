@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="StatusDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/status_definition.gd" id="1_status"]
+
+[resource]
+script = ExtResource("1_status")
+display_name = "Rot"
+polarity = "Ailment"
+status_type = "Rot"
+stacking_rule = "Intensify"
+max_stacks = 5
+tags = Array[String](["ailment", "healing", "max_hp"])
+amount = 1
+elapses_naturally = false
+description = "Whenever this unit receives healing, it loses 1 maximum HP per stack for the rest of the battle."

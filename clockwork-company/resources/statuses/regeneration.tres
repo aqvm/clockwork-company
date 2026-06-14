@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="StatusDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/status_definition.gd" id="1_status"]
+
+[resource]
+script = ExtResource("1_status")
+display_name = "Regeneration"
+polarity = "Boon"
+status_type = "Regeneration"
+stacking_rule = "Refresh"
+tags = Array[String](["boon", "healing"])
+amount = 2
+description = "At the start of this unit's turn, it heals 2 HP."

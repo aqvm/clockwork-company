@@ -4,12 +4,13 @@
 
 [resource]
 script = ExtResource("1_status")
-display_name = "Frost"
+display_name = "Burning"
 polarity = "Ailment"
-status_type = "Frost"
+status_type = "Burning"
 stacking_rule = "Intensify"
 stack_cap_enabled = false
 max_stacks = 5
-tags = Array[String](["ailment", "physical", "setup"])
-amount_percent = 20
-description = "The next physical hit against this unit deals 20% more post-armor physical damage per stack, rounded up, then removes Frost."
+tags = Array[String](["ailment", "damage", "action"])
+amount = 1
+elapses_naturally = false
+description = "After this unit completes an action, it takes 1 damage per stack and loses one stack. Healing or protecting it Scorches the supporter."

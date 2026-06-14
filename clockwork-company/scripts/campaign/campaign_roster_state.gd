@@ -541,6 +541,8 @@ func _clone_tactic(source: TacticDefinition) -> TacticDefinition:
 	copy.condition = source.condition
 	copy.action = source.action
 	copy.target = source.target
+	copy.status = source.status
+	copy.status_stack_threshold = source.status_stack_threshold
 	copy.foretell_enabled = source.foretell_enabled
 	return copy
 
@@ -554,6 +556,8 @@ func _tactics_to_save_data(tactics: Array[TacticDefinition]) -> Array[Dictionary
 			"condition": tactic.condition,
 			"action": tactic.action,
 			"target": tactic.target,
+			"status_id": _content_id(tactic.status),
+			"status_stack_threshold": tactic.status_stack_threshold,
 			"foretell_enabled": tactic.foretell_enabled,
 		})
 	return results
@@ -569,6 +573,9 @@ func _tactic_from_save_data(raw: Variant, enabled_mod_pack_ids: Array[String]) -
 	tactic.condition = String(data.get("condition", tactic.condition))
 	tactic.action = String(data.get("action", tactic.action))
 	tactic.target = String(data.get("target", tactic.target))
+	var status_id := String(data.get("status_id", _content_id(tactic.status)))
+	tactic.status = JsonContentLoaderScript.load_status_definition_by_id(status_id, enabled_mod_pack_ids)
+	tactic.status_stack_threshold = int(data.get("status_stack_threshold", tactic.status_stack_threshold))
 	tactic.foretell_enabled = bool(data.get("foretell_enabled", tactic.foretell_enabled))
 	return tactic
 

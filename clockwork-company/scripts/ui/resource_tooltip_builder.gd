@@ -282,19 +282,19 @@ static func _ancestry_text(ancestry: AncestryDefinition) -> String:
 
 
 static func _skill_text(skill: SkillDefinition) -> String:
-	return "%s\nTags: %s\nAction: %s\nTarget: %s\nStatus: %s\nStatus duration: %s\nAmount modifier: %+d\nEffects: %s" % [_title(skill), _join(skill.tags), skill.action, skill.default_target, _name_or_none(skill.status), _status_duration_text(skill.status_duration_turns, skill.status_is_permanent), skill.amount_modifier, _join(_effect_summaries(skill.effects))]
+	return "%s\nTags: %s\nAction: %s\nAttack damage: %s x%d\nTarget: %s\nStatus: %s\nStatus duration: %s\nAmount modifier: %+d\nCooldown turns: %d\nEffects: %s" % [_title(skill), _join(skill.tags), skill.action, skill.attack_damage_type, skill.attack_count, skill.default_target, _name_or_none(skill.status), _status_duration_text(skill.status_duration_turns, skill.status_is_permanent), skill.amount_modifier, skill.cooldown_turns, _join(_effect_summaries(skill.effects))]
 
 
 static func _passive_text(passive: PassiveDefinition) -> String:
-	return "%s\nTags: %s\nType: %s\nAmount: %+d\nCooldown turns: %d" % [_title(passive), _join(passive.tags), passive.passive_type, passive.amount, passive.cooldown_turns]
+	return "%s\nTags: %s\nType: %s\nAmount: %+d\nCooldown turns: %d\nEffects: %s" % [_title(passive), _join(passive.tags), passive.passive_type, passive.amount, passive.cooldown_turns, _join(_effect_summaries(passive.effects))]
 
 
 static func _reaction_text(reaction: ReactionDefinition) -> String:
-	return "%s\nTags: %s\nTrigger: %s\nCondition: %s\nType: %s\nAmount: %+d\nThreshold: %d%%\nCooldown turns: %d" % [_title(reaction), _join(reaction.tags), reaction.trigger, reaction.condition, reaction.reaction_type, reaction.amount, reaction.threshold_percent, reaction.cooldown_turns]
+	return "%s\nTags: %s\nTrigger: %s\nCondition: %s\nCondition status: %s at %d stacks\nPrevents triggering request: %s\nReplacement statuses: %s\nType: %s\nAmount: %+d\nThreshold: %d%%\nCooldown turns: %d\nEffects: %s" % [_title(reaction), _join(reaction.tags), reaction.trigger, reaction.condition, _name_or_none(reaction.status), reaction.status_stack_threshold, "yes" if reaction.prevents_triggering_request else "no", _join(_resource_names(reaction.replacement_statuses)), reaction.reaction_type, reaction.amount, reaction.threshold_percent, reaction.cooldown_turns, _join(_effect_summaries(reaction.effects))]
 
 
 static func _tactic_text(tactic: TacticDefinition) -> String:
-	return "%s\nTags: %s\nForetell: %s\nRule: %s -> %s -> %s" % [_title(tactic), _join(tactic.tags), "enabled" if tactic.foretell_enabled else "disabled", tactic.condition, tactic.action, tactic.target]
+	return "%s\nTags: %s\nForetell: %s\nRule: %s -> %s -> %s\nCondition status: %s at %d stacks" % [_title(tactic), _join(tactic.tags), "enabled" if tactic.foretell_enabled else "disabled", tactic.condition, tactic.action, tactic.target, _name_or_none(tactic.status), tactic.status_stack_threshold]
 
 
 static func _effect_text(effect: EffectDefinition) -> String:
@@ -302,16 +302,17 @@ static func _effect_text(effect: EffectDefinition) -> String:
 
 
 static func _status_text(status: Resource) -> String:
+	var stacking_text := "Stacking: %s, maximum %d" % [status.stacking_rule, status.max_stacks] if status.stack_cap_enabled else "Stacking: %s, uncapped" % status.stacking_rule
 	var lines: Array[String] = [
 		_title(status),
 		"Polarity: %s" % status.polarity,
 		"Type: %s" % status.status_type,
-		"Stacking: %s, maximum %d" % [status.stacking_rule, status.max_stacks],
+		stacking_text,
 		"Tags: %s" % _join(status.tags),
 	]
 	if status.amount != 0:
 		lines.append("Amount: %d" % status.amount)
-	if status.status_type == "Reconstitution":
+	if status.status_type in ["Reconstitution", "Frost"]:
 		lines.append("Amount percent: %d%%" % status.amount_percent)
 	if not status.elapses_naturally:
 		lines.append("Duration: requires explicit removal")
@@ -409,14 +410,46 @@ static func _generic_resource_text(resource) -> String:
 
 static func _effect_summary(effect: EffectDefinition) -> String:
 	var limit_text := ", once per battle" if effect.once_per_battle else ""
+	var condition_text := effect.condition
+	if effect.condition in ["Target Status Stacks At Least", "Target Pending Status Damage At Least HP", "Requested Status Matches"]:
+		condition_text += " (%s, %d stacks)" % [_name_or_none(effect.status), effect.status_stack_threshold]
+	elif effect.condition == "Applied Status Matches":
+		condition_text += " (%s)" % _name_or_none(effect.condition_status)
+	elif effect.condition in ["Owner Counter At Least", "Target Counter At Least"]:
+		condition_text += " (%s >= %d)" % [effect.counter_name, effect.counter_threshold]
+	elif effect.condition == "Event Count At Least":
+		condition_text += " (%d)" % effect.counter_threshold
 	if effect.effect_type == "Apply Status":
-		return "Apply %s when %s to %s, %s%s" % [_name_or_none(effect.status), effect.trigger, effect.target_selector, _status_duration_text(effect.status_duration_turns, effect.status_is_permanent), limit_text]
+		return "Apply %s stacks of %s when %s / %s to %s, %s%s" % [_effect_amount_text(effect), _name_or_none(effect.status), effect.trigger, condition_text, effect.target_selector, _status_duration_text(effect.status_duration_turns, effect.status_is_permanent), limit_text]
+	if effect.effect_type == "Maintain Status Aura":
+		return "Maintain %s on %s while source is alive%s" % [_name_or_none(effect.status), effect.target_selector, limit_text]
 	if effect.effect_type == "Remove Status":
 		var filter_text := effect.status.display_name if effect.status_removal_mode == "Specific Status" and effect.status != null else "%s %s" % [effect.status_removal_mode, effect.status_polarity]
 		return "Remove %s when %s from %s%s" % [filter_text, effect.trigger, effect.target_selector, limit_text]
 	if effect.effect_type == "Modify Stat":
-		return "Modify %s %+d when %s on %s for %d turns%s" % [effect.modified_stat, effect.amount, effect.trigger, effect.target_selector, effect.modifier_duration_turns, limit_text]
-	return "%s when %s: %s %d to %s%s" % [effect.effect_type, effect.trigger, effect.condition, effect.amount, effect.target_selector, limit_text]
+		if effect.modifier_mode == "Dynamic Percent":
+			return "Dynamically %s %s by %s%% when %s / %s on %s; amount group: %s%s" % [effect.modifier_direction.to_lower(), effect.modified_stat, _effect_amount_text(effect), effect.trigger, condition_text, effect.target_selector, effect.amount_target_selector, limit_text]
+		return "%s %s by %s when %s / %s on %s for %d turns%s" % [effect.modifier_direction, effect.modified_stat, _effect_amount_text(effect), effect.trigger, condition_text, effect.target_selector, effect.modifier_duration_turns, limit_text]
+	if effect.effect_type == "Deal Damage":
+		return "Deal %s %s damage when %s / %s to %s%s" % [_effect_amount_text(effect), effect.damage_type.to_lower(), effect.trigger, condition_text, effect.target_selector, limit_text]
+	if effect.effect_type in ["Fortify Damage", "Redirect Enemy Attacks"]:
+		return "%s when %s / %s on %s for %d completed actions%s" % [effect.effect_type, effect.trigger, condition_text, effect.target_selector, effect.modifier_duration_turns, limit_text]
+	return "%s when %s / %s: %s to %s%s" % [effect.effect_type, effect.trigger, condition_text, _effect_amount_text(effect), effect.target_selector, limit_text]
+
+
+static func _effect_amount_text(effect: EffectDefinition) -> String:
+	var base := "%+d" % effect.amount if effect.amount_source == "Fixed" else effect.amount_source
+	if effect.effect_type == "Apply Status" and effect.amount_source == "Fixed":
+		base = str(effect.status_stacks)
+	if effect.amount_source in ["Owner Counter", "Target Counter", "Overhealing Diminishing"]:
+		base += " [%s]" % effect.counter_name
+	if effect.amount_source in ["Target Status Stacks", "Event Target Status Stacks", "Defeated Target Status Stacks", "Total Status Stacks On Selected Group", "Total Status Max HP Loss On Selected Group", "Target Pending Status Damage"]:
+		base += " [%s]" % _name_or_none(effect.amount_status if effect.amount_status != null else effect.status)
+	if effect.amount_multiplier != 1 or effect.amount_divisor != 1:
+		base += " x%d /%d" % [effect.amount_multiplier, effect.amount_divisor]
+	if effect.amount_rounding == "Ceil":
+		base += " (round up)"
+	return base
 
 
 static func _effect_summaries(effects: Array[EffectDefinition]) -> Array[String]:
