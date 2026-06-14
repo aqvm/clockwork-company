@@ -19,11 +19,12 @@ const RenewalStatus := preload("res://resources/statuses/renewal.tres")
 const RegenerationStatus := preload("res://resources/statuses/regeneration.tres")
 const ReconstitutionStatus := preload("res://resources/statuses/reconstitution.tres")
 const AshChokedRule := preload("res://resources/scenario_rules/ash_chapel_confusion.tres")
-const AldenGuard := preload("res://resources/units/alden_guard.tres")
-const IronBrute := preload("res://resources/units/iron_brute.tres")
+
+var check_completed := false
 
 
 func _init() -> void:
+	process_frame.connect(_quit_if_incomplete, CONNECT_ONE_SHOT)
 	var invalid_requested_condition := _effect("Battle Start", "Apply Status", "Self", 0, BleedStatus)
 	invalid_requested_condition.condition = "Requested Status Matches"
 	assert(not invalid_requested_condition.support_error().is_empty(), "Resource validation should reject request-only conditions on ordinary triggers.")
@@ -73,16 +74,17 @@ func _init() -> void:
 	ally.add_status(NumbStatus, "test", 3, false)
 	context.publish("reaction_triggered", ally, enemy, {}, -1, root_log_id)
 	assert(not ally.has_status("Numb"), "Specific Status removal should remove the referenced status type.")
-	var json_item: ItemDefinition = JsonContentLoaderScript.load_item_definition_by_id("resolver_vocabulary_it", ["integration_test_mod_pack"])
+	var json_content: Dictionary = JsonContentLoaderScript.load_content_resources(["integration_test_mod_pack"])
+	var json_item: ItemDefinition = json_content["items"].get("resolver_vocabulary_it", null)
 	assert(json_item != null and json_item.effects.size() == 2, "JSON should load shared triggered effects.")
 	assert(json_item.effects[0].modified_stat == "Action Speed" and json_item.effects[0].modifier_duration_turns == 2, "JSON should preserve temporary modifier fields.")
 	assert(json_item.effects[1].status_removal_mode == "Specific Status" and json_item.effects[1].status != null, "JSON should preserve status-removal fields and references.")
-	var json_job: JobDefinition = JsonContentLoaderScript.load_job_definition_by_id("cleanser_it", ["integration_test_mod_pack"])
+	var json_job: JobDefinition = json_content["jobs"].get("cleanser_it", null)
 	assert(json_job != null and json_job.skill.action == "Effects Only" and json_job.skill.attack_count == 2 and json_job.skill.effects.size() == 1, "JSON should load effect-only job skills and attack counts.")
 	assert(json_job.passive.effects.size() == 2 and json_job.passive.effects[0].status.status_type == "Bleed" and json_job.passive.effects[1].trigger == "Damage Requested", "JSON should load specific and generic request-interception effects.")
 	assert(json_job.reaction.effects.size() == 2 and json_job.reaction.status.status_type == "Burning", "JSON should load effect-only reactions, stack conditions, and formula effects.")
 	assert(json_job.default_tactic.status.status_type == "Burning", "JSON should load status-aware default tactics.")
-	var formula_probe: ItemDefinition = JsonContentLoaderScript.load_item_definition_by_id("formula_counter_probe_it", ["integration_test_mod_pack"])
+	var formula_probe: ItemDefinition = json_content["items"].get("formula_counter_probe_it", null)
 	assert(formula_probe != null and formula_probe.effects.size() == 2, "JSON should reconstruct formula/counter probe effects.")
 	assert(formula_probe.effects[0].repeat_within_event_chain, "JSON should preserve opt-in repeated resolution within one event chain.")
 	assert(formula_probe.effects[1].counter_threshold == 2 and formula_probe.effects[1].amount_source == "Target Counter" and formula_probe.effects[1].amount_multiplier == 2, "JSON should preserve counter thresholds and formula scaling fields.")
@@ -96,11 +98,6 @@ func _init() -> void:
 	ally.add_status(FrostStatus, "test", 3, false)
 	context.publish("skill_used", ally, ally, {"skill": skill.display_name, "action": skill.action}, -1, root_log_id)
 	assert(not ally.has_status("Frost"), "Effect-only job skills should resolve the shared effect vocabulary.")
-	var ash_target = _unit("Ash Target", "Allies")
-	var ash_context = CombatContextScript.new([ash_target], log, [AshChokedRule])
-	ash_context.add_responder(TriggeredEffectResolverScript.respond)
-	ash_context.publish("battle_started", null, null, {}, -1, root_log_id)
-	assert(ash_target.has_status("Confusion"), "Ash-Choked Rites should resolve through its authored scenario-rule effect.")
 	var loop_rule := ScenarioRuleDefinition.new()
 	loop_rule.display_name = "Root Loop Guard"
 	loop_rule.effects.append(_effect("Status Applied", "Apply Status", "Event Target", 0, FrostStatus))
@@ -929,6 +926,25 @@ func _init() -> void:
 	assert(not ready_target.is_alive() and ready_executioner.prepared_base_attack_source.is_empty(), "A prepared base attack should resolve before the enemy turn and be consumed after one strike.")
 	assert(ready_context.events_of_type("attack_performed").size() == 1, "A prepared strike should use one complete normal base-attack resolution.")
 
+	var battle_ready_executioner = _unit("Battle Ready Executioner", "Allies")
+	battle_ready_executioner.current_skill = ready_swing
+	battle_ready_executioner.next_action_time = 1
+	var ready_tactic := TacticDefinition.new()
+	ready_tactic.condition = "Always"
+	ready_tactic.action = "Job Skill"
+	ready_tactic.target = "Self"
+	battle_ready_executioner.tactics.append(ready_tactic)
+	var canceled_actor = _unit("Canceled Actor", "Enemies")
+	canceled_actor.hp = 5
+	canceled_actor.next_action_time = 2
+	var prepared_report: Dictionary = executioner_simulator.run_battle_report_from_units([battle_ready_executioner, canceled_actor], "Prepared attack cancellation", [AshChokedRule])
+	assert(prepared_report["winner"] == "Allies" and int(prepared_report["actions_taken"]) == 1, "A lethal prepared base attack should cancel the defeated enemy's pending scheduled turn.")
+	var scenario_status_events := 0
+	for event: Dictionary in prepared_report["combat_events"]:
+		if event["type"] == "status_applied" and event["payload"].get("status", "") == "Confusion":
+			scenario_status_events += 1
+	assert(scenario_status_events == 2, "An authored scenario hook should apply through the complete CombatSimulator battle path.")
+
 	var sanguinist = _unit("Sanguinist", "Allies")
 	sanguinist.base_action_speed = 10
 	sanguinist.action_speed = 10
@@ -1011,15 +1027,16 @@ func _init() -> void:
 	rot_context.apply_healing(rot_victim, rot_victim, 1, -1, root_log_id, ["healing"])
 	assert(rot_victim.action_speed == 11, "Rot should count as ailment damage when max-HP loss also lowers current HP.")
 
-	var battle_report: Dictionary = CombatSimulatorScript.new().run_battle_report([AldenGuard, IronBrute], "Scenario hook integration", [AshChokedRule])
-	var scenario_status_events := 0
-	for event: Dictionary in battle_report["combat_events"]:
-		if event["type"] == "status_applied" and event["payload"].get("status", "") == "Confusion":
-			scenario_status_events += 1
-	assert(scenario_status_events == 2, "An authored scenario hook should apply through the complete CombatSimulator battle path.")
-
+	check_completed = true
 	print("Triggered effect validation passed: scenario hooks, formulas, counters, interception, stack consumption/detonation, expanded tactics, and JSON authoring worked.")
 	quit(0)
+
+
+func _quit_if_incomplete() -> void:
+	if check_completed:
+		return
+	push_error("Triggered effect validation aborted before completion. Review the preceding assertion or script error.")
+	quit(1)
 
 
 func _effect(trigger: String, effect_type: String, target_selector: String, amount := 0, status: StatusDefinition = null) -> EffectDefinition:

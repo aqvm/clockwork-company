@@ -82,9 +82,7 @@ static func load_demo_unit_definitions(enabled_mod_pack_ids: Variant = null) -> 
 
 
 static func load_unit_definitions_by_ids(unit_ids: Array[String], enabled_mod_pack_ids: Variant = null) -> Array[UnitDefinition]:
-	var base_data := _load_base_data_from_resources()
-	var merged_data := _apply_mod_packs(base_data, enabled_mod_pack_ids)
-	var content := _build_content_resources(merged_data)
+	var content := load_content_resources(enabled_mod_pack_ids)
 	var units_by_id: Dictionary = content["units"]
 	var results: Array[UnitDefinition] = []
 	for unit_id in unit_ids:
@@ -94,12 +92,16 @@ static func load_unit_definitions_by_ids(unit_ids: Array[String], enabled_mod_pa
 	return results
 
 
+static func load_content_resources(enabled_mod_pack_ids: Variant = null) -> Dictionary:
+	var base_data := _load_base_data_from_resources()
+	var merged_data := _apply_mod_packs(base_data, enabled_mod_pack_ids)
+	return _build_content_resources(merged_data)
+
+
 static func load_item_definition_by_id(item_id: String, enabled_mod_pack_ids: Variant = null) -> ItemDefinition:
 	if item_id.is_empty():
 		return null
-	var base_data := _load_base_data_from_resources()
-	var merged_data := _apply_mod_packs(base_data, enabled_mod_pack_ids)
-	var content := _build_content_resources(merged_data)
+	var content := load_content_resources(enabled_mod_pack_ids)
 	var items_by_id: Dictionary = content["items"]
 	return items_by_id.get(item_id, null)
 
@@ -107,17 +109,13 @@ static func load_item_definition_by_id(item_id: String, enabled_mod_pack_ids: Va
 static func load_job_definition_by_id(job_id: String, enabled_mod_pack_ids: Variant = null) -> JobDefinition:
 	if job_id.is_empty():
 		return null
-	var base_data := _load_base_data_from_resources()
-	var merged_data := _apply_mod_packs(base_data, enabled_mod_pack_ids)
-	var content := _build_content_resources(merged_data)
+	var content := load_content_resources(enabled_mod_pack_ids)
 	var jobs_by_id: Dictionary = content["jobs"]
 	return jobs_by_id.get(job_id, null)
 
 
 static func load_job_definitions(enabled_mod_pack_ids: Variant = null) -> Array[JobDefinition]:
-	var base_data := _load_base_data_from_resources()
-	var merged_data := _apply_mod_packs(base_data, enabled_mod_pack_ids)
-	var content := _build_content_resources(merged_data)
+	var content := load_content_resources(enabled_mod_pack_ids)
 	var jobs_by_id: Dictionary = content["jobs"]
 	var results: Array[JobDefinition] = []
 	for job_id in jobs_by_id.keys():
@@ -127,9 +125,7 @@ static func load_job_definitions(enabled_mod_pack_ids: Variant = null) -> Array[
 
 
 static func load_tactic_definitions(enabled_mod_pack_ids: Variant = null) -> Array[TacticDefinition]:
-	var base_data := _load_base_data_from_resources()
-	var merged_data := _apply_mod_packs(base_data, enabled_mod_pack_ids)
-	var content := _build_content_resources(merged_data)
+	var content := load_content_resources(enabled_mod_pack_ids)
 	var tactics_by_id: Dictionary = content["tactics"]
 	var results: Array[TacticDefinition] = []
 	for tactic_id in tactics_by_id.keys():
@@ -148,9 +144,7 @@ static func load_tactic_definition_by_id(tactic_id: String, enabled_mod_pack_ids
 
 
 static func load_status_definitions(enabled_mod_pack_ids: Variant = null) -> Array[StatusDefinition]:
-	var base_data := _load_base_data_from_resources()
-	var merged_data := _apply_mod_packs(base_data, enabled_mod_pack_ids)
-	var content := _build_content_resources(merged_data)
+	var content := load_content_resources(enabled_mod_pack_ids)
 	var statuses_by_id: Dictionary = content["statuses"]
 	var results: Array[StatusDefinition] = []
 	for status_id in statuses_by_id.keys():
