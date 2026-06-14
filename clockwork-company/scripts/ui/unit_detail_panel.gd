@@ -27,7 +27,7 @@ func show_unit(unit: UnitDefinition, party_units: Array[UnitDefinition] = []) ->
 	var computed_stats: Dictionary = preview.get("before_battle_start", {})
 	var battle_start_stats: Dictionary = preview.get("after_battle_start", {})
 	_add_resource_text(unit, unit.display_name)
-	_add_plain_text("Base stats: HP %d, physical %d, magic %d, armor %d, interval %d" % [unit.max_hp, unit.physical_damage, unit.magic_damage, unit.armor, unit.action_interval])
+	_add_plain_text("Base stats: HP %d, physical %d, magic %d, armor %d, speed %d" % [unit.max_hp, unit.physical_damage, unit.magic_damage, unit.armor, unit.action_speed])
 	_add_plain_text("Computed stats: %s" % PlanningStatPreviewScript.stats_line(computed_stats))
 	if PlanningStatPreviewScript.stats_changed(computed_stats, battle_start_stats):
 		_add_plain_text("After battle-start effects: %s" % PlanningStatPreviewScript.stats_line(battle_start_stats))
@@ -112,7 +112,7 @@ func _add_glossary_text(term: String) -> Label:
 
 func _add_stat_glossary_rows() -> void:
 	_add_plain_text("Stat terms:")
-	for term in ["HP", "Physical Damage", "Magic Damage", "Armor", "Action Interval", "Guard", "Cooldown"]:
+	for term in ["HP", "Physical Damage", "Magic Damage", "Armor", "Action Speed", "Guard", "Cooldown"]:
 		_add_glossary_text(term)
 
 
@@ -173,7 +173,7 @@ func _item_detail_text(item: ItemDefinition) -> String:
 	_append_stat_part(parts, "P", item.physical_damage_modifier)
 	_append_stat_part(parts, "M", item.magic_damage_modifier)
 	_append_stat_part(parts, "A", item.armor_modifier)
-	_append_stat_part(parts, "I", item.action_interval_modifier)
+	_append_stat_part(parts, "S", item.action_speed_modifier)
 	var stat_text := "no stat changes" if parts.is_empty() else _join_values(parts, ", ")
 	var effect_parts: Array[String] = []
 	for effect in item.effects:

@@ -1,5 +1,7 @@
 # Content-Authorable Job Design
 
+> Wiki navigation: [[Jobs]] separates runnable prototype job Resources from designed-but-unimplemented concepts and links back to the detailed recipes in this document.
+
 This document tests proposed jobs against the current authored skill, passive,
 reaction, status, and shared-effect vocabulary. It records concrete recipes and
 reusable resolver gaps without treating unimplemented concepts as commitments.
@@ -38,8 +40,8 @@ onto their source.
   - Explicit `replacement_statuses` boon pool
   - `Reaction Triggered` + `Apply Status` Burning to `Event Target`
   - Amount source: `Target Status Stacks`
-- Bridge action, `Hot on Their Heels`: temporarily reduce an ally's action
-  interval by its total ailment stacks. A non-stacking ailment contributes one;
+- Bridge action, `Hot on Their Heels`: temporarily increase an ally's action
+  speed by its total ailment stacks. A non-stacking ailment contributes one;
   an intensified ailment contributes its current stack count.
 
 ### Important Interaction
@@ -66,8 +68,8 @@ slows the enemy team as Frost accumulates.
 - Passive: dynamically slow all enemies based on total enemy Frost.
   - `Battle State Changed`
   - `Modify Stat` targeting `Enemy Units`
-  - Stat: `Action Interval`
-  - Mode: `Dynamic Percent`, direction `Increase`
+  - Stat: `Action Speed`
+  - Mode: `Dynamic Percent`, direction `Decrease`
   - Amount source: `Total Status Stacks On Selected Group`
   - Amount group: `Enemy Units`, amount status: Frost
 - Reaction: retaliate against physical attackers with Frost.
@@ -231,15 +233,13 @@ allies, and turns repeated physical punishment into accelerating tempo.
   - Must not trigger when the Bruiser was already the target.
   - Redirection occurs before attack logs, attack effects, damage requests, and
     hit effects select their target.
-- Passive: whenever the Bruiser takes physical damage, temporarily reduce its
-  action interval.
+- Passive: whenever the Bruiser takes physical damage, temporarily increase its
+  action speed.
   - Repeated physical hits can stack the acceleration.
-  - The Bruiser's action interval cannot fall below half its finalized
-    pre-effect action interval.
-  - Decide whether gained acceleration also moves the Bruiser's already
-    scheduled next action earlier. Current interval modifiers only affect later
-    scheduling, so they do not immediately punish attacks landing before the
-    Bruiser's next turn.
+  - The Bruiser's action speed cannot rise above twice its finalized
+    encounter-start action speed.
+  - Gained acceleration proportionally moves the Bruiser's already scheduled
+    next action earlier, rounded up to an integer timeline time.
 - Bridge action: deal physical damage proportional to the target's remaining
   HP.
   - Intended as an early-fight pressure tool that helps allied half-HP or
@@ -250,7 +250,7 @@ allies, and turns repeated physical punishment into accelerating tempo.
 ### Important Interactions
 
 The physical-damage speed passive intentionally punishes rapid, low-damage
-attackers. Its half-interval floor prevents repeated hits from creating
+attackers. Its double-speed cap prevents repeated hits from creating
 unbounded acceleration while preserving that matchup identity.
 
 Stun is a named timeline delay, not a turn-duration status. A unit does not need
@@ -269,6 +269,69 @@ None required for the current concept. Use:
 - a `Physically Damaged` `Hasten Action` effect with a 50% floor, two or three
   completed-action duration, and `repeat_within_event_chain = true`
 - `Target Current HP` for the bridge action
+
+## Executioner
+
+Identity: a slow, durable physical attacker who pressures high-HP targets,
+finishes wounded enemies, and prepares lethal attacks between its scheduled
+actions.
+
+### Intended Recipe
+
+- Growth: strong physical-damage growth, moderate maximum-HP growth, and poor
+  action-speed growth.
+- Action: perform one physical attack, then deal additional physical damage
+  proportional to the target's maximum HP.
+  - Exact proportion and any boss-specific cap remain balance decisions.
+- Passive: when the Executioner's physical damage deals positive HP damage and
+  leaves an enemy at or below 10% maximum HP, immediately defeat that enemy.
+  - Fully prevented damage cannot trigger the execute.
+  - The execute should be clearly identified in the combat log rather than
+    represented as an unexplained damage spike.
+- Reaction, `Stay of Execution`: when the Executioner crosses from above 30%
+  maximum HP to at or below 30%, activate until its next scheduled action
+  begins.
+  - After each enemy completes a scheduled action while active, heal the
+    Executioner for an authored percentage of its maximum HP.
+  - Cooldown: `5` Executioner completed actions.
+  - Triggered effects, reactions, and individual attacks within an action do
+    not create additional healing.
+  - The reaction does not prevent lethal damage.
+- Bridge action, `Ready the Swing`: prepare one base attack against the next
+  enemy to begin a scheduled action.
+  - The prepared attack resolves before that enemy's action.
+  - It is one complete normal base attack, including equipment attack effects
+    and the Executioner's passive, but it does not use either equipped skill.
+  - If it defeats the acting enemy, that enemy's pending action is canceled.
+  - Preparing the swing consumes and schedules the Executioner's current action
+    normally.
+
+### Important Interactions
+
+The action's maximum-HP damage helps the Executioner cross its own execute
+threshold, making it a strong anti-tank tool without making the execute
+independent of the Executioner's attacks.
+
+`Stay of Execution` turns low action speed into conditional sustain because
+more enemies may act before the Executioner does. It heals once per enemy
+scheduled action, so enemy team size and action speed affect its value. Start
+tuning near 4% maximum HP per qualifying action and watch large, fast enemy
+teams closely.
+
+`Ready the Swing` cheats the Executioner's poor action speed without granting
+more than one attack for the action spent preparing it. Its uncontrolled target
+selection distinguishes it from immediately attacking a chosen enemy.
+
+### Resolver Gaps
+
+None required for the current concept. Use:
+
+- `Hit` + `Execute Target` on `Attack Target`, with the passive's authored
+  `threshold_percent`
+- an `HP Below Threshold` reaction with `Reaction Triggered` +
+  `Begin Enemy Action Healing` on `Self`, using a maximum-HP amount formula
+- an `Effects Only` bridge skill with `Skill Used` + `Prepare Base Attack` on
+  `Self`
 
 ## Resolver Gap Priority
 
@@ -362,8 +425,8 @@ tempo, recovery, and magic protection.
 
 ### Important Interactions
 
-Every action-interval decrease obeys the global floor of half the unit's
-encounter-start interval. A future explicit floor-changing mechanic may allow
+Every action-speed increase obeys the global cap of twice the unit's
+encounter-start speed. A future explicit cap-changing mechanic may allow
 specific units to exceed that general limit.
 
 `Ailment Damaged` requires positive actual HP loss. Energy Shield absorption,

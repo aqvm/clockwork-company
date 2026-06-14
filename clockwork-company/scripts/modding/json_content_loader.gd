@@ -39,8 +39,8 @@ const ITEM_SLOT_VALUES := {"Weapon": true, "Armor": true, "Helmet": true, "Trink
 const EFFECT_TRIGGER_VALUES := {"Battle Start": true, "Battle State Changed": true, "Turn Start": true, "Turn Complete": true, "Action Completed": true, "Skill Used": true, "Skill Completed": true, "Attack": true, "Consecutive Attack": true, "Enemy Attack Targeted": true, "Hit": true, "Kill": true, "Death": true, "Ailment Damaged": true, "Damaged": true, "Physically Damaged": true, "Magically Damaged": true, "HP Below Threshold": true, "Damage Requested": true, "Healing Requested": true, "Healing Received": true, "Ally Overhealed": true, "Reaction Requested": true, "Status Application Requested": true, "Status Removal Requested": true, "Status Applied": true, "Externally Sourced Status Applied": true, "Enemy Status Applied": true, "Status Removed": true, "Reaction Triggered": true}
 const EFFECT_CONDITION_VALUES := {"Always": true, "Event Source Is Not Owner": true, "Owner Is Unarmed": true, "Event Count At Least": true, "Self HP Below Percent": true, "Target Has Tag": true, "Target Missing Tag": true, "Target Status Stacks At Least": true, "Target Pending Status Damage At Least HP": true, "Owner Counter At Least": true, "Target Counter At Least": true, "Requested Status Matches": true, "Applied Status Matches": true}
 const EFFECT_TARGET_VALUES := {"Self": true, "Event Source": true, "Event Target": true, "Attack Target": true, "Attacker": true, "Killer": true, "All Units": true, "Allied Units": true, "Enemy Units": true, "Lowest HP Allied Unit": true, "Random Allied Unit": true, "Random Damaged Allied Unit": true, "Random Enemy Unit": true}
-const EFFECT_TYPE_VALUES := {"Gain Armor": true, "Bonus Damage": true, "Reduce Target Armor": true, "Heal Self": true, "Damage Killer": true, "Increase Max HP": true, "Apply Status": true, "Maintain Status Aura": true, "Replace Requested Status": true, "Remove Status": true, "Consume Status": true, "Detonate Status": true, "Gather Status": true, "Transfer Statuses": true, "Restore Max HP Lost To Status": true, "Deal Damage": true, "Heal": true, "Grant Armor": true, "Grant Battle Armor": true, "Grant Energy Shield": true, "Disable Armor": true, "Delay Action": true, "Hasten Action": true, "Hasten Action For Battle": true, "Fortify Damage": true, "Redirect Enemy Attacks": true, "Add Attack Damage": true, "Modify Stat": true, "Modify Counter": true, "Reset Counter": true, "Seal Next Attack": true, "Prevent Request": true}
-const EFFECT_AMOUNT_SOURCE_VALUES := {"Fixed": true, "Target Current HP": true, "Target Max HP": true, "Target Max HP Times Event Status Stacks": true, "Target Recent Damage": true, "Target Ailment Stacks": true, "Target Unique Boons": true, "Target Status Stacks": true, "Event Target Status Stacks": true, "Defeated Target Status Stacks": true, "Applied Status Stacks": true, "Total Status Stacks On Selected Group": true, "Total Status Max HP Loss On Selected Group": true, "Target Pending Status Damage": true, "Target Action Interval": true, "Event Amount": true, "Overhealing": true, "Overhealing Diminishing": true, "Owner Counter": true, "Target Counter": true}
+const EFFECT_TYPE_VALUES := {"Gain Armor": true, "Bonus Damage": true, "Reduce Target Armor": true, "Heal Self": true, "Damage Killer": true, "Increase Max HP": true, "Apply Status": true, "Maintain Status Aura": true, "Replace Requested Status": true, "Remove Status": true, "Consume Status": true, "Detonate Status": true, "Gather Status": true, "Transfer Statuses": true, "Restore Max HP Lost To Status": true, "Deal Damage": true, "Heal": true, "Grant Armor": true, "Grant Battle Armor": true, "Grant Energy Shield": true, "Disable Armor": true, "Delay Action": true, "Hasten Action": true, "Hasten Action For Battle": true, "Fortify Damage": true, "Redirect Enemy Attacks": true, "Add Attack Damage": true, "Modify Stat": true, "Modify Counter": true, "Reset Counter": true, "Seal Next Attack": true, "Prevent Request": true, "Execute Target": true, "Begin Enemy Action Healing": true, "Prepare Base Attack": true}
+const EFFECT_AMOUNT_SOURCE_VALUES := {"Fixed": true, "Target Current HP": true, "Target Max HP": true, "Target Max HP Times Event Status Stacks": true, "Target Recent Damage": true, "Target Ailment Stacks": true, "Target Unique Boons": true, "Target Status Stacks": true, "Event Target Status Stacks": true, "Defeated Target Status Stacks": true, "Applied Status Stacks": true, "Total Status Stacks On Selected Group": true, "Total Status Max HP Loss On Selected Group": true, "Target Pending Status Damage": true, "Target Action Speed": true, "Event Amount": true, "Overhealing": true, "Overhealing Diminishing": true, "Owner Counter": true, "Target Counter": true}
 const EFFECT_AMOUNT_ROUNDING_VALUES := {"Floor": true, "Ceil": true}
 const EFFECT_AMOUNT_TARGET_VALUES := {"Self": true, "All Units": true, "Allied Units": true, "Enemy Units": true}
 const EFFECT_MODIFIER_MODE_VALUES := {"Temporary Flat": true, "Dynamic Percent": true}
@@ -48,7 +48,7 @@ const EFFECT_MODIFIER_DIRECTION_VALUES := {"Increase": true, "Decrease": true}
 const EFFECT_DAMAGE_TYPE_VALUES := {"Magic": true, "Physical": true}
 const EFFECT_STATUS_POLARITY_VALUES := {"Any": true, "Boon": true, "Ailment": true}
 const EFFECT_STATUS_REMOVAL_MODE_VALUES := {"Random Matching": true, "Specific Status": true}
-const EFFECT_MODIFIED_STAT_VALUES := {"Max HP": true, "Physical Damage": true, "Magic Damage": true, "Armor": true, "Action Interval": true}
+const EFFECT_MODIFIED_STAT_VALUES := {"Max HP": true, "Physical Damage": true, "Magic Damage": true, "Armor": true, "Action Speed": true}
 const SKILL_ACTION_VALUES := {"Attack": true, "Heal": true, "Guard": true, "Apply Status": true, "Effects Only": true}
 const SKILL_TARGET_VALUES := {"Self": true, "Lowest HP Ally": true, "Frontmost Enemy": true}
 const SKILL_ATTACK_DAMAGE_TYPE_VALUES := {"Physical": true, "Magic": true, "Split Evenly": true}
@@ -65,6 +65,14 @@ const ANCESTRY_FEATURE_TYPE_VALUES := {"Gain Armor": true, "Bonus Damage": true,
 const TACTIC_CONDITION_VALUES := {"Always": true, "Self HP Below Half": true, "Ally HP Below Half": true, "Enemy Alive": true, "Target Has Status": true, "Target Status Stacks At Least": true, "Target Pending Status Damage At Least HP": true, "Target Slower Than Self": true}
 const TACTIC_ACTION_VALUES := {"Attack": true, "Heal": true, "Guard": true, "Job Skill": true, "Assigned Skill": true}
 const TACTIC_TARGET_VALUES := {"Self": true, "Lowest HP Ally": true, "Lowest HP Ally With Status": true, "Frontmost Enemy": true}
+const LEGACY_ACTION_INTERVAL_FIELDS := {
+	"action_interval": true,
+	"base_action_interval": true,
+	"min_action_interval": true,
+	"max_action_interval": true,
+	"action_interval_growth": true,
+	"action_interval_modifier": true,
+}
 
 
 static func load_demo_unit_definitions(enabled_mod_pack_ids: Variant = null) -> Array[UnitDefinition]:
@@ -217,13 +225,13 @@ static func _load_base_ancestries() -> Dictionary:
 			"max_magic_damage": resource.max_magic_damage,
 			"min_armor": resource.min_armor,
 			"max_armor": resource.max_armor,
-			"min_action_interval": resource.min_action_interval,
-			"max_action_interval": resource.max_action_interval,
+			"min_action_speed": resource.min_action_speed,
+			"max_action_speed": resource.max_action_speed,
 			"max_hp_growth": resource.max_hp_growth,
 			"physical_damage_growth": resource.physical_damage_growth,
 			"magic_damage_growth": resource.magic_damage_growth,
 			"armor_growth": resource.armor_growth,
-			"action_interval_growth": resource.action_interval_growth,
+			"action_speed_growth": resource.action_speed_growth,
 			"forbid_weapon": resource.forbid_weapon,
 			"forbid_armor": resource.forbid_armor,
 			"forbid_helmet": resource.forbid_helmet,
@@ -247,7 +255,7 @@ static func _load_base_items() -> Dictionary:
 			"physical_damage_modifier": resource.physical_damage_modifier,
 			"magic_damage_modifier": resource.magic_damage_modifier,
 			"armor_modifier": resource.armor_modifier,
-			"action_interval_modifier": resource.action_interval_modifier,
+			"action_speed_modifier": resource.action_speed_modifier,
 			"effects": _effect_resources_to_data(resource.effects),
 		}
 	return out
@@ -265,7 +273,7 @@ static func _load_base_jobs() -> Dictionary:
 			"physical_damage_growth": resource.physical_damage_growth,
 			"magic_damage_growth": resource.magic_damage_growth,
 			"armor_growth": resource.armor_growth,
-			"action_interval_growth": resource.action_interval_growth,
+			"action_speed_growth": resource.action_speed_growth,
 			"forbid_weapon": resource.forbid_weapon,
 			"forbid_armor": resource.forbid_armor,
 			"forbid_helmet": resource.forbid_helmet,
@@ -336,7 +344,7 @@ static func _load_base_units() -> Dictionary:
 			"physical_damage": resource.physical_damage,
 			"magic_damage": resource.magic_damage,
 			"armor": resource.armor,
-			"action_interval": resource.action_interval,
+			"action_speed": resource.action_speed,
 			"job_progress": _job_progress_resources_to_data(resource.job_progress),
 			"loadout_id": _resource_ref_id(resource.loadout),
 		}
@@ -577,11 +585,17 @@ static func _effect_support_error(effect: Dictionary) -> String:
 		return "Dynamic Percent modifiers require Battle State Changed"
 	if effect_type == "Prevent Request" and not trigger in ["Damage Requested", "Healing Requested", "Reaction Requested", "Status Application Requested", "Status Removal Requested"]:
 		return "Prevent Request requires a request trigger"
+	if effect_type == "Execute Target" and (trigger != "Hit" or target != "Attack Target"):
+		return "Execute Target requires Hit + Attack Target"
+	if effect_type == "Begin Enemy Action Healing" and target != "Self":
+		return "Begin Enemy Action Healing requires Self"
+	if effect_type == "Prepare Base Attack" and target != "Self":
+		return "Prepare Base Attack requires Self"
 	if effect.get("condition", "") == "Requested Status Matches" and not trigger in ["Status Application Requested", "Status Removal Requested"]:
 		return "Requested Status Matches requires a status request trigger"
 	if effect.get("condition", "") == "Applied Status Matches" and not trigger in ["Status Applied", "Externally Sourced Status Applied", "Enemy Status Applied"]:
 		return "Applied Status Matches requires a status-applied trigger"
-	if effect_type in ["Apply Status", "Maintain Status Aura", "Replace Requested Status", "Remove Status", "Consume Status", "Detonate Status", "Gather Status", "Transfer Statuses", "Restore Max HP Lost To Status", "Deal Damage", "Heal", "Grant Armor", "Grant Battle Armor", "Grant Energy Shield", "Disable Armor", "Delay Action", "Hasten Action", "Hasten Action For Battle", "Fortify Damage", "Redirect Enemy Attacks", "Add Attack Damage", "Modify Stat", "Modify Counter", "Reset Counter", "Seal Next Attack", "Prevent Request"]:
+	if effect_type in ["Apply Status", "Maintain Status Aura", "Replace Requested Status", "Remove Status", "Consume Status", "Detonate Status", "Gather Status", "Transfer Statuses", "Restore Max HP Lost To Status", "Deal Damage", "Heal", "Grant Armor", "Grant Battle Armor", "Grant Energy Shield", "Disable Armor", "Delay Action", "Hasten Action", "Hasten Action For Battle", "Fortify Damage", "Redirect Enemy Attacks", "Add Attack Damage", "Modify Stat", "Modify Counter", "Reset Counter", "Seal Next Attack", "Prevent Request", "Execute Target", "Begin Enemy Action Healing", "Prepare Base Attack"]:
 		return ""
 	if trigger == "Battle Start" and effect_type == "Gain Armor" and target == "Self":
 		return ""
@@ -638,6 +652,7 @@ static func _validate_formula_fields(data: Dictionary, effect: Dictionary, label
 	assert(int(effect.get("counter_threshold", 1)) >= 1, "Counter threshold must be at least 1 for %s" % label)
 	assert(int(effect.get("amount_multiplier", 1)) >= 1, "Amount multiplier must be at least 1 for %s" % label)
 	assert(int(effect.get("amount_divisor", 1)) >= 1, "Amount divisor must be at least 1 for %s" % label)
+	assert(int(effect.get("max_action_speed_percent", 200)) >= 100, "Maximum action speed percent must be at least 100 for %s" % label)
 
 
 static func _validate_tactic_status(data: Dictionary, tactic: Dictionary, label: String) -> void:
@@ -736,13 +751,13 @@ static func _build_ancestry_resources(ancestries_data: Dictionary) -> Dictionary
 		ancestry.max_magic_damage = int(src.get("max_magic_damage", ancestry.min_magic_damage))
 		ancestry.min_armor = int(src.get("min_armor", 0))
 		ancestry.max_armor = int(src.get("max_armor", ancestry.min_armor))
-		ancestry.min_action_interval = int(src.get("min_action_interval", 10))
-		ancestry.max_action_interval = int(src.get("max_action_interval", ancestry.min_action_interval))
+		ancestry.min_action_speed = int(src.get("min_action_speed", 10))
+		ancestry.max_action_speed = int(src.get("max_action_speed", ancestry.min_action_speed))
 		ancestry.max_hp_growth = int(src.get("max_hp_growth", 0))
 		ancestry.physical_damage_growth = int(src.get("physical_damage_growth", 0))
 		ancestry.magic_damage_growth = int(src.get("magic_damage_growth", 0))
 		ancestry.armor_growth = int(src.get("armor_growth", 0))
-		ancestry.action_interval_growth = int(src.get("action_interval_growth", 0))
+		ancestry.action_speed_growth = int(src.get("action_speed_growth", 0))
 		ancestry.forbid_weapon = bool(src.get("forbid_weapon", false))
 		ancestry.forbid_armor = bool(src.get("forbid_armor", false))
 		ancestry.forbid_helmet = bool(src.get("forbid_helmet", false))
@@ -784,7 +799,7 @@ static func _build_item_resources(items_data: Dictionary, statuses_by_id: Dictio
 		item.physical_damage_modifier = int(src.get("physical_damage_modifier", 0))
 		item.magic_damage_modifier = int(src.get("magic_damage_modifier", 0))
 		item.armor_modifier = int(src.get("armor_modifier", 0))
-		item.action_interval_modifier = int(src.get("action_interval_modifier", 0))
+		item.action_speed_modifier = int(src.get("action_speed_modifier", 0))
 		item.effects = _build_effect_resources(src.get("effects", []), statuses_by_id)
 		out[id] = item
 	return out
@@ -829,6 +844,7 @@ static func _build_effect_resources(effects_data: Array, statuses_by_id: Diction
 		effect.amount = int(src.get("amount", 0))
 		effect.damage_type = String(src.get("damage_type", "Magic"))
 		effect.threshold_percent = int(src.get("threshold_percent", 50))
+		effect.max_action_speed_percent = int(src.get("max_action_speed_percent", 200))
 		effect.ignore_events_from_same_effect_source = bool(src.get("ignore_events_from_same_effect_source", false))
 		effect.repeat_within_event_chain = bool(src.get("repeat_within_event_chain", false))
 		effect.once_per_battle = bool(src.get("once_per_battle", false))
@@ -848,7 +864,7 @@ static func _build_job_resources(jobs_data: Dictionary, statuses_by_id: Dictiona
 		job.physical_damage_growth = int(src.get("physical_damage_growth", 0))
 		job.magic_damage_growth = int(src.get("magic_damage_growth", 0))
 		job.armor_growth = int(src.get("armor_growth", 0))
-		job.action_interval_growth = int(src.get("action_interval_growth", 0))
+		job.action_speed_growth = int(src.get("action_speed_growth", 0))
 		job.forbid_weapon = bool(src.get("forbid_weapon", false))
 		job.forbid_armor = bool(src.get("forbid_armor", false))
 		job.forbid_helmet = bool(src.get("forbid_helmet", false))
@@ -975,6 +991,7 @@ static func _effect_resources_to_data(effects: Array[EffectDefinition]) -> Array
 			"amount": effect.amount,
 			"damage_type": effect.damage_type,
 			"threshold_percent": effect.threshold_percent,
+			"max_action_speed_percent": effect.max_action_speed_percent,
 			"once_per_battle": effect.once_per_battle,
 			"ignore_events_from_same_effect_source": effect.ignore_events_from_same_effect_source,
 			"repeat_within_event_chain": effect.repeat_within_event_chain,
@@ -1170,7 +1187,7 @@ static func _build_unit_resources(units_data: Dictionary, loadouts_by_id: Dictio
 		unit.physical_damage = int(src.get("physical_damage", 1))
 		unit.magic_damage = int(src.get("magic_damage", 0))
 		unit.armor = int(src.get("armor", 0))
-		unit.action_interval = int(src.get("action_interval", 10))
+		unit.action_speed = int(src.get("action_speed", 10))
 		unit.job_progress = _build_job_progress_resources(src.get("job_progress", []), jobs_by_id)
 		unit.loadout = loadouts_by_id.get(String(src.get("loadout_id", "")), null)
 		out[id] = unit
@@ -1238,7 +1255,19 @@ static func _read_json_file(path: String) -> Variant:
 	var parsed = JSON.parse_string(text)
 	if parsed == null:
 		push_warning("Failed to parse JSON file: %s" % path)
+	else:
+		_assert_no_legacy_action_interval_fields(parsed, path)
 	return parsed
+
+
+static func _assert_no_legacy_action_interval_fields(value: Variant, path: String) -> void:
+	if value is Dictionary:
+		for key in value.keys():
+			assert(not LEGACY_ACTION_INTERVAL_FIELDS.has(String(key)), "Legacy action-interval field '%s' in %s; author action-speed fields instead." % [key, path])
+			_assert_no_legacy_action_interval_fields(value[key], path)
+	elif value is Array:
+		for child in value:
+			_assert_no_legacy_action_interval_fields(child, path)
 
 
 static func _collect_pack_descriptors_from_dir(descriptors: Array[Dictionary], dir_path: String, default_enabled: bool) -> void:

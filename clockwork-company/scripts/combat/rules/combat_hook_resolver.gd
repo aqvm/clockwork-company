@@ -31,6 +31,8 @@ static func respond(context, event: Dictionary) -> void:
 	if event_type == EVENT_BATTLE_STARTED:
 		ItemEffectResolverScript.apply_battle_start_item_effects(context.log, context.units, parent_log_id, context)
 		AncestryFeatureResolverScript.apply_battle_start_features(context.log, context.units, parent_log_id, context)
+	elif event_type == "turn_started" and source != null:
+		source.clear_enemy_action_healing()
 	elif event_type == EVENT_REACTION_REQUESTED and source != null:
 		if not source.status_instance(StatusResolverScript.STATUS_TYPE_NUMB).is_empty():
 			event["payload"]["prevented"] = true
@@ -96,6 +98,8 @@ static func respond(context, event: Dictionary) -> void:
 				context.apply_direct_damage(null, source, burning_amount, int(event.get("id", -1)), parent_log_id, ["status", "burning"])
 			_consume_status_stack(context, event, source, burning, "decayed after triggering")
 		source.complete_damage_action_window()
+	elif event_type == "turn_completed" and source != null:
+		_apply_enemy_action_healing(context, event, source)
 	elif event_type == "status_applied" and target != null:
 		JobEffectResolverScript.apply_enemy_status_threshold_reactions(context.log, parent_log_id, target, event["payload"], context)
 	elif event_type in ["healing_received", "armor_gained"] and target != null and source != null and int(event["payload"].get("amount", 0)) > 0:
@@ -155,6 +159,13 @@ static func _apply_deferred_damage_tick(context, event: Dictionary, target) -> v
 	var amount: int = target.take_deferred_damage_tick()
 	if amount > 0:
 		context.apply_direct_damage(null, target, amount, int(event.get("id", -1)), int(event.get("parent_log_id", -1)), ["deferred_damage"])
+
+
+static func _apply_enemy_action_healing(context, event: Dictionary, actor) -> void:
+	for owner in context.units:
+		if owner == null or not owner.is_alive() or owner.team == actor.team or owner.enemy_action_healing_amount <= 0:
+			continue
+		context.apply_healing(owner, owner, owner.enemy_action_healing_amount, int(event.get("id", -1)), int(event.get("parent_log_id", -1)), ["reaction", "enemy_action_window"])
 
 
 static func _active_attack_redirector(units: Array, attacker, requested_target):

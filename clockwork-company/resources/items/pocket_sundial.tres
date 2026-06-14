@@ -8,4 +8,4 @@ display_name = "Pocket Sundial"
 tags = ["trinket", "speed", "focus"]
 slot = "Trinket"
 physical_damage_modifier = -1
-action_interval_modifier = -2
+action_speed_modifier = 2

@@ -8,4 +8,4 @@ display_name = "Salt Garter"
 tags = ["trinket", "speed", "survival"]
 slot = "Trinket"
 max_hp_modifier = 2
-action_interval_modifier = -1
+action_speed_modifier = 1

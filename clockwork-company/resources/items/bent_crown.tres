@@ -15,5 +15,5 @@ display_name = "Bent Crown"
 tags = Array[String](["trinket", "armor", "slow"])
 slot = "Trinket"
 armor_modifier = 2
-action_interval_modifier = 2
+action_speed_modifier = -2
 effects = Array[ExtResource("2_effect")]([SubResource("Resource_bent_crown_posture")])

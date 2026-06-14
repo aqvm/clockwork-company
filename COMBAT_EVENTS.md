@@ -1,5 +1,7 @@
 # Combat Events
 
+> Wiki navigation: start at [[Combat Event Pipeline]] for the concise concept page; this document owns the detailed event contract.
+
 Combat rules communicate through the simulator-owned `CombatContext`. The context keeps deterministic responder order, an authoritative event history, causal parent/root ids, and safety limits for triggered chains.
 
 ## Requests and facts

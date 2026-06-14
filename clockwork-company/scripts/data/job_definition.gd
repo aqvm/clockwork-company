@@ -8,7 +8,7 @@ class_name JobDefinition
 @export var physical_damage_growth := 0
 @export var magic_damage_growth := 0
 @export var armor_growth := 0
-@export var action_interval_growth := 0
+@export var action_speed_growth := 0
 @export var forbid_weapon := false
 @export var forbid_armor := false
 @export var forbid_helmet := false

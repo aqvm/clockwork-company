@@ -87,13 +87,13 @@ static func _apply_feature(log, parent_entry_id: int, owner, other, feature, con
 			var damage_event := CombatEventsScript.ancestry_feature(owner, feature.display_name, "%s HP %d -> %d" % [other.unit_name, previous_other_hp, other.hp])
 			log.add_event("Ancestry feature %s: %s HP %d -> %d." % [feature.display_name, other.unit_name, previous_other_hp, other.hp], damage_event["event_type"], -1, parent_entry_id, damage_event["payload"], damage_event["tags"])
 	elif feature.feature_type == FEATURE_HASTEN_SELF:
-		var previous_interval: int = owner.action_interval
-		var floor_interval: int = max(1, int(ceil(float(owner.base_action_interval * owner.action_interval_floor_percent) / 100.0)))
-		owner.action_interval = max(floor_interval, owner.action_interval - feature.amount)
-		var haste_event := CombatEventsScript.ancestry_feature(owner, feature.display_name, "interval %d -> %d" % [previous_interval, owner.action_interval])
-		log.add_event("Ancestry feature %s: %s interval %d -> %d." % [feature.display_name, owner.unit_name, previous_interval, owner.action_interval], haste_event["event_type"], -1, parent_entry_id, haste_event["payload"], haste_event["tags"])
+		var previous_speed: int = owner.action_speed
+		var speed_cap: int = maxi(1, floori(float(owner.base_action_speed * owner.action_speed_cap_percent) / 100.0))
+		owner.action_speed = min(speed_cap, owner.action_speed + feature.amount)
+		var haste_event := CombatEventsScript.ancestry_feature(owner, feature.display_name, "action speed %d -> %d" % [previous_speed, owner.action_speed])
+		log.add_event("Ancestry feature %s: %s action speed %d -> %d." % [feature.display_name, owner.unit_name, previous_speed, owner.action_speed], haste_event["event_type"], -1, parent_entry_id, haste_event["payload"], haste_event["tags"])
 		if context != null:
-			context.publish("action_interval_changed", owner, owner, {"previous": previous_interval, "new": owner.action_interval}, -1, parent_entry_id, ["timeline", "ancestry"])
+			context.publish("action_speed_changed", owner, owner, {"previous": previous_speed, "new": owner.action_speed}, -1, parent_entry_id, ["timeline", "ancestry"])
 	elif feature.feature_type == FEATURE_GAIN_PHYSICAL_DAMAGE:
 		var previous_physical: int = owner.physical_damage
 		owner.physical_damage = max(1, owner.physical_damage + feature.amount)

@@ -16,5 +16,5 @@ tags = Array[String](["armor", "union", "armored"])
 slot = "Armor"
 max_hp_modifier = 6
 armor_modifier = 2
-action_interval_modifier = 2
+action_speed_modifier = -2
 effects = Array[ExtResource("2_effect")]([SubResource("Resource_union_mail_link")])

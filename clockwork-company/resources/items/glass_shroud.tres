@@ -18,5 +18,5 @@ display_name = "Glass Shroud"
 tags = ["armor", "fragile", "death_backlash"]
 slot = "Armor"
 max_hp_modifier = -4
-action_interval_modifier = -1
+action_speed_modifier = 1
 effects = [SubResource("Resource_glass_shroud_shatter")]

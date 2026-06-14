@@ -36,7 +36,7 @@ static func _describe_item_modifiers(item: ItemDefinition) -> String:
 	_append_modifier_text(parts, "physical", item.physical_damage_modifier)
 	_append_modifier_text(parts, "magic", item.magic_damage_modifier)
 	_append_modifier_text(parts, "armor", item.armor_modifier)
-	_append_modifier_text(parts, "interval", item.action_interval_modifier)
+	_append_modifier_text(parts, "speed", item.action_speed_modifier)
 	if parts.is_empty():
 		return "no stat changes"
 	return join_text_parts(parts, ", ")

@@ -23,6 +23,6 @@ max_hp = 18
 physical_damage = 1
 magic_damage = 4
 armor = 0
-action_interval = 9
+action_speed = 11
 job_progress = [SubResource("Resource_archivist_progress")]
 loadout = ExtResource("2_loadout")

@@ -16,5 +16,5 @@ tags = Array[String](["armor", "guard"])
 slot = "Armor"
 max_hp_modifier = 6
 armor_modifier = 2
-action_interval_modifier = 1
+action_speed_modifier = -1
 effects = Array[ExtResource("2_effect")]([SubResource("Resource_buckler_start")])

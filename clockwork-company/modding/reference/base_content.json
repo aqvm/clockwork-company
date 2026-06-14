@@ -66,13 +66,13 @@
 	  "max_magic_damage": 3,
 	  "min_armor": 1,
 	  "max_armor": 3,
-	  "min_action_interval": 9,
-	  "max_action_interval": 12,
+	  "max_action_speed": 11,
+	  "min_action_speed": 8,
 	  "max_hp_growth": 1,
 	  "physical_damage_growth": 0,
 	  "magic_damage_growth": 0,
 	  "armor_growth": 1,
-	  "action_interval_growth": 0,
+	  "action_speed_growth": 0,
 	  "feature": {
 		"display_name": "Spring Return",
 		"tags": [
@@ -102,7 +102,7 @@
 	  "max_hp_modifier": -2,
 	  "magic_damage_modifier": 3,
 	  "armor_modifier": 0,
-	  "action_interval_modifier": 0,
+	  "action_speed_modifier": 0,
 	  "effects": [
 		{
 		  "display_name": "Glass Focus Attack Burst",
@@ -131,7 +131,7 @@
 	  "slot": "Trinket",
 	  "max_hp_modifier": 0,
 	  "armor_modifier": -1,
-	  "action_interval_modifier": -2,
+	  "action_speed_modifier": 2,
 	  "physical_damage_modifier": 0,
 	  "magic_damage_modifier": 0
 	},
@@ -145,7 +145,7 @@
 	  "slot": "Armor",
 	  "max_hp_modifier": 6,
 	  "armor_modifier": 2,
-	  "action_interval_modifier": 1,
+	  "action_speed_modifier": -1,
 	  "effects": [
 		{
 		  "display_name": "Buckler Brace",
@@ -176,7 +176,7 @@
 	  "max_hp_modifier": 0,
 	  "physical_damage_modifier": 2,
 	  "armor_modifier": 0,
-	  "action_interval_modifier": 0,
+	  "action_speed_modifier": 0,
 	  "effects": [
 		{
 		  "display_name": "Shortblade Notch",
@@ -206,7 +206,7 @@
 	  "slot": "Trinket",
 	  "max_hp_modifier": 0,
 	  "armor_modifier": 0,
-	  "action_interval_modifier": 0,
+	  "action_speed_modifier": 0,
 	  "effects": [
 		{
 		  "display_name": "Stubborn Heart",
@@ -235,7 +235,7 @@
 	  "physical_damage_growth": 0,
 	  "magic_damage_growth": 1,
 	  "armor_growth": 0,
-	  "action_interval_growth": -1,
+	  "action_speed_growth": 1,
 	  "forbid_weapon": false,
 	  "forbid_armor": false,
 	  "forbid_trinket": false,
@@ -290,7 +290,7 @@
 	  "physical_damage_growth": 0,
 	  "magic_damage_growth": 0,
 	  "armor_growth": 1,
-	  "action_interval_growth": 0,
+	  "action_speed_growth": 0,
 	  "forbid_weapon": false,
 	  "forbid_armor": false,
 	  "forbid_trinket": false,
@@ -344,7 +344,7 @@
 	  "physical_damage_growth": 1,
 	  "magic_damage_growth": 0,
 	  "armor_growth": 0,
-	  "action_interval_growth": -1,
+	  "action_speed_growth": 1,
 	  "forbid_weapon": false,
 	  "forbid_armor": false,
 	  "forbid_trinket": false,
@@ -496,7 +496,7 @@
 	  "physical_damage": 6,
 	  "magic_damage": 0,
 	  "armor": 2,
-	  "action_interval": 12,
+	  "action_speed": 8,
 	  "loadout_id": "guard_buckler",
 	  "ancestry_id": "brassbound"
 	},
@@ -508,7 +508,7 @@
 	  "physical_damage": 5,
 	  "magic_damage": 0,
 	  "armor": 1,
-	  "action_interval": 8,
+	  "action_speed": 12,
 	  "loadout_id": "scout_support_boots",
 	  "ancestry_id": "brassbound"
 	},
@@ -520,7 +520,7 @@
 	  "physical_damage": 2,
 	  "magic_damage": 8,
 	  "armor": 0,
-	  "action_interval": 10,
+	  "action_speed": 10,
 	  "loadout_id": "apprentice_focus",
 	  "ancestry_id": "brassbound"
 	},
@@ -532,7 +532,7 @@
 	  "physical_damage": 7,
 	  "magic_damage": 0,
 	  "armor": 2,
-	  "action_interval": 13,
+	  "action_speed": 8,
 	  "loadout_id": "guard_forbidden_boots",
 	  "ancestry_id": "brassbound"
 	},
@@ -544,7 +544,7 @@
 	  "physical_damage": 6,
 	  "magic_damage": 0,
 	  "armor": 1,
-	  "action_interval": 9,
+	  "action_speed": 11,
 	  "loadout_id": "scout_shortblade",
 	  "ancestry_id": "brassbound"
 	},
@@ -556,7 +556,7 @@
 	  "physical_damage": 3,
 	  "magic_damage": 9,
 	  "armor": 0,
-	  "action_interval": 14,
+	  "action_speed": 7,
 	  "loadout_id": "apprentice_support",
 	  "ancestry_id": "brassbound"
 	}

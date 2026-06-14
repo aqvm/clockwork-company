@@ -10,7 +10,7 @@ class_name EffectDefinition
 @export_enum("Battle Start", "Battle State Changed", "Turn Start", "Turn Complete", "Action Completed", "Skill Used", "Skill Completed", "Attack", "Consecutive Attack", "Enemy Attack Targeted", "Hit", "Kill", "Death", "Ailment Damaged", "Damaged", "Physically Damaged", "Magically Damaged", "HP Below Threshold", "Damage Requested", "Healing Requested", "Healing Received", "Ally Overhealed", "Reaction Requested", "Status Application Requested", "Status Removal Requested", "Status Applied", "Externally Sourced Status Applied", "Enemy Status Applied", "Status Removed", "Reaction Triggered") var trigger := "Battle Start"
 @export_enum("Always", "Event Source Is Not Owner", "Owner Is Unarmed", "Event Count At Least", "Self HP Below Percent", "Target Has Tag", "Target Missing Tag", "Target Status Stacks At Least", "Target Pending Status Damage At Least HP", "Owner Counter At Least", "Target Counter At Least", "Requested Status Matches", "Applied Status Matches") var condition := "Always"
 @export_enum("Self", "Event Source", "Event Target", "Attack Target", "Attacker", "Killer", "All Units", "Allied Units", "Enemy Units", "Lowest HP Allied Unit", "Random Allied Unit", "Random Damaged Allied Unit", "Random Enemy Unit") var target_selector := "Self"
-@export_enum("Gain Armor", "Bonus Damage", "Reduce Target Armor", "Heal Self", "Damage Killer", "Increase Max HP", "Apply Status", "Maintain Status Aura", "Replace Requested Status", "Remove Status", "Consume Status", "Detonate Status", "Gather Status", "Transfer Statuses", "Restore Max HP Lost To Status", "Deal Damage", "Heal", "Grant Armor", "Grant Battle Armor", "Grant Energy Shield", "Disable Armor", "Delay Action", "Hasten Action", "Hasten Action For Battle", "Fortify Damage", "Redirect Enemy Attacks", "Add Attack Damage", "Modify Stat", "Modify Counter", "Reset Counter", "Seal Next Attack", "Prevent Request") var effect_type := "Gain Armor"
+@export_enum("Gain Armor", "Bonus Damage", "Reduce Target Armor", "Heal Self", "Damage Killer", "Increase Max HP", "Apply Status", "Maintain Status Aura", "Replace Requested Status", "Remove Status", "Consume Status", "Detonate Status", "Gather Status", "Transfer Statuses", "Restore Max HP Lost To Status", "Deal Damage", "Heal", "Grant Armor", "Grant Battle Armor", "Grant Energy Shield", "Disable Armor", "Delay Action", "Hasten Action", "Hasten Action For Battle", "Fortify Damage", "Redirect Enemy Attacks", "Add Attack Damage", "Modify Stat", "Modify Counter", "Reset Counter", "Seal Next Attack", "Prevent Request", "Execute Target", "Begin Enemy Action Healing", "Prepare Base Attack") var effect_type := "Gain Armor"
 @export var status: StatusDefinition = null
 @export var condition_status: StatusDefinition = null
 @export var amount_status: StatusDefinition = null
@@ -21,11 +21,11 @@ class_name EffectDefinition
 @export_range(1, 99, 1) var status_stack_threshold := 1
 @export_enum("Any", "Boon", "Ailment") var status_polarity := "Any"
 @export_enum("Random Matching", "Specific Status") var status_removal_mode := "Random Matching"
-@export_enum("Max HP", "Physical Damage", "Magic Damage", "Armor", "Action Interval") var modified_stat := "Physical Damage"
+@export_enum("Max HP", "Physical Damage", "Magic Damage", "Armor", "Action Speed") var modified_stat := "Physical Damage"
 @export_enum("Temporary Flat", "Dynamic Percent") var modifier_mode := "Temporary Flat"
 @export_enum("Increase", "Decrease") var modifier_direction := "Increase"
 @export_range(1, 99, 1) var modifier_duration_turns := 1
-@export_enum("Fixed", "Target Current HP", "Target Max HP", "Target Max HP Times Event Status Stacks", "Target Recent Damage", "Target Ailment Stacks", "Target Unique Boons", "Target Status Stacks", "Event Target Status Stacks", "Defeated Target Status Stacks", "Applied Status Stacks", "Total Status Stacks On Selected Group", "Total Status Max HP Loss On Selected Group", "Target Pending Status Damage", "Target Action Interval", "Event Amount", "Overhealing", "Overhealing Diminishing", "Owner Counter", "Target Counter") var amount_source := "Fixed"
+@export_enum("Fixed", "Target Current HP", "Target Max HP", "Target Max HP Times Event Status Stacks", "Target Recent Damage", "Target Ailment Stacks", "Target Unique Boons", "Target Status Stacks", "Event Target Status Stacks", "Defeated Target Status Stacks", "Applied Status Stacks", "Total Status Stacks On Selected Group", "Total Status Max HP Loss On Selected Group", "Target Pending Status Damage", "Target Action Speed", "Event Amount", "Overhealing", "Overhealing Diminishing", "Owner Counter", "Target Counter") var amount_source := "Fixed"
 @export_enum("Floor", "Ceil") var amount_rounding := "Floor"
 @export_enum("Self", "All Units", "Allied Units", "Enemy Units") var amount_target_selector := "Self"
 @export var counter_name := ""
@@ -35,6 +35,7 @@ class_name EffectDefinition
 @export var amount := 0
 @export_enum("Magic", "Physical") var damage_type := "Magic"
 @export_range(1, 100, 1) var threshold_percent := 50
+@export_range(100, 999, 1) var max_action_speed_percent := 200
 @export var once_per_battle := false
 @export var ignore_events_from_same_effect_source := false
 @export var repeat_within_event_chain := false
@@ -86,6 +87,12 @@ func support_error() -> String:
 		return "Reset Counter requires a counter name."
 	if effect_type == "Prevent Request" and not REQUEST_TRIGGERS.has(trigger):
 		return "Prevent Request requires a request trigger."
+	if effect_type == "Execute Target" and (trigger != "Hit" or target_selector != "Attack Target"):
+		return "Execute Target requires Hit + Attack Target."
+	if effect_type == "Begin Enemy Action Healing" and target_selector != "Self":
+		return "Begin Enemy Action Healing requires Self."
+	if effect_type == "Prepare Base Attack" and target_selector != "Self":
+		return "Prepare Base Attack requires Self."
 	if condition == "Requested Status Matches" and status == null:
 		return "Requested Status Matches requires a status."
 	if condition == "Requested Status Matches" and not trigger in ["Status Application Requested", "Status Removal Requested"]:
@@ -121,5 +128,5 @@ func support_error() -> String:
 	return "%s + %s + %s is not a supported effect combination." % [trigger, effect_type, target_selector]
 
 
-const SHARED_EFFECT_TYPES := ["Apply Status", "Maintain Status Aura", "Replace Requested Status", "Remove Status", "Consume Status", "Detonate Status", "Gather Status", "Transfer Statuses", "Restore Max HP Lost To Status", "Deal Damage", "Heal", "Grant Armor", "Grant Battle Armor", "Grant Energy Shield", "Disable Armor", "Delay Action", "Hasten Action", "Hasten Action For Battle", "Fortify Damage", "Redirect Enemy Attacks", "Add Attack Damage", "Modify Stat", "Modify Counter", "Reset Counter", "Seal Next Attack", "Prevent Request"]
+const SHARED_EFFECT_TYPES := ["Apply Status", "Maintain Status Aura", "Replace Requested Status", "Remove Status", "Consume Status", "Detonate Status", "Gather Status", "Transfer Statuses", "Restore Max HP Lost To Status", "Deal Damage", "Heal", "Grant Armor", "Grant Battle Armor", "Grant Energy Shield", "Disable Armor", "Delay Action", "Hasten Action", "Hasten Action For Battle", "Fortify Damage", "Redirect Enemy Attacks", "Add Attack Damage", "Modify Stat", "Modify Counter", "Reset Counter", "Seal Next Attack", "Prevent Request", "Execute Target", "Begin Enemy Action Healing", "Prepare Base Attack"]
 const REQUEST_TRIGGERS := ["Damage Requested", "Healing Requested", "Reaction Requested", "Status Application Requested", "Status Removal Requested"]

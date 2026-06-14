@@ -53,7 +53,7 @@ Purpose: exercise as many modding code paths as possible in one toggleable pack.
 - Tests new unit creation and roster placement.
 
 11. Unit override:
-- Overrides existing `mira_scout` with `action_interval = 70`.
+- Overrides existing `mira_scout` with `action_speed = 1`.
 - Tests extreme stat patch and visible runtime impact.
 
 12. Demo roster override:
@@ -64,13 +64,13 @@ Purpose: exercise as many modding code paths as possible in one toggleable pack.
 
 - Setup pane shows:
   - `Borin Anchor IT` in Allies roster.
-  - `Mira Scout (IT Override)` with interval `70`.
+  - `Mira Scout (IT Override)` with speed `1`.
   - Loadout names ending with `(IT Override)` where patched.
   - `Tower Shield IT` and `Glass Focus (IT Override)` in gear summaries.
   - `Borin Anchor IT` gains the `Reconstitution IT` boon for three owner turns at battle start.
 
 - Replay behavior:
-  - Mira should act dramatically later because of interval `70`.
+  - Mira should act dramatically later because of speed `1`.
   - Added/overridden tactics should appear in tactic selection lines.
   - Added battle-start armor trigger should appear in item trigger lines.
   - After Borin takes damage and reaches another turn, Reconstitution should restore half of the damage received since Borin's previous turn.

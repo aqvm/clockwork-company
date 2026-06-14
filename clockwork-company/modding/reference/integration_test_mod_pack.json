@@ -22,7 +22,7 @@
       "slot": "Armor",
       "max_hp_modifier": 10,
       "armor_modifier": 4,
-      "action_interval_modifier": 3,
+      "action_speed_modifier": -3,
       "effects": [
         {
           "display_name": "Tower Shield IT Brace",
@@ -64,9 +64,9 @@
           "condition": "Always",
           "target_selector": "Self",
           "effect_type": "Modify Stat",
-          "modified_stat": "Action Interval",
+          "modified_stat": "Action Speed",
           "modifier_duration_turns": 2,
-          "amount": -1
+          "amount": 1
         },
         {
           "display_name": "Resolver IT Dispel",
@@ -118,7 +118,7 @@
       "slot": "Trinket",
       "max_hp_modifier": -6,
       "armor_modifier": 0,
-      "action_interval_modifier": 1,
+      "action_speed_modifier": -1,
       "effects": [
         {
           "display_name": "Glass Focus IT Burst",
@@ -318,7 +318,7 @@
       "team": "Allies",
       "max_hp": 46,
       "armor": 3,
-      "action_interval": 15,
+      "action_speed": 7,
       "loadout_id": "warden_anchor_it",
       "physical_damage": 5,
       "magic_damage": 0,
@@ -330,7 +330,7 @@
       "team": "Allies",
       "max_hp": 24,
       "armor": 1,
-      "action_interval": 70,
+      "action_speed": 1,
       "loadout_id": "scout_support_boots",
       "physical_damage": 4,
       "magic_damage": 0,

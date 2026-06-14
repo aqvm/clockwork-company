@@ -9,4 +9,4 @@ tags = ["armor", "reward"]
 slot = "Armor"
 max_hp_modifier = 5
 armor_modifier = 1
-action_interval_modifier = 1
+action_speed_modifier = -1

@@ -27,7 +27,7 @@ Demonstrates three common mod actions:
   - `physical_damage_modifier`
   - `magic_damage_modifier`
   - `armor_modifier`
-  - `action_interval_modifier`
+  - `action_speed_modifier`
 
 - `loadouts[]`:
   - `id`
@@ -35,7 +35,7 @@ Demonstrates three common mod actions:
 
 - `units[]`:
   - `id`
-  - `action_interval`
+  - `action_speed`
 
 ## Usage
 

@@ -18,5 +18,5 @@ display_name = "Bellhammer"
 tags = Array[String](["weapon", "hammer", "slow", "armor_break"])
 physical_damage_modifier = 4
 armor_modifier = 1
-action_interval_modifier = 2
+action_speed_modifier = -2
 effects = Array[ExtResource("2_effect")]([SubResource("Resource_bellhammer_crack")])

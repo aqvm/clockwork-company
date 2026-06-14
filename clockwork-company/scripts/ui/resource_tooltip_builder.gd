@@ -110,7 +110,7 @@ static func text_for_runtime_unit(snapshot: Dictionary) -> String:
 	var team: String = String(snapshot.get("team", ""))
 	var max_hp: int = int(snapshot.get("max_hp", 1))
 	var hp: int = int(snapshot.get("hp", max_hp))
-	var action_interval: int = int(snapshot.get("action_interval", 1))
+	var action_speed: int = int(snapshot.get("action_speed", 1))
 	var next_action_time: float = float(snapshot.get("next_action_time", 0.0))
 	var display_time: float = float(snapshot.get("display_time", 0.0))
 	var remaining: float = max(0.0, next_action_time - display_time)
@@ -145,7 +145,7 @@ static func text_for_runtime_unit(snapshot: Dictionary) -> String:
 					int(modifier.get("remaining_turns", 0)),
 				])
 		modifier_text = "\n- %s" % _join(modifier_lines, "\n- ")
-	return _with_source_note("%s\nTeam: %s\nHP: %d/%d\nAction interval: %d\nNext action in: %.1f\nStatuses: %s\nTemporary modifiers: %s" % [name, team, hp, max_hp, action_interval, remaining, status_text, modifier_text], "Source: runtime combat state")
+	return _with_source_note("%s\nTeam: %s\nHP: %d/%d\nAction speed: %d\nNext action in: %.1f\nStatuses: %s\nTemporary modifiers: %s" % [name, team, hp, max_hp, action_speed, remaining, status_text, modifier_text], "Source: runtime combat state")
 
 
 static func text_for_glossary_term(term: String) -> String:
@@ -153,7 +153,7 @@ static func text_for_glossary_term(term: String) -> String:
 	var definitions := {
 		"hp": "HP\nCurrent and maximum health. A unit is defeated when HP reaches 0.",
 		"armor": "Armor\nReduces physical damage. Temporary guard armor is added on top of base battle armor.",
-		"action interval": "Action Interval\nLower values act sooner. After a unit acts, its next action is scheduled by adding this interval.",
+		"action speed": "Action Speed\nHigher values act more frequently. The timeline derives an integer action delay by rounding 100 / speed up.",
 		"physical damage": "Physical Damage\nThe base damage used by normal attacks and non-magic damage sources. Armor reduces it.",
 		"magic damage": "Magic Damage\nThe base damage used by magic-tagged actions and effects. It currently ignores armor.",
 		"guard": "Guard\nA defensive action that grants temporary armor until the guarding unit's next turn.",
@@ -187,7 +187,7 @@ static func _unit_text(unit: UnitDefinition) -> String:
 	var lines: Array[String] = []
 	lines.append(_title(unit))
 	lines.append("Team: %s" % unit.team)
-	lines.append("Stats: HP %d, physical %d, magic %d, armor %d, interval %d" % [unit.max_hp, unit.physical_damage, unit.magic_damage, unit.armor, unit.action_interval])
+	lines.append("Stats: HP %d, physical %d, magic %d, armor %d, speed %d" % [unit.max_hp, unit.physical_damage, unit.magic_damage, unit.armor, unit.action_speed])
 	lines.append("Tags: %s" % _join(unit.tags))
 	lines.append("Ancestry: %s" % _name_or_none(unit.ancestry))
 	lines.append("Loadout: %s" % _name_or_none(unit.loadout))
@@ -239,7 +239,7 @@ static func _job_text(job: JobDefinition) -> String:
 	var lines: Array[String] = []
 	lines.append(_title(job))
 	lines.append("Tags: %s" % _join(job.tags))
-	lines.append("Growth: HP %+d, physical %+d, magic %+d, armor %+d, interval %+d" % [job.max_hp_growth, job.physical_damage_growth, job.magic_damage_growth, job.armor_growth, job.action_interval_growth])
+	lines.append("Growth: HP %+d, physical %+d, magic %+d, armor %+d, speed %+d" % [job.max_hp_growth, job.physical_damage_growth, job.magic_damage_growth, job.armor_growth, job.action_speed_growth])
 	var forbids: Array[String] = []
 	if job.forbid_weapon:
 		forbids.append("weapon")
@@ -268,14 +268,14 @@ static func _ancestry_text(ancestry: AncestryDefinition) -> String:
 		forbids.append("helmet")
 	if ancestry.forbid_trinket:
 		forbids.append("trinket")
-	return "%s\nTags: %s\nGrowth: HP %+d, physical %+d, magic %+d, armor %+d, interval %+d\nForbids: %s\nFeature: %s" % [
+	return "%s\nTags: %s\nGrowth: HP %+d, physical %+d, magic %+d, armor %+d, speed %+d\nForbids: %s\nFeature: %s" % [
 		_title(ancestry),
 		_join(ancestry.tags),
 		ancestry.max_hp_growth,
 		ancestry.physical_damage_growth,
 		ancestry.magic_damage_growth,
 		ancestry.armor_growth,
-		ancestry.action_interval_growth,
+		ancestry.action_speed_growth,
 		_join(forbids),
 		_name_or_none(ancestry.feature),
 	]
@@ -471,7 +471,7 @@ static func _item_stats(item: ItemDefinition) -> String:
 	_append_amount(parts, "physical", item.physical_damage_modifier)
 	_append_amount(parts, "magic", item.magic_damage_modifier)
 	_append_amount(parts, "armor", item.armor_modifier)
-	_append_amount(parts, "interval", item.action_interval_modifier)
+	_append_amount(parts, "speed", item.action_speed_modifier)
 	return _join(parts) if not parts.is_empty() else "no stat changes"
 
 

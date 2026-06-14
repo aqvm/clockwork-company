@@ -18,5 +18,5 @@ display_name = "Inkneedle"
 tags = ["weapon", "needle", "swift", "armor_break"]
 slot = "Weapon"
 physical_damage_modifier = 1
-action_interval_modifier = -1
+action_speed_modifier = 1
 effects = [SubResource("Resource_inkneedle_puncture")]

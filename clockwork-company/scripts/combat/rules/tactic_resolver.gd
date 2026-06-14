@@ -77,7 +77,7 @@ static func condition_matches(condition: String, actor, units: Array, target = n
 	if condition == "Target Pending Status Damage At Least HP":
 		return target != null and tactic != null and tactic.status != null and target.pending_status_damage(tactic.status.status_type) >= target.hp
 	if condition == "Target Slower Than Self":
-		return target != null and target.action_interval > actor.action_interval
+		return target != null and target.action_speed < actor.action_speed
 	return false
 
 static func find_tactic_target(target_rule: String, actor, units: Array, tactic: TacticDefinition = null):

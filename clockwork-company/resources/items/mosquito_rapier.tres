@@ -18,5 +18,5 @@ display_name = "Mosquito Rapier"
 tags = Array[String](["weapon", "blade", "swift"])
 physical_damage_modifier = 1
 armor_modifier = -1
-action_interval_modifier = -2
+action_speed_modifier = 2
 effects = Array[ExtResource("2_effect")]([SubResource("Resource_mosquito_lunge")])

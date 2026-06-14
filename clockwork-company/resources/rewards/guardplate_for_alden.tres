@@ -6,6 +6,6 @@
 [resource]
 script = ExtResource("1_reward")
 display_name = "Guardplate for Alden"
-description = "Equip Alden with sturdier armor: +5 HP, +1 armor, +1 interval."
+description = "Equip Alden with sturdier armor: +5 HP, +1 armor, +1 speed."
 target_unit_name = "Alden Guard"
 item = ExtResource("2_item")

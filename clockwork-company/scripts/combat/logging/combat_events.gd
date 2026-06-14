@@ -18,7 +18,7 @@ static func turn_start(actor, next_action_time_before: int) -> Dictionary:
 		"payload": {
 			"actor_id": actor.unit_id,
 			"actor": actor.unit_name,
-			"action_interval": actor.action_interval,
+			"action_speed": actor.action_speed,
 			"next_action_time_before": next_action_time_before,
 		},
 		"tags": ["replay", "turn"],

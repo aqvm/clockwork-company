@@ -503,7 +503,7 @@ func _clone_unit_definition(source: UnitDefinition) -> UnitDefinition:
 	copy.physical_damage = source.physical_damage
 	copy.magic_damage = source.magic_damage
 	copy.armor = source.armor
-	copy.action_interval = source.action_interval
+	copy.action_speed = source.action_speed
 	copy.job_progress = _clone_job_progress(source.job_progress)
 	copy.loadout = _clone_loadout_definition(source.loadout) if source.loadout != null else null
 	return copy
@@ -590,7 +590,7 @@ func _clone_item_definition(source: ItemDefinition) -> ItemDefinition:
 	copy.physical_damage_modifier = source.physical_damage_modifier
 	copy.magic_damage_modifier = source.magic_damage_modifier
 	copy.armor_modifier = source.armor_modifier
-	copy.action_interval_modifier = source.action_interval_modifier
+	copy.action_speed_modifier = source.action_speed_modifier
 	copy.effects = source.effects.duplicate()
 	return copy
 

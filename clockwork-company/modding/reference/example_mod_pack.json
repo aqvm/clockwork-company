@@ -8,7 +8,7 @@
 	  "slot": "Armor",
 	  "max_hp_modifier": 8,
 	  "armor_modifier": 3,
-	  "action_interval_modifier": 2,
+	  "action_speed_modifier": -2,
 	  "physical_damage_modifier": 0,
 	  "magic_damage_modifier": 0
 	}
@@ -22,7 +22,7 @@
   "units": [
 	{
 	  "id": "mira_scout",
-	  "action_interval": 7,
+	  "action_speed": 14,
 	  "physical_damage": 1,
 	  "magic_damage": 0,
 	  "ancestry_id": "brassbound"

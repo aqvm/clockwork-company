@@ -219,7 +219,13 @@ static func _mark_passive_fired(actor) -> void:
 
 
 static func _reaction_can_fire(owner, reaction: ReactionDefinition, trigger_payload := {}) -> bool:
-	if reaction.trigger == TRIGGER_HP_BELOW_THRESHOLD or reaction.condition == CONDITION_SELF_HP_BELOW_PERCENT:
+	if reaction.trigger == TRIGGER_HP_BELOW_THRESHOLD:
+		var previous_hp := int(trigger_payload.get("previous_hp", owner.hp))
+		var new_hp := int(trigger_payload.get("new_hp", owner.hp))
+		var threshold_hp: int = owner.max_hp * reaction.threshold_percent
+		if previous_hp * 100 <= threshold_hp or new_hp * 100 > threshold_hp:
+			return false
+	elif reaction.condition == CONDITION_SELF_HP_BELOW_PERCENT:
 		if owner.hp * 100 > owner.max_hp * reaction.threshold_percent:
 			return false
 	if reaction.condition == "Self Status Stacks At Least":

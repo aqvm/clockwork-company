@@ -178,6 +178,17 @@ func apply_healing(source, target, amount: int, parent_event_id := -1, parent_lo
 	return {"amount": applied_amount, "event_id": healing_event_id}
 
 
+func execute_unit(source, target, source_name: String, parent_event_id := -1, parent_log_id := -1) -> bool:
+	if target == null or not target.is_alive():
+		return false
+	target.hp = 0
+	if log != null:
+		log.add_child(parent_log_id, "%s executes %s." % [source_name, target.unit_name])
+	var execute_event_id := publish("unit_executed", source, target, {"source_name": source_name}, parent_event_id, parent_log_id, ["execute", "defeat"])
+	publish("unit_defeated", source, target, {"statuses": target.status_snapshots(), "reason": source_name}, execute_event_id, parent_log_id, ["defeat", "execute"])
+	return true
+
+
 func _process_queue() -> void:
 	_processing = true
 	while not _queue.is_empty():

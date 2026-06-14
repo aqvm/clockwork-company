@@ -1,6 +1,8 @@
 extends RefCounted
 class_name UnitState
 
+const TurnSchedulerScript := preload("res://scripts/combat/runtime/turn_scheduler.gd")
+
 var unit_name := ""
 var unit_id := ""
 var campaign_unit_id := ""
@@ -13,10 +15,10 @@ var hp := 1
 var physical_damage := 1
 var magic_damage := 0
 var armor := 0
-var action_interval := 10
-var base_action_interval := 10
-var action_interval_floor_percent := 50
-var action_interval_floor_active := false
+var action_speed := 10
+var base_action_speed := 10
+var action_speed_cap_percent := 200
+var action_speed_cap_active := false
 var next_action_time := 10
 var slot_index := 0
 var loadout: UnitLoadoutDefinition = null
@@ -50,6 +52,9 @@ var attack_redirection_pending_start := false
 var energy_shield := 0
 var damage_current_action_window := 0
 var damage_previous_action_window := 0
+var enemy_action_healing_amount := 0
+var enemy_action_healing_source := ""
+var prepared_base_attack_source := ""
 
 
 func _init(definition: UnitDefinition = null, unit_slot_index: int = 0) -> void:
@@ -66,7 +71,7 @@ func _init(definition: UnitDefinition = null, unit_slot_index: int = 0) -> void:
 	physical_damage = definition.physical_damage
 	magic_damage = definition.magic_damage
 	armor = definition.armor
-	action_interval = definition.action_interval
+	action_speed = definition.action_speed
 	slot_index = unit_slot_index
 	loadout = definition.loadout
 	equipped_items = []
@@ -95,9 +100,9 @@ func _init(definition: UnitDefinition = null, unit_slot_index: int = 0) -> void:
 			skipped_items.append(item)
 
 	hp = max_hp
-	base_action_interval = action_interval
-	action_interval_floor_active = true
-	next_action_time = action_interval
+	base_action_speed = action_speed
+	action_speed_cap_active = true
+	next_action_time = action_delay()
 
 
 func is_alive() -> bool:
@@ -122,10 +127,10 @@ func clone_runtime_state():
 	clone.physical_damage = physical_damage
 	clone.magic_damage = magic_damage
 	clone.armor = armor
-	clone.action_interval = action_interval
-	clone.base_action_interval = base_action_interval
-	clone.action_interval_floor_percent = action_interval_floor_percent
-	clone.action_interval_floor_active = action_interval_floor_active
+	clone.action_speed = action_speed
+	clone.base_action_speed = base_action_speed
+	clone.action_speed_cap_percent = action_speed_cap_percent
+	clone.action_speed_cap_active = action_speed_cap_active
 	clone.next_action_time = next_action_time
 	clone.slot_index = slot_index
 	clone.loadout = _duplicate_resource(loadout)
@@ -159,6 +164,9 @@ func clone_runtime_state():
 	clone.energy_shield = energy_shield
 	clone.damage_current_action_window = damage_current_action_window
 	clone.damage_previous_action_window = damage_previous_action_window
+	clone.enemy_action_healing_amount = enemy_action_healing_amount
+	clone.enemy_action_healing_source = enemy_action_healing_source
+	clone.prepared_base_attack_source = prepared_base_attack_source
 	return clone
 
 
@@ -447,6 +455,26 @@ func recent_damage() -> int:
 	return damage_previous_action_window + damage_current_action_window
 
 
+func begin_enemy_action_healing(amount: int, source_name: String) -> void:
+	enemy_action_healing_amount = max(0, amount)
+	enemy_action_healing_source = source_name
+
+
+func clear_enemy_action_healing() -> void:
+	enemy_action_healing_amount = 0
+	enemy_action_healing_source = ""
+
+
+func prepare_base_attack(source_name: String) -> void:
+	prepared_base_attack_source = source_name
+
+
+func consume_prepared_base_attack() -> String:
+	var source_name := prepared_base_attack_source
+	prepared_base_attack_source = ""
+	return source_name
+
+
 func remove_status(status_name: String) -> Dictionary:
 	for index in range(statuses.size()):
 		var instance: Dictionary = statuses[index]
@@ -515,39 +543,57 @@ func add_temporary_modifier(stat_name: String, amount: int, duration_turns: int,
 	return modifier
 
 
-func add_capped_action_haste(amount: int, duration_actions: int, source_name: String, floor_percent: int, current_time: int) -> Dictionary:
-	var effective_floor_percent: int = max(action_interval_floor_percent, floor_percent)
-	var floor_interval: int = max(1, int(ceil(float(base_action_interval * effective_floor_percent) / 100.0)))
-	var applied_amount: int = min(max(0, amount), max(0, action_interval - floor_interval))
+func action_delay() -> int:
+	return TurnSchedulerScript.action_delay(action_speed)
+
+
+func rescale_remaining_action_time(current_time: int, previous_speed: int) -> void:
+	var remaining := maxi(0, next_action_time - current_time)
+	if remaining == 0:
+		return
+	var previous_delay := TurnSchedulerScript.action_delay(previous_speed)
+	next_action_time = current_time + ceili(float(remaining * action_delay()) / float(previous_delay))
+
+
+func add_capped_action_haste(amount: int, duration_actions: int, source_name: String, max_speed_percent: int, current_time: int) -> Dictionary:
+	var effective_cap_percent: int = min(action_speed_cap_percent, max_speed_percent)
+	var speed_cap: int = maxi(1, floori(float(base_action_speed * effective_cap_percent) / 100.0))
+	var applied_amount: int = min(maxi(0, amount), maxi(0, speed_cap - action_speed))
 	if applied_amount <= 0:
 		return {}
-	var modifier: Dictionary = add_temporary_modifier("Action Interval", -applied_amount, duration_actions, source_name)
+	var previous_speed := action_speed
+	var modifier: Dictionary = add_temporary_modifier("Action Speed", applied_amount, duration_actions, source_name)
 	if modifier.is_empty():
 		return {}
 	var previous_next_action_time: int = next_action_time
-	next_action_time = max(current_time, next_action_time - applied_amount)
+	rescale_remaining_action_time(current_time, previous_speed)
 	modifier["timeline_advance"] = previous_next_action_time - next_action_time
 	return modifier
 
 
 func add_battle_action_haste(amount: int, current_time: int) -> int:
-	var floor_interval: int = max(1, int(ceil(float(base_action_interval * action_interval_floor_percent) / 100.0)))
-	var applied_amount: int = min(max(0, amount), max(0, action_interval - floor_interval))
+	var speed_cap: int = maxi(1, floori(float(base_action_speed * action_speed_cap_percent) / 100.0))
+	var applied_amount: int = min(maxi(0, amount), maxi(0, speed_cap - action_speed))
 	if applied_amount <= 0:
 		return 0
-	action_interval -= applied_amount
-	next_action_time = max(current_time, next_action_time - applied_amount)
+	var previous_speed := action_speed
+	action_speed += applied_amount
+	rescale_remaining_action_time(current_time, previous_speed)
 	return applied_amount
 
 
-func elapse_temporary_modifiers() -> Array[Dictionary]:
+func elapse_temporary_modifiers(current_time: int = 0) -> Array[Dictionary]:
 	var expired: Array[Dictionary] = []
 	for index in range(temporary_modifiers.size() - 1, -1, -1):
 		var modifier: Dictionary = temporary_modifiers[index]
 		modifier["remaining_turns"] = int(modifier.get("remaining_turns", 1)) - 1
 		if int(modifier["remaining_turns"]) > 0:
 			continue
-		_apply_stat_delta(String(modifier.get("stat", "")), -int(modifier.get("amount", 0)))
+		var stat_name := String(modifier.get("stat", ""))
+		var previous_speed := action_speed
+		_apply_stat_delta(stat_name, -int(modifier.get("amount", 0)))
+		if stat_name == "Action Speed" and previous_speed != action_speed:
+			rescale_remaining_action_time(current_time, previous_speed)
 		expired.append(modifier)
 		temporary_modifiers.remove_at(index)
 	return expired
@@ -595,8 +641,8 @@ func stat_value(stat_name: String) -> int:
 			return magic_damage
 		"Armor":
 			return armor
-		"Action Interval":
-			return action_interval
+		"Action Speed":
+			return action_speed
 	return 0
 
 
@@ -611,9 +657,9 @@ func _apply_stat_delta(stat_name: String, amount: int) -> void:
 			magic_damage = max(0, magic_damage + amount)
 		"Armor":
 			armor = max(0, armor + amount)
-		"Action Interval":
-			var floor_interval: int = max(1, int(ceil(float(base_action_interval * action_interval_floor_percent) / 100.0))) if action_interval_floor_active else 1
-			action_interval = max(floor_interval, action_interval + amount)
+		"Action Speed":
+			var speed_cap: int = maxi(1, floori(float(base_action_speed * action_speed_cap_percent) / 100.0)) if action_speed_cap_active else 999999
+			action_speed = clampi(action_speed + amount, 1, speed_cap)
 
 
 func total_armor() -> int:
@@ -711,7 +757,7 @@ func _apply_item_stat_modifiers(item: ItemDefinition) -> void:
 	physical_damage = max(1, physical_damage + item.physical_damage_modifier)
 	magic_damage = max(0, magic_damage + item.magic_damage_modifier)
 	armor = max(0, armor + item.armor_modifier)
-	action_interval = max(1, action_interval + item.action_interval_modifier)
+	action_speed = max(1, action_speed + item.action_speed_modifier)
 
 
 func _apply_ancestry_growth(job_progress: Array[JobProgressDefinition]) -> void:
@@ -727,7 +773,7 @@ func _apply_ancestry_growth(job_progress: Array[JobProgressDefinition]) -> void:
 	physical_damage = max(1, physical_damage + ancestry.physical_damage_growth * total_level)
 	magic_damage = max(0, magic_damage + ancestry.magic_damage_growth * total_level)
 	armor = max(0, armor + ancestry.armor_growth * total_level)
-	action_interval = max(1, action_interval + ancestry.action_interval_growth * total_level)
+	action_speed = max(1, action_speed + ancestry.action_speed_growth * total_level)
 
 
 func _apply_job_progress_growth(job_progress: Array[JobProgressDefinition]) -> void:
@@ -739,7 +785,7 @@ func _apply_job_progress_growth(job_progress: Array[JobProgressDefinition]) -> v
 		physical_damage = max(1, physical_damage + progress.job.physical_damage_growth * level)
 		magic_damage = max(0, magic_damage + progress.job.magic_damage_growth * level)
 		armor = max(0, armor + progress.job.armor_growth * level)
-		action_interval = max(1, action_interval + progress.job.action_interval_growth * level)
+		action_speed = max(1, action_speed + progress.job.action_speed_growth * level)
 
 
 func _can_equip_item(item: ItemDefinition) -> bool:

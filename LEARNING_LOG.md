@@ -1,5 +1,7 @@
 # Learning Log
 
+> This is the chronological historical record. For concise current knowledge and concept navigation, start at [[Home]]. New entries should link to canonical wiki pages where useful rather than repeating their full current rules.
+
 This file tracks what I should understand as the project develops.
 
 Each entry should include:

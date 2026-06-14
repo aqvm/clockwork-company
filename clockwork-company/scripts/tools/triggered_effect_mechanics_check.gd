@@ -75,7 +75,7 @@ func _init() -> void:
 	assert(not ally.has_status("Numb"), "Specific Status removal should remove the referenced status type.")
 	var json_item: ItemDefinition = JsonContentLoaderScript.load_item_definition_by_id("resolver_vocabulary_it", ["integration_test_mod_pack"])
 	assert(json_item != null and json_item.effects.size() == 2, "JSON should load shared triggered effects.")
-	assert(json_item.effects[0].modified_stat == "Action Interval" and json_item.effects[0].modifier_duration_turns == 2, "JSON should preserve temporary modifier fields.")
+	assert(json_item.effects[0].modified_stat == "Action Speed" and json_item.effects[0].modifier_duration_turns == 2, "JSON should preserve temporary modifier fields.")
 	assert(json_item.effects[1].status_removal_mode == "Specific Status" and json_item.effects[1].status != null, "JSON should preserve status-removal fields and references.")
 	var json_job: JobDefinition = JsonContentLoaderScript.load_job_definition_by_id("cleanser_it", ["integration_test_mod_pack"])
 	assert(json_job != null and json_job.skill.action == "Effects Only" and json_job.skill.attack_count == 2 and json_job.skill.effects.size() == 1, "JSON should load effect-only job skills and attack counts.")
@@ -303,8 +303,9 @@ func _init() -> void:
 	var gathering_cold := PassiveDefinition.new()
 	gathering_cold.display_name = "Gathering Cold"
 	var frost_slow := _effect("Battle State Changed", "Modify Stat", "Enemy Units", 0, FrostStatus)
-	frost_slow.modified_stat = "Action Interval"
+	frost_slow.modified_stat = "Action Speed"
 	frost_slow.modifier_mode = "Dynamic Percent"
+	frost_slow.modifier_direction = "Decrease"
 	frost_slow.amount_source = "Total Status Stacks On Selected Group"
 	frost_slow.amount_target_selector = "Enemy Units"
 	frost_slow.amount_multiplier = 10
@@ -312,14 +313,14 @@ func _init() -> void:
 	cryomancer.current_passive = gathering_cold
 	var cold_enemy = _unit("Cold Enemy", "Enemies")
 	var colder_enemy = _unit("Colder Enemy", "Enemies")
-	colder_enemy.action_interval = 20
+	colder_enemy.action_speed = 20
 	var cryomancer_context = _context([cryomancer, cold_enemy, colder_enemy], log)
 	cryomancer_context.publish("skill_used", cryomancer, cold_enemy, {"skill": frostbite.display_name}, -1, root_log_id)
 	assert(cold_enemy.has_status("Frost") and cold_enemy.has_status("Numb"), "An effect-only skill should author Frost and Numb together.")
-	assert(cold_enemy.action_interval == 11 and colder_enemy.action_interval == 22, "A dynamic percentage modifier should slow all enemies from aggregate enemy Frost.")
+	assert(cold_enemy.action_speed == 9 and colder_enemy.action_speed == 18, "A dynamic percentage modifier should slow all enemies from aggregate enemy Frost.")
 	cryomancer_context.publish("damage_dealt", colder_enemy, cryomancer, {"amount": 1, "physical_amount": 1, "magic_amount": 0}, -1, root_log_id)
 	assert(colder_enemy.status_stack_count("Frost") == 2, "A Physically Damaged reaction should apply its authored effects to the damage source.")
-	assert(cold_enemy.action_interval == 13 and colder_enemy.action_interval == 26, "Dynamic modifiers should replace their prior contribution when aggregate Frost changes.")
+	assert(cold_enemy.action_speed == 7 and colder_enemy.action_speed == 14, "Dynamic modifiers should replace their prior contribution when aggregate Frost changes.")
 	cryomancer_context.publish("damage_dealt", cold_enemy, cryomancer, {"amount": 1, "physical_amount": 0, "magic_amount": 1}, -1, root_log_id)
 	assert(cold_enemy.status_stack_count("Frost") == 1, "A Physically Damaged reaction should ignore magical damage.")
 
@@ -521,22 +522,22 @@ func _init() -> void:
 
 	var bridge_actor = _unit("Bridge Actor", "Allies")
 	var bridge_ally = _unit("Bridge Ally", "Allies")
-	bridge_ally.action_interval = 20
+	bridge_ally.action_speed = 10
 	StatusResolverScript.apply_status(log, root_log_id, bridge_ally, RotStatus, "test", 3, false)
 	StatusResolverScript.apply_status(log, root_log_id, bridge_ally, BurningStatus, "test", 3, false, null, null, -1, 3)
 	var haste_skill := SkillDefinition.new()
 	haste_skill.display_name = "Hot on Their Heels"
 	haste_skill.action = "Effects Only"
 	var ailment_haste := _effect("Skill Used", "Modify Stat", "Event Target")
-	ailment_haste.modified_stat = "Action Interval"
-	ailment_haste.modifier_direction = "Decrease"
+	ailment_haste.modified_stat = "Action Speed"
+	ailment_haste.modifier_direction = "Increase"
 	ailment_haste.modifier_duration_turns = 2
 	ailment_haste.amount_source = "Target Ailment Stacks"
 	haste_skill.effects.append(ailment_haste)
 	bridge_actor.current_skill = haste_skill
 	var haste_context = _context([bridge_actor, bridge_ally], log)
 	haste_context.publish("skill_used", bridge_actor, bridge_ally, {"skill": haste_skill.display_name}, -1, root_log_id)
-	assert(bridge_ally.action_interval == 16, "Ailment-stack formulas should count one Rot and three Burning stacks, and temporary modifiers should support authored decreases.")
+	assert(bridge_ally.action_speed == 14, "Ailment-stack formulas should count one Rot and three Burning stacks, and temporary modifiers should support authored speed increases.")
 
 	var barrier_target = _unit("Barrier Target", "Allies")
 	barrier_target.add_status(ReconstitutionStatus, "test", 3, false)
@@ -613,8 +614,8 @@ func _init() -> void:
 	assert(barrier_ally.battle_armor == 4, "Battle armor should not expire at the target's next turn.")
 
 	var bruiser = _unit("Bruiser", "Allies")
-	bruiser.action_interval = 10
-	bruiser.base_action_interval = 10
+	bruiser.action_speed = 10
+	bruiser.base_action_speed = 10
 	bruiser.next_action_time = 20
 	var rapid_attacker = _unit("Rapid Attacker", "Enemies")
 	rapid_attacker.next_action_time = 5
@@ -622,7 +623,7 @@ func _init() -> void:
 	momentum.display_name = "Punishing Momentum"
 	var physical_haste := _effect("Physically Damaged", "Hasten Action", "Self", 2)
 	physical_haste.modifier_duration_turns = 3
-	physical_haste.threshold_percent = 50
+	physical_haste.max_action_speed_percent = 200
 	physical_haste.repeat_within_event_chain = true
 	momentum.effects.append(physical_haste)
 	bruiser.current_passive = momentum
@@ -630,10 +631,10 @@ func _init() -> void:
 	var rapid_root: int = momentum_context.publish("attack_performed", rapid_attacker, bruiser, {}, -1, root_log_id)
 	for _hit in range(4):
 		momentum_context.publish("damage_dealt", rapid_attacker, bruiser, {"amount": 1, "physical_amount": 1, "magic_amount": 0}, rapid_root, root_log_id)
-	assert(bruiser.action_interval == 5 and bruiser.next_action_time == 15, "Repeated physical hits should immediately hasten the next action and stack only to half the finalized baseline interval.")
+	assert(bruiser.action_speed == 18 and bruiser.next_action_time == 16, "Repeated physical hits should immediately hasten the next action and proportionally rescale remaining time.")
 	for _action in range(3):
 		momentum_context.publish("turn_completed", bruiser, bruiser, {}, -1, root_log_id)
-	assert(bruiser.action_interval == 10, "Capped action haste should expire after the authored number of completed actions.")
+	assert(bruiser.action_speed == 10, "Capped action haste should expire after the authored number of completed actions.")
 
 	var protected_ally = _unit("Protected Ally", "Allies")
 	var interceptor = _unit("Interceptor", "Allies")
@@ -684,15 +685,15 @@ func _init() -> void:
 	assert(high_hp_target.hp == 13, "Target Current HP should support proportional remaining-HP damage.")
 
 	var speed_caster = _unit("Speed Caster", "Allies")
-	speed_caster.action_interval = 10
+	speed_caster.action_speed = 10
 	var slow_target = _unit("Slow Target", "Enemies")
-	slow_target.action_interval = 30
+	slow_target.action_speed = 5
 	var speed_skill := SkillDefinition.new()
 	speed_skill.display_name = "Exploit Delay"
 	speed_skill.action = "Effects Only"
 	var speed_damage := _effect("Skill Used", "Deal Damage", "Event Target")
-	speed_damage.amount_source = "Target Action Interval"
-	speed_damage.amount_divisor = 10
+	speed_damage.amount_source = "Target Action Speed"
+	speed_damage.amount_divisor = 1
 	speed_skill.effects.append(speed_damage)
 	speed_caster.current_skill = speed_skill
 	var speed_tactic := TacticDefinition.new()
@@ -700,7 +701,7 @@ func _init() -> void:
 	assert(TacticResolverScript.condition_matches(speed_tactic.condition, speed_caster, [speed_caster, slow_target], slow_target, speed_tactic), "Tactics should identify targets slower than the acting unit.")
 	var speed_context = _context([speed_caster, slow_target], log)
 	speed_context.publish("skill_used", speed_caster, slow_target, {"skill": speed_skill.display_name}, -1, root_log_id)
-	assert(slow_target.hp == 17, "Effects should scale damage from the target's authored action interval.")
+	assert(slow_target.hp == 15, "Effects should scale damage from the target's authored action speed.")
 
 	var monk = _unit("Monk", "Allies")
 	var fist_target = _unit("Fist Target", "Enemies")
@@ -864,10 +865,74 @@ func _init() -> void:
 		spike.tick_ability_cooldowns()
 	assert(spike.skill_is_ready(redirect_skill), "Authored skill cooldowns should elapse on the owner's turns.")
 
+	var executioner = _unit("Executioner", "Allies")
+	var execute_passive := PassiveDefinition.new()
+	execute_passive.display_name = "Headsman"
+	var execute_wounded := _effect("Hit", "Execute Target", "Attack Target")
+	execute_wounded.threshold_percent = 10
+	execute_passive.effects.append(execute_wounded)
+	executioner.current_passive = execute_passive
+	var execution_target = _unit("Execution Target", "Enemies")
+	execution_target.hp = 6
+	var execution_context = _context([executioner, execution_target], log)
+	CombatSimulatorScript.new()._resolve_attack(execution_context, log, root_log_id, executioner, execution_target)
+	assert(not execution_target.is_alive() and execution_context.events_of_type("unit_executed").size() == 1, "Execute Target should defeat an enemy left at or below its authored threshold by the owner's physical base attack.")
+
+	var magic_execution_target = _unit("Magic Execution Target", "Enemies")
+	magic_execution_target.hp = 6
+	var magic_execution_skill := SkillDefinition.new()
+	magic_execution_skill.display_name = "False Execution"
+	magic_execution_skill.action = "Attack"
+	magic_execution_skill.attack_damage_type = "Magic"
+	var magic_execution_context = _context([executioner, magic_execution_target], log)
+	CombatSimulatorScript.new()._resolve_skill(magic_execution_context, log, root_log_id, executioner, magic_execution_target, magic_execution_skill, "assigned skill")
+	assert(magic_execution_target.is_alive() and magic_execution_context.events_of_type("unit_executed").is_empty(), "Execute Target should ignore hits without positive physical damage.")
+
+	var stayed_executioner = _unit("Stayed Executioner", "Allies")
+	var stay := ReactionDefinition.new()
+	stay.display_name = "Stay of Execution"
+	stay.trigger = "HP Below Threshold"
+	stay.reaction_type = "Effects Only"
+	stay.threshold_percent = 30
+	var begin_stay := _effect("Reaction Triggered", "Begin Enemy Action Healing", "Self")
+	begin_stay.amount_source = "Target Max HP"
+	begin_stay.amount_divisor = 4
+	stay.effects.append(begin_stay)
+	stayed_executioner.current_reaction = stay
+	var stay_enemy = _unit("Stay Enemy", "Enemies")
+	var stay_context = _context([stayed_executioner, stay_enemy], log)
+	stay_context.apply_direct_damage(stay_enemy, stayed_executioner, 14, -1, root_log_id, ["attack"])
+	assert(stayed_executioner.enemy_action_healing_amount == 5, "Crossing the authored HP threshold should open an enemy-turn healing window using the authored amount formula.")
+	stay_context.publish("turn_completed", stay_enemy, stay_enemy, {}, -1, root_log_id, ["turn"])
+	assert(stayed_executioner.hp == 11, "An active enemy-action healing window should heal once after an enemy scheduled turn completes.")
+	stay_context.publish("turn_started", stayed_executioner, stayed_executioner, {}, -1, root_log_id, ["turn"])
+	stay_context.publish("turn_completed", stay_enemy, stay_enemy, {}, -1, root_log_id, ["turn"])
+	assert(stayed_executioner.hp == 11, "The enemy-action healing window should close when the owner's next scheduled turn begins.")
+	stayed_executioner.hp = 5
+	stay_context.apply_direct_damage(stay_enemy, stayed_executioner, 1, -1, root_log_id, ["attack"])
+	assert(stayed_executioner.enemy_action_healing_amount == 0, "HP Below Threshold reactions should require crossing from above the threshold.")
+
+	var ready_executioner = _unit("Ready Executioner", "Allies")
+	var ready_swing := SkillDefinition.new()
+	ready_swing.display_name = "Ready the Swing"
+	ready_swing.action = "Effects Only"
+	ready_swing.default_target = "Self"
+	ready_swing.effects.append(_effect("Skill Used", "Prepare Base Attack", "Self"))
+	ready_executioner.current_skill = ready_swing
+	var ready_target = _unit("Ready Target", "Enemies")
+	ready_target.hp = 5
+	var ready_context = _context([ready_executioner, ready_target], log)
+	var executioner_simulator = CombatSimulatorScript.new()
+	executioner_simulator._resolve_skill(ready_context, log, root_log_id, ready_executioner, ready_executioner, ready_swing, "job skill")
+	assert(not ready_executioner.prepared_base_attack_source.is_empty(), "Prepare Base Attack should store one authored prepared strike.")
+	executioner_simulator._resolve_prepared_base_attacks(ready_context, log, root_log_id, ready_target)
+	assert(not ready_target.is_alive() and ready_executioner.prepared_base_attack_source.is_empty(), "A prepared base attack should resolve before the enemy turn and be consumed after one strike.")
+	assert(ready_context.events_of_type("attack_performed").size() == 1, "A prepared strike should use one complete normal base-attack resolution.")
+
 	var sanguinist = _unit("Sanguinist", "Allies")
-	sanguinist.base_action_interval = 10
-	sanguinist.action_interval = 10
-	sanguinist.action_interval_floor_active = true
+	sanguinist.base_action_speed = 10
+	sanguinist.action_speed = 10
+	sanguinist.action_speed_cap_active = true
 	sanguinist.next_action_time = 20
 	var blood_rush := PassiveDefinition.new()
 	blood_rush.display_name = "Blood Rush"
@@ -875,11 +940,11 @@ func _init() -> void:
 	sanguinist.current_passive = blood_rush
 	var blood_source = _unit("Blood Source", "Enemies")
 	var blood_context = _context([sanguinist, blood_source], log)
-	for _tick in range(4):
+	for _tick in range(6):
 		blood_context.apply_direct_damage(null, sanguinist, 1, -1, root_log_id, ["status", "bleed"])
-	assert(sanguinist.action_interval == 5 and sanguinist.next_action_time == 15, "Battle-long ailment haste should stop at the global half-encounter-start interval floor.")
+	assert(sanguinist.action_speed == 20 and sanguinist.next_action_time == 10, "Battle-long ailment haste should stop at the global double-encounter-start speed cap.")
 	blood_context.apply_direct_damage(blood_source, sanguinist, 1, -1, root_log_id, ["attack"])
-	assert(sanguinist.action_interval == 5, "Ordinary damage should not trigger Ailment Damaged effects.")
+	assert(sanguinist.action_speed == 20, "Ordinary damage should not trigger Ailment Damaged effects.")
 
 	var bleeding_enemy = _unit("Bleeding Enemy", "Enemies")
 	bleeding_enemy.hp = 1
@@ -935,16 +1000,16 @@ func _init() -> void:
 	rot_haste.display_name = "Rot Rush"
 	rot_haste.effects.append(_effect("Ailment Damaged", "Hasten Action For Battle", "Self", 1))
 	rot_victim.current_passive = rot_haste
-	rot_victim.base_action_interval = 10
-	rot_victim.action_interval = 10
-	rot_victim.action_interval_floor_active = true
+	rot_victim.base_action_speed = 10
+	rot_victim.action_speed = 10
+	rot_victim.action_speed_cap_active = true
 	rot_victim.hp = 10
 	var rot_context = _context([rot_victim], log)
 	rot_context.apply_healing(rot_victim, rot_victim, 1, -1, root_log_id, ["healing"])
-	assert(rot_victim.action_interval == 10, "Rot max-HP loss should not count as ailment damage when current HP does not fall.")
+	assert(rot_victim.action_speed == 10, "Rot max-HP loss should not count as ailment damage when current HP does not fall.")
 	rot_victim.hp = rot_victim.max_hp - 1
 	rot_context.apply_healing(rot_victim, rot_victim, 1, -1, root_log_id, ["healing"])
-	assert(rot_victim.action_interval == 9, "Rot should count as ailment damage when max-HP loss also lowers current HP.")
+	assert(rot_victim.action_speed == 11, "Rot should count as ailment damage when max-HP loss also lowers current HP.")
 
 	var battle_report: Dictionary = CombatSimulatorScript.new().run_battle_report([AldenGuard, IronBrute], "Scenario hook integration", [AshChokedRule])
 	var scenario_status_events := 0

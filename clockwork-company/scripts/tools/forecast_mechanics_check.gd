@@ -77,7 +77,7 @@ func _unit(name: String, team: String, slot: int, hp: int, damage: int, next_tim
 	unit.max_hp = hp
 	unit.hp = hp
 	unit.physical_damage = damage
-	unit.action_interval = 10
+	unit.action_speed = 10
 	unit.next_action_time = next_time
 	return unit
 
