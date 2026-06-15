@@ -26,6 +26,11 @@ Foretell is an optional deterministic evaluation mode for a normal [[Tactics|tac
 
 Foretell is intentionally narrow. Do not add alternative futures, arbitrary event predicates, timeline rewriting, or continuous forecasting until focused content needs them.
 
+The same isolated deterministic simulation can also project one unit's next
+action damage for authored effects. This projection totals actual HP damage
+sourced by that unit, does not mutate real combat, and treats nested
+next-action prediction as zero.
+
 ## Implementation
 
 - `clockwork-company/scripts/combat/rules/forecast_service.gd`

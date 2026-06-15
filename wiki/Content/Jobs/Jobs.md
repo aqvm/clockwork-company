@@ -44,6 +44,8 @@ Jobs are the trained identity layer described by [[Jobs and Progression]].
 - [[Bog Priest]]
 - [[Bruiser]]
 - [[Executioner]]
+- [[Bard]]
+- [[Chronomancer]]
 - [[Monk]]
 - [[The Spike]]
 - [[Sanguinist]]

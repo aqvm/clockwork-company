@@ -3,7 +3,7 @@ class_name TriggeredEffectResolver
 
 const StatusResolverScript := preload("res://scripts/combat/rules/status_resolver.gd")
 
-const SHARED_EFFECT_TYPES := ["Apply Status", "Maintain Status Aura", "Replace Requested Status", "Remove Status", "Consume Status", "Detonate Status", "Gather Status", "Transfer Statuses", "Restore Max HP Lost To Status", "Deal Damage", "Heal", "Grant Armor", "Grant Battle Armor", "Grant Energy Shield", "Disable Armor", "Delay Action", "Hasten Action", "Hasten Action For Battle", "Fortify Damage", "Redirect Enemy Attacks", "Add Attack Damage", "Modify Stat", "Modify Counter", "Reset Counter", "Seal Next Attack", "Prevent Request", "Execute Target", "Begin Enemy Action Healing", "Prepare Base Attack"]
+const SHARED_EFFECT_TYPES := ["Apply Status", "Maintain Status Aura", "Replace Requested Status", "Remove Status", "Consume Status", "Detonate Status", "Gather Status", "Transfer Statuses", "Restore Max HP Lost To Status", "Deal Damage", "Heal", "Grant Armor", "Grant Battle Armor", "Grant Energy Shield", "Disable Armor", "Delay Action", "Apply Haste", "Increase Action Speed For Battle", "Fortify Damage", "Redirect Enemy Attacks", "Add Attack Damage", "Modify Stat", "Modify Counter", "Reset Counter", "Seal Next Attack", "Prevent Request", "Execute Target", "Begin Enemy Action Healing", "Prepare Base Attack"]
 
 
 static func respond(context, event: Dictionary) -> void:
@@ -158,14 +158,14 @@ static func _resolve(context, event: Dictionary, owner, effect: EffectDefinition
 			target.next_action_time += delay_amount
 			context.log.add_child(int(event.get("parent_log_id", -1)), "%s delays %s's next action by %d." % [source_name, target.unit_name, delay_amount])
 			context.publish("action_delayed", owner, target, {"amount": delay_amount, "reason": source_name, "new_time": target.next_action_time}, effect_event_id, int(event.get("parent_log_id", -1)), source_tags + ["timeline"])
-		elif effect.effect_type == "Hasten Action":
+		elif effect.effect_type == "Apply Haste":
 			_hasten_action(context, event, owner, target, effect, source_name, effect_event_id, source_tags)
-		elif effect.effect_type == "Hasten Action For Battle":
+		elif effect.effect_type == "Increase Action Speed For Battle":
 			var event_source = event.get("source", null)
 			var current_time: int = event_source.next_action_time if event_source != null else 0
 			var applied_haste: int = target.add_battle_action_haste(_effect_amount(event, owner, target, effect, context), current_time)
 			if applied_haste > 0:
-				context.log.add_child(int(event.get("parent_log_id", -1)), "%s permanently hastens %s by %d for this battle." % [source_name, target.unit_name, applied_haste])
+				context.log.add_child(int(event.get("parent_log_id", -1)), "%s increases %s's action speed by %d for this battle." % [source_name, target.unit_name, applied_haste])
 				context.publish("action_hastened", owner, target, {"amount": applied_haste, "speed_amount": applied_haste, "duration_actions": 0, "new_time": target.next_action_time}, effect_event_id, int(event.get("parent_log_id", -1)), source_tags + ["timeline"])
 		elif effect.effect_type == "Fortify Damage":
 			target.begin_fortification(effect.modifier_duration_turns)
@@ -253,7 +253,8 @@ static func _apply_modifier(context, event: Dictionary, owner, target, effect: E
 		return
 	if effect.modifier_direction == "Decrease":
 		amount *= -1
-	var modifier: Dictionary = target.add_temporary_modifier(effect.modified_stat, amount, effect.modifier_duration_turns, source_name)
+	var duration: int = context.allied_buff_duration(target, effect.modifier_duration_turns) if amount > 0 else effect.modifier_duration_turns
+	var modifier: Dictionary = target.add_temporary_modifier(effect.modified_stat, amount, duration, source_name)
 	if modifier.is_empty():
 		context.log.add_child(int(event.get("parent_log_id", -1)), "%s cannot change %s's %s any further." % [source_name, target.unit_name, effect.modified_stat.to_lower()])
 		return
@@ -266,8 +267,8 @@ static func _apply_modifier(context, event: Dictionary, owner, target, effect: E
 		effect.modified_stat.to_lower(),
 		previous_value,
 		new_value,
-		effect.modifier_duration_turns,
-		"" if effect.modifier_duration_turns == 1 else "s",
+		duration,
+		"" if duration == 1 else "s",
 	])
 	context.publish("temporary_modifier_applied", owner, target, {
 		"source_name": source_name,
@@ -383,8 +384,8 @@ static func _transfer_statuses(context, event: Dictionary, owner, target, effect
 			var permanent := bool(instance.get("is_permanent", false))
 			var stacks := int(instance.get("stack_count", 1))
 			if StatusResolverScript.remove_status(context.log, int(event.get("parent_log_id", -1)), source_unit, definition.display_name, source_name, context, owner, effect_event_id):
-				if not StatusResolverScript.apply_status(context.log, int(event.get("parent_log_id", -1)), target, definition, source_name, duration, permanent, context, owner, effect_event_id, stacks):
-					StatusResolverScript.apply_status(context.log, int(event.get("parent_log_id", -1)), source_unit, definition, source_name, duration, permanent, context, owner, effect_event_id, stacks)
+				if not StatusResolverScript.apply_status(context.log, int(event.get("parent_log_id", -1)), target, definition, source_name, duration, permanent, context, owner, effect_event_id, stacks, true):
+					StatusResolverScript.apply_status(context.log, int(event.get("parent_log_id", -1)), source_unit, definition, source_name, duration, permanent, context, owner, effect_event_id, stacks, true)
 
 
 static func _hasten_action(context, event: Dictionary, owner, target, effect: EffectDefinition, source_name: String, effect_event_id: int, source_tags: Array) -> void:
@@ -393,15 +394,16 @@ static func _hasten_action(context, event: Dictionary, owner, target, effect: Ef
 	var current_time: int = event_source.next_action_time if event_source != null else 0
 	var previous_speed: int = target.action_speed
 	var previous_time: int = target.next_action_time
-	var modifier: Dictionary = target.add_capped_action_haste(amount, effect.modifier_duration_turns, source_name, effect.max_action_speed_percent, current_time)
+	var duration: int = context.allied_buff_duration(target, effect.modifier_duration_turns)
+	var modifier: Dictionary = target.add_capped_action_haste(amount, duration, source_name, effect.max_action_speed_percent, current_time)
 	if modifier.is_empty():
 		return
-	context.log.add_child(int(event.get("parent_log_id", -1)), "%s hastens %s: action speed %d -> %d and next action %d -> %d for %d completed actions." % [source_name, target.unit_name, previous_speed, target.action_speed, previous_time, target.next_action_time, effect.modifier_duration_turns])
+	context.log.add_child(int(event.get("parent_log_id", -1)), "%s gives %s Haste: action speed %d -> %d and next action %d -> %d for %d completed actions." % [source_name, target.unit_name, previous_speed, target.action_speed, previous_time, target.next_action_time, duration])
 	context.publish("action_hastened", owner, target, {
 		"amount": previous_time - target.next_action_time,
 		"speed_amount": target.action_speed - previous_speed,
 		"max_speed_percent": effect.max_action_speed_percent,
-		"duration_actions": effect.modifier_duration_turns,
+		"duration_actions": duration,
 		"new_time": target.next_action_time,
 	}, effect_event_id, int(event.get("parent_log_id", -1)), source_tags + ["timeline", "modifier"])
 
@@ -538,6 +540,12 @@ static func _effect_amount(event: Dictionary, owner, target, effect: EffectDefin
 			value = target.max_hp * int(event["payload"].get("status_stacks", 0)) if target != null else 0
 		"Target Recent Damage":
 			value = target.recent_damage() if target != null else 0
+		"Target Damage Taken Within Interval":
+			value = context.target_damage_taken_within_interval(target, effect.interval_time) if context != null else 0
+		"Total Allied Magic Damage Taken Within Interval":
+			value = context.allied_magic_damage_taken_within_interval(owner, effect.interval_time) if context != null else 0
+		"Target Predicted Next Action Damage":
+			value = context.predicted_next_action_damage(target) if context != null else 0
 		"Target Ailment Stacks":
 			value = _status_stacks_by_polarity(target, "Ailment")
 		"Target Unique Boons":

@@ -101,6 +101,7 @@ static func respond(context, event: Dictionary) -> void:
 	elif event_type == "turn_completed" and source != null:
 		_apply_enemy_action_healing(context, event, source)
 	elif event_type == "status_applied" and target != null:
+		JobEffectResolverScript.apply_ally_ailment_reactions(context.log, parent_log_id, target, event["payload"], context)
 		JobEffectResolverScript.apply_enemy_status_threshold_reactions(context.log, parent_log_id, target, event["payload"], context)
 	elif event_type in ["healing_received", "armor_gained"] and target != null and source != null and int(event["payload"].get("amount", 0)) > 0:
 		_apply_burning_support_cost(context, event, source, target)
@@ -114,6 +115,7 @@ static func respond(context, event: Dictionary) -> void:
 			if renewal_amount > 0:
 				context.apply_healing(target, target, renewal_amount, int(event.get("id", -1)), parent_log_id, ["status", "renewal"])
 	elif event_type == EVENT_DAMAGE_DEALT and target != null:
+		JobEffectResolverScript.apply_ally_magic_damage_reactions(context.log, parent_log_id, target, source, event["payload"], context)
 		if int(event["payload"].get("physical_amount", 0)) > 0:
 			var frost: Dictionary = target.status_instance(StatusResolverScript.STATUS_TYPE_FROST)
 			if not frost.is_empty():

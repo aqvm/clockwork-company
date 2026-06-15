@@ -10,7 +10,7 @@ const STATUS_TYPE_FROST := "Frost"
 const CombatEventsScript := preload("res://scripts/combat/logging/combat_events.gd")
 
 
-static func apply_status(log, parent_entry_id: int, target, status: Resource, source_name: String, duration_turns := 3, is_permanent := false, context = null, source = null, parent_event_id := -1, stack_count := 1) -> bool:
+static func apply_status(log, parent_entry_id: int, target, status: Resource, source_name: String, duration_turns := 3, is_permanent := false, context = null, source = null, parent_event_id := -1, stack_count := 1, preserve_duration := false) -> bool:
 	if target == null:
 		return false
 	if status == null:
@@ -33,8 +33,11 @@ static func apply_status(log, parent_entry_id: int, target, status: Resource, so
 			return false
 		request_event_id = int(request["id"])
 	var result := "invalid"
+	var applied_duration: int = duration_turns
+	if context != null and not preserve_duration and not is_permanent and status.polarity == "Boon" and status.elapses_naturally:
+		applied_duration = context.allied_buff_duration(target, duration_turns)
 	for _stack in range(max(1, stack_count)):
-		var application_result: String = target.add_status(status, source_name, duration_turns, is_permanent)
+		var application_result: String = target.add_status(status, source_name, applied_duration, is_permanent)
 		if application_result == "ignored":
 			if result == "invalid":
 				result = application_result
@@ -48,7 +51,7 @@ static func apply_status(log, parent_entry_id: int, target, status: Resource, so
 	var instance: Dictionary = target.status_instance_by_name(status.display_name)
 	var resulting_stack_count := int(instance.get("stack_count", 1))
 	var added_stack_count: int = max(0, resulting_stack_count - previous_stack_count)
-	var resulting_duration := int(instance.get("remaining_turns", duration_turns))
+	var resulting_duration := int(instance.get("remaining_turns", applied_duration))
 	var resulting_permanent := bool(instance.get("is_permanent", is_permanent))
 	var event := CombatEventsScript.status_applied(target, status, source_name, resulting_duration, resulting_permanent, result, resulting_stack_count)
 	var duration_text := "permanently" if resulting_permanent else "for %d turns" % resulting_duration

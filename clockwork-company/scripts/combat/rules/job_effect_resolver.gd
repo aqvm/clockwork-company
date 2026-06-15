@@ -16,6 +16,8 @@ const CONDITION_REQUESTED_STATUS_IS_AILMENT := "Requested Status Is Ailment"
 const TRIGGER_HP_BELOW_THRESHOLD := "HP Below Threshold"
 const TRIGGER_DAMAGED := "Damaged"
 const TRIGGER_STATUS_APPLICATION_REQUESTED := "Status Application Requested"
+const TRIGGER_ALLY_AILMENT_APPLIED := "Ally Ailment Applied"
+const TRIGGER_ALLY_MAGICALLY_DAMAGED := "Ally Magically Damaged"
 const TRIGGER_ENEMY_HEALING_REQUESTED := "Enemy Healing Requested"
 const TRIGGER_ATTACK_TARGETS_ANOTHER_ALLY := "Attack Targets Another Ally"
 const TRIGGER_LETHAL_PHYSICAL_ATTACK_REQUESTED := "Lethal Physical Attack Requested"
@@ -70,6 +72,17 @@ static func apply_damage_reaction(log, parent_entry_id: int, damaged_unit, attac
 		_apply_reaction(log, parent_entry_id, damaged_unit, attacker, reaction.trigger, damage_payload, context)
 	elif reaction.trigger in [TRIGGER_DAMAGED, TRIGGER_HP_BELOW_THRESHOLD]:
 		_apply_reaction(log, parent_entry_id, damaged_unit, attacker, reaction.trigger, damage_payload, context)
+
+
+static func apply_ally_magic_damage_reactions(log, parent_entry_id: int, damaged_unit, attacker, damage_payload: Dictionary, context = null) -> void:
+	if context == null or damaged_unit == null or int(damage_payload.get("magic_amount", 0)) <= 0:
+		return
+	for owner in context.units:
+		if owner == null or not owner.is_alive() or owner.team != damaged_unit.team:
+			continue
+		var reaction: ReactionDefinition = owner.current_reaction
+		if reaction != null and reaction.trigger == TRIGGER_ALLY_MAGICALLY_DAMAGED:
+			_apply_reaction(log, parent_entry_id, owner, attacker, reaction.trigger, damage_payload, context)
 
 
 static func apply_status_application_reaction(log, parent_entry_id: int, target, source, request_payload: Dictionary, context = null) -> void:
@@ -131,6 +144,18 @@ static func apply_enemy_status_threshold_reactions(log, parent_entry_id: int, st
 		if String(status_payload.get("status_type", "")) != reaction.status.status_type:
 			continue
 		if status_target.status_stack_count(reaction.status.status_type) < reaction.status_stack_threshold:
+			continue
+		_apply_reaction(log, parent_entry_id, owner, status_target, reaction.trigger, status_payload, context)
+
+
+static func apply_ally_ailment_reactions(log, parent_entry_id: int, status_target, status_payload: Dictionary, context = null) -> void:
+	if context == null or status_target == null or String(status_payload.get("polarity", "")) != "Ailment":
+		return
+	for owner in context.units:
+		if owner == null or not owner.is_alive() or owner.team != status_target.team:
+			continue
+		var reaction: ReactionDefinition = owner.current_reaction
+		if reaction == null or reaction.trigger != TRIGGER_ALLY_AILMENT_APPLIED:
 			continue
 		_apply_reaction(log, parent_entry_id, owner, status_target, reaction.trigger, status_payload, context)
 

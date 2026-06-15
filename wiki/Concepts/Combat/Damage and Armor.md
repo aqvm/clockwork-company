@@ -34,6 +34,8 @@ Named armor statuses are intentionally avoided unless a future mechanic needs st
 - Energy Shield is a battle-long pool that absorbs only magic damage.
 - Fortified defers damage into later direct-damage ticks.
 - [[Rot]] can cause actual HP loss by reducing maximum HP.
+- Combat records actual HP damage at discrete timeline times for interval-based
+  effects. Prevented damage, absorbed magic damage, and overkill are excluded.
 
 ## Implementation
 

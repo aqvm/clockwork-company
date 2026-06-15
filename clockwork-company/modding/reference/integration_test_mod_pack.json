@@ -108,7 +108,8 @@
           "counter_threshold": 2,
           "amount_source": "Target Counter",
           "amount_multiplier": 2,
-          "amount_divisor": 1
+          "amount_divisor": 1,
+          "interval_time": 12
         }
       ]
     },

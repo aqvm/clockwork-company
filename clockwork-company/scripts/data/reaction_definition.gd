@@ -7,7 +7,7 @@ class_name ReactionDefinition
 		display_name = value
 		resource_name = value
 @export var tags: Array[String] = []
-@export_enum("Damaged", "Physically Damaged", "Magically Damaged", "HP Below Threshold", "Lethal Physical Attack Requested", "Attack Targets Another Ally", "Status Application Requested", "Enemy Healing Requested", "Enemy Status Threshold Reached", "Enemy Died With Status") var trigger := "Damaged"
+@export_enum("Damaged", "Physically Damaged", "Magically Damaged", "Ally Magically Damaged", "HP Below Threshold", "Lethal Physical Attack Requested", "Attack Targets Another Ally", "Status Application Requested", "Ally Ailment Applied", "Enemy Healing Requested", "Enemy Status Threshold Reached", "Enemy Died With Status") var trigger := "Damaged"
 @export_enum("Always", "Self HP Below Percent", "Self Status Stacks At Least", "Requested Status Is Ailment", "Requested Status Matches") var condition := "Always"
 @export_enum("Gain Armor", "Heal Self", "Damage Attacker", "Effects Only") var reaction_type := "Gain Armor"
 @export var amount := 0

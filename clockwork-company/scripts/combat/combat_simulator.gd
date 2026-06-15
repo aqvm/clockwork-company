@@ -37,8 +37,7 @@ func run_battle_report_from_units(units: Array, battle_title := "Run battle", sc
 	var log = CombatLogScript.new()
 	var actions_taken := 0
 	var replay_snapshots: Array[Dictionary] = []
-	var context = CombatContextScript.new(units, log, scenario_rules)
-	context.add_responder(CombatHookResolverScript.respond)
+	var context = _combat_context(units, log, scenario_rules)
 
 	log.add(battle_title)
 	log.add("Random seed: none yet. This fight is deterministic because there are no random rolls.")
@@ -162,6 +161,10 @@ func foretell_target_for_tactic(actor, units: Array, tactic: TacticDefinition):
 		_evaluate_speculative_tactic_target
 	)
 
+
+func predicted_next_action_damage(actor, units: Array, current_actor = null) -> int:
+	return ForecastServiceScript.predicted_next_action_damage(actor, units, _execute_projected_next_action, current_actor)
+
 func _evaluate_speculative_tactic_target(tactic: TacticDefinition, actor, units: Array):
 	var target = TacticResolverScript.find_tactic_target(tactic.target, actor, units, tactic)
 	if not TacticResolverScript.condition_matches(tactic.condition, actor, units, target, tactic):
@@ -188,8 +191,7 @@ func _log_and_resolve_decision(context, log, turn_entry_id: int, actor, decision
 
 func _execute_speculative_current_action(actor, units: Array) -> void:
 	var log = CombatLogScript.new()
-	var context = CombatContextScript.new(units, log, [], true)
-	context.add_responder(CombatHookResolverScript.respond)
+	var context = _combat_context(units, log, [], true)
 	var turn_entry_id: int = log.add("Speculative current action")
 	var active_status_instance_ids: Array[int] = actor.status_instance_ids()
 	var decision: Dictionary = TacticResolverScript.choose_action(actor, units, Callable(), false)
@@ -199,14 +201,13 @@ func _execute_speculative_current_action(actor, units: Array) -> void:
 	StatusResolverScript.elapse_turn_statuses(log, turn_entry_id, actor, active_status_instance_ids, context)
 
 
-func _execute_speculative_future_turn(actor, units: Array) -> void:
+func _execute_speculative_future_turn(actor, units: Array, allow_prediction := true) -> int:
 	var log = CombatLogScript.new()
-	var context = CombatContextScript.new(units, log, [], true)
-	context.add_responder(CombatHookResolverScript.respond)
+	var context = _combat_context(units, log, [], true, allow_prediction)
 	var turn_entry_id: int = log.add("Speculative future turn")
 	_resolve_prepared_base_attacks(context, log, turn_entry_id, actor)
 	if not actor.is_alive():
-		return
+		return 0
 	context.publish("turn_started", actor, actor, {"time": actor.next_action_time}, -1, turn_entry_id, ["turn"])
 	actor.tick_ability_cooldowns()
 	_clear_guard_if_needed(context, log, turn_entry_id, actor)
@@ -220,6 +221,23 @@ func _execute_speculative_future_turn(actor, units: Array) -> void:
 	context.publish("turn_completed", actor, actor, {"time": actor.next_action_time}, -1, turn_entry_id, ["turn"])
 	if actor.is_alive():
 		TurnSchedulerScript.schedule_next_turn(actor)
+	var total_damage := 0
+	for event: Dictionary in context.events_of_type("damage_dealt"):
+		if event.get("source", null) == actor:
+			total_damage += int(event["payload"].get("amount", 0))
+	return total_damage
+
+
+func _execute_projected_next_action(actor, units: Array) -> int:
+	return _execute_speculative_future_turn(actor, units, false)
+
+
+func _combat_context(units: Array, log, scenario_rules: Array = [], speculative := false, allow_prediction := true):
+	var context = CombatContextScript.new(units, log, scenario_rules, speculative)
+	context.add_responder(CombatHookResolverScript.respond)
+	if allow_prediction:
+		context.predict_next_action_damage = func(target, current_actor): return predicted_next_action_damage(target, units, current_actor)
+	return context
 
 
 func _resolve_tactic_action(context, log, turn_entry_id: int, actor, target, action: String, parent_event_id := -1) -> void:

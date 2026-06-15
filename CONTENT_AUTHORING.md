@@ -71,7 +71,7 @@ The shared authoring vocabulary is available on every supported trigger:
 - `Remove Status`: removes one deterministic-random matching status by polarity, or a referenced specific status type.
 - `Modify Stat`: temporarily modifies max HP, physical damage, magic damage, armor, or action speed for a configured number of the target's completed actions.
 - `Deal Damage`, `Heal`, `Grant Armor`, and `Grant Battle Armor`: apply shared combat outcomes using fixed or authored formula amounts.
-- `Delay Action` and `Hasten Action`: change timeline position; authored haste temporarily raises action speed up to a configured encounter-start speed cap.
+- `Delay Action` and `Apply Haste`: change timeline position; Haste temporarily raises action speed up to a configured encounter-start speed cap.
 - Status transfer/consumption effects can consume, detonate, gather, maintain, replace, or restore state recorded by authored statuses.
 - `Execute Target`: on `Hit` targeting `Attack Target`, defeats a target left at or below `threshold_percent` maximum HP by positive physical HP damage.
 - `Begin Enemy Action Healing`: opens a healing window on `Self` until the owner's next scheduled turn begins.

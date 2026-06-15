@@ -102,7 +102,7 @@ Optional fields:
 - `tags` (`Array[String]`)
 - `trigger` (`String enum`): `Battle Start`, `Attack`, `Kill`, `Damaged`, `HP Below Threshold`
 - `condition` (`String enum`): `Always`, `Self HP Below Percent`
-- `feature_type` (`String enum`): `Gain Armor`, `Bonus Damage`, `Heal Self`, `Damage Attacker`, `Hasten Self`, `Gain Physical Damage`
+- `feature_type` (`String enum`): `Gain Armor`, `Bonus Damage`, `Heal Self`, `Damage Attacker`, `Increase Own Action Speed`, `Gain Physical Damage`
 - `amount` (`int`)
 - `threshold_percent` (`int`, 1-100)
 - `cooldown_turns` (`int`): unit-turn cooldown after the feature fires. `0` means no cooldown.
@@ -111,7 +111,7 @@ Optional fields:
 Currently implemented ancestry feature behavior:
 - `Battle Start` + `Gain Armor`
 - `Attack` + `Bonus Damage`; a `magic` tag makes the bonus magic damage, otherwise physical.
-- `Kill` + `Hasten Self` or `Gain Physical Damage`
+- `Kill` + `Increase Own Action Speed` or `Gain Physical Damage`
 - `Damaged` or `HP Below Threshold` + `Gain Armor`, `Heal Self`, or `Damage Attacker`
 
 Reserved but not implemented:
@@ -143,7 +143,7 @@ Optional fields:
 - `trigger` (`String enum`): `Battle Start`, `Battle State Changed`, `Turn Start`, `Turn Complete`, `Action Completed`, `Skill Used`, `Skill Completed`, `Attack`, `Consecutive Attack`, `Enemy Attack Targeted`, `Hit`, `Kill`, `Death`, `Ailment Damaged`, `Damaged`, `Physically Damaged`, `Magically Damaged`, `HP Below Threshold`, `Damage Requested`, `Healing Requested`, `Healing Received`, `Ally Overhealed`, `Reaction Requested`, `Status Application Requested`, `Status Removal Requested`, `Status Applied`, `Externally Sourced Status Applied`, `Enemy Status Applied`, `Status Removed`, `Reaction Triggered`
 - `condition` (`String enum`): `Always`, `Event Source Is Not Owner`, `Owner Is Unarmed`, `Event Count At Least`, `Self HP Below Percent`, `Target Has Tag`, `Target Missing Tag`, `Target Status Stacks At Least`, `Target Pending Status Damage At Least HP`, `Owner Counter At Least`, `Target Counter At Least`, `Requested Status Matches`, `Applied Status Matches`
 - `target_selector` (`String enum`): `Self`, `Event Source`, `Event Target`, `Attack Target`, `Attacker`, `Killer`, `All Units`, `Allied Units`, `Enemy Units`, `Lowest HP Allied Unit`, `Random Allied Unit`, `Random Damaged Allied Unit`, `Random Enemy Unit`
-- `effect_type` (`String enum`): `Gain Armor`, `Bonus Damage`, `Reduce Target Armor`, `Heal Self`, `Damage Killer`, `Increase Max HP`, `Apply Status`, `Maintain Status Aura`, `Replace Requested Status`, `Remove Status`, `Consume Status`, `Detonate Status`, `Gather Status`, `Transfer Statuses`, `Restore Max HP Lost To Status`, `Deal Damage`, `Heal`, `Grant Armor`, `Grant Battle Armor`, `Grant Energy Shield`, `Disable Armor`, `Delay Action`, `Hasten Action`, `Hasten Action For Battle`, `Fortify Damage`, `Redirect Enemy Attacks`, `Add Attack Damage`, `Modify Stat`, `Modify Counter`, `Reset Counter`, `Seal Next Attack`, `Prevent Request`, `Execute Target`, `Begin Enemy Action Healing`, `Prepare Base Attack`
+- `effect_type` (`String enum`): `Gain Armor`, `Bonus Damage`, `Reduce Target Armor`, `Heal Self`, `Damage Killer`, `Increase Max HP`, `Apply Status`, `Maintain Status Aura`, `Replace Requested Status`, `Remove Status`, `Consume Status`, `Detonate Status`, `Gather Status`, `Transfer Statuses`, `Restore Max HP Lost To Status`, `Deal Damage`, `Heal`, `Grant Armor`, `Grant Battle Armor`, `Grant Energy Shield`, `Disable Armor`, `Delay Action`, `Apply Haste`, `Increase Action Speed For Battle`, `Fortify Damage`, `Redirect Enemy Attacks`, `Add Attack Damage`, `Modify Stat`, `Modify Counter`, `Reset Counter`, `Seal Next Attack`, `Prevent Request`, `Execute Target`, `Begin Enemy Action Healing`, `Prepare Base Attack`
 - `status_id` (`String`): required for `Apply Status` and `Specific Status` removal; references a `statuses[].id`.
 - `condition_status_id` (`String`): status matched by `Applied Status Matches`, independently of any status applied by the effect.
 - `amount_status_id` (`String`): optional status read by status-based amount formulas. Falls back to `status_id`.
@@ -157,17 +157,18 @@ Optional fields:
 - `modified_stat` (`String enum`): `Max HP`, `Physical Damage`, `Magic Damage`, `Armor`, `Action Speed`.
 - `modifier_mode` (`String enum`): `Temporary Flat`, `Dynamic Percent`. Dynamic modifiers replace their previous contribution whenever `Battle State Changed` reevaluates them.
 - `modifier_direction` (`String enum`): `Increase`, `Decrease`; controls the sign of temporary and dynamic modifiers.
-- `modifier_duration_turns` (`int`, default `1`): target completed actions before a temporary modifier or `Hasten Action` contribution expires.
-- `amount_source` (`String enum`): `Fixed`, `Target Current HP`, `Target Max HP`, `Target Max HP Times Event Status Stacks`, `Target Recent Damage`, `Target Ailment Stacks`, `Target Unique Boons`, `Target Status Stacks`, `Event Target Status Stacks`, `Defeated Target Status Stacks`, `Applied Status Stacks`, `Total Status Stacks On Selected Group`, `Total Status Max HP Loss On Selected Group`, `Target Pending Status Damage`, `Target Action Speed`, `Event Amount`, `Overhealing`, `Overhealing Diminishing`, `Owner Counter`, `Target Counter`.
+- `modifier_duration_turns` (`int`, default `1`): target completed actions before a temporary modifier or `Apply Haste` contribution expires.
+- `amount_source` (`String enum`): `Fixed`, `Target Current HP`, `Target Max HP`, `Target Max HP Times Event Status Stacks`, `Target Recent Damage`, `Target Damage Taken Within Interval`, `Total Allied Magic Damage Taken Within Interval`, `Target Predicted Next Action Damage`, `Target Ailment Stacks`, `Target Unique Boons`, `Target Status Stacks`, `Event Target Status Stacks`, `Defeated Target Status Stacks`, `Applied Status Stacks`, `Total Status Stacks On Selected Group`, `Total Status Max HP Loss On Selected Group`, `Target Pending Status Damage`, `Target Action Speed`, `Event Amount`, `Overhealing`, `Overhealing Diminishing`, `Owner Counter`, `Target Counter`.
 - `amount_rounding` (`String enum`): `Floor`, `Ceil`; controls formula rounding after multiplier and divisor scaling.
 - `amount_target_selector` (`String enum`): `Self`, `All Units`, `Allied Units`, `Enemy Units`; selects the units aggregated by `Total Status Stacks On Selected Group`.
 - `counter_name` (`String`): required by counter sources, `Modify Counter`, `Reset Counter`, and `Overhealing Diminishing`.
 - `counter_threshold` (`int`, default `1`): used by counter-threshold conditions and `Event Count At Least`.
 - `amount_multiplier` / `amount_divisor` (`int`, minimum `1`): scale the selected amount source after it is read.
+- `interval_time` (`int`, minimum `1`, default `10`): inclusive discrete timeline interval used by interval-based damage amount sources.
 - `amount` (`int`)
 - `damage_type` (`String enum`): `Magic`, `Physical`. Physical authored damage passes through armor and physical-damage hooks such as Frost.
 - `threshold_percent` (`int`, 1-100): used by HP threshold conditions and `Execute Target`.
-- `max_action_speed_percent` (`int`, default `200`): maximum percentage of finalized encounter-start speed allowed by `Hasten Action`.
+- `max_action_speed_percent` (`int`, default `200`): maximum percentage of finalized encounter-start speed allowed by `Apply Haste`.
 - `once_per_battle` (`bool`)
 - `ignore_events_from_same_effect_source` (`bool`, default `false`): prevents an effect from responding to events produced by the same named authored source.
 - `repeat_within_event_chain` (`bool`, default `false`): allows the effect to respond separately to multiple matching events in one causal chain. Use narrowly for mechanics such as responding to every hit of a multi-hit attack.
@@ -192,8 +193,8 @@ Currently implemented item effect combinations:
 - `Grant Energy Shield` adds to an uncapped combat-long pool. Energy Shield absorbs magic damage before HP; physical damage bypasses it.
 - `Disable Armor` makes every stored, temporary, and battle-local armor contribution provide zero mitigation for the rest of the battle.
 - `Delay Action` increases the target's next scheduled action time.
-- `Hasten Action` raises action speed and proportionally shortens remaining time until the next action. It stacks only to `max_action_speed_percent` of encounter-start speed and expires after `modifier_duration_turns` completed actions.
-- `Hasten Action For Battle` permanently raises action speed and proportionally shortens remaining time for the encounter.
+- `Apply Haste` grants temporary Haste, raising action speed and proportionally shortening remaining time until the next action. It stacks only to `max_action_speed_percent` of encounter-start speed and expires after `modifier_duration_turns` completed actions.
+- `Increase Action Speed For Battle` permanently raises action speed and proportionally shortens remaining time for the encounter. It is not temporary Haste.
 - Every action-speed increase obeys the global cap of 200% of encounter-start speed. Slows do not lower this cap.
 - `Fortify Damage` prevents incoming damage, pools it, and distributes the complete pool across the target's next `modifier_duration_turns` completed actions. Deferred ticks cannot be deferred again.
 - `Redirect Enemy Attacks` makes enemy attacks aimed at another allied unit target the selected unit until it completes `modifier_duration_turns` actions.
@@ -211,6 +212,9 @@ Currently implemented item effect combinations:
 - `Enemy Status Applied` observes statuses gained by opposing units. `Applied Status Stacks` is the number of stacks actually added, excluding refreshes and stacks blocked by caps.
 - `Ailment Damaged` observes positive HP damage tagged as caused by an ailment. Absorbed or prevented damage does not qualify. Rot qualifies only when its maximum-HP reduction also lowers current HP.
 - `Target Recent Damage` reads actual HP damage from the target's current unfinished action window plus its immediately preceding completed-action window.
+- `Target Damage Taken Within Interval` reads actual HP loss suffered by the target since `current_time - interval_time`, inclusive.
+- `Total Allied Magic Damage Taken Within Interval` totals actual magic HP loss suffered by the effect owner's team over the same inclusive interval. Prevented damage, Energy Shield absorption, and overkill do not inflate it.
+- `Target Predicted Next Action Damage` isolates the current combat state, executes the target's deterministic next action, and totals actual HP damage sourced by that target. Prediction does not mutate real combat and nested prediction resolves as zero.
 - Defeat events preserve status snapshots. `Defeated Target Status Stacks` reads those snapshots after the defeated unit can no longer act.
 - `Externally Sourced Status Applied` observes statuses gained by the effect owner from any other unit, allowing `Applied Status Matches` to narrow the observed status.
 - `Ally Overhealed` observes positive overhealing caused by the effect owner on another allied unit. `Random Damaged Allied Unit` selects from all damaged living units on the owner's team, including the owner.
@@ -275,7 +279,8 @@ Currently implemented skill actions:
 Optional fields:
 - `display_name` (`String`)
 - `tags` (`Array[String]`)
-- `passive_type` (`String enum`): `None`, `Attack Damage Bonus`, `Heal Bonus`, `Guard Armor Bonus`, `Forecast`
+- `passive_type` (`String enum`): `None`, `Attack Damage Bonus`, `Heal Bonus`, `Guard Armor Bonus`, `Forecast`, `Extend Allied Buff Duration`
+- `Extend Allied Buff Duration` uses `amount` as a percentage. The strongest living allied copy applies once to finite naturally-elapsing Boons, positive temporary stat modifiers, and temporary Haste from any source. It does not alter transferred existing durations or battle-long action-speed increases.
 - `amount` (`int`)
 - `cooldown_turns` (`int`): unit-turn cooldown after the passive fires. `0` means no cooldown.
 - `effects` (`Array[Dictionary]`): shared triggered effects using the same vocabulary as item effects.
@@ -287,7 +292,7 @@ Optional fields:
 Optional fields:
 - `display_name` (`String`)
 - `tags` (`Array[String]`)
-- `trigger` (`String enum`): `Damaged`, `Physically Damaged`, `Magically Damaged`, `HP Below Threshold`, `Lethal Physical Attack Requested`, `Attack Targets Another Ally`, `Status Application Requested`, `Enemy Healing Requested`, `Enemy Status Threshold Reached`, `Enemy Died With Status`
+- `trigger` (`String enum`): `Damaged`, `Physically Damaged`, `Magically Damaged`, `Ally Magically Damaged`, `HP Below Threshold`, `Lethal Physical Attack Requested`, `Attack Targets Another Ally`, `Status Application Requested`, `Ally Ailment Applied`, `Enemy Healing Requested`, `Enemy Status Threshold Reached`, `Enemy Died With Status`
 - `condition` (`String enum`): `Always`, `Self HP Below Percent`, `Self Status Stacks At Least`, `Requested Status Is Ailment`, `Requested Status Matches`
 - `reaction_type` (`String enum`): `Gain Armor`, `Heal Self`, `Damage Attacker`, `Effects Only`
 - `amount` (`int`)
@@ -303,6 +308,8 @@ Currently implemented reaction timing:
 - `Damaged` reacts to any actual damage, while `Physically Damaged` and `Magically Damaged` require a positive dealt component of that type.
 - `HP Below Threshold` fires only when damage crosses from above `threshold_percent` maximum HP to at or below it.
 - `Enemy Status Threshold Reached` checks whenever an enemy gains the reaction's referenced status and fires while that enemy has at least `status_stack_threshold` stacks.
+- `Ally Ailment Applied` fires after an ailment successfully applies to any living ally, including the reaction owner. Prevented applications do not fire it.
+- `Ally Magically Damaged` fires after any living ally, including the reaction owner, suffers positive magic HP damage.
 - `Enemy Died With Status` checks the defeated enemy's preserved status snapshot and requires the reaction's referenced status.
 - `Enemy Healing Requested` checks before an opposing unit receives healing. Request-preventing reactions can replace that heal through their `Reaction Triggered` effects.
 - `Lethal Physical Attack Requested` checks the final pending attack damage after armor and request modifiers. Its `Reaction Triggered` effects inherit the pending damage amount, and request prevention cancels that damage.

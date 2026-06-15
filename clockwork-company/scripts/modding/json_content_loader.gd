@@ -39,8 +39,8 @@ const ITEM_SLOT_VALUES := {"Weapon": true, "Armor": true, "Helmet": true, "Trink
 const EFFECT_TRIGGER_VALUES := {"Battle Start": true, "Battle State Changed": true, "Turn Start": true, "Turn Complete": true, "Action Completed": true, "Skill Used": true, "Skill Completed": true, "Attack": true, "Consecutive Attack": true, "Enemy Attack Targeted": true, "Hit": true, "Kill": true, "Death": true, "Ailment Damaged": true, "Damaged": true, "Physically Damaged": true, "Magically Damaged": true, "HP Below Threshold": true, "Damage Requested": true, "Healing Requested": true, "Healing Received": true, "Ally Overhealed": true, "Reaction Requested": true, "Status Application Requested": true, "Status Removal Requested": true, "Status Applied": true, "Externally Sourced Status Applied": true, "Enemy Status Applied": true, "Status Removed": true, "Reaction Triggered": true}
 const EFFECT_CONDITION_VALUES := {"Always": true, "Event Source Is Not Owner": true, "Owner Is Unarmed": true, "Event Count At Least": true, "Self HP Below Percent": true, "Target Has Tag": true, "Target Missing Tag": true, "Target Status Stacks At Least": true, "Target Pending Status Damage At Least HP": true, "Owner Counter At Least": true, "Target Counter At Least": true, "Requested Status Matches": true, "Applied Status Matches": true}
 const EFFECT_TARGET_VALUES := {"Self": true, "Event Source": true, "Event Target": true, "Attack Target": true, "Attacker": true, "Killer": true, "All Units": true, "Allied Units": true, "Enemy Units": true, "Lowest HP Allied Unit": true, "Random Allied Unit": true, "Random Damaged Allied Unit": true, "Random Enemy Unit": true}
-const EFFECT_TYPE_VALUES := {"Gain Armor": true, "Bonus Damage": true, "Reduce Target Armor": true, "Heal Self": true, "Damage Killer": true, "Increase Max HP": true, "Apply Status": true, "Maintain Status Aura": true, "Replace Requested Status": true, "Remove Status": true, "Consume Status": true, "Detonate Status": true, "Gather Status": true, "Transfer Statuses": true, "Restore Max HP Lost To Status": true, "Deal Damage": true, "Heal": true, "Grant Armor": true, "Grant Battle Armor": true, "Grant Energy Shield": true, "Disable Armor": true, "Delay Action": true, "Hasten Action": true, "Hasten Action For Battle": true, "Fortify Damage": true, "Redirect Enemy Attacks": true, "Add Attack Damage": true, "Modify Stat": true, "Modify Counter": true, "Reset Counter": true, "Seal Next Attack": true, "Prevent Request": true, "Execute Target": true, "Begin Enemy Action Healing": true, "Prepare Base Attack": true}
-const EFFECT_AMOUNT_SOURCE_VALUES := {"Fixed": true, "Target Current HP": true, "Target Max HP": true, "Target Max HP Times Event Status Stacks": true, "Target Recent Damage": true, "Target Ailment Stacks": true, "Target Unique Boons": true, "Target Status Stacks": true, "Event Target Status Stacks": true, "Defeated Target Status Stacks": true, "Applied Status Stacks": true, "Total Status Stacks On Selected Group": true, "Total Status Max HP Loss On Selected Group": true, "Target Pending Status Damage": true, "Target Action Speed": true, "Event Amount": true, "Overhealing": true, "Overhealing Diminishing": true, "Owner Counter": true, "Target Counter": true}
+const EFFECT_TYPE_VALUES := {"Gain Armor": true, "Bonus Damage": true, "Reduce Target Armor": true, "Heal Self": true, "Damage Killer": true, "Increase Max HP": true, "Apply Status": true, "Maintain Status Aura": true, "Replace Requested Status": true, "Remove Status": true, "Consume Status": true, "Detonate Status": true, "Gather Status": true, "Transfer Statuses": true, "Restore Max HP Lost To Status": true, "Deal Damage": true, "Heal": true, "Grant Armor": true, "Grant Battle Armor": true, "Grant Energy Shield": true, "Disable Armor": true, "Delay Action": true, "Apply Haste": true, "Increase Action Speed For Battle": true, "Fortify Damage": true, "Redirect Enemy Attacks": true, "Add Attack Damage": true, "Modify Stat": true, "Modify Counter": true, "Reset Counter": true, "Seal Next Attack": true, "Prevent Request": true, "Execute Target": true, "Begin Enemy Action Healing": true, "Prepare Base Attack": true}
+const EFFECT_AMOUNT_SOURCE_VALUES := {"Fixed": true, "Target Current HP": true, "Target Max HP": true, "Target Max HP Times Event Status Stacks": true, "Target Recent Damage": true, "Target Damage Taken Within Interval": true, "Total Allied Magic Damage Taken Within Interval": true, "Target Predicted Next Action Damage": true, "Target Ailment Stacks": true, "Target Unique Boons": true, "Target Status Stacks": true, "Event Target Status Stacks": true, "Defeated Target Status Stacks": true, "Applied Status Stacks": true, "Total Status Stacks On Selected Group": true, "Total Status Max HP Loss On Selected Group": true, "Target Pending Status Damage": true, "Target Action Speed": true, "Event Amount": true, "Overhealing": true, "Overhealing Diminishing": true, "Owner Counter": true, "Target Counter": true}
 const EFFECT_AMOUNT_ROUNDING_VALUES := {"Floor": true, "Ceil": true}
 const EFFECT_AMOUNT_TARGET_VALUES := {"Self": true, "All Units": true, "Allied Units": true, "Enemy Units": true}
 const EFFECT_MODIFIER_MODE_VALUES := {"Temporary Flat": true, "Dynamic Percent": true}
@@ -55,13 +55,13 @@ const SKILL_ATTACK_DAMAGE_TYPE_VALUES := {"Physical": true, "Magic": true, "Spli
 const STATUS_POLARITY_VALUES := {"Boon": true, "Ailment": true}
 const STATUS_TYPE_VALUES := {"Confusion": true, "Reconstitution": true, "Regeneration": true, "Bleed": true, "Burning": true, "Numb": true, "Frost": true, "Ward": true, "Rot": true, "Renewal": true}
 const STATUS_STACKING_RULE_VALUES := {"Ignore": true, "Refresh": true, "Intensify": true}
-const PASSIVE_TYPE_VALUES := {"None": true, "Attack Damage Bonus": true, "Heal Bonus": true, "Guard Armor Bonus": true, "Forecast": true}
-const REACTION_TRIGGER_VALUES := {"Damaged": true, "Physically Damaged": true, "Magically Damaged": true, "HP Below Threshold": true, "Lethal Physical Attack Requested": true, "Attack Targets Another Ally": true, "Status Application Requested": true, "Enemy Healing Requested": true, "Enemy Status Threshold Reached": true, "Enemy Died With Status": true}
+const PASSIVE_TYPE_VALUES := {"None": true, "Attack Damage Bonus": true, "Heal Bonus": true, "Guard Armor Bonus": true, "Forecast": true, "Extend Allied Buff Duration": true}
+const REACTION_TRIGGER_VALUES := {"Damaged": true, "Physically Damaged": true, "Magically Damaged": true, "Ally Magically Damaged": true, "HP Below Threshold": true, "Lethal Physical Attack Requested": true, "Attack Targets Another Ally": true, "Status Application Requested": true, "Ally Ailment Applied": true, "Enemy Healing Requested": true, "Enemy Status Threshold Reached": true, "Enemy Died With Status": true}
 const REACTION_CONDITION_VALUES := {"Always": true, "Self HP Below Percent": true, "Self Status Stacks At Least": true, "Requested Status Is Ailment": true, "Requested Status Matches": true}
 const REACTION_TYPE_VALUES := {"Gain Armor": true, "Heal Self": true, "Damage Attacker": true, "Effects Only": true}
 const ANCESTRY_FEATURE_TRIGGER_VALUES := {"Battle Start": true, "Attack": true, "Kill": true, "Damaged": true, "HP Below Threshold": true}
 const ANCESTRY_FEATURE_CONDITION_VALUES := {"Always": true, "Self HP Below Percent": true}
-const ANCESTRY_FEATURE_TYPE_VALUES := {"Gain Armor": true, "Bonus Damage": true, "Heal Self": true, "Damage Attacker": true, "Hasten Self": true, "Gain Physical Damage": true}
+const ANCESTRY_FEATURE_TYPE_VALUES := {"Gain Armor": true, "Bonus Damage": true, "Heal Self": true, "Damage Attacker": true, "Increase Own Action Speed": true, "Gain Physical Damage": true}
 const TACTIC_CONDITION_VALUES := {"Always": true, "Self HP Below Half": true, "Ally HP Below Half": true, "Enemy Alive": true, "Target Has Status": true, "Target Status Stacks At Least": true, "Target Pending Status Damage At Least HP": true, "Target Slower Than Self": true}
 const TACTIC_ACTION_VALUES := {"Attack": true, "Heal": true, "Guard": true, "Job Skill": true, "Assigned Skill": true}
 const TACTIC_TARGET_VALUES := {"Self": true, "Lowest HP Ally": true, "Lowest HP Ally With Status": true, "Frontmost Enemy": true}
@@ -589,7 +589,7 @@ static func _effect_support_error(effect: Dictionary) -> String:
 		return "Requested Status Matches requires a status request trigger"
 	if effect.get("condition", "") == "Applied Status Matches" and not trigger in ["Status Applied", "Externally Sourced Status Applied", "Enemy Status Applied"]:
 		return "Applied Status Matches requires a status-applied trigger"
-	if effect_type in ["Apply Status", "Maintain Status Aura", "Replace Requested Status", "Remove Status", "Consume Status", "Detonate Status", "Gather Status", "Transfer Statuses", "Restore Max HP Lost To Status", "Deal Damage", "Heal", "Grant Armor", "Grant Battle Armor", "Grant Energy Shield", "Disable Armor", "Delay Action", "Hasten Action", "Hasten Action For Battle", "Fortify Damage", "Redirect Enemy Attacks", "Add Attack Damage", "Modify Stat", "Modify Counter", "Reset Counter", "Seal Next Attack", "Prevent Request", "Execute Target", "Begin Enemy Action Healing", "Prepare Base Attack"]:
+	if effect_type in ["Apply Status", "Maintain Status Aura", "Replace Requested Status", "Remove Status", "Consume Status", "Detonate Status", "Gather Status", "Transfer Statuses", "Restore Max HP Lost To Status", "Deal Damage", "Heal", "Grant Armor", "Grant Battle Armor", "Grant Energy Shield", "Disable Armor", "Delay Action", "Apply Haste", "Increase Action Speed For Battle", "Fortify Damage", "Redirect Enemy Attacks", "Add Attack Damage", "Modify Stat", "Modify Counter", "Reset Counter", "Seal Next Attack", "Prevent Request", "Execute Target", "Begin Enemy Action Healing", "Prepare Base Attack"]:
 		return ""
 	if trigger == "Battle Start" and effect_type == "Gain Armor" and target == "Self":
 		return ""
@@ -646,6 +646,7 @@ static func _validate_formula_fields(data: Dictionary, effect: Dictionary, label
 	assert(int(effect.get("counter_threshold", 1)) >= 1, "Counter threshold must be at least 1 for %s" % label)
 	assert(int(effect.get("amount_multiplier", 1)) >= 1, "Amount multiplier must be at least 1 for %s" % label)
 	assert(int(effect.get("amount_divisor", 1)) >= 1, "Amount divisor must be at least 1 for %s" % label)
+	assert(int(effect.get("interval_time", 10)) >= 1, "Interval time must be at least 1 for %s" % label)
 	assert(int(effect.get("max_action_speed_percent", 200)) >= 100, "Maximum action speed percent must be at least 100 for %s" % label)
 
 
@@ -835,6 +836,7 @@ static func _build_effect_resources(effects_data: Array, statuses_by_id: Diction
 		effect.counter_threshold = int(src.get("counter_threshold", 1))
 		effect.amount_multiplier = int(src.get("amount_multiplier", 1))
 		effect.amount_divisor = int(src.get("amount_divisor", 1))
+		effect.interval_time = int(src.get("interval_time", 10))
 		effect.amount = int(src.get("amount", 0))
 		effect.damage_type = String(src.get("damage_type", "Magic"))
 		effect.threshold_percent = int(src.get("threshold_percent", 50))
@@ -982,6 +984,7 @@ static func _effect_resources_to_data(effects: Array[EffectDefinition]) -> Array
 			"counter_threshold": effect.counter_threshold,
 			"amount_multiplier": effect.amount_multiplier,
 			"amount_divisor": effect.amount_divisor,
+			"interval_time": effect.interval_time,
 			"amount": effect.amount,
 			"damage_type": effect.damage_type,
 			"threshold_percent": effect.threshold_percent,

@@ -14,7 +14,7 @@ const FEATURE_GAIN_ARMOR := "Gain Armor"
 const FEATURE_BONUS_DAMAGE := "Bonus Damage"
 const FEATURE_HEAL_SELF := "Heal Self"
 const FEATURE_DAMAGE_ATTACKER := "Damage Attacker"
-const FEATURE_HASTEN_SELF := "Hasten Self"
+const FEATURE_INCREASE_OWN_ACTION_SPEED := "Increase Own Action Speed"
 const FEATURE_GAIN_PHYSICAL_DAMAGE := "Gain Physical Damage"
 
 
@@ -86,7 +86,7 @@ static func _apply_feature(log, parent_entry_id: int, owner, other, feature, con
 			StatusResolverScript.record_damage(other, previous_other_hp - other.hp)
 			var damage_event := CombatEventsScript.ancestry_feature(owner, feature.display_name, "%s HP %d -> %d" % [other.unit_name, previous_other_hp, other.hp])
 			log.add_event("Ancestry feature %s: %s HP %d -> %d." % [feature.display_name, other.unit_name, previous_other_hp, other.hp], damage_event["event_type"], -1, parent_entry_id, damage_event["payload"], damage_event["tags"])
-	elif feature.feature_type == FEATURE_HASTEN_SELF:
+	elif feature.feature_type == FEATURE_INCREASE_OWN_ACTION_SPEED:
 		var previous_speed: int = owner.action_speed
 		var speed_cap: int = maxi(1, floori(float(owner.base_action_speed * owner.action_speed_cap_percent) / 100.0))
 		owner.action_speed = min(speed_cap, owner.action_speed + feature.amount)

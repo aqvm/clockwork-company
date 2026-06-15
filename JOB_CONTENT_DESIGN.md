@@ -266,7 +266,7 @@ None required for the current concept. Use:
 
 - `attack_count = 2` plus a `Skill Completed` `Delay Action` effect
 - `Attack Targets Another Ally` for interception
-- a `Physically Damaged` `Hasten Action` effect with a 50% floor, two or three
+- a `Physically Damaged` `Apply Haste` effect with a 50% floor, two or three
   completed-action duration, and `repeat_within_event_chain = true`
 - `Target Current HP` for the bridge action
 
@@ -412,7 +412,7 @@ tempo, recovery, and magic protection.
 ### Intended Recipe
 
 - Action: apply Bleed independently to an enemy and `Self`.
-- Passive: `Ailment Damaged` + `Hasten Action For Battle` on `Self` for a
+- Passive: `Ailment Damaged` + `Increase Action Speed For Battle` on `Self` for a
   fixed amount per positive ailment-damage event.
 - Reaction:
   - `Enemy Died With Status`, referencing Bleed.
@@ -440,3 +440,57 @@ physical damage bypasses it. Repeated grants add together.
 action window and the immediately preceding completed-action window. The
 bleeding-ally selector includes the acting unit and returns no target when no
 living ally has the referenced status.
+
+## Bard
+
+Identity: a pure global support who improves allied tempo, protection, healing,
+and the duration of buffs from the whole team.
+
+### Intended Recipe
+
+- Stat growth: HP and action speed, with no physical- or magic-damage growth.
+- Action: `Effects Only` with `Skill Used` + `Apply Haste` on `Allied Units`.
+- Reaction: `Ally Ailment Applied`, `Effects Only`, cooldown 3, followed by
+  `Reaction Triggered` + `Apply Status` Ward on `Allied Units`.
+- Bridge action: `Effects Only` with `Skill Used` + `Apply Status`
+  Regeneration on `Allied Units`.
+- Passive: `Extend Allied Buff Duration`, with `amount` as the percentage.
+
+### Important Interactions
+
+The duration passive is global across the passive owner's living team,
+including buffs supplied by other units. If multiple allied copies are active,
+only the strongest percentage applies. Finite naturally-elapsing Boons,
+positive temporary stat modifiers, and temporary Haste qualify. Permanent or
+non-elapsing statuses such as Ward, debuffs, transferred existing durations,
+and battle-long action-speed increases do not.
+
+`Ally Ailment Applied` observes only successful applications. Ward prevention
+therefore does not recursively trigger the reaction.
+
+## Chronomancer
+
+Identity: a predictive support mage who rewinds recent harm, protects the team
+against repeated magic damage, and weaponizes an enemy's deterministic future.
+
+### Intended Recipe
+
+- Passive: `Forecast`.
+- Action: `Effects Only` with `Skill Used` + `Heal` on `Event Target`, using
+  `Target Damage Taken Within Interval`.
+- Reaction: `Ally Magically Damaged`, `Effects Only`, with
+  `Reaction Triggered` + `Grant Energy Shield` on `Allied Units`, using
+  `Total Allied Magic Damage Taken Within Interval` divided by 2.
+- Bridge action: `Effects Only` with `Skill Used` + `Deal Damage` on
+  `Event Target`, using `Target Predicted Next Action Damage`.
+
+### Important Interactions
+
+Interval formulas use inclusive discrete timeline time rather than real-time
+seconds. They count actual HP loss, so prevention, Energy Shield absorption,
+and overkill do not inflate them. Healing does not erase recorded damage.
+
+Next-action projection clones the current combat state, executes the target's
+normal deterministic next action, and totals actual HP damage sourced by that
+target. The real state remains unchanged. Nested prediction during that
+projected action resolves as zero to prevent recursive forecast loops.

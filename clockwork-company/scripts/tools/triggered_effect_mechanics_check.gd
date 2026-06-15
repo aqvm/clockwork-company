@@ -87,7 +87,7 @@ func _init() -> void:
 	var formula_probe: ItemDefinition = json_content["items"].get("formula_counter_probe_it", null)
 	assert(formula_probe != null and formula_probe.effects.size() == 2, "JSON should reconstruct formula/counter probe effects.")
 	assert(formula_probe.effects[0].repeat_within_event_chain, "JSON should preserve opt-in repeated resolution within one event chain.")
-	assert(formula_probe.effects[1].counter_threshold == 2 and formula_probe.effects[1].amount_source == "Target Counter" and formula_probe.effects[1].amount_multiplier == 2, "JSON should preserve counter thresholds and formula scaling fields.")
+	assert(formula_probe.effects[1].counter_threshold == 2 and formula_probe.effects[1].amount_source == "Target Counter" and formula_probe.effects[1].amount_multiplier == 2 and formula_probe.effects[1].interval_time == 12, "JSON should preserve counter thresholds, interval time, and formula scaling fields.")
 	var skill := SkillDefinition.new()
 	skill.display_name = "Cleanse Lesson"
 	skill.action = "Effects Only"
@@ -618,7 +618,7 @@ func _init() -> void:
 	rapid_attacker.next_action_time = 5
 	var momentum := PassiveDefinition.new()
 	momentum.display_name = "Punishing Momentum"
-	var physical_haste := _effect("Physically Damaged", "Hasten Action", "Self", 2)
+	var physical_haste := _effect("Physically Damaged", "Apply Haste", "Self", 2)
 	physical_haste.modifier_duration_turns = 3
 	physical_haste.max_action_speed_percent = 200
 	physical_haste.repeat_within_event_chain = true
@@ -952,7 +952,7 @@ func _init() -> void:
 	sanguinist.next_action_time = 20
 	var blood_rush := PassiveDefinition.new()
 	blood_rush.display_name = "Blood Rush"
-	blood_rush.effects.append(_effect("Ailment Damaged", "Hasten Action For Battle", "Self", 2))
+	blood_rush.effects.append(_effect("Ailment Damaged", "Increase Action Speed For Battle", "Self", 2))
 	sanguinist.current_passive = blood_rush
 	var blood_source = _unit("Blood Source", "Enemies")
 	var blood_context = _context([sanguinist, blood_source], log)
@@ -1014,7 +1014,7 @@ func _init() -> void:
 	rot_victim.add_status(RotStatus, "test", 3, false)
 	var rot_haste := PassiveDefinition.new()
 	rot_haste.display_name = "Rot Rush"
-	rot_haste.effects.append(_effect("Ailment Damaged", "Hasten Action For Battle", "Self", 1))
+	rot_haste.effects.append(_effect("Ailment Damaged", "Increase Action Speed For Battle", "Self", 1))
 	rot_victim.current_passive = rot_haste
 	rot_victim.base_action_speed = 10
 	rot_victim.action_speed = 10
@@ -1026,6 +1026,120 @@ func _init() -> void:
 	rot_victim.hp = rot_victim.max_hp - 1
 	rot_context.apply_healing(rot_victim, rot_victim, 1, -1, root_log_id, ["healing"])
 	assert(rot_victim.action_speed == 11, "Rot should count as ailment damage when max-HP loss also lowers current HP.")
+
+	var bard = _unit("Bard", "Allies")
+	var stronger_bard = _unit("Stronger Bard", "Allies")
+	var supported_ally = _unit("Supported Ally", "Allies")
+	var outside_enemy = _unit("Outside Enemy", "Enemies")
+	var lingering_song := PassiveDefinition.new()
+	lingering_song.display_name = "Lingering Song"
+	lingering_song.passive_type = "Extend Allied Buff Duration"
+	lingering_song.amount = 25
+	bard.current_passive = lingering_song
+	var stronger_song := PassiveDefinition.new()
+	stronger_song.display_name = "Stronger Lingering Song"
+	stronger_song.passive_type = "Extend Allied Buff Duration"
+	stronger_song.amount = 50
+	stronger_bard.current_passive = stronger_song
+	var bard_reaction := ReactionDefinition.new()
+	bard_reaction.display_name = "Protective Chorus"
+	bard_reaction.trigger = "Ally Ailment Applied"
+	bard_reaction.reaction_type = "Effects Only"
+	bard_reaction.cooldown_turns = 3
+	bard_reaction.effects.append(_effect("Reaction Triggered", "Apply Status", "Allied Units", 0, WardStatus))
+	bard.current_reaction = bard_reaction
+	var bard_context = _context([bard, stronger_bard, supported_ally, outside_enemy], log)
+	assert(StatusResolverScript.apply_status(log, root_log_id, supported_ally, RegenerationStatus, "External Support", 3, false, bard_context, stronger_bard))
+	assert(int(supported_ally.status_instance("Regeneration").get("remaining_turns", 0)) == 5, "The strongest living allied duration passive should globally extend a cross-source finite Boon once, rounded up.")
+	assert(StatusResolverScript.apply_status(log, root_log_id, outside_enemy, RegenerationStatus, "Enemy Support", 3, false, bard_context, outside_enemy))
+	assert(int(outside_enemy.status_instance("Regeneration").get("remaining_turns", 0)) == 3, "Allied duration passives should not extend enemy buffs.")
+	assert(StatusResolverScript.apply_status(log, root_log_id, supported_ally, WardStatus, "External Support", 3, false, bard_context, stronger_bard))
+	assert(int(supported_ally.status_instance("Ward").get("remaining_turns", 0)) == 3, "Non-elapsing Boons such as Ward should not be duration-extended.")
+	var bard_item := ItemDefinition.new()
+	bard_item.display_name = "External Tempo"
+	var allied_power := _effect("Battle Start", "Modify Stat", "Allied Units", 2)
+	allied_power.modified_stat = "Physical Damage"
+	allied_power.modifier_duration_turns = 2
+	bard_item.effects.append(allied_power)
+	var allied_haste := _effect("Battle Start", "Apply Haste", "Allied Units", 2)
+	allied_haste.modifier_duration_turns = 2
+	bard_item.effects.append(allied_haste)
+	stronger_bard.equipped_items.append(bard_item)
+	bard_context.publish("battle_started", null, null, {}, -1, root_log_id)
+	assert(int(supported_ally.temporary_modifiers[0].get("remaining_turns", 0)) == 3, "Positive temporary stat buffs should receive global allied duration extension.")
+	assert(int(supported_ally.temporary_modifiers[1].get("remaining_turns", 0)) == 3, "Temporary Haste should receive global allied duration extension.")
+	supported_ally.remove_status(WardStatus.display_name)
+	assert(StatusResolverScript.apply_status(log, root_log_id, supported_ally, BleedStatus, "Enemy Ailment", 3, false, bard_context, outside_enemy))
+	assert(bard.has_status("Ward") and stronger_bard.has_status("Ward") and supported_ally.has_status("Ward"), "An allied successful ailment application should let the Bard grant Ward to all allies.")
+	assert(bard_context.events_of_type("reaction_triggered").size() == 1, "One successful multi-target Ward reaction should fire once for the triggering ailment.")
+	assert(not StatusResolverScript.apply_status(log, root_log_id, supported_ally, RotStatus, "Blocked Ailment", 3, false, bard_context, outside_enemy), "Ward should prevent the next ailment before it can retrigger the Bard reaction.")
+	assert(bard_context.events_of_type("reaction_triggered").size() == 1, "Prevented ailment applications should not trigger Ally Ailment Applied.")
+
+	var chronomancer = _unit("Chronomancer", "Allies")
+	var rewind_target = _unit("Rewind Target", "Allies")
+	var time_enemy = _unit("Time Enemy", "Enemies")
+	var rewind_context = _context([chronomancer, rewind_target, time_enemy], log)
+	rewind_context.publish("turn_started", time_enemy, time_enemy, {"time": 5}, -1, root_log_id)
+	rewind_context.apply_direct_damage(time_enemy, rewind_target, 4, -1, root_log_id, ["attack"])
+	rewind_context.publish("turn_started", time_enemy, time_enemy, {"time": 12}, -1, root_log_id)
+	rewind_context.apply_physical_damage(time_enemy, rewind_target, 3, -1, root_log_id, ["attack"])
+	rewind_context.publish("turn_started", chronomancer, chronomancer, {"time": 16}, -1, root_log_id)
+	rewind_context.apply_direct_damage(time_enemy, rewind_target, 2, -1, root_log_id, ["attack"])
+	var rewind := SkillDefinition.new()
+	rewind.display_name = "Rewind"
+	rewind.action = "Effects Only"
+	var rewind_heal := _effect("Skill Used", "Heal", "Event Target")
+	rewind_heal.amount_source = "Target Damage Taken Within Interval"
+	rewind_heal.interval_time = 10
+	rewind.effects.append(rewind_heal)
+	chronomancer.current_skill = rewind
+	CombatSimulatorScript.new()._resolve_skill(rewind_context, log, root_log_id, chronomancer, rewind_target, rewind, "job skill")
+	assert(rewind_target.hp == 16, "Rewind should heal actual HP damage within the inclusive timeline interval and exclude older damage.")
+
+	var shield_chronomancer = _unit("Shield Chronomancer", "Allies")
+	var shielded_ally = _unit("Shielded Ally", "Allies")
+	var magic_enemy = _unit("Magic Enemy", "Enemies")
+	var temporal_shield := ReactionDefinition.new()
+	temporal_shield.display_name = "Temporal Shield"
+	temporal_shield.trigger = "Ally Magically Damaged"
+	temporal_shield.reaction_type = "Effects Only"
+	temporal_shield.cooldown_turns = 3
+	var team_shield := _effect("Reaction Triggered", "Grant Energy Shield", "Allied Units")
+	team_shield.amount_source = "Total Allied Magic Damage Taken Within Interval"
+	team_shield.amount_divisor = 2
+	team_shield.interval_time = 10
+	temporal_shield.effects.append(team_shield)
+	shield_chronomancer.current_reaction = temporal_shield
+	var temporal_context = _context([shield_chronomancer, shielded_ally, magic_enemy], log)
+	temporal_context.publish("turn_started", magic_enemy, magic_enemy, {"time": 10}, -1, root_log_id)
+	temporal_context.apply_direct_damage(magic_enemy, shielded_ally, 6, -1, root_log_id, ["attack"])
+	assert(shield_chronomancer.energy_shield == 3 and shielded_ally.energy_shield == 3, "An allied magic-damage reaction should grant each ally half the team's actual recent magic HP damage.")
+	temporal_context.apply_direct_damage(magic_enemy, shield_chronomancer, 5, -1, root_log_id, ["attack"])
+	assert(shield_chronomancer.energy_shield == 0 and shielded_ally.energy_shield == 3, "Reaction cooldown should prevent immediate retriggering, and Energy Shield absorption should not enter magic HP-damage history.")
+
+	var future_target = _unit("Future Target", "Allies")
+	future_target.armor = 2
+	var future_enemy = _unit("Future Enemy", "Enemies")
+	future_enemy.physical_damage = 7
+	future_enemy.next_action_time = 12
+	var intervening_ally = _unit("Intervening Ally", "Allies")
+	intervening_ally.physical_damage = 1
+	intervening_ally.next_action_time = 5
+	var projection_simulator := CombatSimulatorScript.new()
+	var projected_damage: int = projection_simulator.predicted_next_action_damage(future_enemy, [future_target, intervening_ally, future_enemy])
+	assert(projected_damage == 5 and future_target.hp == future_target.max_hp and future_enemy.hp == future_enemy.max_hp, "Next-action projection should advance intervening turns and return isolated actual HP damage without mutating real combat state.")
+	var future_echo := SkillDefinition.new()
+	future_echo.display_name = "Future Echo"
+	future_echo.action = "Effects Only"
+	var echo_damage := _effect("Skill Used", "Deal Damage", "Event Target")
+	echo_damage.amount_source = "Target Predicted Next Action Damage"
+	future_echo.effects.append(echo_damage)
+	chronomancer.current_skill = future_echo
+	var echo_context = _context([chronomancer, future_enemy], log)
+	echo_context.publish("turn_started", chronomancer, chronomancer, {"time": chronomancer.next_action_time}, -1, root_log_id)
+	echo_context.predict_next_action_damage = func(target, current_actor): return projection_simulator.predicted_next_action_damage(target, [chronomancer, future_enemy], current_actor)
+	CombatSimulatorScript.new()._resolve_skill(echo_context, log, root_log_id, chronomancer, future_enemy, future_echo, "job skill")
+	assert(future_enemy.hp == 13, "An authored bridge effect should deal the target's isolated predicted next-action damage.")
 
 	check_completed = true
 	print("Triggered effect validation passed: scenario hooks, formulas, counters, interception, stack consumption/detonation, expanded tactics, and JSON authoring worked.")
