@@ -5,6 +5,7 @@ const SCENARIO_DIR := "res://resources/scenarios"
 const ITEM_DIR := "res://resources/items"
 const ANCESTRY_DIR := "res://resources/ancestries"
 const JOB_DIR := "res://resources/jobs"
+const TACTIC_DIR := "res://resources/tactics"
 const UNIT_DIR := "res://resources/units"
 const ContentCatalogScript := preload("res://scripts/content/content_catalog.gd")
 const JsonContentLoaderScript := preload("res://scripts/modding/json_content_loader.gd")
@@ -241,16 +242,37 @@ func _validate_authored_resources(errors: Array[String]) -> void:
 		if job.skill != null and job.skill.action == "Effects Only" and job.skill.effects.is_empty():
 			errors.append("Job '%s' has an Effects Only skill with no effects." % job.display_name)
 		if job.skill != null:
-			for effect_index in job.skill.effects.size():
-				var effect: EffectDefinition = job.skill.effects[effect_index]
-				if effect == null:
-					errors.append("Job '%s' skill has a missing effect at index %d." % [job.display_name, effect_index])
-					continue
-				if effect.trigger != "Skill Used":
-					errors.append("Job '%s' skill effect %d must use the Skill Used trigger." % [job.display_name, effect_index])
-				var support_error: String = effect.support_error()
-				if not support_error.is_empty():
-					errors.append("Job '%s' skill effect %d is unsupported: %s" % [job.display_name, effect_index, support_error])
+			if job.skill.attack_count < 1:
+				errors.append("Job '%s' skill must attack at least once." % job.display_name)
+			_validate_effects(job.skill.effects, "Job '%s' skill" % job.display_name, errors, "Skill")
+		if job.passive != null:
+			_validate_effects(job.passive.effects, "Job '%s' passive" % job.display_name, errors)
+		if job.reaction != null:
+			if job.reaction.reaction_type == "Effects Only" and job.reaction.effects.is_empty() and job.reaction.replacement_statuses.is_empty() and job.reaction.trigger != "Attack Targets Another Ally":
+				errors.append("Job '%s' has an Effects Only reaction with no effects." % job.display_name)
+			if job.reaction.condition == "Self Status Stacks At Least" and job.reaction.status == null:
+				errors.append("Job '%s' reaction has a status-stack condition with no status." % job.display_name)
+			if job.reaction.trigger == "Enemy Status Threshold Reached" and job.reaction.status == null:
+				errors.append("Job '%s' enemy-status threshold reaction has no status." % job.display_name)
+			if job.reaction.trigger == "Enemy Died With Status" and job.reaction.status == null:
+				errors.append("Job '%s' enemy-death status reaction has no status." % job.display_name)
+			if job.reaction.condition == "Requested Status Matches" and job.reaction.status == null:
+				errors.append("Job '%s' requested-status reaction has no status." % job.display_name)
+			if job.reaction.prevents_triggering_request and not job.reaction.trigger in ["Status Application Requested", "Enemy Healing Requested", "Lethal Physical Attack Requested"]:
+				errors.append("Job '%s' reaction prevents its triggering request but does not use a request trigger." % job.display_name)
+			for replacement in job.reaction.replacement_statuses:
+				if replacement == null or replacement.polarity != "Boon":
+					errors.append("Job '%s' reaction has a replacement status that is not a boon." % job.display_name)
+			_validate_effects(job.reaction.effects, "Job '%s' reaction" % job.display_name, errors)
+		if job.default_tactic != null:
+			_validate_tactic(job.default_tactic, "Job '%s' default tactic" % job.display_name, errors)
+
+	for entry in _load_resources(TACTIC_DIR, errors):
+		var tactic := entry["resource"] as TacticDefinition
+		if tactic == null:
+			errors.append("Resource is not a TacticDefinition: %s" % entry["path"])
+			continue
+		_validate_tactic(tactic, "Tactic '%s'" % tactic.display_name, errors)
 
 	for entry in _load_resources(UNIT_DIR, errors):
 		var unit := entry["resource"] as UnitDefinition
@@ -264,6 +286,26 @@ func _validate_authored_resources(errors: Array[String]) -> void:
 		_validate_item_slot(unit, "armor", unit.loadout.armor, "Armor", errors)
 		_validate_item_slot(unit, "helmet", unit.loadout.helmet, "Helmet", errors)
 		_validate_item_slot(unit, "trinket", unit.loadout.trinket, "Trinket", errors)
+
+
+func _validate_effects(effects: Array[EffectDefinition], label: String, errors: Array[String], required_trigger := "") -> void:
+	for effect_index in effects.size():
+		var effect: EffectDefinition = effects[effect_index]
+		if effect == null:
+			errors.append("%s has a missing effect at index %d." % [label, effect_index])
+			continue
+		if required_trigger == "Skill" and not effect.trigger in ["Skill Used", "Skill Completed"]:
+			errors.append("%s effect %d must use Skill Used or Skill Completed." % [label, effect_index])
+		elif not required_trigger.is_empty() and required_trigger != "Skill" and effect.trigger != required_trigger:
+			errors.append("%s effect %d must use the %s trigger." % [label, effect_index, required_trigger])
+		var support_error: String = effect.support_error()
+		if not support_error.is_empty():
+			errors.append("%s effect %d is unsupported: %s" % [label, effect_index, support_error])
+
+
+func _validate_tactic(tactic: TacticDefinition, label: String, errors: Array[String]) -> void:
+	if (tactic.condition in ["Target Has Status", "Target Status Stacks At Least", "Target Pending Status Damage At Least HP"] or tactic.target == "Lowest HP Ally With Status") and tactic.status == null:
+		errors.append("%s has a status-aware condition with no status." % label)
 
 
 func _validate_item_slot(unit: UnitDefinition, slot_name: String, item: ItemDefinition, expected_slot: String, errors: Array[String]) -> void:

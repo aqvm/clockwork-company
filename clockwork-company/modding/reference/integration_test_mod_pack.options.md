@@ -14,6 +14,8 @@ Purpose: exercise as many modding code paths as possible in one toggleable pack.
 - Adds `tower_shield_it` (new id).
 - Tests new content creation, reference usage by loadouts, and finite three-turn battle-start `Apply Status`.
 - Adds `resolver_vocabulary_it` to validate JSON temporary modifiers and specific-status removal.
+- Adds `formula_counter_probe_it` to validate counter modification, counter-threshold conditions, multi-stack application fields, and formula scaling reconstruction.
+- Covers `attack_count` and opt-in `repeat_within_event_chain` reconstruction.
 
 3. Item override:
 - Overrides existing `glass_focus`.
@@ -23,6 +25,7 @@ Purpose: exercise as many modding code paths as possible in one toggleable pack.
 - Adds `warden_it`.
 - Tests new job creation, loadout linkage, a five-turn status-applying skill, and the `Forecast` passive capability.
 - Adds `cleanser_it` to validate an `Effects Only` skill with deterministic ailment removal.
+- `cleanser_it` also validates passive status and damage-request interception, an effect-only stack-gated reaction, formula-driven healing/consumption, and a status-aware default tactic.
 
 5. Job override:
 - Overrides existing `apprentice`.
@@ -30,7 +33,8 @@ Purpose: exercise as many modding code paths as possible in one toggleable pack.
 
 6. Tactic add:
 - Adds `guard_then_attack_it` and `foretell_heal_it`.
-- Tests custom tactic id flow plus normal condition/target and `foretell_enabled` reconstruction.
+- Adds `attack_slow_target_it`.
+- Tests custom tactic id flow, speed-aware targeting conditions, normal condition/target, and `foretell_enabled` reconstruction.
 
 7. Tactic override:
 - Overrides existing `attack_frontmost`.
@@ -49,7 +53,7 @@ Purpose: exercise as many modding code paths as possible in one toggleable pack.
 - Tests new unit creation and roster placement.
 
 11. Unit override:
-- Overrides existing `mira_scout` with `action_interval = 70`.
+- Overrides existing `mira_scout` with `action_speed = 1`.
 - Tests extreme stat patch and visible runtime impact.
 
 12. Demo roster override:
@@ -60,13 +64,13 @@ Purpose: exercise as many modding code paths as possible in one toggleable pack.
 
 - Setup pane shows:
   - `Borin Anchor IT` in Allies roster.
-  - `Mira Scout (IT Override)` with interval `70`.
+  - `Mira Scout (IT Override)` with speed `1`.
   - Loadout names ending with `(IT Override)` where patched.
   - `Tower Shield IT` and `Glass Focus (IT Override)` in gear summaries.
   - `Borin Anchor IT` gains the `Reconstitution IT` boon for three owner turns at battle start.
 
 - Replay behavior:
-  - Mira should act dramatically later because of interval `70`.
+  - Mira should act dramatically later because of speed `1`.
   - Added/overridden tactics should appear in tactic selection lines.
   - Added battle-start armor trigger should appear in item trigger lines.
   - After Borin takes damage and reaches another turn, Reconstitution should restore half of the damage received since Borin's previous turn.

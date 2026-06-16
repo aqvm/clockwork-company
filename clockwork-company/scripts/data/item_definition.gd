@@ -9,5 +9,5 @@ class_name ItemDefinition
 @export var physical_damage_modifier := 0
 @export var magic_damage_modifier := 0
 @export var armor_modifier := 0
-@export var action_interval_modifier := 0
+@export var action_speed_modifier := 0
 @export var effects: Array[EffectDefinition] = []

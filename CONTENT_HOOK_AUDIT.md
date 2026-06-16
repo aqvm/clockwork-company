@@ -1,5 +1,7 @@
 # Content Hook Audit
 
+> Wiki navigation: [[Architecture Map]] and [[Content Authoring]] summarize current ownership and workflow; this document remains the focused audit record.
+
 Audit date: 2026-06-05
 
 This audit checks whether current mechanics can be authored, applied, inspected, explained, persisted, validated, and represented in JSON where those hooks are relevant. It is a snapshot of the small implemented vocabulary, not a requirement to make every future system generic now.

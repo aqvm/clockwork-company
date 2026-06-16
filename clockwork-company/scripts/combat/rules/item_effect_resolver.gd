@@ -145,20 +145,25 @@ static func _heal_unit(log, parent_entry_id: int, owner, target, item: ItemDefin
 
 static func _reduce_target_armor(log, parent_entry_id: int, actor, target, item, effect, context = null) -> void:
 	var previous_base_armor: int = target.armor
+	var previous_battle_armor: int = target.battle_armor
 	var previous_guard_armor: int = target.guard_armor
 	var remaining_reduction: int = effect.amount
 	if target.armor > 0:
 		var base_reduction: int = min(target.armor, remaining_reduction)
 		target.armor -= base_reduction
 		remaining_reduction -= base_reduction
+	if remaining_reduction > 0 and target.battle_armor > 0:
+		var battle_reduction: int = min(target.battle_armor, remaining_reduction)
+		target.battle_armor -= battle_reduction
+		remaining_reduction -= battle_reduction
 	if remaining_reduction > 0 and target.guard_armor > 0:
 		var guard_reduction: int = min(target.guard_armor, remaining_reduction)
 		target.guard_armor -= guard_reduction
-	var event := CombatEventsScript.item_trigger(actor, item.display_name, CombatConstantsScript.TRIGGER_HIT, effect.effect_type, "%s base armor %d -> %d, temporary armor %d -> %d" % [target.unit_name, previous_base_armor, target.armor, previous_guard_armor, target.guard_armor])
-	log.add_event("%s triggers %s on hit: %s base armor %d -> %d, temporary armor %d -> %d." % [actor.unit_name, item.display_name, target.unit_name, previous_base_armor, target.armor, previous_guard_armor, target.guard_armor], event["event_type"], -1, parent_entry_id, event["payload"], event["tags"])
+	var event := CombatEventsScript.item_trigger(actor, item.display_name, CombatConstantsScript.TRIGGER_HIT, effect.effect_type, "%s base armor %d -> %d, battle armor %d -> %d, temporary armor %d -> %d" % [target.unit_name, previous_base_armor, target.armor, previous_battle_armor, target.battle_armor, previous_guard_armor, target.guard_armor])
+	log.add_event("%s triggers %s on hit: %s base armor %d -> %d, battle armor %d -> %d, temporary armor %d -> %d." % [actor.unit_name, item.display_name, target.unit_name, previous_base_armor, target.armor, previous_battle_armor, target.battle_armor, previous_guard_armor, target.guard_armor], event["event_type"], -1, parent_entry_id, event["payload"], event["tags"])
 	if context != null:
 		context.publish("armor_lost", actor, target, {
-			"amount": (previous_base_armor - target.armor) + (previous_guard_armor - target.guard_armor),
+			"amount": (previous_base_armor - target.armor) + (previous_battle_armor - target.battle_armor) + (previous_guard_armor - target.guard_armor),
 			"armor_kind": "mixed",
 			"reason": item.display_name,
 		}, -1, parent_entry_id, ["armor", "item"])

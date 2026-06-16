@@ -1,5 +1,7 @@
 # Roadmap
 
+> This is the phase plan. Start at [[Home]] for canonical current behavior and concept navigation.
+
 ## Phase 0: Repo bootstrap
 
 Goal:

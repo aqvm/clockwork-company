@@ -39,6 +39,33 @@ static func foretell_target(actor, units: Array, tactic: TacticDefinition, execu
 	return null
 
 
+static func predicted_next_action_damage(actor, units: Array, execute_next_action: Callable, current_actor = null) -> int:
+	if actor == null or not actor.is_alive() or execute_next_action.is_null():
+		return 0
+	var speculative_units: Array = []
+	var speculative_actor = null
+	var speculative_current_actor = null
+	for unit in units:
+		var clone = unit.clone_runtime_state()
+		speculative_units.append(clone)
+		if unit == actor:
+			speculative_actor = clone
+		if unit == current_actor:
+			speculative_current_actor = clone
+	if speculative_actor == null:
+		return 0
+	if speculative_current_actor != null and speculative_current_actor.is_alive():
+		TurnSchedulerScript.schedule_next_turn(speculative_current_actor)
+	while TargetingRulesScript.team_has_living_unit(speculative_units, speculative_actor.team) and TargetingRulesScript.team_has_living_unit(speculative_units, TargetingRulesScript.opposing_team(speculative_actor.team)):
+		var next_actor = TurnSchedulerScript.find_next_actor(speculative_units)
+		if next_actor == null:
+			break
+		var damage: int = max(0, int(execute_next_action.call(next_actor, speculative_units)))
+		if next_actor == speculative_actor:
+			return damage
+	return 0
+
+
 static func _mapped_target(units: Array, speculative_target):
 	if speculative_target == null:
 		return null

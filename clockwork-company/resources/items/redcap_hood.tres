@@ -18,5 +18,5 @@ display_name = "Redcap Hood"
 tags = Array[String](["helmet", "swift", "bloodied"])
 slot = "Helmet"
 physical_damage_modifier = 1
-action_interval_modifier = -1
+action_speed_modifier = 1
 effects = Array[ExtResource("1_yvlaq")]([SubResource("Resource_0cyl2")])

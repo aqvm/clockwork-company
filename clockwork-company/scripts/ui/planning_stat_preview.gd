@@ -33,30 +33,30 @@ static func build_party_preview_by_name(units: Array[UnitDefinition]) -> Diction
 
 static func stats_line(stats: Dictionary) -> String:
 	if stats.is_empty():
-		return "HP ?, physical ?, magic ?, armor ?, interval ?"
-	return "HP %d, physical %d, magic %d, armor %d, interval %d" % [
+		return "HP ?, physical ?, magic ?, armor ?, speed ?"
+	return "HP %d, physical %d, magic %d, armor %d, speed %d" % [
 		int(stats.get("max_hp", 0)),
 		int(stats.get("physical_damage", 0)),
 		int(stats.get("magic_damage", 0)),
 		int(stats.get("armor", 0)),
-		int(stats.get("action_interval", 0)),
+		int(stats.get("action_speed", 0)),
 	]
 
 
 static func compact_stats_line(stats: Dictionary) -> String:
 	if stats.is_empty():
-		return "HP ? | P? M? A? I?"
-	return "HP %d | P%d M%d A%d I%d" % [
+		return "HP ? | P? M? A? S?"
+	return "HP %d | P%d M%d A%d S%d" % [
 		int(stats.get("max_hp", 0)),
 		int(stats.get("physical_damage", 0)),
 		int(stats.get("magic_damage", 0)),
 		int(stats.get("armor", 0)),
-		int(stats.get("action_interval", 0)),
+		int(stats.get("action_speed", 0)),
 	]
 
 
 static func stats_changed(left: Dictionary, right: Dictionary) -> bool:
-	for key in ["max_hp", "physical_damage", "magic_damage", "armor", "action_interval"]:
+	for key in ["max_hp", "physical_damage", "magic_damage", "armor", "action_speed"]:
 		if int(left.get(key, 0)) != int(right.get(key, 0)):
 			return true
 	return false
@@ -68,7 +68,7 @@ static func _stats_from_state(state) -> Dictionary:
 		"physical_damage": state.physical_damage,
 		"magic_damage": state.magic_damage,
 		"armor": state.total_armor(),
-		"action_interval": state.action_interval,
+		"action_speed": state.action_speed,
 	}
 
 

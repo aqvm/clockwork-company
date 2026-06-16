@@ -1,6 +1,8 @@
 extends Control
 class_name UnitStatusDot
 
+const TurnSchedulerScript := preload("res://scripts/combat/runtime/turn_scheduler.gd")
+
 const TEAM_ALLY := "Allies"
 const TEAM_ENEMY := "Enemies"
 
@@ -8,7 +10,8 @@ var unit_name := ""
 var team := TEAM_ALLY
 var max_hp := 1
 var current_hp := 1
-var action_interval := 1
+var energy_shield := 0
+var action_speed := 1
 var next_action_time := 1.0
 var display_time := 0.0
 var is_alive := true
@@ -35,7 +38,8 @@ func configure(snapshot: Dictionary) -> void:
 	team = snapshot.get("team", team)
 	max_hp = max(1, int(snapshot.get("max_hp", max_hp)))
 	current_hp = clamp(int(snapshot.get("hp", current_hp)), 0, max_hp)
-	action_interval = max(1, int(snapshot.get("action_interval", action_interval)))
+	energy_shield = max(0, int(snapshot.get("energy_shield", energy_shield)))
+	action_speed = max(1, int(snapshot.get("action_speed", action_speed)))
 	next_action_time = float(snapshot.get("next_action_time", next_action_time))
 	display_time = float(snapshot.get("display_time", display_time))
 	is_alive = bool(snapshot.get("is_alive", is_alive))
@@ -98,6 +102,8 @@ func _draw() -> void:
 		13,
 		text_color
 	)
+	if energy_shield > 0:
+		draw_string(ThemeDB.fallback_font, Vector2(center.x - 34.0, center.y + 20.0), "ES %d" % energy_shield, HORIZONTAL_ALIGNMENT_CENTER, 68, 11, Color(0.42, 0.82, 1.0, 1.0))
 	_draw_floating_delta_text(center)
 
 
@@ -111,7 +117,7 @@ func _cooldown_ratio() -> float:
 	if not is_alive:
 		return 0.0
 	var remaining: float = max(0.0, next_action_time - display_time)
-	return clamp(remaining / float(action_interval), 0.0, 1.0)
+	return clamp(remaining / float(TurnSchedulerScript.action_delay(action_speed)), 0.0, 1.0)
 
 
 func _draw_action_pulse(center: Vector2, body_radius: float, pulse_color: Color) -> void:

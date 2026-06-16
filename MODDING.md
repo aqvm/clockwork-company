@@ -1,5 +1,7 @@
 # Modding Data Guide
 
+> Wiki navigation: start at [[Modding Pipeline]] for architecture and use this document as the modding entry guide.
+
 This project supports a hybrid data workflow:
 
 - Core game authoring: `.tres` Resources in Godot (editor ergonomics).

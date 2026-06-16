@@ -19,5 +19,5 @@ tags = ["armor", "clockwork", "armored"]
 slot = "Armor"
 max_hp_modifier = 3
 armor_modifier = 2
-action_interval_modifier = 1
+action_speed_modifier = -1
 effects = [SubResource("Resource_clocktower_stance")]

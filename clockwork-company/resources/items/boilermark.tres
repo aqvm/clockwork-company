@@ -19,5 +19,5 @@ display_name = "Boilermark"
 tags = Array[String](["trinket", "machine", "damage"])
 slot = "Trinket"
 magic_damage_modifier = 2
-action_interval_modifier = 1
+action_speed_modifier = -1
 effects = Array[ExtResource("2_effect")]([SubResource("Resource_boilermark_pressure")])

@@ -13,6 +13,6 @@ max_hp = 22
 physical_damage = 5
 magic_damage = 0
 armor = 1
-action_interval = 8
+action_speed = 12
 loadout = ExtResource("2_loadout")
 

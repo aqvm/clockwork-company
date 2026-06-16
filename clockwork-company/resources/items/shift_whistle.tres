@@ -8,4 +8,4 @@ display_name = "Shift Whistle"
 tags = ["trinket", "speed", "tempo"]
 slot = "Trinket"
 max_hp_modifier = -1
-action_interval_modifier = -1
+action_speed_modifier = 1

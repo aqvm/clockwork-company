@@ -1,6 +1,8 @@
 extends RefCounted
 class_name UnitState
 
+const TurnSchedulerScript := preload("res://scripts/combat/runtime/turn_scheduler.gd")
+
 var unit_name := ""
 var unit_id := ""
 var campaign_unit_id := ""
@@ -13,7 +15,10 @@ var hp := 1
 var physical_damage := 1
 var magic_damage := 0
 var armor := 0
-var action_interval := 10
+var action_speed := 10
+var base_action_speed := 10
+var action_speed_cap_percent := 200
+var action_speed_cap_active := false
 var next_action_time := 10
 var slot_index := 0
 var loadout: UnitLoadoutDefinition = null
@@ -26,12 +31,30 @@ var equipped_items: Array[ItemDefinition] = []
 var skipped_items: Array[ItemDefinition] = []
 var tactics: Array[TacticDefinition] = []
 var guard_armor := 0
+var battle_armor := 0
 var effect_usage_counts := {}
 var ability_cooldowns := {}
 var statuses: Array[Dictionary] = []
 var next_status_instance_id := 1
 var temporary_modifiers: Array[Dictionary] = []
 var next_temporary_modifier_id := 1
+var dynamic_modifiers := {}
+var counters := {}
+var attack_streak_target_id := ""
+var attack_streak_count := 0
+var attack_seals: Array[String] = []
+var armor_disabled := false
+var deferred_damage := 0
+var fortification_actions_remaining := 0
+var fortification_pending_start := false
+var attack_redirection_actions_remaining := 0
+var attack_redirection_pending_start := false
+var energy_shield := 0
+var damage_current_action_window := 0
+var damage_previous_action_window := 0
+var enemy_action_healing_amount := 0
+var enemy_action_healing_source := ""
+var prepared_base_attack_source := ""
 
 
 func _init(definition: UnitDefinition = null, unit_slot_index: int = 0) -> void:
@@ -48,7 +71,7 @@ func _init(definition: UnitDefinition = null, unit_slot_index: int = 0) -> void:
 	physical_damage = definition.physical_damage
 	magic_damage = definition.magic_damage
 	armor = definition.armor
-	action_interval = definition.action_interval
+	action_speed = definition.action_speed
 	slot_index = unit_slot_index
 	loadout = definition.loadout
 	equipped_items = []
@@ -77,7 +100,9 @@ func _init(definition: UnitDefinition = null, unit_slot_index: int = 0) -> void:
 			skipped_items.append(item)
 
 	hp = max_hp
-	next_action_time = action_interval
+	base_action_speed = action_speed
+	action_speed_cap_active = true
+	next_action_time = action_delay()
 
 
 func is_alive() -> bool:
@@ -102,7 +127,10 @@ func clone_runtime_state():
 	clone.physical_damage = physical_damage
 	clone.magic_damage = magic_damage
 	clone.armor = armor
-	clone.action_interval = action_interval
+	clone.action_speed = action_speed
+	clone.base_action_speed = base_action_speed
+	clone.action_speed_cap_percent = action_speed_cap_percent
+	clone.action_speed_cap_active = action_speed_cap_active
 	clone.next_action_time = next_action_time
 	clone.slot_index = slot_index
 	clone.loadout = _duplicate_resource(loadout)
@@ -115,12 +143,30 @@ func clone_runtime_state():
 	clone.skipped_items = _duplicate_items(skipped_items)
 	clone.tactics = _duplicate_tactics(tactics)
 	clone.guard_armor = guard_armor
+	clone.battle_armor = battle_armor
 	clone.effect_usage_counts = effect_usage_counts.duplicate(true)
 	clone.ability_cooldowns = ability_cooldowns.duplicate(true)
 	clone.statuses = _duplicate_statuses(statuses)
 	clone.next_status_instance_id = next_status_instance_id
 	clone.temporary_modifiers = temporary_modifiers.duplicate(true)
 	clone.next_temporary_modifier_id = next_temporary_modifier_id
+	clone.dynamic_modifiers = dynamic_modifiers.duplicate(true)
+	clone.counters = counters.duplicate(true)
+	clone.attack_streak_target_id = attack_streak_target_id
+	clone.attack_streak_count = attack_streak_count
+	clone.attack_seals = attack_seals.duplicate()
+	clone.armor_disabled = armor_disabled
+	clone.deferred_damage = deferred_damage
+	clone.fortification_actions_remaining = fortification_actions_remaining
+	clone.fortification_pending_start = fortification_pending_start
+	clone.attack_redirection_actions_remaining = attack_redirection_actions_remaining
+	clone.attack_redirection_pending_start = attack_redirection_pending_start
+	clone.energy_shield = energy_shield
+	clone.damage_current_action_window = damage_current_action_window
+	clone.damage_previous_action_window = damage_previous_action_window
+	clone.enemy_action_healing_amount = enemy_action_healing_amount
+	clone.enemy_action_healing_source = enemy_action_healing_source
+	clone.prepared_base_attack_source = prepared_base_attack_source
 	return clone
 
 
@@ -161,11 +207,12 @@ func add_status(status: Resource, source_name: String, duration_turns: int, is_p
 		if status.stacking_rule == "Ignore":
 			return "ignored"
 		existing["source_name"] = source_name
+		existing["has_independent_source"] = true
 		existing["remaining_turns"] = max(int(existing.get("remaining_turns", 1)), max(1, duration_turns))
 		existing["is_permanent"] = bool(existing.get("is_permanent", false)) or is_permanent
 		if status.stacking_rule == "Intensify":
 			var previous_stacks := int(existing.get("stack_count", 1))
-			existing["stack_count"] = min(status.max_stacks, previous_stacks + 1)
+			existing["stack_count"] = min(status.max_stacks, previous_stacks + 1) if status.stack_cap_enabled else previous_stacks + 1
 			return "intensified" if int(existing["stack_count"]) > previous_stacks else "refreshed"
 		return "refreshed"
 	statuses.append({
@@ -176,9 +223,50 @@ func add_status(status: Resource, source_name: String, duration_turns: int, is_p
 		"is_permanent": is_permanent,
 		"stack_count": 1,
 		"damage_since_last_turn": 0,
+		"has_independent_source": true,
+		"maintained_sources": {},
 	})
 	next_status_instance_id += 1
 	return "added"
+
+
+func maintain_status(status: Resource, source_key: String, source_name: String) -> String:
+	if status == null or source_key.is_empty():
+		return "invalid"
+	var existing := status_instance_by_name(status.display_name)
+	if not existing.is_empty():
+		var sources: Dictionary = existing.get("maintained_sources", {})
+		if sources.has(source_key):
+			return "unchanged"
+		sources[source_key] = source_name
+		existing["maintained_sources"] = sources
+		return "maintained"
+	statuses.append({
+		"instance_id": next_status_instance_id,
+		"definition": status,
+		"source_name": source_name,
+		"remaining_turns": 1,
+		"is_permanent": true,
+		"stack_count": 1,
+		"damage_since_last_turn": 0,
+		"has_independent_source": false,
+		"maintained_sources": {source_key: source_name},
+	})
+	next_status_instance_id += 1
+	return "added"
+
+
+func remove_maintained_status_source(status_name: String, source_key: String) -> bool:
+	var instance := status_instance_by_name(status_name)
+	if instance.is_empty():
+		return false
+	var sources: Dictionary = instance.get("maintained_sources", {})
+	sources.erase(source_key)
+	instance["maintained_sources"] = sources
+	if bool(instance.get("has_independent_source", true)) or not sources.is_empty():
+		return false
+	remove_status(status_name)
+	return true
 
 
 func has_status(status_name: String) -> bool:
@@ -232,6 +320,161 @@ func consume_status_stack(status_name: String) -> int:
 	return 0
 
 
+func consume_status_stacks(status_name: String, requested_stacks: int) -> int:
+	var consumed := 0
+	for _index in range(max(0, requested_stacks)):
+		if not has_status(status_name):
+			break
+		consume_status_stack(status_name)
+		consumed += 1
+	return consumed
+
+
+func status_stack_count(status_type: String) -> int:
+	var instance := status_instance(status_type)
+	return int(instance.get("stack_count", 0))
+
+
+func pending_status_damage(status_type: String) -> int:
+	var instance := status_instance(status_type)
+	var definition: Resource = instance.get("definition", null)
+	if definition == null:
+		return 0
+	return int(definition.amount) * int(instance.get("stack_count", 0))
+
+
+func counter_value(counter_name: String) -> int:
+	return int(counters.get(counter_name, 0))
+
+
+func modify_counter(counter_name: String, amount: int) -> int:
+	if counter_name.is_empty():
+		return 0
+	counters[counter_name] = max(0, counter_value(counter_name) + amount)
+	return int(counters[counter_name])
+
+
+func reset_counter(counter_name: String) -> void:
+	if not counter_name.is_empty():
+		counters[counter_name] = 0
+
+
+func is_unarmed() -> bool:
+	for item in equipped_items:
+		if item != null and item.slot == "Weapon":
+			return false
+	return true
+
+
+func record_attack_target(target_id: String) -> int:
+	if target_id != attack_streak_target_id:
+		attack_streak_target_id = target_id
+		attack_streak_count = 0
+	attack_streak_count += 1
+	return attack_streak_count
+
+
+func reset_attack_streak() -> void:
+	attack_streak_target_id = ""
+	attack_streak_count = 0
+
+
+func add_attack_seal(source_id: String) -> bool:
+	if source_id.is_empty():
+		return false
+	attack_seals.append(source_id)
+	return true
+
+
+func consume_attack_seal() -> String:
+	if attack_seals.is_empty():
+		return ""
+	return attack_seals.pop_front()
+
+
+func begin_fortification(duration_actions: int) -> void:
+	fortification_actions_remaining = max(fortification_actions_remaining, max(1, duration_actions))
+	fortification_pending_start = true
+
+
+func defer_damage(amount: int) -> int:
+	deferred_damage += max(0, amount)
+	return deferred_damage
+
+
+func take_deferred_damage_tick() -> int:
+	if fortification_pending_start:
+		fortification_pending_start = false
+		return 0
+	if fortification_actions_remaining <= 0 or deferred_damage <= 0:
+		fortification_actions_remaining = max(0, fortification_actions_remaining - 1)
+		return 0
+	var amount := int(ceil(float(deferred_damage) / float(fortification_actions_remaining)))
+	deferred_damage -= amount
+	fortification_actions_remaining -= 1
+	return amount
+
+
+func begin_attack_redirection(duration_actions: int) -> void:
+	attack_redirection_actions_remaining = max(attack_redirection_actions_remaining, max(1, duration_actions))
+	attack_redirection_pending_start = true
+
+
+func elapse_attack_redirection() -> void:
+	if attack_redirection_pending_start:
+		attack_redirection_pending_start = false
+	elif attack_redirection_actions_remaining > 0:
+		attack_redirection_actions_remaining -= 1
+
+
+func redirects_enemy_attacks() -> bool:
+	return is_alive() and attack_redirection_actions_remaining > 0
+
+
+func add_energy_shield(amount: int) -> int:
+	energy_shield += max(0, amount)
+	return energy_shield
+
+
+func absorb_magic_damage(amount: int) -> int:
+	var absorbed: int = min(energy_shield, max(0, amount))
+	energy_shield -= absorbed
+	return absorbed
+
+
+func record_hp_damage(amount: int) -> void:
+	damage_current_action_window += max(0, amount)
+
+
+func complete_damage_action_window() -> void:
+	damage_previous_action_window = damage_current_action_window
+	damage_current_action_window = 0
+
+
+func recent_damage() -> int:
+	return damage_previous_action_window + damage_current_action_window
+
+
+func begin_enemy_action_healing(amount: int, source_name: String) -> void:
+	enemy_action_healing_amount = max(0, amount)
+	enemy_action_healing_source = source_name
+
+
+func clear_enemy_action_healing() -> void:
+	enemy_action_healing_amount = 0
+	enemy_action_healing_source = ""
+
+
+func prepare_base_attack(source_name: String) -> void:
+	prepared_base_attack_source = source_name
+
+
+func consume_prepared_base_attack() -> String:
+	var source_name := prepared_base_attack_source
+	prepared_base_attack_source = ""
+	return source_name
+
+
 func remove_status(status_name: String) -> Dictionary:
 	for index in range(statuses.size()):
 		var instance: Dictionary = statuses[index]
@@ -267,6 +510,7 @@ func status_snapshots() -> Array[Dictionary]:
 			continue
 		snapshots.append({
 			"name": definition.display_name,
+			"status_type": definition.status_type,
 			"polarity": definition.polarity,
 			"description": definition.description,
 			"source_name": String(instance.get("source_name", "")),
@@ -274,6 +518,7 @@ func status_snapshots() -> Array[Dictionary]:
 			"is_permanent": bool(instance.get("is_permanent", false)),
 			"stack_count": int(instance.get("stack_count", 1)),
 			"damage_since_last_turn": int(instance.get("damage_since_last_turn", 0)),
+			"maintained_sources": Dictionary(instance.get("maintained_sources", {})).values(),
 		})
 	return snapshots
 
@@ -298,14 +543,57 @@ func add_temporary_modifier(stat_name: String, amount: int, duration_turns: int,
 	return modifier
 
 
-func elapse_temporary_modifiers() -> Array[Dictionary]:
+func action_delay() -> int:
+	return TurnSchedulerScript.action_delay(action_speed)
+
+
+func rescale_remaining_action_time(current_time: int, previous_speed: int) -> void:
+	var remaining := maxi(0, next_action_time - current_time)
+	if remaining == 0:
+		return
+	var previous_delay := TurnSchedulerScript.action_delay(previous_speed)
+	next_action_time = current_time + ceili(float(remaining * action_delay()) / float(previous_delay))
+
+
+func add_capped_action_haste(amount: int, duration_actions: int, source_name: String, max_speed_percent: int, current_time: int) -> Dictionary:
+	var effective_cap_percent: int = min(action_speed_cap_percent, max_speed_percent)
+	var speed_cap: int = maxi(1, floori(float(base_action_speed * effective_cap_percent) / 100.0))
+	var applied_amount: int = min(maxi(0, amount), maxi(0, speed_cap - action_speed))
+	if applied_amount <= 0:
+		return {}
+	var previous_speed := action_speed
+	var modifier: Dictionary = add_temporary_modifier("Action Speed", applied_amount, duration_actions, source_name)
+	if modifier.is_empty():
+		return {}
+	var previous_next_action_time: int = next_action_time
+	rescale_remaining_action_time(current_time, previous_speed)
+	modifier["timeline_advance"] = previous_next_action_time - next_action_time
+	return modifier
+
+
+func add_battle_action_haste(amount: int, current_time: int) -> int:
+	var speed_cap: int = maxi(1, floori(float(base_action_speed * action_speed_cap_percent) / 100.0))
+	var applied_amount: int = min(maxi(0, amount), maxi(0, speed_cap - action_speed))
+	if applied_amount <= 0:
+		return 0
+	var previous_speed := action_speed
+	action_speed += applied_amount
+	rescale_remaining_action_time(current_time, previous_speed)
+	return applied_amount
+
+
+func elapse_temporary_modifiers(current_time: int = 0) -> Array[Dictionary]:
 	var expired: Array[Dictionary] = []
 	for index in range(temporary_modifiers.size() - 1, -1, -1):
 		var modifier: Dictionary = temporary_modifiers[index]
 		modifier["remaining_turns"] = int(modifier.get("remaining_turns", 1)) - 1
 		if int(modifier["remaining_turns"]) > 0:
 			continue
-		_apply_stat_delta(String(modifier.get("stat", "")), -int(modifier.get("amount", 0)))
+		var stat_name := String(modifier.get("stat", ""))
+		var previous_speed := action_speed
+		_apply_stat_delta(stat_name, -int(modifier.get("amount", 0)))
+		if stat_name == "Action Speed" and previous_speed != action_speed:
+			rescale_remaining_action_time(current_time, previous_speed)
 		expired.append(modifier)
 		temporary_modifiers.remove_at(index)
 	return expired
@@ -313,6 +601,34 @@ func elapse_temporary_modifiers() -> Array[Dictionary]:
 
 func temporary_modifier_snapshots() -> Array[Dictionary]:
 	return temporary_modifiers.duplicate(true)
+
+
+func set_dynamic_modifier(key: String, stat_name: String, amount: int, source_name: String) -> Dictionary:
+	var previous: Dictionary = dynamic_modifiers.get(key, {})
+	var previous_amount := int(previous.get("amount", 0))
+	var requested_delta := amount - previous_amount
+	var previous_value := stat_value(stat_name)
+	if requested_delta != 0:
+		_apply_stat_delta(stat_name, requested_delta)
+	var applied_amount := previous_amount + stat_value(stat_name) - previous_value
+	if applied_amount == 0:
+		dynamic_modifiers.erase(key)
+	else:
+		dynamic_modifiers[key] = {
+			"key": key,
+			"stat": stat_name,
+			"amount": applied_amount,
+			"source_name": source_name,
+		}
+	return {"previous_amount": previous_amount, "amount": applied_amount, "delta": applied_amount - previous_amount}
+
+
+func stat_value_without_dynamic_modifiers(stat_name: String) -> int:
+	var dynamic_amount := 0
+	for modifier: Dictionary in dynamic_modifiers.values():
+		if String(modifier.get("stat", "")) == stat_name:
+			dynamic_amount += int(modifier.get("amount", 0))
+	return stat_value(stat_name) - dynamic_amount
 
 
 func stat_value(stat_name: String) -> int:
@@ -325,8 +641,8 @@ func stat_value(stat_name: String) -> int:
 			return magic_damage
 		"Armor":
 			return armor
-		"Action Interval":
-			return action_interval
+		"Action Speed":
+			return action_speed
 	return 0
 
 
@@ -341,12 +657,15 @@ func _apply_stat_delta(stat_name: String, amount: int) -> void:
 			magic_damage = max(0, magic_damage + amount)
 		"Armor":
 			armor = max(0, armor + amount)
-		"Action Interval":
-			action_interval = max(1, action_interval + amount)
+		"Action Speed":
+			var speed_cap: int = maxi(1, floori(float(base_action_speed * action_speed_cap_percent) / 100.0)) if action_speed_cap_active else 999999
+			action_speed = clampi(action_speed + amount, 1, speed_cap)
 
 
 func total_armor() -> int:
-	return armor + guard_armor
+	if armor_disabled:
+		return 0
+	return armor + guard_armor + battle_armor
 
 
 func current_job_name() -> String:
@@ -412,6 +731,15 @@ func start_ability_cooldown(key: String, cooldown_turns: int) -> void:
 	ability_cooldowns[key] = cooldown_turns
 
 
+func skill_is_ready(skill: SkillDefinition) -> bool:
+	return skill != null and ability_is_ready("skill|%s" % skill.display_name)
+
+
+func start_skill_cooldown(skill: SkillDefinition) -> void:
+	if skill != null:
+		start_ability_cooldown("skill|%s" % skill.display_name, skill.cooldown_turns)
+
+
 func assigned_items() -> Array[ItemDefinition]:
 	var items: Array[ItemDefinition] = []
 	if loadout == null:
@@ -429,7 +757,7 @@ func _apply_item_stat_modifiers(item: ItemDefinition) -> void:
 	physical_damage = max(1, physical_damage + item.physical_damage_modifier)
 	magic_damage = max(0, magic_damage + item.magic_damage_modifier)
 	armor = max(0, armor + item.armor_modifier)
-	action_interval = max(1, action_interval + item.action_interval_modifier)
+	action_speed = max(1, action_speed + item.action_speed_modifier)
 
 
 func _apply_ancestry_growth(job_progress: Array[JobProgressDefinition]) -> void:
@@ -445,7 +773,7 @@ func _apply_ancestry_growth(job_progress: Array[JobProgressDefinition]) -> void:
 	physical_damage = max(1, physical_damage + ancestry.physical_damage_growth * total_level)
 	magic_damage = max(0, magic_damage + ancestry.magic_damage_growth * total_level)
 	armor = max(0, armor + ancestry.armor_growth * total_level)
-	action_interval = max(1, action_interval + ancestry.action_interval_growth * total_level)
+	action_speed = max(1, action_speed + ancestry.action_speed_growth * total_level)
 
 
 func _apply_job_progress_growth(job_progress: Array[JobProgressDefinition]) -> void:
@@ -457,7 +785,7 @@ func _apply_job_progress_growth(job_progress: Array[JobProgressDefinition]) -> v
 		physical_damage = max(1, physical_damage + progress.job.physical_damage_growth * level)
 		magic_damage = max(0, magic_damage + progress.job.magic_damage_growth * level)
 		armor = max(0, armor + progress.job.armor_growth * level)
-		action_interval = max(1, action_interval + progress.job.action_interval_growth * level)
+		action_speed = max(1, action_speed + progress.job.action_speed_growth * level)
 
 
 func _can_equip_item(item: ItemDefinition) -> bool:

@@ -65,6 +65,10 @@ After code changes, briefly explain what changed, why it changed, how to test it
 
 Update documentation only when a change directly invalidates or materially changes that document. Do not update documents merely to record that implementation occurred.
 
+- Start documentation and concept lookup at `wiki/Home.md`. Read the relevant canonical wiki page before searching broad historical documents.
+- Wiki pages are the concise current-knowledge layer. Prefer links to canonical pages over repeating full rules across multiple pages.
+- Update a canonical wiki page when current behavior, durable design intent, important interactions, implementation ownership, implementation state, or an authoring/validation workflow changes.
+- Use `wiki/Meta/Vault Conventions.md` when adding or reorganizing wiki pages.
 - Update `ARCHITECTURE.md` only for meaningful responsibility or structural changes.
 - Update `DESIGN_NOTES.md` only for durable design decisions.
 - Update `TODO.md` only when backlog commitments change.
@@ -91,6 +95,14 @@ Why this matters:
 - Passing `--log-file godot-check.log` redirects the log into the Godot project directory, which is writable from Codex, and lets `--check-only` report script diagnostics normally.
 - Keep using the same `godot-check.log` path each run; it can be treated as a reusable scratch log and is git-ignored.
 
+## Validation efficiency
+
+- During implementation, run only the narrowest focused check needed to diagnose the current change or confirm the behavior just edited.
+- Reserve the complete regression/validation suite for the final pre-commit and pre-push gate. Do not repeatedly run the full suite while implementation is still changing.
+- Keep validation command output concise. Prefer pass/fail summaries and inspect detailed logs only when a check fails.
+- After a focused check passes, do not rerun it unless relevant code changes again or the final pre-commit suite is being run.
+- For wiki/documentation changes, run `powershell -ExecutionPolicy Bypass -File tools/check_wiki.ps1` and `git diff --check`.
+
 ## GitHub guidance
 
 - Never commit to `main`.
@@ -98,7 +110,7 @@ Why this matters:
 - If local work is on `main`, create a helpfully named branch before committing.
 - Keep commit-and-push wrap-up compact. Unless the tree changes or a check fails, use one straightforward sequence:
   1. Fetch and resync with `origin/main`.
-  2. Run the relevant established validation checks once.
+  2. Run the relevant established validation checks once as the final pre-commit/pre-push validation gate.
   3. Stage changes, inspect the staged diff/status once, and remove any accidental artifacts.
   4. Commit on the feature branch.
   5. Push the feature branch.

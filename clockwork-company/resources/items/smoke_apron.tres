@@ -16,5 +16,5 @@ tags = Array[String](["armor", "light", "foundry"])
 slot = "Armor"
 max_hp_modifier = 4
 armor_modifier = 1
-action_interval_modifier = -1
+action_speed_modifier = 1
 effects = Array[ExtResource("2_effect")]([SubResource("Resource_smoke_apron_cough")])

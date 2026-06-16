@@ -16,7 +16,7 @@ const TargetingRulesScript := preload("res://scripts/combat/rules/targeting_rule
 const DemoBattleFactoryScript := preload("res://scripts/combat/scenarios/demo_battle_factory.gd")
 const CombatContextScript := preload("res://scripts/combat/runtime/combat_context.gd")
 const CombatHookResolverScript := preload("res://scripts/combat/rules/combat_hook_resolver.gd")
-const LOG_VERSION := 1
+const LOG_VERSION := 2
 
 func run_demo_battle(enabled_mod_pack_ids: Variant = null) -> Array[String]:
 	var report := run_demo_battle_report(enabled_mod_pack_ids)
@@ -37,8 +37,7 @@ func run_battle_report_from_units(units: Array, battle_title := "Run battle", sc
 	var log = CombatLogScript.new()
 	var actions_taken := 0
 	var replay_snapshots: Array[Dictionary] = []
-	var context = CombatContextScript.new(units, log, scenario_rules)
-	context.add_responder(CombatHookResolverScript.respond)
+	var context = _combat_context(units, log, scenario_rules)
 
 	log.add(battle_title)
 	log.add("Random seed: none yet. This fight is deterministic because there are no random rolls.")
@@ -74,6 +73,10 @@ func run_battle_report_from_units(units: Array, battle_title := "Run battle", sc
 		var turn_event := CombatEventsScript.turn_start(actor, actor.next_action_time)
 		var turn_entry_id: int = log.add_event("%s takes a turn." % actor.unit_name, turn_event["event_type"], current_time, CombatLogScript.NO_PARENT, turn_event["payload"], turn_event["tags"])
 
+		_resolve_prepared_base_attacks(context, log, turn_entry_id, actor)
+		if not actor.is_alive():
+			replay_snapshots.append(_build_replay_snapshot(turn_entry_id, current_time, units))
+			continue
 		actor.tick_ability_cooldowns()
 		context.publish("turn_started", actor, actor, {"time": current_time}, -1, turn_entry_id, ["turn"])
 		_clear_guard_if_needed(context, log, turn_entry_id, actor)
@@ -107,7 +110,7 @@ func run_battle_report_from_units(units: Array, battle_title := "Run battle", sc
 func _append_jobs_summary(log, units: Array) -> void:
 	var jobs_entry_id: int = log.add("Jobs:")
 	for unit in units:
-		log.add_child(jobs_entry_id, "%s: %s ancestry (%s), %s loadout, %s job. Job skill: %s. Assigned skill: %s. Passive: %s. Reaction: %s. Final stats before battle-start effects: HP %d, physical %d, magic %d, armor %d, interval %d." % [unit.unit_name, unit.ancestry_name(), unit.ancestry_feature_name(), unit.loadout_name(), unit.current_job_name(), unit.skill_name(), unit.assigned_skill_name(), unit.job_effect(), unit.reaction_name(), unit.max_hp, unit.physical_damage, unit.magic_damage, unit.total_armor(), unit.action_interval])
+		log.add_child(jobs_entry_id, "%s: %s ancestry (%s), %s loadout, %s job. Job skill: %s. Assigned skill: %s. Passive: %s. Reaction: %s. Final stats before battle-start effects: HP %d, physical %d, magic %d, armor %d, action speed %d." % [unit.unit_name, unit.ancestry_name(), unit.ancestry_feature_name(), unit.loadout_name(), unit.current_job_name(), unit.skill_name(), unit.assigned_skill_name(), unit.job_effect(), unit.reaction_name(), unit.max_hp, unit.physical_damage, unit.magic_damage, unit.total_armor(), unit.action_speed])
 
 
 func _append_gear_summary(log, units: Array) -> void:
@@ -140,7 +143,7 @@ func _append_roster(log, units: Array) -> void:
 		var team_entry_id: int = log.add_child(roster_entry_id, "%s" % team)
 		for unit in units:
 			if unit.team == team:
-				log.add_child(team_entry_id, "%s | HP %d | physical %d | magic %d | armor %d | interval %d | item %s | tactics %d" % [unit.unit_name, unit.max_hp, unit.physical_damage, unit.magic_damage, unit.total_armor(), unit.action_interval, CombatTextFormatterScript.item_name_or_none(unit), unit.tactics.size()])
+				log.add_child(team_entry_id, "%s | HP %d | physical %d | magic %d | armor %d | action speed %d | item %s | tactics %d" % [unit.unit_name, unit.max_hp, unit.physical_damage, unit.magic_damage, unit.total_armor(), unit.action_speed, CombatTextFormatterScript.item_name_or_none(unit), unit.tactics.size()])
 
 
 func _take_tactical_action(context, log, turn_entry_id: int, actor, units: Array) -> void:
@@ -158,12 +161,17 @@ func foretell_target_for_tactic(actor, units: Array, tactic: TacticDefinition):
 		_evaluate_speculative_tactic_target
 	)
 
+
+func predicted_next_action_damage(actor, units: Array, current_actor = null) -> int:
+	return ForecastServiceScript.predicted_next_action_damage(actor, units, _execute_projected_next_action, current_actor)
+
 func _evaluate_speculative_tactic_target(tactic: TacticDefinition, actor, units: Array):
-	if not TacticResolverScript.condition_matches(tactic.condition, actor, units):
+	var target = TacticResolverScript.find_tactic_target(tactic.target, actor, units, tactic)
+	if not TacticResolverScript.condition_matches(tactic.condition, actor, units, target, tactic):
 		return {"matched": false}
 	return {
 		"matched": true,
-		"target": TacticResolverScript.find_tactic_target(tactic.target, actor, units),
+		"target": target,
 	}
 
 func _log_and_resolve_decision(context, log, turn_entry_id: int, actor, decision: Dictionary) -> void:
@@ -183,8 +191,7 @@ func _log_and_resolve_decision(context, log, turn_entry_id: int, actor, decision
 
 func _execute_speculative_current_action(actor, units: Array) -> void:
 	var log = CombatLogScript.new()
-	var context = CombatContextScript.new(units, log, [], true)
-	context.add_responder(CombatHookResolverScript.respond)
+	var context = _combat_context(units, log, [], true)
 	var turn_entry_id: int = log.add("Speculative current action")
 	var active_status_instance_ids: Array[int] = actor.status_instance_ids()
 	var decision: Dictionary = TacticResolverScript.choose_action(actor, units, Callable(), false)
@@ -194,11 +201,13 @@ func _execute_speculative_current_action(actor, units: Array) -> void:
 	StatusResolverScript.elapse_turn_statuses(log, turn_entry_id, actor, active_status_instance_ids, context)
 
 
-func _execute_speculative_future_turn(actor, units: Array) -> void:
+func _execute_speculative_future_turn(actor, units: Array, allow_prediction := true) -> int:
 	var log = CombatLogScript.new()
-	var context = CombatContextScript.new(units, log, [], true)
-	context.add_responder(CombatHookResolverScript.respond)
+	var context = _combat_context(units, log, [], true, allow_prediction)
 	var turn_entry_id: int = log.add("Speculative future turn")
+	_resolve_prepared_base_attacks(context, log, turn_entry_id, actor)
+	if not actor.is_alive():
+		return 0
 	context.publish("turn_started", actor, actor, {"time": actor.next_action_time}, -1, turn_entry_id, ["turn"])
 	actor.tick_ability_cooldowns()
 	_clear_guard_if_needed(context, log, turn_entry_id, actor)
@@ -212,6 +221,23 @@ func _execute_speculative_future_turn(actor, units: Array) -> void:
 	context.publish("turn_completed", actor, actor, {"time": actor.next_action_time}, -1, turn_entry_id, ["turn"])
 	if actor.is_alive():
 		TurnSchedulerScript.schedule_next_turn(actor)
+	var total_damage := 0
+	for event: Dictionary in context.events_of_type("damage_dealt"):
+		if event.get("source", null) == actor:
+			total_damage += int(event["payload"].get("amount", 0))
+	return total_damage
+
+
+func _execute_projected_next_action(actor, units: Array) -> int:
+	return _execute_speculative_future_turn(actor, units, false)
+
+
+func _combat_context(units: Array, log, scenario_rules: Array = [], speculative := false, allow_prediction := true):
+	var context = CombatContextScript.new(units, log, scenario_rules, speculative)
+	context.add_responder(CombatHookResolverScript.respond)
+	if allow_prediction:
+		context.predict_next_action_damage = func(target, current_actor): return predicted_next_action_damage(target, units, current_actor)
+	return context
 
 
 func _resolve_tactic_action(context, log, turn_entry_id: int, actor, target, action: String, parent_event_id := -1) -> void:
@@ -227,47 +253,85 @@ func _resolve_tactic_action(context, log, turn_entry_id: int, actor, target, act
 	if action == CombatConstantsScript.ACTION_GUARD:
 		_resolve_guard(context, log, turn_entry_id, actor, 0, parent_event_id)
 		return
-	_resolve_attack(context, log, turn_entry_id, actor, target, 0, [], parent_event_id)
+	_resolve_attack(context, log, turn_entry_id, actor, target, 0, [], parent_event_id, "Physical")
+
+
+func _resolve_prepared_base_attacks(context, log, turn_entry_id: int, actor) -> void:
+	for owner in context.units:
+		if not actor.is_alive():
+			return
+		if owner == null or not owner.is_alive() or owner.team == actor.team or owner.prepared_base_attack_source.is_empty():
+			continue
+		var source_name: String = owner.consume_prepared_base_attack()
+		log.add_child(turn_entry_id, "%s intercepts %s with %s." % [owner.unit_name, actor.unit_name, source_name])
+		var event_id: int = context.publish("prepared_base_attack_triggered", owner, actor, {"source_name": source_name}, -1, turn_entry_id, ["attack", "prepared"])
+		_resolve_attack(context, log, turn_entry_id, owner, actor, 0, [], event_id, "Physical")
 
 
 func _resolve_skill(context, log, turn_entry_id: int, actor, target, skill: SkillDefinition, skill_source: String, parent_event_id := -1) -> void:
-	if skill == null:
+	if skill == null or not actor.skill_is_ready(skill):
 		log.add_child(turn_entry_id, "%s has no available %s; default attack used." % [actor.unit_name, skill_source])
-		_resolve_attack(context, log, turn_entry_id, actor, target, 0, [], parent_event_id)
+		_resolve_attack(context, log, turn_entry_id, actor, target, 0, [], parent_event_id, "Physical")
 		return
+	actor.start_skill_cooldown(skill)
 	var event := CombatEventsScript.job_effect(actor, skill.display_name, "uses %s" % skill.action.to_lower())
 	log.add_event("%s uses %s %s." % [actor.unit_name, skill_source, skill.display_name], event["event_type"], -1, turn_entry_id, event["payload"], event["tags"])
 	var skill_event_id: int = context.publish("skill_used", actor, target, {"skill": skill.display_name, "skill_source": skill_source, "action": skill.action}, parent_event_id, turn_entry_id, ["skill", "action"])
 	if skill.action == CombatConstantsScript.ACTION_HEAL:
 		_resolve_heal(context, log, turn_entry_id, actor, target, skill.amount_modifier, skill_event_id)
+		_publish_skill_completed(context, actor, target, skill, skill_source, skill_event_id, turn_entry_id)
 		return
 	if skill.action == CombatConstantsScript.ACTION_GUARD:
 		_resolve_guard(context, log, turn_entry_id, actor, skill.amount_modifier, skill_event_id)
+		_publish_skill_completed(context, actor, target, skill, skill_source, skill_event_id, turn_entry_id)
 		return
 	if skill.action == CombatConstantsScript.ACTION_APPLY_STATUS:
 		StatusResolverScript.apply_status(log, turn_entry_id, target, skill.status, skill.display_name, skill.status_duration_turns, skill.status_is_permanent, context, actor, skill_event_id)
+		_publish_skill_completed(context, actor, target, skill, skill_source, skill_event_id, turn_entry_id)
 		return
 	if skill.action == CombatConstantsScript.ACTION_EFFECTS_ONLY:
+		_publish_skill_completed(context, actor, target, skill, skill_source, skill_event_id, turn_entry_id)
 		return
-	_resolve_attack(context, log, turn_entry_id, actor, target, skill.amount_modifier, skill.tags, skill_event_id)
+	for _attack_index in range(skill.attack_count):
+		if target == null or not target.is_alive():
+			break
+		_resolve_attack(context, log, turn_entry_id, actor, target, skill.amount_modifier, skill.tags, skill_event_id, skill.attack_damage_type)
+	_publish_skill_completed(context, actor, target, skill, skill_source, skill_event_id, turn_entry_id)
 
 
-func _resolve_attack(context, log, turn_entry_id: int, actor, target, skill_damage_bonus := 0, source_tags: Array = [], parent_event_id := -1) -> void:
+func _publish_skill_completed(context, actor, target, skill: SkillDefinition, skill_source: String, parent_event_id: int, parent_log_id: int) -> void:
+	context.publish("skill_completed", actor, target, {"skill": skill.display_name, "skill_source": skill_source, "action": skill.action}, parent_event_id, parent_log_id, ["skill", "completed"])
+
+
+func _resolve_attack(context, log, turn_entry_id: int, actor, target, skill_damage_bonus := 0, source_tags: Array = [], parent_event_id := -1, attack_damage_type := "Physical") -> void:
+	if attack_damage_type == "Physical" and source_tags.has("magic"):
+		attack_damage_type = "Magic"
+	var target_request: Dictionary = context.request("attack_target_requested", actor, target, {"target_unit_id": target.unit_id}, parent_event_id, turn_entry_id, ["attack", "target", "request"])
+	if bool(target_request["payload"].get("prevented", false)):
+		context.publish("attack_prevented", actor, target, target_request["payload"], int(target_request["id"]), turn_entry_id, ["attack", "prevented"])
+		return
+	target = _unit_by_id(context.units, String(target_request["payload"].get("target_unit_id", target.unit_id)))
+	if target == null or not target.is_alive():
+		return
+	var targeted_event_id: int = context.publish("attack_targeted", actor, target, {}, int(target_request["id"]), turn_entry_id, ["attack", "targeted"])
 	var attack_event := CombatEventsScript.attack(actor, target)
 	var attack_entry_id: int = log.add_event("%s attacks %s." % [actor.unit_name, target.unit_name], attack_event["event_type"], CombatLogScript.NO_TIME, turn_entry_id, attack_event["payload"], attack_event["tags"])
-	var attack_hook_id: int = context.publish("attack_performed", actor, target, {"tags": source_tags.duplicate()}, parent_event_id, attack_entry_id, ["attack"])
-	var bonus_damage: int = skill_damage_bonus + JobEffectResolverScript.attack_bonus(log, attack_entry_id, actor, context)
+	var attack_hook_id: int = context.publish("attack_performed", actor, target, {"tags": source_tags.duplicate(), "bonus_damage": 0}, targeted_event_id, attack_entry_id, ["attack"])
+	var attack_event_data: Dictionary = context.event_by_id(attack_hook_id)
+	var bonus_damage: int = skill_damage_bonus + int(attack_event_data.get("payload", {}).get("bonus_damage", 0)) + JobEffectResolverScript.attack_bonus(log, attack_entry_id, actor, context)
 	var ancestry_attack_bonuses: Dictionary = AncestryFeatureResolverScript.attack_bonus(log, attack_entry_id, actor, context)
 	var item_attack_bonuses: Dictionary = ItemEffectResolverScript.apply_attack_item_effects(log, attack_entry_id, actor, target, context)
-	var is_magic_damage := source_tags.has("magic")
-	var base_damage: int = actor.magic_damage if is_magic_damage else actor.physical_damage
 	var target_armor: int = target.total_armor()
 	var physical_component := int(item_attack_bonuses.get("physical", 0)) + int(ancestry_attack_bonuses.get("physical", 0))
 	var magic_component := int(item_attack_bonuses.get("magic", 0)) + int(ancestry_attack_bonuses.get("magic", 0))
-	if is_magic_damage:
-		magic_component += base_damage + bonus_damage
+	if attack_damage_type == "Magic":
+		magic_component += actor.magic_damage + bonus_damage
+	elif attack_damage_type == "Split Evenly":
+		var split_base: int = actor.physical_damage + bonus_damage
+		physical_component += int(ceil(float(split_base) / 2.0))
+		magic_component += int(floor(float(split_base) / 2.0))
 	else:
-		physical_component += base_damage + bonus_damage
+		physical_component += actor.physical_damage + bonus_damage
 	var physical_damage_taken := 0
 	if physical_component > 0:
 		physical_damage_taken = max(1, physical_component - target_armor)
@@ -277,19 +341,26 @@ func _resolve_attack(context, log, turn_entry_id: int, actor, target, skill_dama
 		"magic_amount": magic_component,
 		"amount": damage_taken,
 		"prevented": false,
-	}, attack_hook_id, attack_entry_id, ["damage", "request"])
+	}, attack_hook_id, attack_entry_id, source_tags + ["attack", "damage", "request"])
 	if bool(damage_request["payload"].get("prevented", false)):
 		context.publish("damage_prevented", actor, target, damage_request["payload"], int(damage_request["id"]), attack_entry_id, ["damage", "prevented"])
 		return
 	physical_damage_taken = int(damage_request["payload"].get("physical_amount", physical_damage_taken))
 	magic_component = int(damage_request["payload"].get("magic_amount", magic_component))
-	damage_taken = max(1, int(damage_request["payload"].get("amount", physical_damage_taken + magic_component)))
+	damage_taken = max(0, int(damage_request["payload"].get("amount", physical_damage_taken + magic_component)))
 	var previous_hp: int = target.hp
 	target.hp = max(0, target.hp - damage_taken)
 	_assert_damage_event_consistency(damage_taken, previous_hp, target.hp)
 	if target.is_alive():
 		ItemEffectResolverScript.apply_hit_item_effects(log, attack_entry_id, actor, target, context)
 	context.record_damage(actor, target, damage_taken, previous_hp, physical_damage_taken, magic_component, attack_hook_id, attack_entry_id, source_tags + ["attack"])
+
+
+func _unit_by_id(units: Array, unit_id: String):
+	for unit in units:
+		if unit.unit_id == unit_id:
+			return unit
+	return null
 
 
 func _resolve_heal(context, log, turn_entry_id: int, actor, target, skill_heal_bonus := 0, parent_event_id := -1) -> void:
@@ -326,7 +397,8 @@ func _build_roster_units(units: Array) -> Array[Dictionary]:
 			"physical_damage": unit.physical_damage,
 			"magic_damage": unit.magic_damage,
 			"armor": unit.total_armor(),
-			"action_interval": unit.action_interval,
+			"energy_shield": unit.energy_shield,
+			"action_speed": unit.action_speed,
 			"statuses": unit.status_snapshots(),
 			"temporary_modifiers": unit.temporary_modifier_snapshots(),
 		})
@@ -346,7 +418,8 @@ func _build_replay_snapshot(root_event_id: int, time: int, units: Array) -> Dict
 			"physical_damage": unit.physical_damage,
 			"magic_damage": unit.magic_damage,
 			"armor": unit.total_armor(),
-			"action_interval": unit.action_interval,
+			"energy_shield": unit.energy_shield,
+			"action_speed": unit.action_speed,
 			"next_action_time": unit.next_action_time,
 			"is_alive": unit.is_alive(),
 			"is_defeated": not unit.is_alive(),

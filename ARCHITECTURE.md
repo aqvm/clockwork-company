@@ -1,5 +1,7 @@
 # Architecture
 
+> Wiki navigation: start at [[Architecture Map]] for concise current ownership and follow links here for the detailed structural record.
+
 ## Project purpose
 
 This is a systems testbed for a small party-based roguelite autobattler. The priority is understandable mechanics and fast iteration, not polish.
@@ -124,7 +126,7 @@ Intentionally not implemented here:
 
 Use a discrete-event model:
 
-- Each unit has an action interval.
+- Each unit has an action speed.
 - Each unit has a next action time.
 - The simulator advances to the next ready unit.
 - That unit performs an action.
@@ -138,7 +140,7 @@ Current combat stats:
 - physical damage
 - magic damage
 - armor
-- action interval
+- action speed
 - targeting rule
 
 Current damage formula:
@@ -197,7 +199,7 @@ The first playable test now opens as a scenario workbench with the older combat 
 - `combat_simulator.gd` now orchestrates a battle by delegating logging, targeting, tactic selection, effect resolution, scheduling, and demo roster setup to dedicated scripts.
 - `combat_simulator.gd` now also provides structured battle report APIs (`run_demo_battle_report` and `run_battle_report`) that return rendered lines, presentation-oriented structured events, authoritative causal `combat_events`, initial roster snapshots, replay unit-state snapshots, winner, and action count.
 - Base game content remains authored in `.tres` Resources; the loader derives JSON-like dictionaries from those Resources, then applies mod JSON overrides from `res://mods/*.json` before constructing runtime Resources.
-- Structured report payloads now include a `log_version` field for format evolution safety.
+- Structured report payloads include a `log_version` field for format evolution safety. Action-speed snapshots use log version `2`; version `1` action-interval snapshots are intentionally incompatible.
 - `clockwork-company/scripts/data/unit_definition.gd` defines the editable unit data Resource type, including ancestry, base physical/magic damage, and per-job progress.
 - `clockwork-company/scripts/data/ancestry_definition.gd` defines an editable ancestry Resource with future base-stat ranges, baseline growth, notes, and an always-on feature reference.
 - `clockwork-company/scripts/data/ancestry_feature_definition.gd` defines the limited ancestry feature payload, including trigger, condition, feature type, amount, cooldown, and notes.
@@ -257,11 +259,11 @@ Current combat rules:
 - a loadout can assign one weapon, one armor item, one helmet, and one trinket item
 - the current job decides whether each assigned item is allowed before item modifiers or triggers apply
 - a loadout owns the unit's priority-ordered tactic Resource list
-- each item has one slot label and flat modifiers for max HP, physical damage, magic damage, armor, and action interval
+- each item has one slot label and flat modifiers for max HP, physical damage, magic damage, armor, and action speed
 - each item can also define declarative authored effects through `Array[EffectDefinition]`
 - item effects are authored through `effects: Array[EffectDefinition]`; the old top-level item `trigger`, `effect`, and `effect_amount` fields have been removed
 - ancestries, items, jobs, tactics, and units can carry freeform tags for future filtering/conditions/content tools
-- each job has small per-level growth values for HP, physical damage, magic damage, armor, and action interval
+- each job has small per-level growth values for HP, physical damage, magic damage, armor, and action speed
 - each unit can gain at most five total job levels across all jobs
 - job progress is stored per unit and per job, with a fixed three-level unlock schedule and a level-1 skill-versus-reaction choice
 - ancestries provide baseline stat-growth values that apply once per total unit job level, in addition to the growth from the specific jobs leveled
@@ -279,7 +281,7 @@ Current combat rules:
 - passive and reaction cooldowns are tracked as combat-only unit-turn counters
 - an equipped `Forecast` passive grants forecast capability; it does not fire as an automatic passive effect
 - physical damage is reduced by armor; magic-tagged damage uses magic damage and ignores armor
-- every unit starts with `next_action_time = action_interval`
+- every unit starts with `next_action_time = ceil(100 / action_speed)`
 - the living unit with the lowest `next_action_time` acts next
 - ties use roster order, which keeps the result deterministic
 - every turn evaluates that unit's loadout tactics in priority order

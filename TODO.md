@@ -1,5 +1,7 @@
 # TODO
 
+> This is the backlog, not a current behavior reference. Start at [[Home]] for canonical concept documentation.
+
 This is the living backlog for planned-but-not-done work. Keep it practical: add items when a decision or deferred task appears, remove or revise items when they are completed or deliberately abandoned, and keep deeper design rationale in `DESIGN_NOTES.md`.
 
 ## Near-Term UI and UX

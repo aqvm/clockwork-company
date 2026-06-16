@@ -503,7 +503,7 @@ func _clone_unit_definition(source: UnitDefinition) -> UnitDefinition:
 	copy.physical_damage = source.physical_damage
 	copy.magic_damage = source.magic_damage
 	copy.armor = source.armor
-	copy.action_interval = source.action_interval
+	copy.action_speed = source.action_speed
 	copy.job_progress = _clone_job_progress(source.job_progress)
 	copy.loadout = _clone_loadout_definition(source.loadout) if source.loadout != null else null
 	return copy
@@ -541,6 +541,8 @@ func _clone_tactic(source: TacticDefinition) -> TacticDefinition:
 	copy.condition = source.condition
 	copy.action = source.action
 	copy.target = source.target
+	copy.status = source.status
+	copy.status_stack_threshold = source.status_stack_threshold
 	copy.foretell_enabled = source.foretell_enabled
 	return copy
 
@@ -554,6 +556,8 @@ func _tactics_to_save_data(tactics: Array[TacticDefinition]) -> Array[Dictionary
 			"condition": tactic.condition,
 			"action": tactic.action,
 			"target": tactic.target,
+			"status_id": _content_id(tactic.status),
+			"status_stack_threshold": tactic.status_stack_threshold,
 			"foretell_enabled": tactic.foretell_enabled,
 		})
 	return results
@@ -569,6 +573,9 @@ func _tactic_from_save_data(raw: Variant, enabled_mod_pack_ids: Array[String]) -
 	tactic.condition = String(data.get("condition", tactic.condition))
 	tactic.action = String(data.get("action", tactic.action))
 	tactic.target = String(data.get("target", tactic.target))
+	var status_id := String(data.get("status_id", _content_id(tactic.status)))
+	tactic.status = JsonContentLoaderScript.load_status_definition_by_id(status_id, enabled_mod_pack_ids)
+	tactic.status_stack_threshold = int(data.get("status_stack_threshold", tactic.status_stack_threshold))
 	tactic.foretell_enabled = bool(data.get("foretell_enabled", tactic.foretell_enabled))
 	return tactic
 
@@ -583,7 +590,7 @@ func _clone_item_definition(source: ItemDefinition) -> ItemDefinition:
 	copy.physical_damage_modifier = source.physical_damage_modifier
 	copy.magic_damage_modifier = source.magic_damage_modifier
 	copy.armor_modifier = source.armor_modifier
-	copy.action_interval_modifier = source.action_interval_modifier
+	copy.action_speed_modifier = source.action_speed_modifier
 	copy.effects = source.effects.duplicate()
 	return copy
 

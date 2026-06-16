@@ -13,6 +13,10 @@ var speculative := false
 var history: Array[Dictionary] = []
 var triggered_effect_root_usage := {}
 var triggered_effect_battle_usage := {}
+var current_time := 0
+var active_actor = null
+var damage_history: Array[Dictionary] = []
+var predict_next_action_damage: Callable = Callable()
 
 var _responders: Array[Callable] = []
 var _queue: Array[Dictionary] = []
@@ -78,6 +82,49 @@ func events_of_type(event_type: String) -> Array[Dictionary]:
 	return matches
 
 
+func allied_buff_duration(target, base_duration: int) -> int:
+	if target == null or base_duration <= 0:
+		return base_duration
+	var strongest_bonus := 0
+	for unit in units:
+		if unit == null or not unit.is_alive() or unit.team != target.team or unit.current_passive == null:
+			continue
+		if unit.current_passive.passive_type == "Extend Allied Buff Duration":
+			strongest_bonus = max(strongest_bonus, int(unit.current_passive.amount))
+	return int(ceil(float(base_duration * (100 + strongest_bonus)) / 100.0))
+
+
+func target_damage_taken_within_interval(target, interval_time: int) -> int:
+	if target == null:
+		return 0
+	var total := 0
+	for record: Dictionary in damage_history:
+		if record.get("target", null) == target and int(record.get("time", 0)) >= current_time - interval_time:
+			total += int(record.get("amount", 0))
+	return total
+
+
+func allied_magic_damage_taken_within_interval(owner, interval_time: int) -> int:
+	if owner == null:
+		return 0
+	var total := 0
+	for record: Dictionary in damage_history:
+		var target = record.get("target", null)
+		if target != null and target.team == owner.team and int(record.get("time", 0)) >= current_time - interval_time:
+			total += int(record.get("magic_amount", 0))
+	return total
+
+
+func predicted_next_action_damage(target) -> int:
+	if target == null or predict_next_action_damage.is_null():
+		return 0
+	return max(0, int(predict_next_action_damage.call(target, active_actor)))
+
+
+func event_by_id(event_id: int) -> Dictionary:
+	return _event_by_id(event_id)
+
+
 func event_snapshots() -> Array[Dictionary]:
 	var snapshots: Array[Dictionary] = []
 	for event: Dictionary in history:
@@ -107,6 +154,19 @@ func apply_direct_damage(source, target, amount: int, parent_event_id := -1, par
 	return record_damage(source, target, amount, previous_hp, 0, previous_hp - target.hp, int(damage_request["id"]), parent_log_id, tags)
 
 
+func apply_physical_damage(source, target, amount: int, parent_event_id := -1, parent_log_id := -1, tags: Array = []) -> Dictionary:
+	var physical_amount: int = max(0, amount - int(target.total_armor()))
+	var damage_request: Dictionary = request("damage_requested", source, target, {"amount": physical_amount, "physical_amount": physical_amount, "magic_amount": 0, "prevented": false}, parent_event_id, parent_log_id, tags)
+	if bool(damage_request["payload"].get("prevented", false)):
+		var prevented_event_id := publish("damage_prevented", source, target, damage_request["payload"], int(damage_request["id"]), parent_log_id, ["damage", "prevented"])
+		return {"amount": 0, "event_id": prevented_event_id}
+	physical_amount = max(0, int(damage_request["payload"].get("physical_amount", physical_amount)))
+	var applied_amount: int = max(0, int(damage_request["payload"].get("amount", physical_amount)))
+	var previous_hp: int = target.hp
+	target.hp = max(0, target.hp - applied_amount)
+	return record_damage(source, target, applied_amount, previous_hp, physical_amount, 0, int(damage_request["id"]), parent_log_id, tags + ["physical"])
+
+
 func record_damage(
 	source,
 	target,
@@ -119,15 +179,27 @@ func record_damage(
 	tags: Array = []
 ) -> Dictionary:
 	var applied_amount: int = previous_hp - target.hp
+	var applied_magic_amount: int = min(max(0, magic_amount), applied_amount)
+	var applied_physical_amount: int = max(0, applied_amount - applied_magic_amount)
 	StatusResolverScript.record_damage(target, applied_amount)
+	target.record_hp_damage(applied_amount)
+	if applied_amount > 0:
+		damage_history.append({
+			"time": current_time,
+			"source": source,
+			"target": target,
+			"amount": applied_amount,
+			"physical_amount": applied_physical_amount,
+			"magic_amount": applied_magic_amount,
+		})
 	var event := CombatEventsScript.damage(source, target, attempted_amount, target.total_armor(), previous_hp, target.hp)
 	if log != null:
 		log.add_event("Damage dealt: %d. Physical %d, magic %d. HP: %d -> %d." % [attempted_amount, physical_amount, magic_amount, previous_hp, target.hp], event["event_type"], -1, parent_log_id, event["payload"], event["tags"])
 	var damage_event_id := publish("damage_dealt", source, target, {
 		"amount": applied_amount,
 		"attempted_amount": attempted_amount,
-		"physical_amount": physical_amount,
-		"magic_amount": magic_amount,
+		"physical_amount": applied_physical_amount,
+		"magic_amount": applied_magic_amount,
 		"previous_hp": previous_hp,
 		"new_hp": target.hp,
 	}, parent_event_id, parent_log_id, tags)
@@ -135,7 +207,7 @@ func record_damage(
 		if log != null:
 			var defeat_event := CombatEventsScript.defeat(target)
 			log.add_event("%s is defeated." % target.unit_name, defeat_event["event_type"], -1, parent_log_id, defeat_event["payload"], defeat_event["tags"])
-		publish("unit_defeated", source, target, {}, damage_event_id, parent_log_id, ["defeat"])
+		publish("unit_defeated", source, target, {"statuses": target.status_snapshots()}, damage_event_id, parent_log_id, ["defeat"])
 	return {"amount": applied_amount, "event_id": damage_event_id}
 
 
@@ -158,6 +230,17 @@ func apply_healing(source, target, amount: int, parent_event_id := -1, parent_lo
 		"new_hp": target.hp,
 	}, int(healing_request["id"]), parent_log_id, tags)
 	return {"amount": applied_amount, "event_id": healing_event_id}
+
+
+func execute_unit(source, target, source_name: String, parent_event_id := -1, parent_log_id := -1) -> bool:
+	if target == null or not target.is_alive():
+		return false
+	target.hp = 0
+	if log != null:
+		log.add_child(parent_log_id, "%s executes %s." % [source_name, target.unit_name])
+	var execute_event_id := publish("unit_executed", source, target, {"source_name": source_name}, parent_event_id, parent_log_id, ["execute", "defeat"])
+	publish("unit_defeated", source, target, {"statuses": target.status_snapshots(), "reason": source_name}, execute_event_id, parent_log_id, ["defeat", "execute"])
+	return true
 
 
 func _process_queue() -> void:
@@ -184,6 +267,10 @@ func _event_by_id(event_id: int) -> Dictionary:
 
 
 func _build_event(event_type: String, source, target, payload: Dictionary, parent_event_id: int, parent_log_id: int, tags: Array) -> Dictionary:
+	if event_type in ["turn_started", "turn_completed"] and payload.has("time"):
+		current_time = int(payload["time"])
+	if event_type == "turn_started":
+		active_actor = source
 	var parent: Dictionary = _event_by_id(parent_event_id)
 	var event_id := _next_event_id
 	_next_event_id += 1

@@ -18,5 +18,5 @@ display_name = "Candlepike"
 tags = ["weapon", "spear", "sustain"]
 slot = "Weapon"
 physical_damage_modifier = 3
-action_interval_modifier = 1
+action_speed_modifier = -1
 effects = [SubResource("Resource_candlepike_wick")]

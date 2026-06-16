@@ -1,5 +1,7 @@
 # Design Notes
 
+> Wiki navigation: start at [[Design Principles]] for the concise current design layer. This document retains durable long-form rationale and decisions.
+
 ## Thesis
 
 This is a party-based autobattler where buildcraft becomes biography.
@@ -24,7 +26,7 @@ Roger begins as a high-Int mage, finds a sword that scales from Int, trains as a
 Combat uses an FFT-like clock idea:
 
 - each unit acts according to timing
-- speed/action interval matters
+- speed/action speed matters
 - actions resolve one at a time
 - combat remains readable through logs
 
@@ -166,7 +168,7 @@ Current job growth rules:
 
 - growth uses small integers and should be roughly point-buy balanced
 - `max_hp_growth`, `physical_damage_growth`, `magic_damage_growth`, and `armor_growth` are positive durability/offense axes
-- `action_interval_growth` uses the simulator's native stat: negative means faster, positive means slower
+- `action_speed_growth` uses the simulator's native stat: positive means faster, negative means slower
 - no job should dominate both speed and every damage/defense axis without paying somewhere else
 
 Damage is now split into physical and magic damage. A damage source with the `magic` tag uses magic damage; otherwise it uses physical damage. Physical damage is reduced by armor. Magic damage currently ignores armor because there is no magic resistance stat yet.

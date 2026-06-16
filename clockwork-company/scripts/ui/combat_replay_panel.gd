@@ -8,6 +8,7 @@ signal tooltip_cleared
 
 const UnitStatusDotScript := preload("res://scripts/ui/unit_status_dot.gd")
 const CombatLogRichTextFormatterScript := preload("res://scripts/ui/combat_log_rich_text_formatter.gd")
+const TurnSchedulerScript := preload("res://scripts/combat/runtime/turn_scheduler.gd")
 const COMBAT_LOG_HEADER := "Combat log:"
 const SECONDS_PER_SIM_SECOND := 0.2
 const MIN_SECONDS_BETWEEN_REPLAY_ACTIONS := 0.1
@@ -302,16 +303,17 @@ func _build_visual_replay_model() -> void:
 		if name.is_empty():
 			continue
 		var max_hp: int = max(1, int(unit.get("max_hp", 1)))
-		var action_interval: int = max(1, int(unit.get("action_interval", 1)))
+		var action_speed: int = max(1, int(unit.get("action_speed", 1)))
 		var state := {
 			"id": unit_id,
 			"name": name,
 			"team": String(unit.get("team", "Enemies")),
 			"max_hp": max_hp,
 			"hp": max_hp,
+			"energy_shield": int(unit.get("energy_shield", 0)),
 			"previous_hp": max_hp,
-			"action_interval": action_interval,
-			"next_action_time": float(action_interval),
+			"action_speed": action_speed,
+			"next_action_time": float(TurnSchedulerScript.action_delay(action_speed)),
 			"display_time": 0.0,
 			"is_alive": true,
 			"turn_pulse_started_at": -9999.0,
@@ -373,7 +375,8 @@ func _apply_snapshot_for_root_event(root_event_id: int) -> bool:
 			continue
 		state["max_hp"] = max(1, int(unit_snapshot.get("max_hp", state.get("max_hp", 1))))
 		state["hp"] = clamp(int(unit_snapshot.get("hp", state.get("hp", state["max_hp"]))), 0, int(state["max_hp"]))
-		state["action_interval"] = max(1, int(unit_snapshot.get("action_interval", state.get("action_interval", 1))))
+		state["energy_shield"] = max(0, int(unit_snapshot.get("energy_shield", state.get("energy_shield", 0))))
+		state["action_speed"] = max(1, int(unit_snapshot.get("action_speed", state.get("action_speed", 1))))
 		state["next_action_time"] = float(unit_snapshot.get("next_action_time", state.get("next_action_time", 0.0)))
 		state["is_alive"] = bool(unit_snapshot.get("is_alive", state.get("is_alive", true)))
 		state["is_defeated"] = bool(unit_snapshot.get("is_defeated", not bool(state["is_alive"])))
@@ -414,7 +417,7 @@ func _apply_turn_start_event(payload: Dictionary) -> void:
 	var actor_state: Dictionary = _find_unit_state_from_payload(payload, "actor_id", "actor")
 	if actor_state.is_empty():
 		return
-	actor_state["next_action_time"] = current_event_time + float(actor_state["action_interval"])
+	actor_state["next_action_time"] = current_event_time + float(TurnSchedulerScript.action_delay(int(actor_state["action_speed"])))
 	actor_state["turn_pulse_started_at"] = displayed_sim_time
 	active_event_actor_name = String(actor_state.get("name", ""))
 

@@ -24,6 +24,6 @@ max_hp = 24
 physical_damage = 1
 magic_damage = 5
 armor = 1
-action_interval = 10
+action_speed = 10
 job_progress = [SubResource("Resource_spellsword_progress")]
 loadout = ExtResource("2_loadout")

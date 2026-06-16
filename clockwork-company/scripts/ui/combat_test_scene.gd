@@ -391,7 +391,9 @@ func _update_campaign_controls() -> void:
 		scenarios = campaign_manager.all_scenarios()
 	if planning_panel != null:
 		var progress = campaign_manager.progress if campaign_manager != null else null
-		var campaign_scenario_ids: Array[String] = campaign_manager.campaign_scenario_ids() if campaign_manager != null else []
+		var campaign_scenario_ids: Array[String] = []
+		if campaign_manager != null:
+			campaign_scenario_ids = campaign_manager.campaign_scenario_ids()
 		planning_panel.call("show_scenarios", scenarios, progress, selected_scenario, _active_scenario_id(), campaign_scenario_ids)
 
 
@@ -575,22 +577,29 @@ func _planning_tactic_options(unit: UnitDefinition) -> Array:
 	if campaign_manager == null or unit == null:
 		return options
 	var loadout = _ensure_planning_loadout(unit)
+	var statuses: Array[StatusDefinition] = campaign_manager.available_statuses()
 	for tactic in loadout.tactics:
-		options.append({"tactic": tactic, "label": tactic.display_name, "equipped": true})
+		options.append({"tactic": tactic, "label": tactic.display_name, "equipped": true, "statuses": statuses})
 	for tactic in campaign_manager.available_tactics():
 		if not _resources_include_id(loadout.tactics, tactic):
-			options.append({"tactic": tactic, "label": tactic.display_name, "equipped": false})
+			options.append({"tactic": tactic, "label": tactic.display_name, "equipped": false, "statuses": statuses})
 	return options
 
 
 func _on_planning_tactic_add_requested(tactic: TacticDefinition) -> void:
 	var unit := _editable_planning_unit()
-	if unit == null or tactic == null:
+	if unit == null:
 		return
 	var loadout = _ensure_planning_loadout(unit)
-	if not _resources_include_id(loadout.tactics, tactic):
+	if tactic == null:
+		tactic = TacticDefinition.new()
+		tactic.display_name = "New Tactic"
 		loadout.tactics.append(tactic)
-		_commit_planning_tactics(unit)
+	elif not _resources_include_id(loadout.tactics, tactic):
+		loadout.tactics.append(tactic)
+	else:
+		return
+	_commit_planning_tactics(unit)
 
 
 func _on_planning_tactic_remove_requested(index: int) -> void:
@@ -621,10 +630,22 @@ func _on_planning_tactic_changed(index: int, field: String, value: Variant) -> v
 	var tactic: TacticDefinition = unit.loadout.tactics[index]
 	if field == "condition":
 		tactic.condition = String(value)
+		if (tactic.condition in ["Target Has Status", "Target Status Stacks At Least", "Target Pending Status Damage At Least HP"] or tactic.target == "Lowest HP Ally With Status") and tactic.status == null:
+			var statuses: Array[StatusDefinition] = campaign_manager.available_statuses()
+			if not statuses.is_empty():
+				tactic.status = statuses[0]
 	elif field == "action":
 		tactic.action = String(value)
 	elif field == "target":
 		tactic.target = String(value)
+	elif field == "display_name":
+		tactic.display_name = String(value).strip_edges()
+		if tactic.display_name.is_empty():
+			tactic.display_name = "New Tactic"
+	elif field == "status":
+		tactic.status = value as StatusDefinition
+	elif field == "status_stack_threshold":
+		tactic.status_stack_threshold = clamp(int(value), 1, 99)
 	elif field == "foretell_enabled":
 		tactic.foretell_enabled = bool(value)
 	else:

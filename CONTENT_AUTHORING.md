@@ -1,5 +1,7 @@
 # Content Authoring Workflow
 
+> Wiki navigation: start at [[Content Authoring]] for the concise workflow and use this document for detailed Resource recipes.
+
 The Godot Inspector is the primary authoring tool for core content. Content Resources live under `clockwork-company/resources/`.
 
 ## Fastest Test Loop
@@ -67,9 +69,20 @@ The shared authoring vocabulary is available on every supported trigger:
 
 - `Apply Status`: applies a referenced status to event-relative, team-wide, or deterministic-random targets.
 - `Remove Status`: removes one deterministic-random matching status by polarity, or a referenced specific status type.
-- `Modify Stat`: temporarily modifies max HP, physical damage, magic damage, armor, or action interval for a configured number of the target's completed turns.
+- `Modify Stat`: temporarily modifies max HP, physical damage, magic damage, armor, or action speed for a configured number of the target's completed actions.
+- `Deal Damage`, `Heal`, `Grant Armor`, and `Grant Battle Armor`: apply shared combat outcomes using fixed or authored formula amounts.
+- `Delay Action` and `Apply Haste`: change timeline position; Haste temporarily raises action speed up to a configured encounter-start speed cap.
+- Status transfer/consumption effects can consume, detonate, gather, maintain, replace, or restore state recorded by authored statuses.
+- `Execute Target`: on `Hit` targeting `Attack Target`, defeats a target left at or below `threshold_percent` maximum HP by positive physical HP damage.
+- `Begin Enemy Action Healing`: opens a healing window on `Self` until the owner's next scheduled turn begins.
+- `Prepare Base Attack`: stores one base attack on `Self` that intercepts the next enemy scheduled turn before it resolves.
 
 Supported shared triggers include battle start, turn start/completion, skill use, attack, hit, damaged, kill, death, status application/removal, and reaction triggering. A shared effect can fire at most once within one causal event chain, preventing it from recursively triggering itself forever.
+
+Attack skills can author multiple complete attacks through `attack_count`.
+`Skill Used` effects resolve before the skill action; `Skill Completed` effects
+resolve afterward. Effects that intentionally respond to every event in a
+multi-hit chain can opt into `repeat_within_event_chain`.
 
 Conditions can narrow these triggers. Unsupported combinations and unavailable targets fail content validation instead of silently doing nothing.
 
