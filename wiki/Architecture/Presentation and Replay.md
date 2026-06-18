@@ -13,11 +13,17 @@ Presentation displays combat that the deterministic simulator has already resolv
 
 The scenario workbench supports scenario inspection, planning, explicit fight start, readable setup text, timed log replay, structured event grouping, lightweight unit visualization, and pinned/nested Resource tooltips.
 
-Replay uses structured events for grouping and emphasis, while simulator-authored snapshots are authoritative for displayed unit state such as HP, timing, defeat, and statuses.
+The same workbench also hosts a developer-facing Combat Lab. `CombatLabState` owns cloned allied/enemy unit definitions, equipment edits, authored ancestry/job/feature/tactic assignments, stat edits, assembly operations, and JSON setup fixture save/load. `CombatLabPanel` presents catalog selection, setup name/notes, saved setup selection, ordered party controls, per-slot item selectors, authored Resource dropdowns, stat fields, and tactic template controls. Lab battles are resolved by `CombatSimulator` and handed to `CombatReplayPanel` as ordinary battle reports; replay finishing does not mutate campaign or run progression.
+
+Replay uses structured events for grouping and emphasis, while simulator-authored snapshots are authoritative for displayed unit state such as HP, timing, defeat, and statuses. Battle reports also include simulator-authored contribution summaries built from structured combat events, and the workbench displays them after resolved scenario, campaign, debug, and Combat Lab battles.
 
 ## Primary Owners
 
 - `clockwork-company/scripts/ui/combat_test_scene.gd`
+- `clockwork-company/scripts/devtools/combat_lab_state.gd`
+- `clockwork-company/scripts/ui/combat_lab_panel.gd`
+- `clockwork-company/scripts/combat/battle_contribution_summary.gd`
+- `clockwork-company/scripts/ui/battle_contribution_panel.gd`
 - `clockwork-company/scripts/ui/combat_replay_panel.gd`
 - `clockwork-company/scripts/ui/unit_status_dot.gd`
 - `clockwork-company/scripts/ui/resource_tooltip_builder.gd`

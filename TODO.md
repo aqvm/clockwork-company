@@ -70,6 +70,7 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 ## Replay and Presentation
 
 - Keep moving visual replay toward structured simulator snapshots where richer visuals need more state. The replay now consumes simulator-authored unit snapshots including statuses after battle start and each root event, while structured events still drive text grouping and lightweight effects.
+- Eventually make Combat Lab a crash/troubleshooting repro target: capture enough combat setup/report context from failures to load it back into the lab and recreate the exact combat conditions for debugging.
 - Add richer replay visuals only when they clarify combat:
   - portraits
   - statuses

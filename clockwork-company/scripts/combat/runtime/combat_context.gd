@@ -156,6 +156,7 @@ func apply_direct_damage(source, target, amount: int, parent_event_id := -1, par
 
 func apply_physical_damage(source, target, amount: int, parent_event_id := -1, parent_log_id := -1, tags: Array = []) -> Dictionary:
 	var physical_amount: int = max(0, amount - int(target.total_armor()))
+	var mitigated_amount: int = max(0, amount - physical_amount)
 	var damage_request: Dictionary = request("damage_requested", source, target, {"amount": physical_amount, "physical_amount": physical_amount, "magic_amount": 0, "prevented": false}, parent_event_id, parent_log_id, tags)
 	if bool(damage_request["payload"].get("prevented", false)):
 		var prevented_event_id := publish("damage_prevented", source, target, damage_request["payload"], int(damage_request["id"]), parent_log_id, ["damage", "prevented"])
@@ -164,7 +165,7 @@ func apply_physical_damage(source, target, amount: int, parent_event_id := -1, p
 	var applied_amount: int = max(0, int(damage_request["payload"].get("amount", physical_amount)))
 	var previous_hp: int = target.hp
 	target.hp = max(0, target.hp - applied_amount)
-	return record_damage(source, target, applied_amount, previous_hp, physical_amount, 0, int(damage_request["id"]), parent_log_id, tags + ["physical"])
+	return record_damage(source, target, applied_amount, previous_hp, physical_amount, 0, int(damage_request["id"]), parent_log_id, tags + ["physical"], mitigated_amount)
 
 
 func record_damage(
@@ -176,7 +177,8 @@ func record_damage(
 	magic_amount: int,
 	parent_event_id := -1,
 	parent_log_id := -1,
-	tags: Array = []
+	tags: Array = [],
+	mitigated_amount := 0
 ) -> Dictionary:
 	var applied_amount: int = previous_hp - target.hp
 	var applied_magic_amount: int = min(max(0, magic_amount), applied_amount)
@@ -200,6 +202,7 @@ func record_damage(
 		"attempted_amount": attempted_amount,
 		"physical_amount": applied_physical_amount,
 		"magic_amount": applied_magic_amount,
+		"mitigated_amount": max(0, mitigated_amount),
 		"previous_hp": previous_hp,
 		"new_hp": target.hp,
 	}, parent_event_id, parent_log_id, tags)

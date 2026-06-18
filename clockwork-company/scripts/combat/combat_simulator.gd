@@ -16,6 +16,7 @@ const TargetingRulesScript := preload("res://scripts/combat/rules/targeting_rule
 const DemoBattleFactoryScript := preload("res://scripts/combat/scenarios/demo_battle_factory.gd")
 const CombatContextScript := preload("res://scripts/combat/runtime/combat_context.gd")
 const CombatHookResolverScript := preload("res://scripts/combat/rules/combat_hook_resolver.gd")
+const BattleContributionSummaryScript := preload("res://scripts/combat/battle_contribution_summary.gd")
 const LOG_VERSION := 2
 
 func run_demo_battle(enabled_mod_pack_ids: Variant = null) -> Array[String]:
@@ -95,13 +96,16 @@ func run_battle_report_from_units(units: Array, battle_title := "Run battle", sc
 	var result_event := CombatEventsScript.result(result_text)
 	var result_entry_id: int = log.add_event(result_text, result_event["event_type"], CombatLogScript.NO_TIME, CombatLogScript.NO_PARENT, result_event["payload"], result_event["tags"])
 	replay_snapshots.append(_build_replay_snapshot(result_entry_id, CombatLogScript.NO_TIME, units))
+	var roster_units: Array[Dictionary] = _build_roster_units(units)
+	var combat_events: Array[Dictionary] = context.event_snapshots()
 	return {
 		"log_version": LOG_VERSION,
 		"lines": log.to_lines(),
 		"events": log.to_event_objects(),
-		"combat_events": context.event_snapshots(),
-		"roster_units": _build_roster_units(units),
+		"combat_events": combat_events,
+		"roster_units": roster_units,
 		"replay_snapshots": replay_snapshots,
+		"contribution_summary": BattleContributionSummaryScript.build(roster_units, combat_events),
 		"winner": _winner_for_units(units),
 		"actions_taken": actions_taken,
 	}
@@ -333,8 +337,10 @@ func _resolve_attack(context, log, turn_entry_id: int, actor, target, skill_dama
 	else:
 		physical_component += actor.physical_damage + bonus_damage
 	var physical_damage_taken := 0
+	var raw_physical_component := physical_component
 	if physical_component > 0:
 		physical_damage_taken = max(1, physical_component - target_armor)
+	var mitigated_amount: int = max(0, raw_physical_component - physical_damage_taken)
 	var damage_taken: int = max(1, physical_damage_taken + magic_component)
 	var damage_request: Dictionary = context.request("damage_requested", actor, target, {
 		"physical_amount": physical_damage_taken,
@@ -353,7 +359,7 @@ func _resolve_attack(context, log, turn_entry_id: int, actor, target, skill_dama
 	_assert_damage_event_consistency(damage_taken, previous_hp, target.hp)
 	if target.is_alive():
 		ItemEffectResolverScript.apply_hit_item_effects(log, attack_entry_id, actor, target, context)
-	context.record_damage(actor, target, damage_taken, previous_hp, physical_damage_taken, magic_component, attack_hook_id, attack_entry_id, source_tags + ["attack"])
+	context.record_damage(actor, target, damage_taken, previous_hp, physical_damage_taken, magic_component, attack_hook_id, attack_entry_id, source_tags + ["attack"], mitigated_amount)
 
 
 func _unit_by_id(units: Array, unit_id: String):
