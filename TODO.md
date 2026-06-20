@@ -58,7 +58,9 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 
 - Add more status effects only when focused content needs them. Confusion, Bleed, Numb, and Frost are implemented ailments; Reconstitution is the first boon.
 - Design ailments as distinct rule pressures, not generic damage-over-time variants. Each ailment should create a readable tactical question or matchup hook.
-- Good ailment directions to explore: bleed that punishes faster units or future movement, confusion that skips the first tactic the unit would have used, armor corrosion that changes mitigation math, silence-like effects that disrupt skill use, or panic effects that alter targeting.
+- Good ailment directions to explore: Shock as poisoned haste, bleed that punishes faster units or future movement, confusion that skips the first tactic the unit would have used, armor corrosion that changes mitigation math, silence-like effects that disrupt skill use, or panic effects that alter targeting.
+- Implement Shock only when focused content needs it. Current candidate: after the afflicted unit completes an action, it takes magic damage equal to its Shock stacks, loses one stack, and has its next scheduled action moved earlier by an authored timeline amount.
+- Shock authoring gaps: add a status behavior that can deal stack-scaling magic ailment damage on action completion, decay one stack on trigger, and reschedule the afflicted unit's next action earlier. Decide whether the acceleration is fixed, per consumed stack, or based on remaining stacks before adding schema fields.
 - Ailments may either punish a unit's strengths or exploit a unit's weaknesses. Both paradigms are valid and can coexist.
 - Add debuff purge options eventually, but keep them specific and intentionally scarce. Avoid a universal, always-accessible cleanse that erases ailment matchup pressure.
 - Avoid generic ailment resistance stats. Occasional authored immunities are acceptable when they make a unit, enemy, item, or scenario identity clearer.
@@ -82,6 +84,8 @@ This is the living backlog for planned-but-not-done work. Keep it practical: add
 - Keep tactic planning template-based for now: planning can add, remove, order, and alter the current condition/action/target/Foretell fields, but should not grow a larger predicate/action language without focused design work.
 - Keep the first authored job unlock schedule small: level 1 chooses skill or reaction, level 2 unlocks the passive, and level 3 unlocks the remaining skill or reaction.
 - Keep the first real progression implementation content-small: build the unlock tracking, choice, equip, persistence, and UI plumbing around the current one-skill/one-passive/one-reaction job scaffold before adding larger job ability catalogs.
+- Aegiswright authoring gaps: add owner-armor amount scaling, Energy Shield redistribution/splitting, a broad ally-would-die intervention trigger, source Energy Shield spending to leave a target at 1 HP, and magic damage that pierces Energy Shield while still counting as magic damage.
+- Arcane Warden authoring gaps: add persistent unit links with owner-action expiration, linked damage splitting, per-link damage type conversion, actual-HP-loss-to-Energy-Shield conversion, received-healing reduction, an Energy-Shield-greater-than-current-HP reaction condition, and Energy Shield detonation that spends shield and exposes the spent amount as damage.
 - Add persistent unit careers across scenarios.
 - Build roster rotation pressure around opportunity cost and matchup evaluation, not fatigue/injury/rest punishment. Max-level units should still be legal and powerful, but bringing them should waste potential XP compared with developing lower-level units.
 - Make scenario and enemy design push different roster/gear answers. If the optimal campaign habit becomes "bring the same three best units to every fight," the roster design has failed.
