@@ -3,10 +3,17 @@
 [ext_resource type="Script" path="res://scripts/data/item_definition.gd" id="1_item"]
 [ext_resource type="Script" path="res://scripts/data/effect_definition.gd" id="2_effect"]
 
+[ext_resource type="Resource" path="res://resources/tags/clockwork.tres" id="tag_clockwork"]
+[ext_resource type="Resource" path="res://resources/tags/damage.tres" id="tag_damage"]
+[ext_resource type="Resource" path="res://resources/tags/magic.tres" id="tag_magic"]
+[ext_resource type="Resource" path="res://resources/tags/spear.tres" id="tag_spear"]
+[ext_resource type="Resource" path="res://resources/tags/tempo.tres" id="tag_tempo"]
+[ext_resource type="Resource" path="res://resources/tags/weapon.tres" id="tag_weapon"]
+
 [sub_resource type="Resource" id="Resource_hourhand_puncture"]
 script = ExtResource("2_effect")
 display_name = "Hourhand Puncture"
-tags = ["damage", "clockwork", "magic"]
+tags = Array[Resource]([ExtResource("tag_damage"), ExtResource("tag_clockwork"), ExtResource("tag_magic")])
 trigger = "Attack"
 target_selector = "Attack Target"
 effect_type = "Bonus Damage"
@@ -15,7 +22,7 @@ amount = 1
 [resource]
 script = ExtResource("1_item")
 display_name = "Hourhand Spear"
-tags = ["weapon", "spear", "tempo"]
+tags = Array[Resource]([ExtResource("tag_weapon"), ExtResource("tag_spear"), ExtResource("tag_tempo")])
 slot = "Weapon"
 magic_damage_modifier = 3
 action_speed_modifier = -1

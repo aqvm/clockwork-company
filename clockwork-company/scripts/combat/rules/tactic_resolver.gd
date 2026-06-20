@@ -30,6 +30,12 @@ static func choose_action(actor, units: Array, evaluate_foretell: Callable = Cal
 		if tactic.action == CombatConstantsScript.ACTION_JOB_SKILL and not actor.skill_is_ready(actor.current_skill):
 			skipped_reasons.append("Tactic skipped: %s. Current job skill is on cooldown." % _describe_tactic(tactic))
 			continue
+		if tactic.action == CombatConstantsScript.ACTION_SECONDARY_SKILL and actor.current_secondary_skill == null:
+			skipped_reasons.append("Tactic skipped: %s. Current job secondary skill is not unlocked." % _describe_tactic(tactic))
+			continue
+		if tactic.action == CombatConstantsScript.ACTION_SECONDARY_SKILL and not actor.skill_is_ready(actor.current_secondary_skill):
+			skipped_reasons.append("Tactic skipped: %s. Current job secondary skill is on cooldown." % _describe_tactic(tactic))
+			continue
 		if tactic.action == CombatConstantsScript.ACTION_ASSIGNED_SKILL and actor.assigned_skill == null:
 			skipped_reasons.append("Tactic skipped: %s. No eligible learned skill is assigned." % _describe_tactic(tactic))
 			continue

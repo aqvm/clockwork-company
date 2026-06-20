@@ -4,10 +4,14 @@
 [ext_resource type="Resource" path="res://resources/loadouts/turnkey_whistle.tres" id="2_loadout"]
 
 [ext_resource type="Resource" path="res://resources/ancestries/brassbound.tres" id="3_ancestry"]
+
+[ext_resource type="Resource" path="res://resources/tags/armored.tres" id="tag_armored"]
+[ext_resource type="Resource" path="res://resources/tags/control.tres" id="tag_control"]
+
 [resource]
 script = ExtResource("1_unit")
 display_name = "Carr Turnkey"
-tags = ["control", "armored"]
+tags = Array[Resource]([ExtResource("tag_control"), ExtResource("tag_armored")])
 team = "Enemies"
 ancestry = ExtResource("3_ancestry")
 max_hp = 25

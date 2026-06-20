@@ -17,8 +17,8 @@ reusable resolver gaps without treating unimplemented concepts as commitments.
 
 ## Pyromancer
 
-Identity: builds persistent Burn pressure while turning hostile ailments back
-onto their source.
+Identity: builds persistent Burn pressure through direct application and a
+global heat aura while turning hostile ailments back onto their source.
 
 ### Authorable Recipe
 
@@ -27,11 +27,16 @@ onto their source.
     `Event Target`.
   - Multiple effects create separately explained pulses. One effect with
     `status_stacks > 1` creates one larger application.
-- Passive: Burn immunity.
+- Passive: Burn immunity plus global heat pulses.
   - `Status Application Requested`
   - `Requested Status Matches` Burning
   - `Self`
   - `Prevent Request`
+- Passive heat pulse effects:
+  - `Battle Start` + `Apply Status` Burning to `All Units`
+  - `Turn Start` or `Action Completed` + `Apply Status` Burning to `All Units`
+  - The exact cadence is a balance knob. Burn immunity should prevent the
+    Pyromancer from benefiting twice by Burning itself.
 - Reaction: replace an incoming ailment with a deterministic-random boon, then
   double the attempted source's existing Burning.
   - Reaction trigger: `Status Application Requested`
@@ -40,7 +45,7 @@ onto their source.
   - Explicit `replacement_statuses` boon pool
   - `Reaction Triggered` + `Apply Status` Burning to `Event Target`
   - Amount source: `Target Status Stacks`
-- Bridge action, `Hot on Their Heels`: temporarily increase an ally's action
+- Secondary skill, `Hot on Their Heels`: temporarily increase an ally's action
   speed by its total ailment stacks. A non-stacking ailment contributes one;
   an intensified ailment contributes its current stack count.
 
@@ -53,7 +58,7 @@ immunity, but it should be stated in the ability text.
 
 ### Resolver Gap
 
-None required for the current concept, including `Hot on Their Heels`.
+None required for the current concept, including the secondary skill `Hot on Their Heels`.
 
 ## Cryomancer
 
@@ -494,3 +499,144 @@ Next-action projection clones the current combat state, executes the target's
 normal deterministic next action, and totals actual HP damage sourced by that
 target. The real state remains unchanged. Nested prediction during that
 projected action resolves as zero to prevent recursive forecast loops.
+
+## Aegiswright
+
+Identity: an armor-scaling shield-battery support who turns personal defenses
+into a shared emergency Energy Shield reserve.
+
+The name is provisional, but `Aegiswright` currently fits better than
+Ward-based names because this job does not interact with the existing Ward
+status.
+
+### Intended Recipe
+
+- Stat growth: strong armor, maximum HP, and magic-damage growth.
+- Passive: after each of the Aegiswright's actions, grant Energy Shield to
+  `Self` equal to twice the Aegiswright's current armor.
+- Action: deal magic damage that ignores Energy Shield and damages HP directly.
+- Reaction: when a living ally would die, if the Aegiswright has Energy Shield,
+  sacrifice 50% of the Aegiswright's current Energy Shield to keep that ally
+  alive at 1 HP. Cooldown 5.
+- Bridge action: split the Aegiswright's current Energy Shield evenly across
+  all living allies.
+
+### Important Interactions
+
+The reaction is the signature mechanic and should be treated as stronger than
+ordinary healing because it prevents a defeat rather than recovering from
+damage afterward. A minimum Energy Shield requirement or minimum cost may be
+needed so a trivial leftover shield does not create a full death save. Start by
+testing a minimum cost such as 10 Energy Shield, or "sacrifice half, minimum
+10."
+
+The reaction should explicitly consume the sacrificed Energy Shield from the
+Aegiswright, not from the ally being saved. It should also define whether the
+saved unit keeps any existing Energy Shield. The simplest rule is that lethal
+damage resolves as far as possible, then the intervention leaves the ally at 1
+HP with whatever Energy Shield remains after the triggering damage request.
+
+The Bridge action should decide how to handle remainders when Energy Shield
+does not divide evenly. Rounding down and leaving the remainder on the
+Aegiswright is deterministic and keeps the action easy to explain.
+
+The action's Energy Shield piercing is intentionally separate from physical
+armor interaction: it is still magic damage for tags and magic-damage scaling,
+but it bypasses the magic-only Energy Shield prevention layer.
+
+### Resolver Gaps
+
+This concept is not fully authorable with the current shared vocabulary.
+
+- Add an amount source such as `Owner Armor` so a `Grant Energy Shield` effect
+  can scale from the effect owner's current armor instead of the target's stats.
+- Add an Energy Shield splitting effect, or a redistribution mode for `Grant
+  Energy Shield`, that can remove shield from the source and divide it across a
+  selected allied group.
+- Add a lethal-ally intervention trigger. Current request prevention only has
+  `Lethal Physical Attack Requested`; this job needs a broader "ally would be
+  defeated" hook that can observe lethal physical damage, magic damage,
+  direct-effect damage, and ailment damage if the design wants all of those
+  covered.
+- Add a request or effect that can spend source Energy Shield and leave the
+  event target alive at exactly 1 HP.
+- Add a damage flag or effect variant for magic damage that pierces Energy
+  Shield while still behaving as magic damage for other combat rules.
+
+## Arcane Warden
+
+Identity: a link-and-transmutation support duelist who converts suffered HP
+loss into Energy Shield, then uses linked damage routing to protect allies or
+punish enemies.
+
+`Warden` is intentionally treated as its own noun rather than a reference to
+the Ward status.
+
+### Intended Recipe
+
+- Stat growth: strong magic-damage and action-speed growth. A secondary bias
+  remains unresolved; maximum HP or armor are both plausible depending on how
+  risky the link gameplay should feel.
+- Passive: whenever the Arcane Warden loses HP from damage, grant Energy Shield
+  to `Self` equal to the actual HP lost. Healing received by the Arcane Warden
+  is reduced by 50%.
+- Secondary action: link to an ally. Until the Arcane Warden has taken two
+  actions, damage to either linked unit is split evenly between them. Physical
+  damage the Arcane Warden would take because of this link becomes magic
+  damage, allowing Energy Shield to mitigate it.
+- Primary action: link to an enemy. Until the Arcane Warden has taken two
+  actions, damage to either linked unit is split evenly between them. Magic
+  damage the Arcane Warden would take because of this link becomes physical
+  damage, bypassing Energy Shield.
+- Reaction: once per combat, when the Arcane Warden has more Energy Shield than
+  current HP, detonate all of its Energy Shield and deal physical damage equal
+  to the Energy Shield lost to all enemies.
+
+### Important Interactions
+
+The learned-reaction slot makes the detonation an intentional build choice. If
+a player does not want an automatic once-per-combat explosion, they can equip a
+different learned reaction instead.
+
+The passive reads actual HP loss, not pending damage. Energy Shield absorption,
+Fortified prevention, and overkill beyond zero HP should not inflate the shield
+gain. The healing penalty should apply to healing received by the Arcane
+Warden, regardless of source, after other prevention/replacement rules decide
+that healing will resolve.
+
+The ally link is protective because it can turn the Warden's share of linked
+physical damage into magic damage and let Energy Shield absorb it. The enemy
+link is intentionally more dangerous because it turns the Warden's share of
+linked magic damage into physical damage, preventing Energy Shield from
+catching that share.
+
+Action-speed growth is a real tradeoff because link duration expires after the
+Arcane Warden takes two actions. Faster action speed gives more frequent link
+choices but shorter link windows.
+
+Physical detonation damage lets armor counter very large Energy Shield pools.
+That keeps the once-per-combat reaction explosive without making it universal
+true damage.
+
+Damage split rounding should be deterministic. A good default is to assign the
+odd point to the original damage target and the lower share to the linked
+partner.
+
+### Resolver Gaps
+
+This concept is not fully authorable with the current shared vocabulary.
+
+- Add persistent link state between two units with an expiration measured in
+  the Arcane Warden's completed actions.
+- Add damage splitting for linked units before final damage application, while
+  preserving clear source, target, and parent-event logging.
+- Add per-link damage type conversion for only the Warden's received share.
+- Add an `HP Lost` trigger or amount source that reads actual HP loss from
+  damage and can grant Energy Shield to the damaged unit.
+- Add a received-healing modifier that can reduce healing on a specific unit by
+  a percentage.
+- Add a once-per-combat reaction condition comparing owner Energy Shield to
+  owner current HP.
+- Add an Energy Shield detonation effect that removes the owner's current
+  Energy Shield and exposes the removed amount as the damage amount for follow-
+  up effects.

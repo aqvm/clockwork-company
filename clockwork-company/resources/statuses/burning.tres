@@ -1,8 +1,14 @@
-[gd_resource type="Resource" script_class="StatusDefinition" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="StatusDefinition" format=3 uid="uid://kub8csryqvxm"]
 
-[ext_resource type="Script" path="res://scripts/data/status_definition.gd" id="1_status"]
+[ext_resource type="Script" uid="uid://dskbx08s3ioej" path="res://scripts/data/status_definition.gd" id="1_status"]
+
+[ext_resource type="Resource" path="res://resources/tags/action.tres" id="tag_action"]
+[ext_resource type="Resource" path="res://resources/tags/ailment.tres" id="tag_ailment"]
+[ext_resource type="Resource" path="res://resources/tags/burn.tres" id="tag_burn"]
+[ext_resource type="Resource" path="res://resources/tags/damage.tres" id="tag_damage"]
 
 [resource]
+resource_name = "Burning"
 script = ExtResource("1_status")
 display_name = "Burning"
 polarity = "Ailment"
@@ -10,7 +16,7 @@ status_type = "Burning"
 stacking_rule = "Intensify"
 stack_cap_enabled = false
 max_stacks = 5
-tags = Array[String](["ailment", "damage", "action"])
+tags = Array[Resource]([ExtResource("tag_ailment"), ExtResource("tag_damage"), ExtResource("tag_action"), ExtResource("tag_burn")])
 amount = 1
 elapses_naturally = false
 description = "After this unit completes an action, it takes 1 damage per stack and loses one stack. Healing or protecting it Scorches the supporter."

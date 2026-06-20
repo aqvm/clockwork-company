@@ -3,10 +3,15 @@
 [ext_resource type="Script" path="res://scripts/data/item_definition.gd" id="1_item"]
 [ext_resource type="Script" path="res://scripts/data/effect_definition.gd" id="2_effect"]
 
+[ext_resource type="Resource" path="res://resources/tags/anti_fragile.tres" id="tag_anti_fragile"]
+[ext_resource type="Resource" path="res://resources/tags/fragile.tres" id="tag_fragile"]
+[ext_resource type="Resource" path="res://resources/tags/mace.tres" id="tag_mace"]
+[ext_resource type="Resource" path="res://resources/tags/weapon.tres" id="tag_weapon"]
+
 [sub_resource type="Resource" id="Resource_mirror_mace_glare"]
 script = ExtResource("2_effect")
 display_name = "Mirror Mace Glare"
-tags = ["fragile"]
+tags = Array[Resource]([ExtResource("tag_fragile")])
 trigger = "Attack"
 condition = "Target Has Tag"
 target_selector = "Attack Target"
@@ -16,7 +21,7 @@ amount = 2
 [resource]
 script = ExtResource("1_item")
 display_name = "Mirror Mace"
-tags = ["weapon", "mace", "anti_fragile"]
+tags = Array[Resource]([ExtResource("tag_weapon"), ExtResource("tag_mace"), ExtResource("tag_anti_fragile")])
 slot = "Weapon"
 max_hp_modifier = -1
 physical_damage_modifier = 2

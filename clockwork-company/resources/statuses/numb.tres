@@ -2,6 +2,9 @@
 
 [ext_resource type="Script" path="res://scripts/data/status_definition.gd" id="1_status"]
 
+[ext_resource type="Resource" path="res://resources/tags/ailment.tres" id="tag_ailment"]
+[ext_resource type="Resource" path="res://resources/tags/reaction.tres" id="tag_reaction"]
+
 [resource]
 script = ExtResource("1_status")
 display_name = "Numb"
@@ -9,5 +12,5 @@ polarity = "Ailment"
 status_type = "Numb"
 stacking_rule = "Refresh"
 max_stacks = 1
-tags = Array[String](["ailment", "reaction"])
+tags = Array[Resource]([ExtResource("tag_ailment"), ExtResource("tag_reaction")])
 description = "This unit cannot trigger reactions."

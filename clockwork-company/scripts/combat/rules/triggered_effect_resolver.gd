@@ -2,6 +2,7 @@ extends RefCounted
 class_name TriggeredEffectResolver
 
 const StatusResolverScript := preload("res://scripts/combat/rules/status_resolver.gd")
+const TagUtilsScript := preload("res://scripts/data/tag_utils.gd")
 
 const SHARED_EFFECT_TYPES := ["Apply Status", "Maintain Status Aura", "Replace Requested Status", "Remove Status", "Consume Status", "Detonate Status", "Gather Status", "Transfer Statuses", "Restore Max HP Lost To Status", "Deal Damage", "Heal", "Grant Armor", "Grant Battle Armor", "Grant Energy Shield", "Disable Armor", "Delay Action", "Apply Haste", "Increase Action Speed For Battle", "Fortify Damage", "Redirect Enemy Attacks", "Add Attack Damage", "Modify Stat", "Modify Counter", "Reset Counter", "Seal Next Attack", "Prevent Request", "Execute Target", "Begin Enemy Action Healing", "Prepare Base Attack"]
 
@@ -15,7 +16,7 @@ static func respond(context, event: Dictionary) -> void:
 			for effect in item.effects:
 				if _can_resolve(context, event, unit, effect, item.display_name):
 					_resolve(context, event, unit, effect, item.display_name, ["item"])
-		for skill in [unit.current_skill, unit.assigned_skill]:
+		for skill in [unit.current_skill, unit.current_secondary_skill, unit.assigned_skill]:
 			if skill == null or String(event["payload"].get("skill", "")) != skill.display_name:
 				continue
 			for effect in skill.effects:
@@ -78,8 +79,8 @@ static func _resolve(context, event: Dictionary, owner, effect: EffectDefinition
 				target,
 				effect.status,
 				source_name,
-				effect.status_duration_turns,
-				effect.status_is_permanent,
+				_status_duration_turns(effect, effect.status),
+				_status_is_permanent(effect, effect.status),
 				context,
 				owner,
 				effect_event_id,
@@ -219,7 +220,7 @@ static func _replace_requested_status(context, event: Dictionary, owner, target,
 	event["payload"]["prevented"] = true
 	event["payload"]["prevented_reason"] = source_name
 	var replacement: StatusDefinition = effect.replacement_statuses[int(event.get("id", 0)) % effect.replacement_statuses.size()]
-	StatusResolverScript.apply_status(context.log, int(event.get("parent_log_id", -1)), target, replacement, source_name, effect.status_duration_turns, effect.status_is_permanent, context, owner, effect_event_id)
+	StatusResolverScript.apply_status(context.log, int(event.get("parent_log_id", -1)), target, replacement, source_name, _status_duration_turns(effect, replacement), _status_is_permanent(effect, replacement), context, owner, effect_event_id)
 
 
 static func _apply_modifier(context, event: Dictionary, owner, target, effect: EffectDefinition, source_name: String, effect_event_id: int) -> void:
@@ -347,7 +348,7 @@ static func _gather_status(context, event: Dictionary, owner, target, effect: Ef
 		if StatusResolverScript.remove_status(context.log, int(event.get("parent_log_id", -1)), source_target, effect.status.display_name, source_name, context, owner, effect_event_id):
 			gathered += stacks
 	if gathered > 0:
-		StatusResolverScript.apply_status(context.log, int(event.get("parent_log_id", -1)), target, effect.status, source_name, effect.status_duration_turns, effect.status_is_permanent, context, owner, effect_event_id, gathered)
+		StatusResolverScript.apply_status(context.log, int(event.get("parent_log_id", -1)), target, effect.status, source_name, _status_duration_turns(effect, effect.status), _status_is_permanent(effect, effect.status), context, owner, effect_event_id, gathered)
 
 
 static func _restore_max_hp_lost_to_status(context, event: Dictionary, owner, target, effect: EffectDefinition, source_name: String, effect_event_id: int) -> void:
@@ -380,7 +381,7 @@ static func _transfer_statuses(context, event: Dictionary, owner, target, effect
 			var definition: StatusDefinition = instance.get("definition", null)
 			if definition == null or (effect.status_polarity != "Any" and definition.polarity != effect.status_polarity):
 				continue
-			var duration := int(instance.get("remaining_turns", effect.status_duration_turns))
+			var duration := int(instance.get("remaining_turns", _status_duration_turns(effect, definition)))
 			var permanent := bool(instance.get("is_permanent", false))
 			var stacks := int(instance.get("stack_count", 1))
 			if StatusResolverScript.remove_status(context.log, int(event.get("parent_log_id", -1)), source_unit, definition.display_name, source_name, context, owner, effect_event_id):
@@ -724,13 +725,22 @@ static func _aura_source_key(owner, effect: EffectDefinition, source_name: Strin
 	return "aura|%s|%s|%d" % [owner.unit_id if owner != null else "scenario", source_name, effect.get_instance_id()]
 
 
-static func _target_has_any_tag(target, tags: Array[String]) -> bool:
+static func _target_has_any_tag(target, tags: Array) -> bool:
 	if target == null:
 		return false
-	for tag in tags:
-		if target.tags.has(tag):
-			return true
-	return false
+	return TagUtilsScript.has_any_tag(target.tags, tags)
+
+
+static func _status_duration_turns(effect: EffectDefinition, status: StatusDefinition) -> int:
+	if effect.override_status_duration or status == null:
+		return effect.status_duration_turns
+	return status.default_duration_turns
+
+
+static func _status_is_permanent(effect: EffectDefinition, status: StatusDefinition) -> bool:
+	if effect.override_status_duration or status == null:
+		return effect.status_is_permanent
+	return status.default_is_permanent
 
 
 static func _usage_key(event: Dictionary, owner, effect: EffectDefinition, source_name: String) -> String:

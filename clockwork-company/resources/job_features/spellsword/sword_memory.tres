@@ -2,10 +2,13 @@
 
 [ext_resource type="Script" path="res://scripts/data/passive_definition.gd" id="1_passive"]
 
+[ext_resource type="Resource" path="res://resources/tags/blade.tres" id="tag_blade"]
+[ext_resource type="Resource" path="res://resources/tags/spellblade.tres" id="tag_spellblade"]
+
 [resource]
 script = ExtResource("1_passive")
 display_name = "Sword Memory"
-tags = Array[String](["spellblade", "blade"])
+tags = Array[Resource]([ExtResource("tag_spellblade"), ExtResource("tag_blade")])
 passive_type = "Attack Damage Bonus"
 amount = 1
 cooldown_turns = 1

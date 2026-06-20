@@ -4,10 +4,15 @@
 [ext_resource type="Resource" path="res://resources/loadouts/foundry_monk_brass.tres" id="2_loadout"]
 
 [ext_resource type="Resource" path="res://resources/ancestries/brassbound.tres" id="3_ancestry"]
+
+[ext_resource type="Resource" path="res://resources/tags/armored.tres" id="tag_armored"]
+[ext_resource type="Resource" path="res://resources/tags/frontline.tres" id="tag_frontline"]
+[ext_resource type="Resource" path="res://resources/tags/machine.tres" id="tag_machine"]
+
 [resource]
 script = ExtResource("1_unit")
 display_name = "Brass Saint"
-tags = ["machine", "armored", "frontline"]
+tags = Array[Resource]([ExtResource("tag_machine"), ExtResource("tag_armored"), ExtResource("tag_frontline")])
 team = "Enemies"
 ancestry = ExtResource("3_ancestry")
 max_hp = 30

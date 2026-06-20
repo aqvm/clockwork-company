@@ -38,7 +38,7 @@ Statuses are battle-local effects. Positive statuses are [[Boons]] and negative 
 
 ## Undeveloped Directions
 
-[[Potential Future Statuses]] collates discussed but unimplemented ideas, including Doom, armor corrosion, silence-like skill disruption, and panic-based targeting changes. These are design candidates, not committed mechanics.
+[[Potential Future Statuses]] collates discussed but unimplemented ideas, including Shock, Doom, armor corrosion, silence-like skill disruption, and panic-based targeting changes. These are design candidates, not committed mechanics.
 
 ## Sources
 

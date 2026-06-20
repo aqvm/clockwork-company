@@ -2,6 +2,10 @@
 
 [ext_resource type="Script" path="res://scripts/data/status_definition.gd" id="1_status"]
 
+[ext_resource type="Resource" path="res://resources/tags/ailment.tres" id="tag_ailment"]
+[ext_resource type="Resource" path="res://resources/tags/physical.tres" id="tag_physical"]
+[ext_resource type="Resource" path="res://resources/tags/setup.tres" id="tag_setup"]
+
 [resource]
 script = ExtResource("1_status")
 display_name = "Frost"
@@ -10,6 +14,6 @@ status_type = "Frost"
 stacking_rule = "Intensify"
 stack_cap_enabled = false
 max_stacks = 5
-tags = Array[String](["ailment", "physical", "setup"])
+tags = Array[Resource]([ExtResource("tag_ailment"), ExtResource("tag_physical"), ExtResource("tag_setup")])
 amount_percent = 20
 description = "The next physical hit against this unit deals 20% more post-armor physical damage per stack, rounded up, then removes Frost."

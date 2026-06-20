@@ -2,10 +2,13 @@
 
 [ext_resource type="Script" path="res://scripts/data/tactic_definition.gd" id="1_tactic"]
 
+[ext_resource type="Resource" path="res://resources/tags/assigned.tres" id="tag_assigned"]
+[ext_resource type="Resource" path="res://resources/tags/skill.tres" id="tag_skill"]
+
 [resource]
 script = ExtResource("1_tactic")
 display_name = "Use Assigned Skill"
-tags = Array[String](["skill", "assigned"])
+tags = Array[Resource]([ExtResource("tag_skill"), ExtResource("tag_assigned")])
 condition = "Enemy Alive"
 action = "Assigned Skill"
 target = "Frontmost Enemy"

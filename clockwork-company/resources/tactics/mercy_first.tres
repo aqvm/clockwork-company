@@ -2,10 +2,13 @@
 
 [ext_resource type="Script" path="res://scripts/data/tactic_definition.gd" id="1_tactic"]
 
+[ext_resource type="Resource" path="res://resources/tags/heal.tres" id="tag_heal"]
+[ext_resource type="Resource" path="res://resources/tags/support.tres" id="tag_support"]
+
 [resource]
 script = ExtResource("1_tactic")
 display_name = "Mercy First"
-tags = ["heal", "support"]
+tags = Array[Resource]([ExtResource("tag_heal"), ExtResource("tag_support")])
 condition = "Ally HP Below Half"
 action = "Heal"
 target = "Lowest HP Ally"

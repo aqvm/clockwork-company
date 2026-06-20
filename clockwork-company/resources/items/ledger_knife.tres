@@ -2,11 +2,18 @@
 
 [ext_resource type="Script" uid="uid://h21mlqiqe25f" path="res://scripts/data/item_definition.gd" id="1_item"]
 [ext_resource type="Script" uid="uid://bq86vbaajvphi" path="res://scripts/data/effect_definition.gd" id="2_effect"]
+[ext_resource type="Script" uid="uid://dskbx08s3ioej" path="res://scripts/data/status_definition.gd" id="2_oghos"]
+
+[ext_resource type="Resource" path="res://resources/tags/armor_break.tres" id="tag_armor_break"]
+[ext_resource type="Resource" path="res://resources/tags/blade.tres" id="tag_blade"]
+[ext_resource type="Resource" path="res://resources/tags/debt.tres" id="tag_debt"]
+[ext_resource type="Resource" path="res://resources/tags/weapon.tres" id="tag_weapon"]
 
 [sub_resource type="Resource" id="Resource_ledger_knife_notch"]
+resource_name = "Ledger Notch"
 script = ExtResource("2_effect")
 display_name = "Ledger Notch"
-tags = Array[String](["armor_break", "blade"])
+tags = Array[Resource]([ExtResource("tag_armor_break"), ExtResource("tag_blade")])
 trigger = "Hit"
 target_selector = "Attack Target"
 effect_type = "Reduce Target Armor"
@@ -15,7 +22,7 @@ amount = 1
 [resource]
 script = ExtResource("1_item")
 display_name = "Ledger Knife"
-tags = Array[String](["weapon", "blade", "debt", "armor_break"])
+tags = Array[Resource]([ExtResource("tag_weapon"), ExtResource("tag_blade"), ExtResource("tag_debt"), ExtResource("tag_armor_break")])
 physical_damage_modifier = 1
 action_speed_modifier = 1
 effects = Array[ExtResource("2_effect")]([SubResource("Resource_ledger_knife_notch")])

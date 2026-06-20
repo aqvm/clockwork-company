@@ -13,7 +13,7 @@ Jobs should combine shared authored effects before requiring job-specific resolv
 ## Steps
 
 1. Define the job's identity and buildcraft question.
-2. Fit the current scaffold: growth, optional equipment forbids, one skill, one passive, one reaction, and one default tactic.
+2. Fit the current scaffold: growth, optional equipment forbids, one primary skill, optional secondary skill, one passive, one reaction, and one default tactic.
 3. Test the concept against existing triggers, conditions, targets, formulas, and effects.
 4. Add a reusable resolver capability only when the concept cannot be expressed accurately.
 5. Author the job Resource and any standalone feature Resources needed for learned-feature provenance.
@@ -27,6 +27,7 @@ Jobs should combine shared authored effects before requiring job-specific resolv
 - Are cooldowns battle-local unit-turn counters?
 - Does the job create a distinct play pattern rather than a better version of another job?
 - Can its default tactic actually exercise its skill?
+- If it has a bridge action, does the secondary skill connect existing mechanics without requiring a new resolver branch?
 
 ## References
 

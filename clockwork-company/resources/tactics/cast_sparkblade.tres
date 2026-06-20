@@ -2,10 +2,13 @@
 
 [ext_resource type="Script" path="res://scripts/data/tactic_definition.gd" id="1_tactic"]
 
+[ext_resource type="Resource" path="res://resources/tags/job_skill.tres" id="tag_job_skill"]
+[ext_resource type="Resource" path="res://resources/tags/learned.tres" id="tag_learned"]
+
 [resource]
 script = ExtResource("1_tactic")
 display_name = "Cast Sparkblade"
-tags = ["learned", "job_skill"]
+tags = Array[Resource]([ExtResource("tag_learned"), ExtResource("tag_job_skill")])
 condition = "Enemy Alive"
 action = "Job Skill"
 target = "Frontmost Enemy"

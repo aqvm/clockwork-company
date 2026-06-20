@@ -8,6 +8,10 @@
 [ext_resource type="Resource" path="res://resources/rewards/guardplate_for_alden.tres" id="6_reward"]
 [ext_resource type="Resource" path="res://resources/rewards/catalog_reward_bellhammer.tres" id="7_reward"]
 
+[ext_resource type="Resource" path="res://resources/tags/armor.tres" id="tag_armor"]
+[ext_resource type="Resource" path="res://resources/tags/mercenary.tres" id="tag_mercenary"]
+[ext_resource type="Resource" path="res://resources/tags/tollgate.tres" id="tag_tollgate"]
+
 [resource]
 script = ExtResource("1_scenario")
 scenario_id = "iron_tollgate"
@@ -21,6 +25,6 @@ scenario_rules = [ExtResource("5_rule")]
 tier = 3
 recommended_level_min = 2
 recommended_level_max = 4
-tags = ["tollgate", "armor", "mercenary"]
+tags = Array[Resource]([ExtResource("tag_tollgate"), ExtResource("tag_armor"), ExtResource("tag_mercenary")])
 rewards = [ExtResource("6_reward"), ExtResource("7_reward")]
 content_unlocks = ["iron_tollgate_contracts"]

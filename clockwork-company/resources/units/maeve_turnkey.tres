@@ -4,10 +4,15 @@
 [ext_resource type="Resource" path="res://resources/loadouts/turnkey_crowbar.tres" id="2_loadout"]
 
 [ext_resource type="Resource" path="res://resources/ancestries/brassbound.tres" id="3_ancestry"]
+
+[ext_resource type="Resource" path="res://resources/tags/armored.tres" id="tag_armored"]
+[ext_resource type="Resource" path="res://resources/tags/control.tres" id="tag_control"]
+[ext_resource type="Resource" path="res://resources/tags/frontline.tres" id="tag_frontline"]
+
 [resource]
 script = ExtResource("1_unit")
 display_name = "Maeve Turnkey"
-tags = ["frontline", "armored", "control"]
+tags = Array[Resource]([ExtResource("tag_frontline"), ExtResource("tag_armored"), ExtResource("tag_control")])
 team = "Enemies"
 ancestry = ExtResource("3_ancestry")
 max_hp = 27

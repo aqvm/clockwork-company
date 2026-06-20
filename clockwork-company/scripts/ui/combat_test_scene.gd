@@ -3,6 +3,9 @@ extends Control
 const CombatSimulatorScript := preload("res://scripts/combat/combat_simulator.gd")
 const CombatLogHighlightPaletteScript := preload("res://scripts/ui/combat_log_highlight_palette.gd")
 const CombatLogRichTextFormatterScript := preload("res://scripts/ui/combat_log_rich_text_formatter.gd")
+const CombatLabStateScript := preload("res://scripts/devtools/combat_lab_state.gd")
+const CombatLabPanelScript := preload("res://scripts/ui/combat_lab_panel.gd")
+const BattleContributionPanelScript := preload("res://scripts/ui/battle_contribution_panel.gd")
 const JsonContentLoaderScript := preload("res://scripts/modding/json_content_loader.gd")
 const RunStateScript := preload("res://scripts/run/run_state.gd")
 const CampaignManagerScript := preload("res://scripts/campaign/campaign_manager.gd")
@@ -31,6 +34,8 @@ const COLORBLIND_LOG_HIGHLIGHT_PALETTE := preload("res://resources/ui/combat_log
 @export var log_highlight_palette: CombatLogHighlightPaletteScript = DEFAULT_LOG_HIGHLIGHT_PALETTE
 
 var planning_panel: Control = null
+var combat_lab_panel: Control = null
+var battle_contribution_panel: Control = null
 var tooltip_presenter = null
 var cached_static_lines: Array[String] = []
 var cached_structured_events: Array[Dictionary] = []
@@ -47,6 +52,8 @@ var active_campaign_scenario_id := ""
 var selected_scenario: Resource = null
 var selected_unit_name := ""
 var planning_party: Array[UnitDefinition] = []
+var combat_lab_state = null
+var combat_lab_active := false
 
 
 func _ready() -> void:
@@ -60,6 +67,7 @@ func _ready() -> void:
 	run_controls.connect("reward_requested", _on_reward_button_pressed)
 	run_controls.connect("continue_requested", _on_continue_button_pressed)
 	run_controls.connect("equipment_requested", _on_equipment_button_pressed)
+	run_controls.connect("combat_lab_requested", _on_combat_lab_button_pressed)
 	_connect_panel_tooltips(run_controls)
 	replay_panel.call("setup", replay_timer, log_highlight_palette)
 	replay_panel.connect("replay_finished", _on_replay_finished)
@@ -70,6 +78,8 @@ func _ready() -> void:
 	_setup_mod_menu()
 	_setup_run_controls()
 	_setup_planning_panel()
+	_setup_combat_lab_panel()
+	_setup_battle_contribution_panel()
 	_setup_tooltip_presenter()
 	_start_first_road_campaign()
 
@@ -79,6 +89,9 @@ func _process(delta: float) -> void:
 
 
 func _on_run_button_pressed() -> void:
+	if combat_lab_active:
+		_on_combat_lab_run_requested()
+		return
 	if run_state == null:
 		_start_new_run(false)
 		return
@@ -123,6 +136,7 @@ func _load_combat_preview() -> void:
 	cached_structured_events = report.get("events", []).duplicate(true)
 	cached_roster_units = report.get("roster_units", []).duplicate(true)
 	cached_replay_snapshots = report.get("replay_snapshots", []).duplicate(true)
+	_show_battle_contributions(report)
 	_collect_static_log_lines(log_lines, static_lines)
 	cached_static_lines = _build_run_static_lines(static_lines)
 	_append_lines(combat_summary, cached_static_lines)
@@ -138,6 +152,7 @@ func _show_run_state_without_combat_preview() -> void:
 	cached_structured_events.clear()
 	cached_roster_units.clear()
 	cached_replay_snapshots.clear()
+	_clear_battle_contributions()
 	_clear_replay_log()
 	if run_state == null:
 		return
@@ -229,6 +244,24 @@ func _setup_planning_panel() -> void:
 	conditions_label.get_parent().visible = true
 
 
+func _setup_combat_lab_panel() -> void:
+	var parent_vbox := log_split.get_parent()
+	combat_lab_panel = CombatLabPanelScript.new()
+	combat_lab_panel.visible = false
+	combat_lab_panel.connect("exit_requested", _on_combat_lab_exit_requested)
+	combat_lab_panel.connect("run_requested", _on_combat_lab_run_requested)
+	combat_lab_panel.connect("state_changed", _on_combat_lab_state_changed)
+	parent_vbox.add_child(combat_lab_panel)
+	parent_vbox.move_child(combat_lab_panel, log_split.get_index())
+
+
+func _setup_battle_contribution_panel() -> void:
+	var parent_vbox := log_split.get_parent()
+	battle_contribution_panel = BattleContributionPanelScript.new()
+	parent_vbox.add_child(battle_contribution_panel)
+	parent_vbox.move_child(battle_contribution_panel, log_split.get_index())
+
+
 func _setup_tooltip_presenter() -> void:
 	tooltip_presenter = TooltipPresenterScript.new()
 	add_child(tooltip_presenter)
@@ -246,6 +279,11 @@ func _start_new_run(should_force_loss: bool) -> void:
 
 func _start_first_road_campaign() -> void:
 	_stop_log_replay()
+	combat_lab_active = false
+	if combat_lab_panel != null:
+		combat_lab_panel.visible = false
+	if planning_panel != null:
+		planning_panel.visible = true
 	campaign_manager = CampaignManagerScript.new()
 	campaign_manager.start(FIRST_ROAD_CAMPAIGN, _enabled_mod_pack_ids_array())
 	active_campaign_scenario_id = ""
@@ -328,6 +366,118 @@ func _on_equipment_button_pressed(index: int) -> void:
 	_show_run_state_without_combat_preview()
 
 
+func _on_combat_lab_button_pressed() -> void:
+	_enter_combat_lab()
+
+
+func _enter_combat_lab() -> void:
+	_stop_log_replay()
+	combat_lab_active = true
+	if combat_lab_state == null:
+		combat_lab_state = CombatLabStateScript.new()
+	combat_lab_state.load_catalog(_enabled_mod_pack_ids_array())
+	combat_lab_state.setup_default_matchup()
+	combat_lab_panel.call("setup", combat_lab_state)
+	combat_lab_panel.visible = true
+	if planning_panel != null:
+		planning_panel.visible = false
+	_show_combat_lab_landing()
+
+
+func _on_combat_lab_exit_requested() -> void:
+	_stop_log_replay()
+	combat_lab_active = false
+	if combat_lab_panel != null:
+		combat_lab_panel.visible = false
+	if planning_panel != null:
+		planning_panel.visible = true
+	if run_state == null:
+		_show_campaign_landing()
+	else:
+		_show_run_state_without_combat_preview()
+
+
+func _on_combat_lab_state_changed() -> void:
+	if combat_lab_active:
+		_show_combat_lab_landing()
+
+
+func _on_combat_lab_run_requested() -> void:
+	if combat_lab_state == null:
+		return
+	_stop_log_replay()
+	if not combat_lab_state.can_run():
+		_show_combat_lab_message(combat_lab_state.run_validation_message())
+		_update_run_controls()
+		return
+	var report: Dictionary = combat_lab_state.run_battle_report()
+	_load_combat_lab_report(report)
+	run_controls.show_run_button(RUN_BUTTON_REPLAYING_TEXT, true)
+	replay_is_active = true
+	replay_panel.call("start_replay", cached_roster_units, cached_structured_events, cached_replay_snapshots)
+
+
+func _load_combat_lab_report(report: Dictionary) -> void:
+	_clear_logs()
+	cached_battle_report = report.duplicate(true)
+	cached_static_lines.clear()
+	cached_structured_events = report.get("events", []).duplicate(true)
+	cached_roster_units = report.get("roster_units", []).duplicate(true)
+	cached_replay_snapshots = report.get("replay_snapshots", []).duplicate(true)
+	_show_battle_contributions(report)
+	var static_lines: Array[String] = []
+	_collect_static_log_lines(report.get("lines", []), static_lines)
+	cached_static_lines = _build_combat_lab_static_lines(static_lines)
+	_append_lines(combat_summary, cached_static_lines)
+	replay_panel.call("load_preview", cached_roster_units, cached_structured_events, cached_replay_snapshots)
+	combat_lab_panel.call("refresh")
+	call_deferred("_resize_conditions_pane")
+
+
+func _show_combat_lab_landing() -> void:
+	_clear_logs()
+	cached_battle_report.clear()
+	_clear_battle_contributions()
+	cached_static_lines = _build_combat_lab_static_lines([])
+	_append_lines(combat_summary, cached_static_lines)
+	conditions_label.text = "Combat Lab Preview"
+	combat_lab_panel.call("refresh")
+	_update_run_controls()
+	call_deferred("_resize_conditions_pane")
+
+
+func _show_combat_lab_message(message: String) -> void:
+	if not combat_lab_active or message.is_empty():
+		return
+	if combat_summary.get_parsed_text().find(message) != -1:
+		return
+	CombatLogRichTextFormatterScript.append_line(combat_summary, message, log_highlight_palette)
+	call_deferred("_resize_conditions_pane")
+
+
+func _build_combat_lab_static_lines(fight_static_lines: Array[String]) -> Array[String]:
+	var lines: Array[String] = []
+	lines.append("Combat Lab: assemble arbitrary cloned catalog units, then resolve them through the real simulator.")
+	if combat_lab_state != null:
+		lines.append("Allies: %s" % _combat_lab_party_summary(combat_lab_state.allied_units))
+		lines.append("Enemies: %s" % _combat_lab_party_summary(combat_lab_state.enemy_units))
+		if not combat_lab_state.last_message.is_empty():
+			lines.append(combat_lab_state.last_message)
+	lines.append("")
+	for line in fight_static_lines:
+		lines.append(line)
+	return lines
+
+
+func _combat_lab_party_summary(units: Array[UnitDefinition]) -> String:
+	if units.is_empty():
+		return "empty"
+	var names: Array[String] = []
+	for index in units.size():
+		names.append("%d. %s" % [index + 1, units[index].display_name])
+	return ", ".join(names)
+
+
 func _build_run_static_lines(fight_static_lines: Array[String]) -> Array[String]:
 	var lines: Array[String] = []
 	if campaign_manager != null:
@@ -344,10 +494,22 @@ func _build_run_static_lines(fight_static_lines: Array[String]) -> Array[String]
 
 
 func _update_run_controls() -> void:
+	if combat_lab_active:
+		var disabled: bool = replay_is_active or combat_lab_state == null or not combat_lab_state.can_run()
+		run_controls.show_run_button(RUN_BUTTON_REPLAYING_TEXT if replay_is_active else "Run Lab Battle", disabled)
+		run_controls.set_campaign_buttons_disabled(true)
+		run_controls.set_debug_buttons_disabled(true)
+		run_controls.call("set_combat_lab_button_disabled", true)
+		run_controls.show_reward_options([], true)
+		run_controls.show_continue_button(false, "", true)
+		run_controls.show_equipment_options([], true)
+		return
+
 	if run_state == null:
 		run_controls.show_run_button("Choose Scenario", true)
 		run_controls.set_campaign_buttons_disabled(campaign_manager == null)
 		run_controls.set_debug_buttons_disabled(replay_is_active)
+		run_controls.call("set_combat_lab_button_disabled", replay_is_active)
 		run_controls.show_reward_options([], replay_is_active)
 		run_controls.show_continue_button(false, "", replay_is_active)
 		run_controls.show_equipment_options([], replay_is_active)
@@ -356,6 +518,7 @@ func _update_run_controls() -> void:
 
 	run_controls.set_campaign_buttons_disabled(campaign_manager == null or replay_is_active)
 	run_controls.set_debug_buttons_disabled(replay_is_active)
+	run_controls.call("set_combat_lab_button_disabled", replay_is_active)
 	if replay_is_active:
 		run_controls.show_run_button(RUN_BUTTON_REPLAYING_TEXT, true)
 	elif run_state.status == RunStateScript.STATUS_ACTIVE:
@@ -832,7 +995,9 @@ func _on_mod_checkbox_toggled(pressed: bool, pack_id: String) -> void:
 		enabled_mod_pack_ids.erase(pack_id)
 
 	_save_enabled_mod_pack_ids(_enabled_mod_pack_ids_array())
-	if _has_active_scenario_run() and run_state.active_scenario != null:
+	if combat_lab_active:
+		_enter_combat_lab()
+	elif _has_active_scenario_run() and run_state.active_scenario != null:
 		_start_scenario_run(run_state.active_scenario, not active_campaign_scenario_id.is_empty())
 	elif campaign_manager != null:
 		_show_campaign_landing()
@@ -929,7 +1094,18 @@ func _resize_conditions_pane() -> void:
 
 func _clear_logs() -> void:
 	combat_summary.clear()
+	_clear_battle_contributions()
 	_clear_replay_log()
+
+
+func _show_battle_contributions(report: Dictionary) -> void:
+	if battle_contribution_panel != null:
+		battle_contribution_panel.call("show_contributions", report.get("contribution_summary", []))
+
+
+func _clear_battle_contributions() -> void:
+	if battle_contribution_panel != null:
+		battle_contribution_panel.call("clear_contributions")
 
 
 func _clear_replay_log() -> void:
@@ -944,6 +1120,11 @@ func _stop_log_replay() -> void:
 
 func _on_replay_finished() -> void:
 	replay_is_active = false
+	if combat_lab_active:
+		_update_run_controls()
+		if combat_lab_panel != null:
+			combat_lab_panel.call("refresh")
+		return
 	if run_state != null and run_state.status == RunStateScript.STATUS_ACTIVE:
 		run_state.complete_fight(cached_battle_report)
 		var should_reload_campaign_party := false

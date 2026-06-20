@@ -2,6 +2,10 @@
 
 [ext_resource type="Script" path="res://scripts/data/status_definition.gd" id="1_status"]
 
+[ext_resource type="Resource" path="res://resources/tags/ailment.tres" id="tag_ailment"]
+[ext_resource type="Resource" path="res://resources/tags/healing.tres" id="tag_healing"]
+[ext_resource type="Resource" path="res://resources/tags/max_hp.tres" id="tag_max_hp"]
+
 [resource]
 script = ExtResource("1_status")
 display_name = "Rot"
@@ -9,7 +13,7 @@ polarity = "Ailment"
 status_type = "Rot"
 stacking_rule = "Intensify"
 max_stacks = 5
-tags = Array[String](["ailment", "healing", "max_hp"])
+tags = Array[Resource]([ExtResource("tag_ailment"), ExtResource("tag_healing"), ExtResource("tag_max_hp")])
 amount = 1
 elapses_naturally = false
 description = "Whenever this unit receives healing, it loses 1 maximum HP per stack for the rest of the battle."

@@ -2,10 +2,14 @@
 
 [ext_resource type="Script" path="res://scripts/data/item_definition.gd" id="1_item"]
 
+[ext_resource type="Resource" path="res://resources/tags/focus.tres" id="tag_focus"]
+[ext_resource type="Resource" path="res://resources/tags/speed.tres" id="tag_speed"]
+[ext_resource type="Resource" path="res://resources/tags/trinket.tres" id="tag_trinket"]
+
 [resource]
 script = ExtResource("1_item")
 display_name = "Pocket Sundial"
-tags = ["trinket", "speed", "focus"]
+tags = Array[Resource]([ExtResource("tag_trinket"), ExtResource("tag_speed"), ExtResource("tag_focus")])
 slot = "Trinket"
 physical_damage_modifier = -1
 action_speed_modifier = 2

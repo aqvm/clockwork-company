@@ -2,14 +2,24 @@
 
 [ext_resource type="Script" uid="uid://8cikor8oh0rp" path="res://scripts/data/job_definition.gd" id="1_job"]
 [ext_resource type="Script" uid="uid://dt86e2l5m6yo4" path="res://scripts/data/skill_definition.gd" id="2_skill"]
+[ext_resource type="Script" uid="uid://bq86vbaajvphi" path="res://scripts/data/effect_definition.gd" id="2_x807x"]
 [ext_resource type="Script" uid="uid://bw4e1gp6l02uv" path="res://scripts/data/passive_definition.gd" id="3_passive"]
+[ext_resource type="Script" uid="uid://dskbx08s3ioej" path="res://scripts/data/status_definition.gd" id="4_2omng"]
 [ext_resource type="Script" uid="uid://c3ugwbjpivem3" path="res://scripts/data/reaction_definition.gd" id="4_reaction"]
 [ext_resource type="Script" uid="uid://cl3b7aebl31vg" path="res://scripts/data/tactic_definition.gd" id="5_tactic"]
+
+[ext_resource type="Resource" path="res://resources/tags/attack.tres" id="tag_attack"]
+[ext_resource type="Resource" path="res://resources/tags/blade.tres" id="tag_blade"]
+[ext_resource type="Resource" path="res://resources/tags/damaged.tres" id="tag_damaged"]
+[ext_resource type="Resource" path="res://resources/tags/job.tres" id="tag_job"]
+[ext_resource type="Resource" path="res://resources/tags/job_default.tres" id="tag_job_default"]
+[ext_resource type="Resource" path="res://resources/tags/reaction.tres" id="tag_reaction"]
+[ext_resource type="Resource" path="res://resources/tags/swift.tres" id="tag_swift"]
 
 [sub_resource type="Resource" id="Resource_cutpurse_default_tactic"]
 script = ExtResource("5_tactic")
 display_name = "Throw Pocket Sand"
-tags = Array[String](["job_default"])
+tags = Array[Resource]([ExtResource("tag_job_default")])
 condition = "Enemy Alive"
 action = "Job Skill"
 
@@ -17,7 +27,7 @@ action = "Job Skill"
 resource_name = "Dirty Edge"
 script = ExtResource("3_passive")
 display_name = "Dirty Edge"
-tags = Array[String](["blade"])
+tags = Array[Resource]([ExtResource("tag_blade")])
 passive_type = "Attack Damage Bonus"
 amount = 1
 cooldown_turns = 1
@@ -26,7 +36,7 @@ cooldown_turns = 1
 resource_name = "Vanish Step"
 script = ExtResource("4_reaction")
 display_name = "Vanish Step"
-tags = Array[String](["damaged", "reaction"])
+tags = Array[Resource]([ExtResource("tag_damaged"), ExtResource("tag_reaction")])
 amount = 2
 cooldown_turns = 3
 
@@ -34,13 +44,13 @@ cooldown_turns = 3
 resource_name = "Pocket Sand"
 script = ExtResource("2_skill")
 display_name = "Pocket Sand"
-tags = Array[String](["swift", "attack"])
+tags = Array[Resource]([ExtResource("tag_swift"), ExtResource("tag_attack")])
 amount_modifier = 1
 
 [resource]
 script = ExtResource("1_job")
 display_name = "Cutpurse"
-tags = Array[String](["job", "swift", "blade"])
+tags = Array[Resource]([ExtResource("tag_job"), ExtResource("tag_swift"), ExtResource("tag_blade")])
 physical_damage_growth = 1
 action_speed_growth = 1
 skill = SubResource("Resource_cutpurse_skill")

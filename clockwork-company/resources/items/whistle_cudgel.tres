@@ -3,10 +3,15 @@
 [ext_resource type="Script" path="res://scripts/data/item_definition.gd" id="1_item"]
 [ext_resource type="Script" path="res://scripts/data/effect_definition.gd" id="2_effect"]
 
+[ext_resource type="Resource" path="res://resources/tags/armor_break.tres" id="tag_armor_break"]
+[ext_resource type="Resource" path="res://resources/tags/club.tres" id="tag_club"]
+[ext_resource type="Resource" path="res://resources/tags/guard.tres" id="tag_guard"]
+[ext_resource type="Resource" path="res://resources/tags/weapon.tres" id="tag_weapon"]
+
 [sub_resource type="Resource" id="Resource_whistle_cudgel_rattle"]
 script = ExtResource("2_effect")
 display_name = "Whistle Cudgel Rattle"
-tags = ["armor_break", "club"]
+tags = Array[Resource]([ExtResource("tag_armor_break"), ExtResource("tag_club")])
 trigger = "Hit"
 target_selector = "Attack Target"
 effect_type = "Reduce Target Armor"
@@ -15,7 +20,7 @@ amount = 1
 [resource]
 script = ExtResource("1_item")
 display_name = "Whistle Cudgel"
-tags = ["weapon", "club", "guard"]
+tags = Array[Resource]([ExtResource("tag_weapon"), ExtResource("tag_club"), ExtResource("tag_guard")])
 slot = "Weapon"
 physical_damage_modifier = 1
 armor_modifier = 1

@@ -2,10 +2,13 @@
 
 [ext_resource type="Script" path="res://scripts/data/tactic_definition.gd" id="1_tactic"]
 
+[ext_resource type="Resource" path="res://resources/tags/heal.tres" id="tag_heal"]
+[ext_resource type="Resource" path="res://resources/tags/low_hp.tres" id="tag_low_hp"]
+
 [resource]
 script = ExtResource("1_tactic")
 display_name = "Panic Stitch"
-tags = ["heal", "low_hp"]
+tags = Array[Resource]([ExtResource("tag_heal"), ExtResource("tag_low_hp")])
 condition = "Self HP Below Half"
 action = "Heal"
 target = "Self"

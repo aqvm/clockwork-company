@@ -4,10 +4,15 @@
 [ext_resource type="Resource" path="res://resources/loadouts/bellguard_rainbarrel.tres" id="2_loadout"]
 
 [ext_resource type="Resource" path="res://resources/ancestries/stonekin.tres" id="3_ancestry"]
+
+[ext_resource type="Resource" path="res://resources/tags/armored.tres" id="tag_armored"]
+[ext_resource type="Resource" path="res://resources/tags/frontline.tres" id="tag_frontline"]
+[ext_resource type="Resource" path="res://resources/tags/slow.tres" id="tag_slow"]
+
 [resource]
 script = ExtResource("1_unit")
 display_name = "Bell-Warden Otto"
-tags = ["frontline", "armored", "slow"]
+tags = Array[Resource]([ExtResource("tag_frontline"), ExtResource("tag_armored"), ExtResource("tag_slow")])
 team = "Allies"
 ancestry = ExtResource("3_ancestry")
 max_hp = 28

@@ -8,6 +8,10 @@
 [ext_resource type="Resource" path="res://resources/rewards/focus_lens_for_sol.tres" id="6_reward"]
 [ext_resource type="Resource" path="res://resources/rewards/catalog_reward_brass_lung.tres" id="7_reward"]
 
+[ext_resource type="Resource" path="res://resources/tags/ash.tres" id="tag_ash"]
+[ext_resource type="Resource" path="res://resources/tags/chapel.tres" id="tag_chapel"]
+[ext_resource type="Resource" path="res://resources/tags/status.tres" id="tag_status"]
+
 [resource]
 script = ExtResource("1_scenario")
 scenario_id = "burned_chapel"
@@ -21,6 +25,6 @@ scenario_rules = [ExtResource("5_rule")]
 tier = 2
 recommended_level_min = 1
 recommended_level_max = 3
-tags = ["chapel", "ash", "status"]
+tags = Array[Resource]([ExtResource("tag_chapel"), ExtResource("tag_ash"), ExtResource("tag_status")])
 rewards = [ExtResource("6_reward"), ExtResource("7_reward")]
 content_unlocks = ["ash_chapel_rite_notes"]

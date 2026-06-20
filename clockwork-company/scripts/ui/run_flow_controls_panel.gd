@@ -11,6 +11,7 @@ signal phase7_run_requested
 signal reward_requested(index: int)
 signal continue_requested
 signal equipment_requested(index: int)
+signal combat_lab_requested
 signal resource_tooltip_requested(source: Control, resource: Resource)
 signal tooltip_cleared
 
@@ -29,6 +30,7 @@ var phase7_run_button: Button = null
 var palette_button: Button = null
 var save_campaign_button: Button = null
 var load_campaign_button: Button = null
+var combat_lab_button: Button = null
 var debug_controls: Array[Control] = []
 
 
@@ -64,6 +66,10 @@ func set_campaign_buttons_disabled(is_disabled: bool) -> void:
 func set_debug_buttons_disabled(is_disabled: bool) -> void:
 	loss_test_button.disabled = is_disabled
 	phase7_run_button.disabled = is_disabled
+
+
+func set_combat_lab_button_disabled(is_disabled: bool) -> void:
+	combat_lab_button.disabled = is_disabled
 
 
 func show_reward_options(options: Array, is_disabled: bool) -> void:
@@ -115,6 +121,11 @@ func _add_extra_controls() -> void:
 	load_campaign_button.text = "Load Campaign"
 	load_campaign_button.pressed.connect(func(): load_campaign_requested.emit())
 	add_child(load_campaign_button)
+
+	combat_lab_button = Button.new()
+	combat_lab_button.text = "Combat Lab"
+	combat_lab_button.pressed.connect(func(): combat_lab_requested.emit())
+	add_child(combat_lab_button)
 
 	debug_toggle_button = Button.new()
 	debug_toggle_button.text = "Debug"

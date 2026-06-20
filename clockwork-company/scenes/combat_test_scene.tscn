@@ -1,8 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://bwypver014851"]
+[gd_scene format=3 uid="uid://bwypver014851"]
 
 [ext_resource type="Script" uid="uid://bha8swoxgq5r6" path="res://scripts/ui/combat_test_scene.gd" id="1_combat_ui"]
 [ext_resource type="Script" uid="uid://v41dhcmpn4bs" path="res://scripts/ui/combat_replay_panel.gd" id="2_replay_panel"]
-[ext_resource type="Script" path="res://scripts/ui/run_flow_controls_panel.gd" id="3_run_controls"]
+[ext_resource type="Script" uid="uid://dq4ui8tikkj84" path="res://scripts/ui/run_flow_controls_panel.gd" id="3_run_controls"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mods_panel"]
 content_margin_left = 6.0

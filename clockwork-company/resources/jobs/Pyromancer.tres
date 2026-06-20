@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="JobDefinition" format=3 uid="uid://dhia8j303k1s7"]
+
+[ext_resource type="Script" uid="uid://8cikor8oh0rp" path="res://scripts/data/job_definition.gd" id="1_job"]
+[ext_resource type="Resource" path="res://resources/job_features/Pyromancer/apply_burn.tres" id="2_skill"]
+[ext_resource type="Resource" path="res://resources/job_features/Pyromancer/hot_on_their_heels.tres" id="3_secondary"]
+[ext_resource type="Resource" path="res://resources/job_features/Pyromancer/fiery_soul.tres" id="4_passive"]
+[ext_resource type="Resource" path="res://resources/job_features/Pyromancer/ember_reversal.tres" id="5_reaction"]
+[ext_resource type="Resource" path="res://resources/job_features/Pyromancer/default_tactic.tres" id="6_tactic"]
+[ext_resource type="Resource" path="res://resources/tags/ailment.tres" id="tag_ailment"]
+[ext_resource type="Resource" path="res://resources/tags/burn.tres" id="tag_burn"]
+[ext_resource type="Resource" path="res://resources/tags/job.tres" id="tag_job"]
+
+[resource]
+script = ExtResource("1_job")
+display_name = "Pyromancer"
+tags = Array[Resource]([ExtResource("tag_job"), ExtResource("tag_burn"), ExtResource("tag_ailment")])
+skill = ExtResource("2_skill")
+secondary_skill = ExtResource("3_secondary")
+passive = ExtResource("4_passive")
+reaction = ExtResource("5_reaction")
+default_tactic = ExtResource("6_tactic")

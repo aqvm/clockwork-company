@@ -25,7 +25,7 @@ Purpose: exercise as many modding code paths as possible in one toggleable pack.
 - Adds `warden_it`.
 - Tests new job creation, loadout linkage, a five-turn status-applying skill, and the `Forecast` passive capability.
 - Adds `cleanser_it` to validate an `Effects Only` skill with deterministic ailment removal.
-- `cleanser_it` also validates passive status and damage-request interception, an effect-only stack-gated reaction, formula-driven healing/consumption, and a status-aware default tactic.
+- `cleanser_it` also validates a secondary bridge skill, passive status and damage-request interception, an effect-only stack-gated reaction, formula-driven healing/consumption, and a status-aware default tactic.
 
 5. Job override:
 - Overrides existing `apprentice`.

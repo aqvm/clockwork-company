@@ -1,6 +1,8 @@
 extends RefCounted
 class_name ResourceTooltipBuilder
 
+const TagUtilsScript := preload("res://scripts/data/tag_utils.gd")
+
 
 static func text_for_resource(resource) -> String:
 	if resource == null:
@@ -73,6 +75,7 @@ static func related_resources_for_resource(resource) -> Array:
 		_append_related(related, "Status", resource.status)
 	elif resource is JobDefinition:
 		_append_related(related, "Skill", resource.skill)
+		_append_related(related, "Secondary Skill", resource.secondary_skill)
 		_append_related(related, "Passive", resource.passive)
 		_append_related(related, "Reaction", resource.reaction)
 		_append_related(related, "Default Tactic", resource.default_tactic)
@@ -251,6 +254,7 @@ static func _job_text(job: JobDefinition) -> String:
 		forbids.append("trinket")
 	lines.append("Forbids: %s" % _join(forbids))
 	lines.append("Skill: %s" % _name_or_none(job.skill))
+	lines.append("Secondary skill: %s" % _name_or_none(job.secondary_skill))
 	lines.append("Passive: %s" % _name_or_none(job.passive))
 	lines.append("Reaction: %s" % _name_or_none(job.reaction))
 	lines.append("Default tactic: %s" % _name_or_none(job.default_tactic))
@@ -282,7 +286,7 @@ static func _ancestry_text(ancestry: AncestryDefinition) -> String:
 
 
 static func _skill_text(skill: SkillDefinition) -> String:
-	return "%s\nTags: %s\nAction: %s\nAttack damage: %s x%d\nTarget: %s\nStatus: %s\nStatus duration: %s\nAmount modifier: %+d\nCooldown turns: %d\nEffects: %s" % [_title(skill), _join(skill.tags), skill.action, skill.attack_damage_type, skill.attack_count, skill.default_target, _name_or_none(skill.status), _status_duration_text(skill.status_duration_turns, skill.status_is_permanent), skill.amount_modifier, skill.cooldown_turns, _join(_effect_summaries(skill.effects))]
+	return "%s\nTags: %s\nAction: %s\nAttack damage: %s x%d\nTarget: %s\nStatus: %s\nStatus duration: %s\nAmount modifier: %+d\nCooldown turns: %d\nEffects: %s" % [_title(skill), _join(skill.tags), skill.action, skill.attack_damage_type, skill.attack_count, skill.default_target, _name_or_none(skill.status), _skill_status_duration_text(skill), skill.amount_modifier, skill.cooldown_turns, _join(_effect_summaries(skill.effects))]
 
 
 static func _passive_text(passive: PassiveDefinition) -> String:
@@ -420,7 +424,7 @@ static func _effect_summary(effect: EffectDefinition) -> String:
 	elif effect.condition == "Event Count At Least":
 		condition_text += " (%d)" % effect.counter_threshold
 	if effect.effect_type == "Apply Status":
-		return "Apply %s stacks of %s when %s / %s to %s, %s%s" % [_effect_amount_text(effect), _name_or_none(effect.status), effect.trigger, condition_text, effect.target_selector, _status_duration_text(effect.status_duration_turns, effect.status_is_permanent), limit_text]
+		return "Apply %s stacks of %s when %s / %s to %s, %s%s" % [_effect_amount_text(effect), _name_or_none(effect.status), effect.trigger, condition_text, effect.target_selector, _effect_status_duration_text(effect, effect.status), limit_text]
 	if effect.effect_type == "Maintain Status Aura":
 		return "Maintain %s on %s while source is alive%s" % [_name_or_none(effect.status), effect.target_selector, limit_text]
 	if effect.effect_type == "Remove Status":
@@ -479,6 +483,18 @@ static func _status_duration_text(duration_turns: int, is_permanent: bool) -> St
 	return "permanent" if is_permanent else "%d owner turns" % duration_turns
 
 
+static func _skill_status_duration_text(skill: SkillDefinition) -> String:
+	if skill.override_status_duration or skill.status == null:
+		return "%s override" % _status_duration_text(skill.status_duration_turns, skill.status_is_permanent)
+	return "%s status default" % _status_duration_text(skill.status.default_duration_turns, skill.status.default_is_permanent)
+
+
+static func _effect_status_duration_text(effect: EffectDefinition, status: StatusDefinition) -> String:
+	if effect.override_status_duration or status == null:
+		return "%s override" % _status_duration_text(effect.status_duration_turns, effect.status_is_permanent)
+	return "%s status default" % _status_duration_text(status.default_duration_turns, status.default_is_permanent)
+
+
 static func _append_amount(parts: Array[String], label: String, amount: int) -> void:
 	if amount == 0:
 		return
@@ -522,13 +538,22 @@ static func _join(values: Array, separator := ", ") -> String:
 		return "none"
 	var text := ""
 	for value in values:
-		var value_text := String(value)
+		var value_text := _value_text(value)
 		if value_text.is_empty():
 			continue
 		if not text.is_empty():
 			text += separator
 		text += value_text
 	return "none" if text.is_empty() else text
+
+
+static func _value_text(value) -> String:
+	if value is Resource:
+		var display_name := String(value.get("display_name"))
+		var tag_id := String(value.get("tag_id"))
+		if not display_name.is_empty() or not tag_id.is_empty():
+			return display_name if not display_name.is_empty() else tag_id
+	return String(value)
 
 
 static func _with_source_note(text: String, note: String) -> String:

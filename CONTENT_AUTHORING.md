@@ -4,6 +4,10 @@
 
 The Godot Inspector is the primary authoring tool for core content. Content Resources live under `clockwork-company/resources/`.
 
+Most core Resources include Inspector tooltips on exported properties. Conditional Resources such as `EffectDefinition`, `SkillDefinition`, `ReactionDefinition`, `TacticDefinition`, `StatusDefinition`, and `AncestryFeatureDefinition` hide fields that cannot affect the currently selected action, trigger, condition, effect type, or formula. If a field disappears after changing a selector, that field is not read by the current combination.
+
+Hidden fields may still be serialized on older Resources if they were set before the selector changed. Validation remains the authoritative check for missing references and unsupported combinations.
+
 ## Fastest Test Loop
 
 1. Create or duplicate the Resources needed by the content.
@@ -38,13 +42,16 @@ The loadout selects the current job, learned features, equipment, and tactics. I
 Create a `JobDefinition`, then optionally assign:
 
 - `SkillDefinition`
+- secondary `SkillDefinition`
 - `PassiveDefinition`
 - `ReactionDefinition`
 - default `TacticDefinition`
 
 These definitions expose only the currently implemented vocabulary. An `Apply Status` skill must reference a `StatusDefinition`.
 
-Use an `Effects Only` skill with one or more `Skill Used` effects to author cleanse/dispel, team buffs, temporary debuffs, or broad status application without adding resolver code.
+Use an `Effects Only` skill with one or more `Skill Used` effects to author cleanse/dispel, team buffs, temporary debuffs, or broad status application without adding resolver code. Use the secondary skill slot for job-owned bridge actions that should be usable through `Secondary Skill` tactics without occupying a unit's assigned cross-job skill.
+
+For Godot-authored Resources, tags should be shared `TagDefinition` resources from `res://resources/tags/`. JSON content still authors tags as canonical string IDs; the loader maps those IDs into transient tag resources.
 
 ### Scenario
 

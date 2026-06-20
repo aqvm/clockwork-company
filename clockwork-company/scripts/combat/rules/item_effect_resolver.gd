@@ -4,6 +4,7 @@ class_name ItemEffectResolver
 const CombatConstantsScript := preload("res://scripts/combat/combat_constants.gd")
 const CombatEventsScript := preload("res://scripts/combat/logging/combat_events.gd")
 const StatusResolverScript := preload("res://scripts/combat/rules/status_resolver.gd")
+const TagUtilsScript := preload("res://scripts/data/tag_utils.gd")
 const TRIGGER_DAMAGED := "Damaged"
 const TRIGGER_HP_BELOW_THRESHOLD := "HP Below Threshold"
 const EFFECT_INCREASE_MAX_HP := "Increase Max HP"
@@ -51,10 +52,10 @@ static func apply_attack_item_effects(log, parent_entry_id: int, actor, target, 
 			if effect.effect_type == CombatConstantsScript.EFFECT_BONUS_DAMAGE:
 				_mark_effect_fired(actor, effect)
 				_publish_trigger(context, actor, target, item, effect, parent_entry_id)
-				var damage_type := "magic" if effect.tags.has("magic") else "physical"
+				var damage_type := "magic" if TagUtilsScript.has_tag(effect.tags, "magic") else "physical"
 				var event := CombatEventsScript.item_trigger(actor, item.display_name, CombatConstantsScript.TRIGGER_ATTACK, effect.effect_type, "+%d %s damage against %s" % [effect.amount, damage_type, target.unit_name])
 				log.add_event("%s triggers %s on attack: +%d %s damage against %s." % [actor.unit_name, item.display_name, effect.amount, damage_type, target.unit_name], event["event_type"], -1, parent_entry_id, event["payload"], event["tags"])
-				if effect.tags.has("magic"):
+				if TagUtilsScript.has_tag(effect.tags, "magic"):
 					magic_bonus_damage += effect.amount
 				else:
 					bonus_damage += effect.amount
@@ -195,10 +196,7 @@ static func _effect_can_fire(owner, effect, context_target) -> bool:
 static func _target_has_any_effect_tag(target, effect) -> bool:
 	if target == null:
 		return false
-	for tag in effect.tags:
-		if target.tags.has(tag):
-			return true
-	return false
+	return TagUtilsScript.has_any_tag(target.tags, effect.tags)
 
 static func _effect_usage_count(owner, effect) -> int:
 	return int(owner.effect_usage_counts.get(_effect_key(effect), 0))

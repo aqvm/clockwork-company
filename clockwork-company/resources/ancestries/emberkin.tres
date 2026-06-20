@@ -3,11 +3,16 @@
 [ext_resource type="Script" uid="uid://cd1dshturnux8" path="res://scripts/data/ancestry_definition.gd" id="1_ancestry"]
 [ext_resource type="Script" uid="uid://ejchwjlwm2mx" path="res://scripts/data/ancestry_feature_definition.gd" id="2_feature"]
 
+[ext_resource type="Resource" path="res://resources/tags/ancestry.tres" id="tag_ancestry"]
+[ext_resource type="Resource" path="res://resources/tags/ember.tres" id="tag_ember"]
+[ext_resource type="Resource" path="res://resources/tags/fire.tres" id="tag_fire"]
+[ext_resource type="Resource" path="res://resources/tags/magic.tres" id="tag_magic"]
+
 [sub_resource type="Resource" id="Feature_ember"]
 resource_name = "Ember Vein"
 script = ExtResource("2_feature")
 display_name = "Ember Vein"
-tags = Array[String](["magic", "fire"])
+tags = Array[Resource]([ExtResource("tag_magic"), ExtResource("tag_fire")])
 trigger = "Attack"
 feature_type = "Bonus Damage"
 amount = 2
@@ -18,7 +23,7 @@ notes = "A periodic magic-damage rider that rewards magic tags and ignores armor
 resource_name = "Emberkin"
 script = ExtResource("1_ancestry")
 display_name = "Emberkin"
-tags = Array[String](["ancestry", "ember", "magic"])
+tags = Array[Resource]([ExtResource("tag_ancestry"), ExtResource("tag_ember"), ExtResource("tag_magic")])
 min_max_hp = 13
 max_max_hp = 18
 min_physical_damage = 2

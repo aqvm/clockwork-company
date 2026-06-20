@@ -4,10 +4,15 @@
 [ext_resource type="Resource" path="res://resources/loadouts/lamplighter_hourhand.tres" id="2_loadout"]
 
 [ext_resource type="Resource" path="res://resources/ancestries/emberkin.tres" id="3_ancestry"]
+
+[ext_resource type="Resource" path="res://resources/tags/clockwork.tres" id="tag_clockwork"]
+[ext_resource type="Resource" path="res://resources/tags/machine.tres" id="tag_machine"]
+[ext_resource type="Resource" path="res://resources/tags/support.tres" id="tag_support"]
+
 [resource]
 script = ExtResource("1_unit")
 display_name = "Aulden Hourhand"
-tags = ["clockwork", "support", "machine"]
+tags = Array[Resource]([ExtResource("tag_clockwork"), ExtResource("tag_support"), ExtResource("tag_machine")])
 team = "Enemies"
 ancestry = ExtResource("3_ancestry")
 max_hp = 21

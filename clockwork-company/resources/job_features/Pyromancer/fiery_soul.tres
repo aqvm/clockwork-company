@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="PassiveDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/passive_definition.gd" id="1_passive"]
+[ext_resource type="Script" path="res://scripts/data/effect_definition.gd" id="2_effect"]
+[ext_resource type="Resource" path="res://resources/job_features/Pyromancer/burn_immunity.tres" id="3_immunity"]
+[ext_resource type="Resource" path="res://resources/job_features/Pyromancer/battle_start_burn.tres" id="4_battle_start"]
+[ext_resource type="Resource" path="res://resources/job_features/Pyromancer/round_start_burn.tres" id="5_round_start"]
+[ext_resource type="Resource" path="res://resources/tags/aura.tres" id="tag_aura"]
+[ext_resource type="Resource" path="res://resources/tags/burn.tres" id="tag_burn"]
+
+[resource]
+resource_name = "Fiery Soul"
+script = ExtResource("1_passive")
+display_name = "Fiery Soul"
+tags = Array[Resource]([ExtResource("tag_burn"), ExtResource("tag_aura")])
+effects = Array[ExtResource("2_effect")]([ExtResource("3_immunity"), ExtResource("4_battle_start"), ExtResource("5_round_start")])

@@ -9,15 +9,18 @@ tags:
 
 # Jobs and Progression
 
-Jobs are the trained identity layer. They provide stat-growth tendencies, optional equipment restrictions, one skill, one passive, one reaction, and one default tactic.
+Jobs are the trained identity layer. They provide stat-growth tendencies, optional equipment restrictions, one primary skill, one optional secondary skill, one passive, one reaction, and one default tactic.
 
 ## Current Ability Model
 
 - `Job Skill` uses the unlocked skill from the current job.
+- `Secondary Skill` uses the unlocked secondary skill from the current job.
 - `Assigned Skill` uses one equipped learned skill from another job.
 - A loadout may equip one learned passive and one learned reaction.
 - Per-job progress records levels and unlocked feature provenance.
 - Abilities mutate runtime outcomes, not authored definitions.
+
+Secondary skills hold job-owned bridge actions: active abilities that connect the job's main mechanic to another planning axis without consuming the cross-job assigned skill slot. They unlock with the job's normal skill unlock and are not currently separate learned-feature assignments.
 
 ## Current Progression
 

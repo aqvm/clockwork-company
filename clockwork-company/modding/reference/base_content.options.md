@@ -40,9 +40,11 @@ Optional fields:
 - `polarity` (`String enum`): `Boon`, `Ailment`
 - `status_type` (`String enum`): `Confusion`, `Reconstitution`, `Regeneration`, `Bleed`, `Burning`, `Numb`, `Frost`, `Ward`, `Rot`, `Renewal`
 - `stacking_rule` (`String enum`): `Ignore`, `Refresh`, `Intensify`
+- `default_duration_turns` (`int`, default `3`): affected owner turns used by status applications unless the skill/effect sets `override_status_duration`.
+- `default_is_permanent` (`bool`, default `false`): when true, status applications are permanent unless the skill/effect sets `override_status_duration`.
 - `stack_cap_enabled` (`bool`, default `true`): when false, an `Intensify` status can accumulate without a maximum.
 - `max_stacks` (`int`, minimum `1`)
-- `tags` (`Array[String]`)
+- `tags` (`Array[String]`): canonical tag IDs. Resource-authored content uses shared `TagDefinition` resources for the same IDs.
 - `amount` (`int`, minimum `0`): flat amount used by statuses such as Bleed.
 - `amount_percent` (`int`, 1-100): percentage used by statuses such as Reconstitution and Frost.
 - `elapses_naturally` (`bool`, default `true`): when false, owner turns do not reduce finite duration; explicit removal is required.
@@ -72,7 +74,7 @@ Required:
 
 Optional fields:
 - `display_name` (`String`)
-- `tags` (`Array[String]`)
+- `tags` (`Array[String]`): canonical tag IDs. Resource-authored content uses shared `TagDefinition` resources for the same IDs.
 - `min_max_hp` / `max_max_hp` (`int`): future deterministic generation range for starting max HP.
 - `min_physical_damage` / `max_physical_damage` (`int`): future generation range for starting physical damage.
 - `min_magic_damage` / `max_magic_damage` (`int`): future generation range for starting magic damage.
@@ -99,7 +101,7 @@ Current behavior:
 
 Optional fields:
 - `display_name` (`String`)
-- `tags` (`Array[String]`)
+- `tags` (`Array[String]`): canonical tag IDs. Resource-authored content uses shared `TagDefinition` resources for the same IDs.
 - `trigger` (`String enum`): `Battle Start`, `Attack`, `Kill`, `Damaged`, `HP Below Threshold`
 - `condition` (`String enum`): `Always`, `Self HP Below Percent`
 - `feature_type` (`String enum`): `Gain Armor`, `Bonus Damage`, `Heal Self`, `Damage Attacker`, `Increase Own Action Speed`, `Gain Physical Damage`
@@ -124,7 +126,7 @@ Required:
 
 Optional fields:
 - `display_name` (`String`)
-- `tags` (`Array[String]`): freeform labels for future conditions, filtering, and content organization.
+- `tags` (`Array[String]`): canonical tag IDs for future conditions, filtering, and content organization. Resource-authored content uses shared `TagDefinition` resources for the same IDs.
 - `slot` (`String enum`): `Weapon`, `Armor`, `Helmet`, `Trinket`
 - `max_hp_modifier` (`int`)
 - `physical_damage_modifier` (`int`)
@@ -139,7 +141,7 @@ Item effects must be authored in `effects[]`. The old top-level `trigger`, `effe
 
 Optional fields:
 - `display_name` (`String`)
-- `tags` (`Array[String]`): effect labels used by tag conditions and future content tools.
+- `tags` (`Array[String]`): canonical tag IDs used by tag conditions and future content tools. Resource-authored content uses shared `TagDefinition` resources for the same IDs.
 - `trigger` (`String enum`): `Battle Start`, `Battle State Changed`, `Turn Start`, `Turn Complete`, `Action Completed`, `Skill Used`, `Skill Completed`, `Attack`, `Consecutive Attack`, `Enemy Attack Targeted`, `Hit`, `Kill`, `Death`, `Ailment Damaged`, `Damaged`, `Physically Damaged`, `Magically Damaged`, `HP Below Threshold`, `Damage Requested`, `Healing Requested`, `Healing Received`, `Ally Overhealed`, `Reaction Requested`, `Status Application Requested`, `Status Removal Requested`, `Status Applied`, `Externally Sourced Status Applied`, `Enemy Status Applied`, `Status Removed`, `Reaction Triggered`
 - `condition` (`String enum`): `Always`, `Event Source Is Not Owner`, `Owner Is Unarmed`, `Event Count At Least`, `Self HP Below Percent`, `Target Has Tag`, `Target Missing Tag`, `Target Status Stacks At Least`, `Target Pending Status Damage At Least HP`, `Owner Counter At Least`, `Target Counter At Least`, `Requested Status Matches`, `Applied Status Matches`
 - `target_selector` (`String enum`): `Self`, `Event Source`, `Event Target`, `Attack Target`, `Attacker`, `Killer`, `All Units`, `Allied Units`, `Enemy Units`, `Lowest HP Allied Unit`, `Random Allied Unit`, `Random Damaged Allied Unit`, `Random Enemy Unit`
@@ -148,8 +150,9 @@ Optional fields:
 - `condition_status_id` (`String`): status matched by `Applied Status Matches`, independently of any status applied by the effect.
 - `amount_status_id` (`String`): optional status read by status-based amount formulas. Falls back to `status_id`.
 - `replacement_status_ids` (`Array[String]`): explicit deterministic-random boon pool used by `Replace Requested Status`.
-- `status_duration_turns` (`int`, default `3`): affected owner turns before expiration.
-- `status_is_permanent` (`bool`, default `false`): when true, ignores `status_duration_turns`.
+- `override_status_duration` (`bool`, default inferred): when true, this effect uses `status_duration_turns` / `status_is_permanent` instead of the referenced status defaults. If omitted, JSON infers true when either duration field is present.
+- `status_duration_turns` (`int`, default `3`): affected owner turns before expiration when `override_status_duration` is true.
+- `status_is_permanent` (`bool`, default `false`): when true and `override_status_duration` is true, ignores `status_duration_turns`.
 - `status_stacks` (`int`, default `1`): fixed number of stacks applied by `Apply Status`.
 - `status_stack_threshold` (`int`, default `1`): used by stack-count conditions.
 - `status_polarity` (`String enum`): `Any`, `Boon`, `Ailment`; filters `Remove Status` and `Transfer Statuses`.
@@ -231,7 +234,7 @@ Required:
 
 Optional fields:
 - `display_name` (`String`)
-- `tags` (`Array[String]`)
+- `tags` (`Array[String]`): canonical tag IDs. Resource-authored content uses shared `TagDefinition` resources for the same IDs.
 - `max_hp_growth` (`int`): permanent HP gained per level in this job.
 - `physical_damage_growth` (`int`): permanent physical damage gained per level in this job.
 - `magic_damage_growth` (`int`): permanent magic damage gained per level in this job.
@@ -242,27 +245,29 @@ Optional fields:
 - `forbid_helmet` (`bool`): default `false`; when `true`, assigned helmet items are skipped.
 - `forbid_trinket` (`bool`): default `false`; when `true`, assigned trinket items are skipped.
 - `skill` (`Dictionary`): current job active skill payload. See `jobs[].skill` below.
+- `secondary_skill` (`Dictionary`): optional current-job bridge skill payload. It uses the same fields as `jobs[].skill` and is selected by `Secondary Skill` tactics.
 - `passive` (`Dictionary`): current job passive payload. See `jobs[].passive` below.
 - `reaction` (`Dictionary`): current job reaction payload. See `jobs[].reaction` below.
 - `default_tactic` (`Dictionary`): tactic automatically appended while this is the unit's current job. See `jobs[].default_tactic` below.
-- Job unlock timing is fixed: level 1 chooses skill or reaction, level 2 unlocks the passive, and level 3 unlocks the remaining skill or reaction.
+- Job unlock timing is fixed: level 1 chooses skill or reaction, level 2 unlocks the passive, and level 3 unlocks the remaining skill or reaction. A job's secondary skill unlocks with its normal skill and is not a separate learned assignment.
 
 Equipment note:
 - Equipment is allowed by default. Use `forbid_weapon`, `forbid_armor`, `forbid_helmet`, and `forbid_trinket` only when a job concept explicitly forbids a category.
 - Shields currently live inside `Weapon` or `Armor` item concepts. There is no offhand or one-hand/two-hand rules layer yet.
 
-## `jobs[].skill` keys
+## `jobs[].skill` and `jobs[].secondary_skill` keys
 
 Optional fields:
 - `display_name` (`String`)
-- `tags` (`Array[String]`)
+- `tags` (`Array[String]`): canonical tag IDs. Resource-authored content uses shared `TagDefinition` resources for the same IDs.
 - `action` (`String enum`): `Attack`, `Heal`, `Guard`, `Apply Status`, `Effects Only`
 - `default_target` (`String enum`): `Self`, `Lowest HP Ally`, `Frontmost Enemy`
 - `attack_damage_type` (`String enum`): `Physical`, `Magic`, `Split Evenly`. Split attacks divide the physical base damage plus skill bonus evenly, assigning the odd point to physical damage.
 - `attack_count` (`int`, minimum `1`, default `1`): number of complete attacks performed by an `Attack` skill. Each attack independently resolves targeting requests, attack/hit effects, damage, reactions, and defeat.
 - `status_id` (`String`): required when `action` is `Apply Status`; references a `statuses[].id`.
-- `status_duration_turns` (`int`, default `3`): affected owner turns before expiration.
-- `status_is_permanent` (`bool`, default `false`): when true, ignores `status_duration_turns`.
+- `override_status_duration` (`bool`, default inferred): when true, this skill uses `status_duration_turns` / `status_is_permanent` instead of the referenced status defaults. If omitted, JSON infers true when either duration field is present.
+- `status_duration_turns` (`int`, default `3`): affected owner turns before expiration when `override_status_duration` is true.
+- `status_is_permanent` (`bool`, default `false`): when true and `override_status_duration` is true, ignores `status_duration_turns`.
 - `amount_modifier` (`int`): added to the base action amount when the skill is used.
 - `cooldown_turns` (`int`, default `0`): owner-turn cooldown started when the skill is used. Tactics skip skills that are still cooling down.
 - `effects` (`Array[Dictionary]`): shared effects using `Skill Used` or `Skill Completed`. `Skill Completed` resolves after the skill action and is useful for post-attack consequences. `Effects Only` requires at least one effect.
@@ -278,7 +283,7 @@ Currently implemented skill actions:
 
 Optional fields:
 - `display_name` (`String`)
-- `tags` (`Array[String]`)
+- `tags` (`Array[String]`): canonical tag IDs. Resource-authored content uses shared `TagDefinition` resources for the same IDs.
 - `passive_type` (`String enum`): `None`, `Attack Damage Bonus`, `Heal Bonus`, `Guard Armor Bonus`, `Forecast`, `Extend Allied Buff Duration`
 - `Extend Allied Buff Duration` uses `amount` as a percentage. The strongest living allied copy applies once to finite naturally-elapsing Boons, positive temporary stat modifiers, and temporary Haste from any source. It does not alter transferred existing durations or battle-long action-speed increases.
 - `amount` (`int`)
@@ -291,7 +296,7 @@ Optional fields:
 
 Optional fields:
 - `display_name` (`String`)
-- `tags` (`Array[String]`)
+- `tags` (`Array[String]`): canonical tag IDs. Resource-authored content uses shared `TagDefinition` resources for the same IDs.
 - `trigger` (`String enum`): `Damaged`, `Physically Damaged`, `Magically Damaged`, `Ally Magically Damaged`, `HP Below Threshold`, `Lethal Physical Attack Requested`, `Attack Targets Another Ally`, `Status Application Requested`, `Ally Ailment Applied`, `Enemy Healing Requested`, `Enemy Status Threshold Reached`, `Enemy Died With Status`
 - `condition` (`String enum`): `Always`, `Self HP Below Percent`, `Self Status Stacks At Least`, `Requested Status Is Ailment`, `Requested Status Matches`
 - `reaction_type` (`String enum`): `Gain Armor`, `Heal Self`, `Damage Attacker`, `Effects Only`
@@ -326,9 +331,9 @@ Currently implemented reaction timing:
 
 Optional fields:
 - `display_name` (`String`)
-- `tags` (`Array[String]`)
+- `tags` (`Array[String]`): canonical tag IDs. Resource-authored content uses shared `TagDefinition` resources for the same IDs.
 - `condition` (`String enum`): `Always`, `Self HP Below Half`, `Ally HP Below Half`, `Enemy Alive`, `Target Has Status`, `Target Status Stacks At Least`, `Target Pending Status Damage At Least HP`, `Target Slower Than Self`
-- `action` (`String enum`): `Attack`, `Heal`, `Guard`, `Job Skill`, `Assigned Skill`
+- `action` (`String enum`): `Attack`, `Heal`, `Guard`, `Job Skill`, `Secondary Skill`, `Assigned Skill`
 - `target` (`String enum`): `Self`, `Lowest HP Ally`, `Lowest HP Ally With Status`, `Frontmost Enemy`
 - `status_id` / `status_stack_threshold`: used by status-aware conditions.
 - `foretell_enabled` (`Boolean`, default `false`)
@@ -340,9 +345,9 @@ Required:
 
 Optional fields:
 - `display_name` (`String`)
-- `tags` (`Array[String]`)
+- `tags` (`Array[String]`): canonical tag IDs. Resource-authored content uses shared `TagDefinition` resources for the same IDs.
 - `condition` (`String enum`): `Always`, `Self HP Below Half`, `Ally HP Below Half`, `Enemy Alive`, `Target Has Status`, `Target Status Stacks At Least`, `Target Pending Status Damage At Least HP`, `Target Slower Than Self`
-- `action` (`String enum`): `Attack`, `Heal`, `Guard`, `Job Skill`, `Assigned Skill`
+- `action` (`String enum`): `Attack`, `Heal`, `Guard`, `Job Skill`, `Secondary Skill`, `Assigned Skill`
 - `target` (`String enum`): `Self`, `Lowest HP Ally`, `Lowest HP Ally With Status`, `Frontmost Enemy`
 - `status_id` / `status_stack_threshold`: used by status-aware conditions.
 - `foretell_enabled` (`Boolean`, default `false`)
@@ -375,6 +380,7 @@ Reference rules:
 Equipped ability notes:
 - Assigned feature job ids identify provenance; the unit must also have the corresponding permanent unlock in `job_progress`.
 - `Job Skill` uses the unlocked skill from the current job.
+- `Secondary Skill` uses the unlocked secondary skill from the current job.
 - `Assigned Skill` uses the separately equipped unlocked skill from a different job.
 - A loadout that equips a skill from another job should include an `Assigned Skill` tactic with an appropriate target.
 
@@ -385,7 +391,7 @@ Required:
 
 Optional fields:
 - `display_name` (`String`)
-- `tags` (`Array[String]`)
+- `tags` (`Array[String]`): canonical tag IDs. Resource-authored content uses shared `TagDefinition` resources for the same IDs.
 - `team` (`String enum`): `Allies`, `Enemies`
 - `ancestry_id` (`String` or empty string)
 - `max_hp` (`int`)

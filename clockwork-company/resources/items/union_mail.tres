@@ -2,17 +2,24 @@
 
 [ext_resource type="Script" uid="uid://h21mlqiqe25f" path="res://scripts/data/item_definition.gd" id="1_item"]
 [ext_resource type="Script" uid="uid://bq86vbaajvphi" path="res://scripts/data/effect_definition.gd" id="2_effect"]
+[ext_resource type="Script" uid="uid://dskbx08s3ioej" path="res://scripts/data/status_definition.gd" id="2_g73ha"]
+
+[ext_resource type="Resource" path="res://resources/tags/armor.tres" id="tag_armor"]
+[ext_resource type="Resource" path="res://resources/tags/armored.tres" id="tag_armored"]
+[ext_resource type="Resource" path="res://resources/tags/battle_start.tres" id="tag_battle_start"]
+[ext_resource type="Resource" path="res://resources/tags/union.tres" id="tag_union"]
 
 [sub_resource type="Resource" id="Resource_union_mail_link"]
+resource_name = "Union Mail Link"
 script = ExtResource("2_effect")
 display_name = "Union Mail Link"
-tags = Array[String](["armor", "battle_start"])
+tags = Array[Resource]([ExtResource("tag_armor"), ExtResource("tag_battle_start")])
 amount = 2
 
 [resource]
 script = ExtResource("1_item")
 display_name = "Union Mail"
-tags = Array[String](["armor", "union", "armored"])
+tags = Array[Resource]([ExtResource("tag_armor"), ExtResource("tag_union"), ExtResource("tag_armored")])
 slot = "Armor"
 max_hp_modifier = 6
 armor_modifier = 2

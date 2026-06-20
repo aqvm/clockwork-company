@@ -4,10 +4,15 @@
 [ext_resource type="Resource" path="res://resources/loadouts/cutpurse_chalk.tres" id="2_loadout"]
 
 [ext_resource type="Resource" path="res://resources/ancestries/redcap.tres" id="3_ancestry"]
+
+[ext_resource type="Resource" path="res://resources/tags/duelist.tres" id="tag_duelist"]
+[ext_resource type="Resource" path="res://resources/tags/fragile.tres" id="tag_fragile"]
+[ext_resource type="Resource" path="res://resources/tags/swift.tres" id="tag_swift"]
+
 [resource]
 script = ExtResource("1_unit")
 display_name = "Chalk Smile"
-tags = ["swift", "fragile", "duelist"]
+tags = Array[Resource]([ExtResource("tag_swift"), ExtResource("tag_fragile"), ExtResource("tag_duelist")])
 team = "Enemies"
 ancestry = ExtResource("3_ancestry")
 max_hp = 19

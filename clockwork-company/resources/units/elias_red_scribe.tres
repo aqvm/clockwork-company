@@ -4,10 +4,15 @@
 [ext_resource type="Resource" path="res://resources/loadouts/red_scribe_locket.tres" id="2_loadout"]
 
 [ext_resource type="Resource" path="res://resources/ancestries/emberkin.tres" id="3_ancestry"]
+
+[ext_resource type="Resource" path="res://resources/tags/blood.tres" id="tag_blood"]
+[ext_resource type="Resource" path="res://resources/tags/fragile.tres" id="tag_fragile"]
+[ext_resource type="Resource" path="res://resources/tags/support.tres" id="tag_support"]
+
 [resource]
 script = ExtResource("1_unit")
 display_name = "Elias Red Scribe"
-tags = ["support", "blood", "fragile"]
+tags = Array[Resource]([ExtResource("tag_support"), ExtResource("tag_blood"), ExtResource("tag_fragile")])
 team = "Allies"
 ancestry = ExtResource("3_ancestry")
 max_hp = 17

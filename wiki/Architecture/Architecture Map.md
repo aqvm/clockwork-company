@@ -29,6 +29,9 @@ tags:
 - Campaign progression: `clockwork-company/scripts/campaign/campaign_manager.gd`
 - Durable roster: `clockwork-company/scripts/campaign/campaign_roster_state.gd`
 - Workbench coordination: `clockwork-company/scripts/ui/combat_test_scene.gd`
+- Combat Lab assembly state: `clockwork-company/scripts/devtools/combat_lab_state.gd`
+- Combat Lab presentation: `clockwork-company/scripts/ui/combat_lab_panel.gd`
+- Combat Lab setup fixtures: `clockwork-company/devtools/combat_lab_setups/`
 - JSON content bridge: `clockwork-company/scripts/modding/json_content_loader.gd`
 
 For the detailed ownership inventory, see [[ARCHITECTURE]].

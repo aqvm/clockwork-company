@@ -7,6 +7,10 @@
 [ext_resource type="Resource" path="res://resources/rewards/catalog_reward_bellhammer.tres" id="5_reward"]
 [ext_resource type="Resource" path="res://resources/rewards/catalog_reward_brass_lung.tres" id="6_reward"]
 
+[ext_resource type="Resource" path="res://resources/tags/campaign-chain.tres" id="tag_campaign_chain"]
+[ext_resource type="Resource" path="res://resources/tags/clocktower.tres" id="tag_clocktower"]
+[ext_resource type="Resource" path="res://resources/tags/debt.tres" id="tag_debt"]
+
 [resource]
 script = ExtResource("1_scenario")
 scenario_id = "clocktower_claim"
@@ -19,6 +23,6 @@ encounters = [ExtResource("2_encounter_a"), ExtResource("3_encounter_b"), ExtRes
 tier = 4
 recommended_level_min = 3
 recommended_level_max = 5
-tags = ["clocktower", "debt", "campaign-chain"]
+tags = Array[Resource]([ExtResource("tag_clocktower"), ExtResource("tag_debt"), ExtResource("tag_campaign_chain")])
 rewards = [ExtResource("5_reward"), ExtResource("6_reward")]
 content_unlocks = ["clocktower_claim_ledger"]

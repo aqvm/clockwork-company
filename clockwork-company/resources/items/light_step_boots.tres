@@ -2,10 +2,13 @@
 
 [ext_resource type="Script" path="res://scripts/data/item_definition.gd" id="1_boots"]
 
+[ext_resource type="Resource" path="res://resources/tags/speed.tres" id="tag_speed"]
+[ext_resource type="Resource" path="res://resources/tags/trinket.tres" id="tag_trinket"]
+
 [resource]
 script = ExtResource("1_boots")
 display_name = "Light-Step Boots"
-tags = ["speed", "trinket"]
+tags = Array[Resource]([ExtResource("tag_speed"), ExtResource("tag_trinket")])
 slot = "Trinket"
 armor_modifier = -1
 action_speed_modifier = 2

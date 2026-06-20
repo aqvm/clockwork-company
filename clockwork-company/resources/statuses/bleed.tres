@@ -2,6 +2,10 @@
 
 [ext_resource type="Script" path="res://scripts/data/status_definition.gd" id="1_status"]
 
+[ext_resource type="Resource" path="res://resources/tags/action.tres" id="tag_action"]
+[ext_resource type="Resource" path="res://resources/tags/ailment.tres" id="tag_ailment"]
+[ext_resource type="Resource" path="res://resources/tags/damage.tres" id="tag_damage"]
+
 [resource]
 script = ExtResource("1_status")
 display_name = "Bleed"
@@ -9,7 +13,7 @@ polarity = "Ailment"
 status_type = "Bleed"
 stacking_rule = "Intensify"
 max_stacks = 5
-tags = Array[String](["ailment", "damage", "action"])
+tags = Array[Resource]([ExtResource("tag_ailment"), ExtResource("tag_damage"), ExtResource("tag_action")])
 amount = 1
 elapses_naturally = false
 description = "After this unit completes an action, it takes 1 damage per stack. Bleed does not expire naturally."

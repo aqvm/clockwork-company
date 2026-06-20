@@ -107,7 +107,7 @@ Campaign progress can be saved to and loaded from `user://first_road_campaign_sa
 
 Campaign scenario victory awards one post-scenario job level after the successful run is committed. `CampaignRosterState` chooses one surviving deployed unit tied for the lowest total level, enforces the scenario tier plus unit/job caps, and owns permanent unlock flags. A pending level-1 skill-versus-reaction choice blocks starting another campaign scenario until planning UI resolves it; practice scenarios remain available.
 
-Campaign planning can freely change a unit's current job and assign unlocked learned features between scenarios. Per-job progress supplies ability provenance. `Job Skill` resolves the unlocked current-job skill, while `Assigned Skill` resolves the separately equipped skill from a different learned job. Passives and reactions use their assigned learned slots. Current job and ancestry equipment restrictions are strict blacklists; changing jobs returns newly illegal gear to campaign inventory.
+Campaign planning can freely change a unit's current job and assign unlocked learned features between scenarios. Per-job progress supplies ability provenance. `Job Skill` resolves the unlocked current-job primary skill, `Secondary Skill` resolves the unlocked current-job secondary skill, and `Assigned Skill` resolves the separately equipped skill from a different learned job. Passives and reactions use their assigned learned slots. Current job and ancestry equipment restrictions are strict blacklists; changing jobs returns newly illegal gear to campaign inventory.
 
 Campaign planning equipment options come only from the selected unit's current gear and `CampaignRosterState.inventory_items`. `CampaignRosterState` owns equip/unequip transactions so replacing an item returns the old item to inventory and planning UI snapshots cannot create gear.
 
@@ -356,7 +356,7 @@ Tactic responsibility split:
 
 Job responsibility split:
 
-- `JobDefinition` owns inspectable source data: current-job stat modifiers, optional equipment forbids, skill, passive, reaction, and default tactic.
+- `JobDefinition` owns inspectable source data: current-job stat modifiers, optional equipment forbids, primary skill, optional secondary skill, passive, reaction, and default tactic.
 - `UnitLoadoutDefinition` owns the source current-job assignment, optional equipped learned abilities, gear, and tactics for a reusable build.
 - `UnitState` owns the runtime current job and current granted job abilities assigned to this combat copy.
 - `CombatSimulator` owns equipment forbid checks, job skill action resolution, and current-job ability timing.
