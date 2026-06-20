@@ -91,7 +91,7 @@ static func apply_status_application_reaction(log, parent_entry_id: int, target,
 		var replacements: Array[StatusDefinition] = target.current_reaction.replacement_statuses
 		if context != null and not replacements.is_empty():
 			var replacement: StatusDefinition = replacements[context.history.size() % replacements.size()]
-			StatusResolverScript.apply_status(log, parent_entry_id, target, replacement, target.current_reaction.display_name, 3, false, context, target)
+			StatusResolverScript.apply_status(log, parent_entry_id, target, replacement, target.current_reaction.display_name, replacement.default_duration_turns, replacement.default_is_permanent, context, target)
 
 
 static func apply_enemy_healing_request_reactions(log, parent_entry_id: int, healed_unit, healer, request_payload: Dictionary, context = null) -> void:

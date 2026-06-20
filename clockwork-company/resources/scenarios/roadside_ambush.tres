@@ -7,6 +7,10 @@
 [ext_resource type="Resource" path="res://resources/rewards/honed_blade_for_mira.tres" id="5_reward"]
 [ext_resource type="Resource" path="res://resources/rewards/catalog_reward_mercy_coin.tres" id="6_reward"]
 
+[ext_resource type="Resource" path="res://resources/tags/bandits.tres" id="tag_bandits"]
+[ext_resource type="Resource" path="res://resources/tags/road.tres" id="tag_road"]
+[ext_resource type="Resource" path="res://resources/tags/starter.tres" id="tag_starter"]
+
 [resource]
 script = ExtResource("1_scenario")
 scenario_id = "roadside_ambush"
@@ -19,6 +23,6 @@ encounters = [ExtResource("2_encounter_a"), ExtResource("3_encounter_b"), ExtRes
 tier = 1
 recommended_level_min = 1
 recommended_level_max = 2
-tags = ["road", "bandits", "starter"]
+tags = Array[Resource]([ExtResource("tag_road"), ExtResource("tag_bandits"), ExtResource("tag_starter")])
 rewards = [ExtResource("5_reward"), ExtResource("6_reward")]
 content_unlocks = ["first_road_bandit_notes"]

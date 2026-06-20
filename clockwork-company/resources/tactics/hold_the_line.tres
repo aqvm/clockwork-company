@@ -2,10 +2,13 @@
 
 [ext_resource type="Script" path="res://scripts/data/tactic_definition.gd" id="1_tactic"]
 
+[ext_resource type="Resource" path="res://resources/tags/frontline.tres" id="tag_frontline"]
+[ext_resource type="Resource" path="res://resources/tags/guard.tres" id="tag_guard"]
+
 [resource]
 script = ExtResource("1_tactic")
 display_name = "Hold the Line"
-tags = ["guard", "frontline"]
+tags = Array[Resource]([ExtResource("tag_guard"), ExtResource("tag_frontline")])
 condition = "Enemy Alive"
 action = "Guard"
 target = "Self"

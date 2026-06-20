@@ -15,7 +15,7 @@ Tactics are priority-ordered authored rules in the form `condition -> action -> 
 
 - Tactics evaluate top to bottom.
 - The first true condition with an available action and valid target wins.
-- Supported actions include attack, heal, guard, `Job Skill`, `Assigned Skill`, apply status, and effects-only content where authored.
+- Supported actions include attack, heal, guard, `Job Skill`, `Secondary Skill`, `Assigned Skill`, apply status, and effects-only content where authored.
 - If no tactic matches, the unit attacks the frontmost living enemy.
 - The current job's default tactic is appended at combat initialization and is not part of the editable loadout list.
 - Campaign planning can add, remove, reorder, and edit authored tactic copies.

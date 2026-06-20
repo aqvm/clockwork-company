@@ -2,10 +2,13 @@
 
 [ext_resource type="Script" path="res://scripts/data/tactic_definition.gd" id="1_tactic"]
 
+[ext_resource type="Resource" path="res://resources/tags/heal.tres" id="tag_heal"]
+[ext_resource type="Resource" path="res://resources/tags/self.tres" id="tag_self"]
+
 [resource]
 script = ExtResource("1_tactic")
 display_name = "Second Wind"
-tags = ["heal", "self"]
+tags = Array[Resource]([ExtResource("tag_heal"), ExtResource("tag_self")])
 condition = "Self HP Below Half"
 action = "Heal"
 target = "Self"

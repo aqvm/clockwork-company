@@ -2,6 +2,7 @@ extends RefCounted
 class_name UnitState
 
 const TurnSchedulerScript := preload("res://scripts/combat/runtime/turn_scheduler.gd")
+const TagUtilsScript := preload("res://scripts/data/tag_utils.gd")
 
 var unit_name := ""
 var unit_id := ""
@@ -24,6 +25,7 @@ var slot_index := 0
 var loadout: UnitLoadoutDefinition = null
 var current_job: JobDefinition = null
 var current_skill: SkillDefinition = null
+var current_secondary_skill: SkillDefinition = null
 var assigned_skill: SkillDefinition = null
 var current_passive: PassiveDefinition = null
 var current_reaction: ReactionDefinition = null
@@ -63,7 +65,7 @@ func _init(definition: UnitDefinition = null, unit_slot_index: int = 0) -> void:
 	unit_name = definition.display_name
 	unit_id = _build_unit_id(definition.team, unit_slot_index, definition.display_name)
 	campaign_unit_id = String(definition.get_meta("campaign_unit_id", definition.display_name))
-	tags = definition.tags.duplicate()
+	tags = TagUtilsScript.ids(definition.tags)
 	team = definition.team
 	ancestry = definition.ancestry
 	current_ancestry_feature = ancestry.feature if ancestry != null else null
@@ -83,6 +85,7 @@ func _init(definition: UnitDefinition = null, unit_slot_index: int = 0) -> void:
 
 	if current_job != null:
 		current_skill = current_job.skill if _job_feature_unlocked(definition.job_progress, current_job, "skill") else null
+		current_secondary_skill = current_job.secondary_skill if _job_feature_unlocked(definition.job_progress, current_job, "skill") else null
 		assigned_skill = loadout.equipped_skill if _feature_is_unlocked(definition.job_progress, loadout.equipped_skill, "skill") else null
 		current_passive = loadout.equipped_passive if _feature_is_unlocked(definition.job_progress, loadout.equipped_passive, "passive") else null
 		current_reaction = loadout.equipped_reaction if _feature_is_unlocked(definition.job_progress, loadout.equipped_reaction, "reaction") else null
@@ -136,6 +139,7 @@ func clone_runtime_state():
 	clone.loadout = _duplicate_resource(loadout)
 	clone.current_job = _duplicate_resource(current_job)
 	clone.current_skill = _duplicate_resource(current_skill)
+	clone.current_secondary_skill = _duplicate_resource(current_secondary_skill)
 	clone.assigned_skill = _duplicate_resource(assigned_skill)
 	clone.current_passive = _duplicate_resource(current_passive)
 	clone.current_reaction = _duplicate_resource(current_reaction)
@@ -702,6 +706,12 @@ func skill_name() -> String:
 	if current_skill == null:
 		return "none"
 	return current_skill.display_name
+
+
+func secondary_skill_name() -> String:
+	if current_secondary_skill == null:
+		return "none"
+	return current_secondary_skill.display_name
 
 
 func assigned_skill_name() -> String:

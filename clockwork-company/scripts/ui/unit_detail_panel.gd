@@ -47,11 +47,13 @@ func show_unit(unit: UnitDefinition, party_units: Array[UnitDefinition] = []) ->
 
 	var loadout := unit.loadout
 	var skill = loadout.current_job.skill if loadout.current_job != null and _job_feature_unlocked(unit, loadout.current_job, "skill") else null
+	var secondary_skill = loadout.current_job.secondary_skill if loadout.current_job != null and _job_feature_unlocked(unit, loadout.current_job, "skill") else null
 	var passive = loadout.equipped_passive
 	var reaction = loadout.equipped_reaction
 	_add_resource_text(loadout, "Loadout: %s" % loadout.display_name)
 	_add_resource_text(loadout.current_job, "Current job: %s" % _resource_display_name(loadout.current_job))
 	_add_resource_text(skill, "Job skill: %s" % _resource_display_name(skill))
+	_add_resource_text(secondary_skill, "Secondary skill: %s" % _resource_display_name(secondary_skill))
 	_add_resource_text(loadout.equipped_skill, "Assigned skill: %s" % _resource_display_name(loadout.equipped_skill))
 	_add_resource_text(passive, "Assigned passive: %s" % _resource_display_name(passive))
 	_add_resource_text(reaction, "Assigned reaction: %s" % _resource_display_name(reaction))

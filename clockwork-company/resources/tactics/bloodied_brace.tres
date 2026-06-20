@@ -2,10 +2,13 @@
 
 [ext_resource type="Script" path="res://scripts/data/tactic_definition.gd" id="1_tactic"]
 
+[ext_resource type="Resource" path="res://resources/tags/guard.tres" id="tag_guard"]
+[ext_resource type="Resource" path="res://resources/tags/low_hp.tres" id="tag_low_hp"]
+
 [resource]
 script = ExtResource("1_tactic")
 display_name = "Bloodied Brace"
-tags = ["guard", "low_hp"]
+tags = Array[Resource]([ExtResource("tag_guard"), ExtResource("tag_low_hp")])
 condition = "Self HP Below Half"
 action = "Guard"
 target = "Self"

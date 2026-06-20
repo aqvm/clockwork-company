@@ -3,11 +3,16 @@
 [ext_resource type="Script" uid="uid://cd1dshturnux8" path="res://scripts/data/ancestry_definition.gd" id="1_ancestry"]
 [ext_resource type="Script" uid="uid://ejchwjlwm2mx" path="res://scripts/data/ancestry_feature_definition.gd" id="2_feature"]
 
+[ext_resource type="Resource" path="res://resources/tags/ancestry.tres" id="tag_ancestry"]
+[ext_resource type="Resource" path="res://resources/tags/durable.tres" id="tag_durable"]
+[ext_resource type="Resource" path="res://resources/tags/guard.tres" id="tag_guard"]
+[ext_resource type="Resource" path="res://resources/tags/stone.tres" id="tag_stone"]
+
 [sub_resource type="Resource" id="Feature_memory"]
 resource_name = "Stone Memory"
 script = ExtResource("2_feature")
 display_name = "Stone Memory"
-tags = Array[String](["guard", "stone"])
+tags = Array[Resource]([ExtResource("tag_guard"), ExtResource("tag_stone")])
 amount = 4
 notes = "A slow ancestry that starts battles already braced."
 
@@ -15,7 +20,7 @@ notes = "A slow ancestry that starts battles already braced."
 resource_name = "Stonekin"
 script = ExtResource("1_ancestry")
 display_name = "Stonekin"
-tags = Array[String](["ancestry", "stone", "durable"])
+tags = Array[Resource]([ExtResource("tag_ancestry"), ExtResource("tag_stone"), ExtResource("tag_durable")])
 min_max_hp = 20
 max_max_hp = 26
 min_physical_damage = 3

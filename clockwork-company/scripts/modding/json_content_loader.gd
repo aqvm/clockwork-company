@@ -14,6 +14,8 @@ const JobProgressDefinitionScript := preload("res://scripts/data/job_progress_de
 const AncestryDefinitionScript := preload("res://scripts/data/ancestry_definition.gd")
 const AncestryFeatureDefinitionScript := preload("res://scripts/data/ancestry_feature_definition.gd")
 const StatusDefinitionScript := preload("res://scripts/data/status_definition.gd")
+const TagDefinitionScript := preload("res://scripts/data/tag_definition.gd")
+const TagUtilsScript := preload("res://scripts/data/tag_utils.gd")
 
 const BASE_ITEMS_DIR := "res://resources/items"
 const BASE_JOBS_DIR := "res://resources/jobs"
@@ -63,7 +65,7 @@ const ANCESTRY_FEATURE_TRIGGER_VALUES := {"Battle Start": true, "Attack": true, 
 const ANCESTRY_FEATURE_CONDITION_VALUES := {"Always": true, "Self HP Below Percent": true}
 const ANCESTRY_FEATURE_TYPE_VALUES := {"Gain Armor": true, "Bonus Damage": true, "Heal Self": true, "Damage Attacker": true, "Increase Own Action Speed": true, "Gain Physical Damage": true}
 const TACTIC_CONDITION_VALUES := {"Always": true, "Self HP Below Half": true, "Ally HP Below Half": true, "Enemy Alive": true, "Target Has Status": true, "Target Status Stacks At Least": true, "Target Pending Status Damage At Least HP": true, "Target Slower Than Self": true}
-const TACTIC_ACTION_VALUES := {"Attack": true, "Heal": true, "Guard": true, "Job Skill": true, "Assigned Skill": true}
+const TACTIC_ACTION_VALUES := {"Attack": true, "Heal": true, "Guard": true, "Job Skill": true, "Secondary Skill": true, "Assigned Skill": true}
 const TACTIC_TARGET_VALUES := {"Self": true, "Lowest HP Ally": true, "Lowest HP Ally With Status": true, "Frontmost Enemy": true}
 const LEGACY_ACTION_INTERVAL_FIELDS := {
 	"action_interval": true,
@@ -192,9 +194,11 @@ static func _load_base_statuses() -> Dictionary:
 			"polarity": resource.polarity,
 			"status_type": resource.status_type,
 			"stacking_rule": resource.stacking_rule,
+			"default_duration_turns": resource.default_duration_turns,
+			"default_is_permanent": resource.default_is_permanent,
 			"stack_cap_enabled": resource.stack_cap_enabled,
 			"max_stacks": resource.max_stacks,
-			"tags": resource.tags.duplicate(),
+			"tags": TagUtilsScript.ids(resource.tags),
 			"amount": resource.amount,
 			"amount_percent": resource.amount_percent,
 			"elapses_naturally": resource.elapses_naturally,
@@ -210,7 +214,7 @@ static func _load_base_ancestries() -> Dictionary:
 		out[id] = {
 			"id": id,
 			"display_name": resource.display_name,
-			"tags": resource.tags.duplicate(),
+			"tags": TagUtilsScript.ids(resource.tags),
 			"min_max_hp": resource.min_max_hp,
 			"max_max_hp": resource.max_max_hp,
 			"min_physical_damage": resource.min_physical_damage,
@@ -243,7 +247,7 @@ static func _load_base_items() -> Dictionary:
 		out[id] = {
 			"id": id,
 			"display_name": resource.display_name,
-			"tags": resource.tags.duplicate(),
+			"tags": TagUtilsScript.ids(resource.tags),
 			"slot": resource.slot,
 			"max_hp_modifier": resource.max_hp_modifier,
 			"physical_damage_modifier": resource.physical_damage_modifier,
@@ -262,7 +266,7 @@ static func _load_base_jobs() -> Dictionary:
 		out[id] = {
 			"id": id,
 			"display_name": resource.display_name,
-			"tags": resource.tags.duplicate(),
+			"tags": TagUtilsScript.ids(resource.tags),
 			"max_hp_growth": resource.max_hp_growth,
 			"physical_damage_growth": resource.physical_damage_growth,
 			"magic_damage_growth": resource.magic_damage_growth,
@@ -273,6 +277,7 @@ static func _load_base_jobs() -> Dictionary:
 			"forbid_helmet": resource.forbid_helmet,
 			"forbid_trinket": resource.forbid_trinket,
 			"skill": _skill_resource_to_data(resource.skill),
+			"secondary_skill": _skill_resource_to_data(resource.secondary_skill),
 			"passive": _passive_resource_to_data(resource.passive),
 			"reaction": _reaction_resource_to_data(resource.reaction),
 			"default_tactic": _tactic_resource_to_data(resource.default_tactic),
@@ -287,7 +292,7 @@ static func _load_base_tactics() -> Dictionary:
 		out[id] = {
 			"id": id,
 			"display_name": resource.display_name,
-			"tags": resource.tags.duplicate(),
+			"tags": TagUtilsScript.ids(resource.tags),
 			"condition": resource.condition,
 			"action": resource.action,
 			"target": resource.target,
@@ -331,7 +336,7 @@ static func _load_base_units() -> Dictionary:
 		out[id] = {
 			"id": id,
 			"display_name": resource.display_name,
-			"tags": resource.tags.duplicate(),
+			"tags": TagUtilsScript.ids(resource.tags),
 			"team": resource.team,
 			"ancestry_id": _resource_ref_id(resource.ancestry),
 			"max_hp": resource.max_hp,
@@ -434,41 +439,8 @@ static func _validate_merged_data(data: Dictionary) -> void:
 
 	for job_id in data["jobs"].keys():
 		var job: Dictionary = data["jobs"][job_id]
-		var skill: Dictionary = job.get("skill", {})
-		if not skill.is_empty():
-			assert(SKILL_ACTION_VALUES.has(skill.get("action", "")), "Invalid skill action for job id %s" % job_id)
-			assert(SKILL_TARGET_VALUES.has(skill.get("default_target", "")), "Invalid skill default target for job id %s" % job_id)
-			assert(SKILL_ATTACK_DAMAGE_TYPE_VALUES.has(skill.get("attack_damage_type", "Physical")), "Invalid skill attack damage type for job id %s" % job_id)
-			var skill_status_id := String(skill.get("status_id", ""))
-			if skill.get("action", "") == "Apply Status":
-				assert(data["statuses"].has(skill_status_id), "Unknown status id '%s' in skill for job %s" % [skill_status_id, job_id])
-				assert(int(skill.get("status_duration_turns", 3)) >= 1, "Status duration must be at least 1 turn in skill for job %s" % job_id)
-			if skill.get("action", "") == "Effects Only":
-				assert(not skill.get("effects", []).is_empty(), "Effects Only skill requires at least one effect for job %s" % job_id)
-			assert(int(skill.get("attack_count", 1)) >= 1, "Skill attack_count must be at least 1 for job %s" % job_id)
-			assert(int(skill.get("cooldown_turns", 0)) >= 0, "Skill cooldown_turns cannot be negative for job %s" % job_id)
-			for effect in skill.get("effects", []):
-				var effect_data: Dictionary = effect
-				assert(effect_data.get("trigger", "") in ["Skill Used", "Skill Completed"], "Skill effects must use Skill Used or Skill Completed for job %s" % job_id)
-				assert(EFFECT_CONDITION_VALUES.has(effect_data.get("condition", "")), "Invalid skill effect condition for job %s" % job_id)
-				assert(EFFECT_TARGET_VALUES.has(effect_data.get("target_selector", "")), "Invalid skill effect target for job %s" % job_id)
-				assert(EFFECT_TYPE_VALUES.has(effect_data.get("effect_type", "")), "Invalid skill effect type for job %s" % job_id)
-				assert(_effect_support_error(effect_data).is_empty(), "Unsupported skill effect in job %s: %s" % [job_id, _effect_support_error(effect_data)])
-				_validate_formula_fields(data, effect_data, "skill in job %s" % job_id)
-				var effect_status_id := String(effect_data.get("status_id", ""))
-				if effect_data.get("effect_type", "") == "Apply Status":
-					assert(data["statuses"].has(effect_status_id), "Unknown skill effect status id '%s' in job %s" % [effect_status_id, job_id])
-				if effect_data.get("effect_type", "") == "Remove Status" and effect_data.get("status_removal_mode", "Random Matching") == "Specific Status":
-					assert(data["statuses"].has(effect_status_id), "Unknown specific removal status id '%s' in job %s" % [effect_status_id, job_id])
-					var filter_polarity := String(effect_data.get("status_polarity", "Any"))
-					if filter_polarity != "Any":
-						assert(String(data["statuses"][effect_status_id].get("polarity", "")) == filter_polarity, "Specific skill removal polarity does not match status '%s' in job %s" % [effect_status_id, job_id])
-				if effect_data.get("effect_type", "") == "Remove Status":
-					assert(EFFECT_STATUS_POLARITY_VALUES.has(effect_data.get("status_polarity", "Any")), "Invalid skill status polarity filter in job %s" % job_id)
-					assert(EFFECT_STATUS_REMOVAL_MODE_VALUES.has(effect_data.get("status_removal_mode", "Random Matching")), "Invalid skill status removal mode in job %s" % job_id)
-				if effect_data.get("effect_type", "") == "Modify Stat":
-					assert(EFFECT_MODIFIED_STAT_VALUES.has(effect_data.get("modified_stat", "")), "Invalid skill modified stat in job %s" % job_id)
-					assert(int(effect_data.get("modifier_duration_turns", 1)) >= 1, "Skill modifier duration must be at least 1 turn in job %s" % job_id)
+		_validate_job_skill(data, job.get("skill", {}), job_id, "skill")
+		_validate_job_skill(data, job.get("secondary_skill", {}), job_id, "secondary skill")
 		var passive: Dictionary = job.get("passive", {})
 		if not passive.is_empty():
 			assert(PASSIVE_TYPE_VALUES.has(passive.get("passive_type", "")), "Invalid passive type for job id %s" % job_id)
@@ -541,6 +513,45 @@ static func _validate_merged_data(data: Dictionary) -> void:
 
 	for roster_unit_id in data.get("demo_roster", []):
 		assert(data["units"].has(String(roster_unit_id)), "Unknown unit id '%s' in demo_roster" % String(roster_unit_id))
+
+
+static func _validate_job_skill(data: Dictionary, raw_skill: Variant, job_id: String, label: String) -> void:
+	var skill: Dictionary = raw_skill
+	if skill.is_empty():
+		return
+	assert(SKILL_ACTION_VALUES.has(skill.get("action", "")), "Invalid %s action for job id %s" % [label, job_id])
+	assert(SKILL_TARGET_VALUES.has(skill.get("default_target", "")), "Invalid %s default target for job id %s" % [label, job_id])
+	assert(SKILL_ATTACK_DAMAGE_TYPE_VALUES.has(skill.get("attack_damage_type", "Physical")), "Invalid %s attack damage type for job id %s" % [label, job_id])
+	var skill_status_id := String(skill.get("status_id", ""))
+	if skill.get("action", "") == "Apply Status":
+		assert(data["statuses"].has(skill_status_id), "Unknown status id '%s' in %s for job %s" % [skill_status_id, label, job_id])
+		assert(int(skill.get("status_duration_turns", 3)) >= 1, "Status duration must be at least 1 turn in %s for job %s" % [label, job_id])
+	if skill.get("action", "") == "Effects Only":
+		assert(not skill.get("effects", []).is_empty(), "Effects Only %s requires at least one effect for job %s" % [label, job_id])
+	assert(int(skill.get("attack_count", 1)) >= 1, "%s attack_count must be at least 1 for job %s" % [label.capitalize(), job_id])
+	assert(int(skill.get("cooldown_turns", 0)) >= 0, "%s cooldown_turns cannot be negative for job %s" % [label.capitalize(), job_id])
+	for effect in skill.get("effects", []):
+		var effect_data: Dictionary = effect
+		assert(effect_data.get("trigger", "") in ["Skill Used", "Skill Completed"], "%s effects must use Skill Used or Skill Completed for job %s" % [label.capitalize(), job_id])
+		assert(EFFECT_CONDITION_VALUES.has(effect_data.get("condition", "")), "Invalid %s effect condition for job %s" % [label, job_id])
+		assert(EFFECT_TARGET_VALUES.has(effect_data.get("target_selector", "")), "Invalid %s effect target for job %s" % [label, job_id])
+		assert(EFFECT_TYPE_VALUES.has(effect_data.get("effect_type", "")), "Invalid %s effect type for job %s" % [label, job_id])
+		assert(_effect_support_error(effect_data).is_empty(), "Unsupported %s effect in job %s: %s" % [label, job_id, _effect_support_error(effect_data)])
+		_validate_formula_fields(data, effect_data, "%s in job %s" % [label, job_id])
+		var effect_status_id := String(effect_data.get("status_id", ""))
+		if effect_data.get("effect_type", "") == "Apply Status":
+			assert(data["statuses"].has(effect_status_id), "Unknown %s effect status id '%s' in job %s" % [label, effect_status_id, job_id])
+		if effect_data.get("effect_type", "") == "Remove Status" and effect_data.get("status_removal_mode", "Random Matching") == "Specific Status":
+			assert(data["statuses"].has(effect_status_id), "Unknown specific removal status id '%s' in %s for job %s" % [effect_status_id, label, job_id])
+			var filter_polarity := String(effect_data.get("status_polarity", "Any"))
+			if filter_polarity != "Any":
+				assert(String(data["statuses"][effect_status_id].get("polarity", "")) == filter_polarity, "Specific %s removal polarity does not match status '%s' in job %s" % [label, effect_status_id, job_id])
+		if effect_data.get("effect_type", "") == "Remove Status":
+			assert(EFFECT_STATUS_POLARITY_VALUES.has(effect_data.get("status_polarity", "Any")), "Invalid %s status polarity filter in job %s" % [label, job_id])
+			assert(EFFECT_STATUS_REMOVAL_MODE_VALUES.has(effect_data.get("status_removal_mode", "Random Matching")), "Invalid %s status removal mode in job %s" % [label, job_id])
+		if effect_data.get("effect_type", "") == "Modify Stat":
+			assert(EFFECT_MODIFIED_STAT_VALUES.has(effect_data.get("modified_stat", "")), "Invalid %s modified stat in job %s" % [label, job_id])
+			assert(int(effect_data.get("modifier_duration_turns", 1)) >= 1, "%s modifier duration must be at least 1 turn in job %s" % [label.capitalize(), job_id])
 
 
 static func _effect_support_error(effect: Dictionary) -> String:
@@ -719,9 +730,11 @@ static func _build_status_resources(statuses_data: Dictionary) -> Dictionary:
 		status.polarity = String(src.get("polarity", "Boon"))
 		status.status_type = String(src.get("status_type", "Reconstitution"))
 		status.stacking_rule = String(src.get("stacking_rule", "Refresh"))
+		status.default_duration_turns = int(src.get("default_duration_turns", 3))
+		status.default_is_permanent = bool(src.get("default_is_permanent", false))
 		status.stack_cap_enabled = bool(src.get("stack_cap_enabled", true))
 		status.max_stacks = int(src.get("max_stacks", 1))
-		status.tags = _string_array(src.get("tags", []))
+		status.tags = _tag_array(src.get("tags", []))
 		status.amount = int(src.get("amount", 0))
 		status.amount_percent = int(src.get("amount_percent", 50))
 		status.elapses_naturally = bool(src.get("elapses_naturally", true))
@@ -737,7 +750,7 @@ static func _build_ancestry_resources(ancestries_data: Dictionary) -> Dictionary
 		var ancestry = AncestryDefinitionScript.new()
 		_set_content_id(ancestry, id)
 		ancestry.display_name = String(src.get("display_name", id))
-		ancestry.tags = _string_array(src.get("tags", []))
+		ancestry.tags = _tag_array(src.get("tags", []))
 		ancestry.min_max_hp = int(src.get("min_max_hp", 1))
 		ancestry.max_max_hp = int(src.get("max_max_hp", ancestry.min_max_hp))
 		ancestry.min_physical_damage = int(src.get("min_physical_damage", 1))
@@ -770,7 +783,7 @@ static func _build_ancestry_feature_resource(raw: Variant):
 	var feature = AncestryFeatureDefinitionScript.new()
 	_set_content_id(feature, String(src.get("id", "")))
 	feature.display_name = String(src.get("display_name", "Ancestry Feature"))
-	feature.tags = _string_array(src.get("tags", []))
+	feature.tags = _tag_array(src.get("tags", []))
 	feature.trigger = String(src.get("trigger", "Battle Start"))
 	feature.condition = String(src.get("condition", "Always"))
 	feature.feature_type = String(src.get("feature_type", "Gain Armor"))
@@ -788,7 +801,7 @@ static func _build_item_resources(items_data: Dictionary, statuses_by_id: Dictio
 		var item: ItemDefinition = ItemDefinitionScript.new()
 		_set_content_id(item, id)
 		item.display_name = String(src.get("display_name", id))
-		item.tags = _string_array(src.get("tags", []))
+		item.tags = _tag_array(src.get("tags", []))
 		item.slot = String(src.get("slot", "Weapon"))
 		item.max_hp_modifier = int(src.get("max_hp_modifier", 0))
 		item.physical_damage_modifier = int(src.get("physical_damage_modifier", 0))
@@ -807,7 +820,7 @@ static func _build_effect_resources(effects_data: Array, statuses_by_id: Diction
 		var effect: EffectDefinition = EffectDefinitionScript.new()
 		_set_content_id(effect, String(src.get("id", "")))
 		effect.display_name = String(src.get("display_name", ""))
-		effect.tags = _string_array(src.get("tags", []))
+		effect.tags = _tag_array(src.get("tags", []))
 		effect.trigger = String(src.get("trigger", "Battle Start"))
 		effect.condition = String(src.get("condition", "Always"))
 		effect.target_selector = String(src.get("target_selector", "Self"))
@@ -819,6 +832,7 @@ static func _build_effect_resources(effects_data: Array, statuses_by_id: Diction
 			var replacement = statuses_by_id.get(String(replacement_id), null)
 			if replacement != null:
 				effect.replacement_statuses.append(replacement)
+		effect.override_status_duration = bool(src.get("override_status_duration", src.has("status_duration_turns") or src.has("status_is_permanent")))
 		effect.status_duration_turns = int(src.get("status_duration_turns", 3))
 		effect.status_is_permanent = bool(src.get("status_is_permanent", false))
 		effect.status_stacks = int(src.get("status_stacks", 1))
@@ -855,7 +869,7 @@ static func _build_job_resources(jobs_data: Dictionary, statuses_by_id: Dictiona
 		var job: JobDefinition = JobDefinitionScript.new()
 		_set_content_id(job, id)
 		job.display_name = String(src.get("display_name", id))
-		job.tags = _string_array(src.get("tags", []))
+		job.tags = _tag_array(src.get("tags", []))
 		job.max_hp_growth = int(src.get("max_hp_growth", 0))
 		job.physical_damage_growth = int(src.get("physical_damage_growth", 0))
 		job.magic_damage_growth = int(src.get("magic_damage_growth", 0))
@@ -866,6 +880,7 @@ static func _build_job_resources(jobs_data: Dictionary, statuses_by_id: Dictiona
 		job.forbid_helmet = bool(src.get("forbid_helmet", false))
 		job.forbid_trinket = bool(src.get("forbid_trinket", false))
 		job.skill = _build_skill_resource(src.get("skill", {}), statuses_by_id)
+		job.secondary_skill = _build_skill_resource(src.get("secondary_skill", {}), statuses_by_id)
 		job.passive = _build_passive_resource(src.get("passive", {}), statuses_by_id)
 		job.reaction = _build_reaction_resource(src.get("reaction", {}), statuses_by_id)
 		job.default_tactic = _build_tactic_resource(src.get("default_tactic", {}), statuses_by_id)
@@ -880,12 +895,13 @@ static func _build_skill_resource(raw: Variant, statuses_by_id: Dictionary) -> S
 	var skill: SkillDefinition = SkillDefinitionScript.new()
 	_set_content_id(skill, String(src.get("id", "")))
 	skill.display_name = String(src.get("display_name", "Job Skill"))
-	skill.tags = _string_array(src.get("tags", []))
+	skill.tags = _tag_array(src.get("tags", []))
 	skill.action = String(src.get("action", "Attack"))
 	skill.default_target = String(src.get("default_target", "Frontmost Enemy"))
 	skill.attack_damage_type = String(src.get("attack_damage_type", "Physical"))
 	skill.attack_count = int(src.get("attack_count", 1))
 	skill.status = statuses_by_id.get(String(src.get("status_id", "")), null)
+	skill.override_status_duration = bool(src.get("override_status_duration", src.has("status_duration_turns") or src.has("status_is_permanent")))
 	skill.status_duration_turns = int(src.get("status_duration_turns", 3))
 	skill.status_is_permanent = bool(src.get("status_is_permanent", false))
 	skill.amount_modifier = int(src.get("amount_modifier", 0))
@@ -900,7 +916,7 @@ static func _build_passive_resource(raw: Variant, statuses_by_id: Dictionary) ->
 		var passive: PassiveDefinition = PassiveDefinitionScript.new()
 		_set_content_id(passive, String(src.get("id", "")))
 		passive.display_name = String(src.get("display_name", "Job Passive"))
-		passive.tags = _string_array(src.get("tags", []))
+		passive.tags = _tag_array(src.get("tags", []))
 		passive.passive_type = String(src.get("passive_type", "None"))
 		passive.amount = int(src.get("amount", 0))
 		passive.cooldown_turns = int(src.get("cooldown_turns", 0))
@@ -916,7 +932,7 @@ static func _build_reaction_resource(raw: Variant, statuses_by_id: Dictionary) -
 	var reaction: ReactionDefinition = ReactionDefinitionScript.new()
 	_set_content_id(reaction, String(src.get("id", "")))
 	reaction.display_name = String(src.get("display_name", "Job Reaction"))
-	reaction.tags = _string_array(src.get("tags", []))
+	reaction.tags = _tag_array(src.get("tags", []))
 	reaction.trigger = String(src.get("trigger", "Damaged"))
 	reaction.condition = String(src.get("condition", "Always"))
 	reaction.reaction_type = String(src.get("reaction_type", "Gain Armor"))
@@ -941,7 +957,7 @@ static func _build_tactic_resource(raw: Variant, statuses_by_id: Dictionary) -> 
 	var tactic: TacticDefinition = TacticDefinitionScript.new()
 	_set_content_id(tactic, String(src.get("id", "")))
 	tactic.display_name = String(src.get("display_name", "Use Job Skill"))
-	tactic.tags = _string_array(src.get("tags", []))
+	tactic.tags = _tag_array(src.get("tags", []))
 	tactic.condition = String(src.get("condition", "Enemy Alive"))
 	tactic.action = String(src.get("action", "Job Skill"))
 	tactic.target = String(src.get("target", "Frontmost Enemy"))
@@ -958,7 +974,7 @@ static func _effect_resources_to_data(effects: Array[EffectDefinition]) -> Array
 			continue
 		out.append({
 			"display_name": effect.display_name,
-			"tags": effect.tags.duplicate(),
+			"tags": TagUtilsScript.ids(effect.tags),
 			"trigger": effect.trigger,
 			"condition": effect.condition,
 			"target_selector": effect.target_selector,
@@ -967,6 +983,7 @@ static func _effect_resources_to_data(effects: Array[EffectDefinition]) -> Array
 			"condition_status_id": _resource_ref_id(effect.condition_status),
 			"amount_status_id": _resource_ref_id(effect.amount_status),
 			"replacement_status_ids": _resource_ref_ids(effect.replacement_statuses),
+			"override_status_duration": effect.override_status_duration,
 			"status_duration_turns": effect.status_duration_turns,
 			"status_is_permanent": effect.status_is_permanent,
 			"status_stacks": effect.status_stacks,
@@ -1001,12 +1018,13 @@ static func _skill_resource_to_data(skill: SkillDefinition) -> Dictionary:
 		return {}
 	return {
 		"display_name": skill.display_name,
-		"tags": skill.tags.duplicate(),
+		"tags": TagUtilsScript.ids(skill.tags),
 		"action": skill.action,
 		"default_target": skill.default_target,
 		"attack_damage_type": skill.attack_damage_type,
 		"attack_count": skill.attack_count,
 		"status_id": _resource_ref_id(skill.status),
+		"override_status_duration": skill.override_status_duration,
 		"status_duration_turns": skill.status_duration_turns,
 		"status_is_permanent": skill.status_is_permanent,
 		"amount_modifier": skill.amount_modifier,
@@ -1020,7 +1038,7 @@ static func _passive_resource_to_data(passive: PassiveDefinition) -> Dictionary:
 		return {}
 	return {
 		"display_name": passive.display_name,
-		"tags": passive.tags.duplicate(),
+		"tags": TagUtilsScript.ids(passive.tags),
 		"passive_type": passive.passive_type,
 		"amount": passive.amount,
 		"cooldown_turns": passive.cooldown_turns,
@@ -1033,7 +1051,7 @@ static func _reaction_resource_to_data(reaction: ReactionDefinition) -> Dictiona
 		return {}
 	return {
 		"display_name": reaction.display_name,
-		"tags": reaction.tags.duplicate(),
+		"tags": TagUtilsScript.ids(reaction.tags),
 		"trigger": reaction.trigger,
 		"condition": reaction.condition,
 		"reaction_type": reaction.reaction_type,
@@ -1053,7 +1071,7 @@ static func _ancestry_feature_resource_to_data(feature) -> Dictionary:
 		return {}
 	return {
 		"display_name": feature.display_name,
-		"tags": feature.tags.duplicate(),
+		"tags": TagUtilsScript.ids(feature.tags),
 		"trigger": feature.trigger,
 		"condition": feature.condition,
 		"feature_type": feature.feature_type,
@@ -1069,7 +1087,7 @@ static func _tactic_resource_to_data(tactic: TacticDefinition) -> Dictionary:
 		return {}
 	return {
 		"display_name": tactic.display_name,
-		"tags": tactic.tags.duplicate(),
+		"tags": TagUtilsScript.ids(tactic.tags),
 		"condition": tactic.condition,
 		"action": tactic.action,
 		"target": tactic.target,
@@ -1124,6 +1142,16 @@ static func _string_array(raw_values: Variant) -> Array[String]:
 	return values
 
 
+static func _tag_array(raw_values: Variant) -> Array[Resource]:
+	var values: Array[Resource] = []
+	for tag_id in _string_array(raw_values):
+		var tag := TagDefinitionScript.new()
+		tag.tag_id = tag_id
+		tag.display_name = tag_id.capitalize()
+		values.append(tag)
+	return values
+
+
 static func _build_tactic_resources(tactics_data: Dictionary, statuses_by_id: Dictionary) -> Dictionary:
 	var out := {}
 	for id in tactics_data.keys():
@@ -1131,7 +1159,7 @@ static func _build_tactic_resources(tactics_data: Dictionary, statuses_by_id: Di
 		var tactic: TacticDefinition = TacticDefinitionScript.new()
 		_set_content_id(tactic, id)
 		tactic.display_name = String(src.get("display_name", id))
-		tactic.tags = _string_array(src.get("tags", []))
+		tactic.tags = _tag_array(src.get("tags", []))
 		tactic.condition = String(src.get("condition", "Always"))
 		tactic.action = String(src.get("action", "Attack"))
 		tactic.target = String(src.get("target", "Frontmost Enemy"))
@@ -1177,7 +1205,7 @@ static func _build_unit_resources(units_data: Dictionary, loadouts_by_id: Dictio
 		var unit: UnitDefinition = UnitDefinitionScript.new()
 		_set_content_id(unit, id)
 		unit.display_name = String(src.get("display_name", id))
-		unit.tags = _string_array(src.get("tags", []))
+		unit.tags = _tag_array(src.get("tags", []))
 		unit.team = String(src.get("team", "Allies"))
 		unit.ancestry = ancestries_by_id.get(String(src.get("ancestry_id", "")), null)
 		unit.max_hp = int(src.get("max_hp", 1))

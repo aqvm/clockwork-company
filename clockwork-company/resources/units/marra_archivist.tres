@@ -7,6 +7,10 @@
 [ext_resource type="Script" path="res://scripts/data/job_progress_definition.gd" id="4_progress"]
 [ext_resource type="Resource" path="res://resources/jobs/archivist.tres" id="5_job"]
 
+[ext_resource type="Resource" path="res://resources/tags/fragile.tres" id="tag_fragile"]
+[ext_resource type="Resource" path="res://resources/tags/paper.tres" id="tag_paper"]
+[ext_resource type="Resource" path="res://resources/tags/support.tres" id="tag_support"]
+
 [sub_resource type="Resource" id="Resource_archivist_progress"]
 script = ExtResource("4_progress")
 job = ExtResource("5_job")
@@ -16,7 +20,7 @@ passive_unlocked = true
 [resource]
 script = ExtResource("1_unit")
 display_name = "Marra Archivist"
-tags = ["support", "paper", "fragile"]
+tags = Array[Resource]([ExtResource("tag_support"), ExtResource("tag_paper"), ExtResource("tag_fragile")])
 team = "Allies"
 ancestry = ExtResource("3_ancestry")
 max_hp = 18

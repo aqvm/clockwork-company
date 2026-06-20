@@ -199,6 +199,25 @@
           }
         ]
       },
+      "secondary_skill": {
+        "display_name": "Cleanser IT Bridge",
+        "tags": ["bridge", "integration_test"],
+        "action": "Effects Only",
+        "default_target": "Lowest HP Ally",
+        "effects": [
+          {
+            "display_name": "Cleanser IT Bridge Haste",
+            "trigger": "Skill Used",
+            "condition": "Always",
+            "target_selector": "Event Target",
+            "effect_type": "Modify Stat",
+            "modified_stat": "Action Speed",
+            "modifier_direction": "Increase",
+            "modifier_duration_turns": 2,
+            "amount_source": "Target Ailment Stacks"
+          }
+        ]
+      },
       "passive": {
         "display_name": "Bloodless IT",
         "passive_type": "None",

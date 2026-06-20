@@ -2,11 +2,20 @@
 
 [ext_resource type="Script" uid="uid://h21mlqiqe25f" path="res://scripts/data/item_definition.gd" id="1_item"]
 [ext_resource type="Script" uid="uid://bq86vbaajvphi" path="res://scripts/data/effect_definition.gd" id="2_effect"]
+[ext_resource type="Script" uid="uid://dskbx08s3ioej" path="res://scripts/data/status_definition.gd" id="2_qfldf"]
+
+[ext_resource type="Resource" path="res://resources/tags/axe.tres" id="tag_axe"]
+[ext_resource type="Resource" path="res://resources/tags/finisher.tres" id="tag_finisher"]
+[ext_resource type="Resource" path="res://resources/tags/heal.tres" id="tag_heal"]
+[ext_resource type="Resource" path="res://resources/tags/kill.tres" id="tag_kill"]
+[ext_resource type="Resource" path="res://resources/tags/slow.tres" id="tag_slow"]
+[ext_resource type="Resource" path="res://resources/tags/weapon.tres" id="tag_weapon"]
 
 [sub_resource type="Resource" id="Resource_debt_collector_receipt"]
+resource_name = "Debt Collector Receipt"
 script = ExtResource("2_effect")
 display_name = "Debt Collector Receipt"
-tags = Array[String](["heal", "kill"])
+tags = Array[Resource]([ExtResource("tag_heal"), ExtResource("tag_kill")])
 trigger = "Kill"
 effect_type = "Heal Self"
 amount = 5
@@ -14,7 +23,7 @@ amount = 5
 [resource]
 script = ExtResource("1_item")
 display_name = "Debt Collector Axe"
-tags = Array[String](["weapon", "axe", "slow", "finisher"])
+tags = Array[Resource]([ExtResource("tag_weapon"), ExtResource("tag_axe"), ExtResource("tag_slow"), ExtResource("tag_finisher")])
 physical_damage_modifier = 5
 action_speed_modifier = -3
 effects = Array[ExtResource("2_effect")]([SubResource("Resource_debt_collector_receipt")])

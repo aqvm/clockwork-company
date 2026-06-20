@@ -24,6 +24,9 @@ foreach ($file in $markdownFiles) {
 
 foreach ($file in $markdownFiles) {
     $text = Get-Content $file.FullName -Raw
+    if ($null -eq $text) {
+        $text = ""
+    }
     foreach ($match in [regex]::Matches($text, "\[\[([^\]|#]+)(?:#[^\]|]+)?(?:\|[^\]]+)?\]\]")) {
         $target = $match.Groups[1].Value
         if (-not $pageNames.ContainsKey($target)) {
@@ -35,6 +38,9 @@ foreach ($file in $markdownFiles) {
 
 foreach ($file in $wikiFiles) {
     $text = Get-Content $file.FullName -Raw
+    if ($null -eq $text) {
+        $text = ""
+    }
     $relativePath = Get-RepoRelativePath $file.FullName
     if (-not $text.StartsWith("---")) {
         $errors.Add("Missing frontmatter in '$relativePath'.")

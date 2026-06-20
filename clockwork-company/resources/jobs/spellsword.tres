@@ -6,10 +6,13 @@
 [ext_resource type="Resource" path="res://resources/job_features/spellsword/ward_flare.tres" id="4_reaction"]
 [ext_resource type="Resource" path="res://resources/tactics/cast_sparkblade.tres" id="5_tactic"]
 
+[ext_resource type="Resource" path="res://resources/tags/learned_build.tres" id="tag_learned_build"]
+[ext_resource type="Resource" path="res://resources/tags/spellblade.tres" id="tag_spellblade"]
+
 [resource]
 script = ExtResource("1_job")
 display_name = "Spellsword"
-tags = Array[String](["spellblade", "learned_build"])
+tags = Array[Resource]([ExtResource("tag_spellblade"), ExtResource("tag_learned_build")])
 skill = ExtResource("2_skill")
 passive = ExtResource("3_passive")
 reaction = ExtResource("4_reaction")

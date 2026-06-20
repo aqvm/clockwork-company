@@ -1,13 +1,18 @@
-[gd_resource type="Resource" script_class="ScenarioRuleDefinition" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="ScenarioRuleDefinition" format=3 uid="uid://17y5r0bjd8e8"]
 
-[ext_resource type="Script" path="res://scripts/data/scenario_rule_definition.gd" id="1_rule"]
-[ext_resource type="Script" path="res://scripts/data/effect_definition.gd" id="2_effect"]
+[ext_resource type="Script" uid="uid://dof12r26vd6ri" path="res://scripts/data/scenario_rule_definition.gd" id="1_rule"]
+[ext_resource type="Script" uid="uid://dskbx08s3ioej" path="res://scripts/data/status_definition.gd" id="2_0uata"]
+[ext_resource type="Script" uid="uid://bq86vbaajvphi" path="res://scripts/data/effect_definition.gd" id="2_effect"]
 [ext_resource type="Resource" path="res://resources/statuses/confusion.tres" id="3_confusion"]
 
+[ext_resource type="Resource" path="res://resources/tags/confusion.tres" id="tag_confusion"]
+[ext_resource type="Resource" path="res://resources/tags/ritual.tres" id="tag_ritual"]
+[ext_resource type="Resource" path="res://resources/tags/status.tres" id="tag_status"]
+
 [sub_resource type="Resource" id="Effect_confusion"]
+resource_name = "Ash-Choked Confusion"
 script = ExtResource("2_effect")
 display_name = "Ash-Choked Confusion"
-trigger = "Battle Start"
 target_selector = "All Units"
 effect_type = "Apply Status"
 status = ExtResource("3_confusion")
@@ -18,5 +23,5 @@ script = ExtResource("1_rule")
 rule_id = "ash_chapel_confusion"
 display_name = "Ash-Choked Rites"
 description = "Every unit permanently has Confusion for each encounter: the first otherwise-valid tactic it would use each turn is skipped."
-tags = ["status", "confusion", "ritual"]
+tags = Array[Resource]([ExtResource("tag_status"), ExtResource("tag_confusion"), ExtResource("tag_ritual")])
 effects = Array[ExtResource("2_effect")]([SubResource("Effect_confusion")])

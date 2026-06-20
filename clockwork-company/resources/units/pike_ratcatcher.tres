@@ -4,10 +4,15 @@
 [ext_resource type="Resource" path="res://resources/loadouts/ratcatcher_inkneedle.tres" id="2_loadout"]
 
 [ext_resource type="Resource" path="res://resources/ancestries/redcap.tres" id="3_ancestry"]
+
+[ext_resource type="Resource" path="res://resources/tags/fragile.tres" id="tag_fragile"]
+[ext_resource type="Resource" path="res://resources/tags/hunter.tres" id="tag_hunter"]
+[ext_resource type="Resource" path="res://resources/tags/swift.tres" id="tag_swift"]
+
 [resource]
 script = ExtResource("1_unit")
 display_name = "Pike Ratcatcher"
-tags = ["swift", "hunter", "fragile"]
+tags = Array[Resource]([ExtResource("tag_swift"), ExtResource("tag_hunter"), ExtResource("tag_fragile")])
 team = "Allies"
 ancestry = ExtResource("3_ancestry")
 max_hp = 20

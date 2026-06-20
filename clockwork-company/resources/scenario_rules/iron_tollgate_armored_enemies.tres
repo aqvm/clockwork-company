@@ -2,9 +2,13 @@
 
 [ext_resource type="Script" path="res://scripts/data/scenario_rule_definition.gd" id="1_rule"]
 
+[ext_resource type="Resource" path="res://resources/tags/armor.tres" id="tag_armor"]
+[ext_resource type="Resource" path="res://resources/tags/authoring_note.tres" id="tag_authoring_note"]
+[ext_resource type="Resource" path="res://resources/tags/physical.tres" id="tag_physical"]
+
 [resource]
 script = ExtResource("1_rule")
 rule_id = "iron_tollgate_armored_enemies"
 display_name = "Iron Tollgate Armor"
 description = "Authoring note: this scenario should express armor pressure through enemy jobs, gear, tactics, and encounter composition rather than a hidden scenario stat patch."
-tags = ["armor", "physical", "authoring_note"]
+tags = Array[Resource]([ExtResource("tag_armor"), ExtResource("tag_physical"), ExtResource("tag_authoring_note")])

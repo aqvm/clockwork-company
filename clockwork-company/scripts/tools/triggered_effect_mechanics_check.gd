@@ -81,6 +81,7 @@ func _init() -> void:
 	assert(json_item.effects[1].status_removal_mode == "Specific Status" and json_item.effects[1].status != null, "JSON should preserve status-removal fields and references.")
 	var json_job: JobDefinition = json_content["jobs"].get("cleanser_it", null)
 	assert(json_job != null and json_job.skill.action == "Effects Only" and json_job.skill.attack_count == 2 and json_job.skill.effects.size() == 1, "JSON should load effect-only job skills and attack counts.")
+	assert(json_job.secondary_skill != null and json_job.secondary_skill.effects[0].amount_source == "Target Ailment Stacks", "JSON should load secondary job skills for bridge actions.")
 	assert(json_job.passive.effects.size() == 2 and json_job.passive.effects[0].status.status_type == "Bleed" and json_job.passive.effects[1].trigger == "Damage Requested", "JSON should load specific and generic request-interception effects.")
 	assert(json_job.reaction.effects.size() == 2 and json_job.reaction.status.status_type == "Burning", "JSON should load effect-only reactions, stack conditions, and formula effects.")
 	assert(json_job.default_tactic.status.status_type == "Burning", "JSON should load status-aware default tactics.")
@@ -98,6 +99,24 @@ func _init() -> void:
 	ally.add_status(FrostStatus, "test", 3, false)
 	context.publish("skill_used", ally, ally, {"skill": skill.display_name, "action": skill.action}, -1, root_log_id)
 	assert(not ally.has_status("Frost"), "Effect-only job skills should resolve the shared effect vocabulary.")
+	var secondary_skill := SkillDefinition.new()
+	secondary_skill.display_name = "Bridge Cleanse"
+	secondary_skill.action = "Effects Only"
+	var bridge_cleanse := _effect("Skill Used", "Remove Status", "Event Target")
+	bridge_cleanse.status_polarity = "Ailment"
+	secondary_skill.effects.append(bridge_cleanse)
+	ally.current_secondary_skill = secondary_skill
+	var secondary_tactic := TacticDefinition.new()
+	secondary_tactic.display_name = "Use Bridge Cleanse"
+	secondary_tactic.condition = "Always"
+	secondary_tactic.action = "Secondary Skill"
+	secondary_tactic.target = "Self"
+	ally.tactics.clear()
+	ally.tactics.append(secondary_tactic)
+	ally.add_status(BleedStatus, "test", 3, false)
+	assert(TacticResolverScript.choose_action(ally, [ally, enemy])["action"] == "Secondary Skill", "Tactics should select an available current-job secondary skill.")
+	context.publish("skill_used", ally, ally, {"skill": secondary_skill.display_name, "action": secondary_skill.action}, -1, root_log_id)
+	assert(not ally.has_status("Bleed"), "Secondary job skills should resolve the shared effect vocabulary.")
 	var loop_rule := ScenarioRuleDefinition.new()
 	loop_rule.display_name = "Root Loop Guard"
 	loop_rule.effects.append(_effect("Status Applied", "Apply Status", "Event Target", 0, FrostStatus))

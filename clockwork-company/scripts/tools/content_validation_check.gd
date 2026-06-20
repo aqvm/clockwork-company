@@ -237,14 +237,8 @@ func _validate_authored_resources(errors: Array[String]) -> void:
 		if job == null:
 			errors.append("Resource is not a JobDefinition: %s" % entry["path"])
 			continue
-		if job.skill != null and job.skill.action == "Apply Status" and job.skill.status == null:
-			errors.append("Job '%s' has an Apply Status skill with no status." % job.display_name)
-		if job.skill != null and job.skill.action == "Effects Only" and job.skill.effects.is_empty():
-			errors.append("Job '%s' has an Effects Only skill with no effects." % job.display_name)
-		if job.skill != null:
-			if job.skill.attack_count < 1:
-				errors.append("Job '%s' skill must attack at least once." % job.display_name)
-			_validate_effects(job.skill.effects, "Job '%s' skill" % job.display_name, errors, "Skill")
+		_validate_skill(job.skill, "Job '%s' skill" % job.display_name, errors)
+		_validate_skill(job.secondary_skill, "Job '%s' secondary skill" % job.display_name, errors)
 		if job.passive != null:
 			_validate_effects(job.passive.effects, "Job '%s' passive" % job.display_name, errors)
 		if job.reaction != null:
@@ -301,6 +295,18 @@ func _validate_effects(effects: Array[EffectDefinition], label: String, errors: 
 		var support_error: String = effect.support_error()
 		if not support_error.is_empty():
 			errors.append("%s effect %d is unsupported: %s" % [label, effect_index, support_error])
+
+
+func _validate_skill(skill: SkillDefinition, label: String, errors: Array[String]) -> void:
+	if skill == null:
+		return
+	if skill.action == "Apply Status" and skill.status == null:
+		errors.append("%s is an Apply Status skill with no status." % label)
+	if skill.action == "Effects Only" and skill.effects.is_empty():
+		errors.append("%s is an Effects Only skill with no effects." % label)
+	if skill.attack_count < 1:
+		errors.append("%s must attack at least once." % label)
+	_validate_effects(skill.effects, label, errors, "Skill")
 
 
 func _validate_tactic(tactic: TacticDefinition, label: String, errors: Array[String]) -> void:

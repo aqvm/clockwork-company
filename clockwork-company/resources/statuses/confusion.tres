@@ -2,6 +2,9 @@
 
 [ext_resource type="Script" path="res://scripts/data/status_definition.gd" id="1_status"]
 
+[ext_resource type="Resource" path="res://resources/tags/ailment.tres" id="tag_ailment"]
+[ext_resource type="Resource" path="res://resources/tags/tactics.tres" id="tag_tactics"]
+
 [resource]
 script = ExtResource("1_status")
 display_name = "Confusion"
@@ -9,5 +12,5 @@ polarity = "Ailment"
 status_type = "Confusion"
 stacking_rule = "Refresh"
 max_stacks = 1
-tags = Array[String](["ailment", "tactics"])
+tags = Array[Resource]([ExtResource("tag_ailment"), ExtResource("tag_tactics")])
 description = "Skips the first otherwise-valid tactic each turn."

@@ -37,6 +37,6 @@ campaign_id = "first_road"
 display_name = "The First Road"
 description = "A small mercenary company follows a chain of contracts that gradually introduce combat concepts."
 starting_scenario_ids = Array[String](["roadside_ambush"])
-scenario_nodes = Array[Resource]([SubResource("CampaignScenarioNodeDefinition_roadside"), SubResource("CampaignScenarioNodeDefinition_chapel"), SubResource("CampaignScenarioNodeDefinition_tollgate"), SubResource("CampaignScenarioNodeDefinition_clocktower")])
+scenario_nodes = Array[ExtResource("2_node_script")]([SubResource("CampaignScenarioNodeDefinition_roadside"), SubResource("CampaignScenarioNodeDefinition_chapel"), SubResource("CampaignScenarioNodeDefinition_tollgate"), SubResource("CampaignScenarioNodeDefinition_clocktower")])
 starting_roster_ids = Array[String](["alden_guard", "mira_scout", "sol_apprentice"])
 starting_unlocks = Array[String](["basic_jobs", "basic_gear"])

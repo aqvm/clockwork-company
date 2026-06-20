@@ -2,6 +2,10 @@
 
 [ext_resource type="Script" path="res://scripts/data/status_definition.gd" id="1_status"]
 
+[ext_resource type="Resource" path="res://resources/tags/boon.tres" id="tag_boon"]
+[ext_resource type="Resource" path="res://resources/tags/cleanse.tres" id="tag_cleanse"]
+[ext_resource type="Resource" path="res://resources/tags/healing.tres" id="tag_healing"]
+
 [resource]
 script = ExtResource("1_status")
 display_name = "Renewal"
@@ -9,6 +13,6 @@ polarity = "Boon"
 status_type = "Renewal"
 stacking_rule = "Intensify"
 max_stacks = 3
-tags = Array[String](["boon", "cleanse", "healing"])
+tags = Array[Resource]([ExtResource("tag_boon"), ExtResource("tag_cleanse"), ExtResource("tag_healing")])
 amount = 2
 description = "Whenever an ailment is removed from this unit, it heals 2 HP per stack."

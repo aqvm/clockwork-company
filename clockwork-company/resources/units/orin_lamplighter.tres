@@ -4,10 +4,14 @@
 [ext_resource type="Resource" path="res://resources/loadouts/lamplighter_moth.tres" id="2_loadout"]
 
 [ext_resource type="Resource" path="res://resources/ancestries/emberkin.tres" id="3_ancestry"]
+
+[ext_resource type="Resource" path="res://resources/tags/light.tres" id="tag_light"]
+[ext_resource type="Resource" path="res://resources/tags/support.tres" id="tag_support"]
+
 [resource]
 script = ExtResource("1_unit")
 display_name = "Orin Lamplighter"
-tags = ["support", "light"]
+tags = Array[Resource]([ExtResource("tag_support"), ExtResource("tag_light")])
 team = "Allies"
 ancestry = ExtResource("3_ancestry")
 max_hp = 21

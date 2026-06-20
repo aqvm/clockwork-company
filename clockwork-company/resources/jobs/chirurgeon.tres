@@ -1,15 +1,26 @@
 [gd_resource type="Resource" script_class="JobDefinition" format=3 uid="uid://twt6jqpyujf3"]
 
 [ext_resource type="Script" uid="uid://8cikor8oh0rp" path="res://scripts/data/job_definition.gd" id="1_job"]
+[ext_resource type="Script" uid="uid://bq86vbaajvphi" path="res://scripts/data/effect_definition.gd" id="2_5qhcr"]
 [ext_resource type="Script" uid="uid://dt86e2l5m6yo4" path="res://scripts/data/skill_definition.gd" id="2_skill"]
 [ext_resource type="Script" uid="uid://bw4e1gp6l02uv" path="res://scripts/data/passive_definition.gd" id="3_passive"]
+[ext_resource type="Script" uid="uid://dskbx08s3ioej" path="res://scripts/data/status_definition.gd" id="4_ic7wn"]
 [ext_resource type="Script" uid="uid://c3ugwbjpivem3" path="res://scripts/data/reaction_definition.gd" id="4_reaction"]
 [ext_resource type="Script" uid="uid://cl3b7aebl31vg" path="res://scripts/data/tactic_definition.gd" id="5_tactic"]
+
+[ext_resource type="Resource" path="res://resources/tags/armor.tres" id="tag_armor"]
+[ext_resource type="Resource" path="res://resources/tags/heal.tres" id="tag_heal"]
+[ext_resource type="Resource" path="res://resources/tags/healer.tres" id="tag_healer"]
+[ext_resource type="Resource" path="res://resources/tags/job.tres" id="tag_job"]
+[ext_resource type="Resource" path="res://resources/tags/job_default.tres" id="tag_job_default"]
+[ext_resource type="Resource" path="res://resources/tags/low_hp.tres" id="tag_low_hp"]
+[ext_resource type="Resource" path="res://resources/tags/magic.tres" id="tag_magic"]
+[ext_resource type="Resource" path="res://resources/tags/reaction.tres" id="tag_reaction"]
 
 [sub_resource type="Resource" id="Resource_chirurgeon_default_tactic"]
 script = ExtResource("5_tactic")
 display_name = "Field Stitch Triage"
-tags = Array[String](["job_default"])
+tags = Array[Resource]([ExtResource("tag_job_default")])
 condition = "Ally HP Below Half"
 action = "Job Skill"
 target = "Lowest HP Ally"
@@ -18,7 +29,7 @@ target = "Lowest HP Ally"
 resource_name = "Clean Hands"
 script = ExtResource("3_passive")
 display_name = "Clean Hands"
-tags = Array[String](["healer"])
+tags = Array[Resource]([ExtResource("tag_healer")])
 passive_type = "Heal Bonus"
 amount = 2
 cooldown_turns = 1
@@ -27,7 +38,7 @@ cooldown_turns = 1
 resource_name = "Reflex Splint"
 script = ExtResource("4_reaction")
 display_name = "Reflex Splint"
-tags = Array[String](["low_hp", "reaction"])
+tags = Array[Resource]([ExtResource("tag_low_hp"), ExtResource("tag_reaction")])
 trigger = "HP Below Threshold"
 condition = "Self HP Below Percent"
 amount = 3
@@ -37,7 +48,7 @@ cooldown_turns = 4
 resource_name = "Field Stitch"
 script = ExtResource("2_skill")
 display_name = "Field Stitch"
-tags = Array[String](["healer", "heal", "magic"])
+tags = Array[Resource]([ExtResource("tag_healer"), ExtResource("tag_heal"), ExtResource("tag_magic")])
 action = "Heal"
 default_target = "Lowest HP Ally"
 amount_modifier = 2
@@ -45,7 +56,7 @@ amount_modifier = 2
 [resource]
 script = ExtResource("1_job")
 display_name = "Chirurgeon"
-tags = Array[String](["job", "healer", "armor"])
+tags = Array[Resource]([ExtResource("tag_job"), ExtResource("tag_healer"), ExtResource("tag_armor")])
 max_hp_growth = 1
 magic_damage_growth = 1
 armor_growth = 1

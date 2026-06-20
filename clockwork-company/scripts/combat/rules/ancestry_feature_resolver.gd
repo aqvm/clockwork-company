@@ -3,6 +3,7 @@ class_name AncestryFeatureResolver
 
 const CombatEventsScript := preload("res://scripts/combat/logging/combat_events.gd")
 const StatusResolverScript := preload("res://scripts/combat/rules/status_resolver.gd")
+const TagUtilsScript := preload("res://scripts/data/tag_utils.gd")
 
 const TRIGGER_BATTLE_START := "Battle Start"
 const TRIGGER_ATTACK := "Attack"
@@ -36,7 +37,7 @@ static func attack_bonus(log, parent_entry_id: int, actor, context = null) -> Di
 	_mark_feature_fired(actor, feature)
 	if context != null:
 		context.publish("ancestry_feature_triggered", actor, actor, {"feature": feature.display_name, "feature_type": feature.feature_type}, -1, parent_entry_id, ["ancestry", "trigger"])
-	var damage_type := "magic" if feature.tags.has("magic") else "physical"
+	var damage_type := "magic" if TagUtilsScript.has_tag(feature.tags, "magic") else "physical"
 	result[damage_type] = feature.amount
 	var event := CombatEventsScript.ancestry_feature(actor, feature.display_name, "+%d %s damage" % [feature.amount, damage_type])
 	log.add_event("Ancestry feature %s: +%d %s damage." % [feature.display_name, feature.amount, damage_type], event["event_type"], -1, parent_entry_id, event["payload"], event["tags"])

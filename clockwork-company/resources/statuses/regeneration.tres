@@ -2,12 +2,15 @@
 
 [ext_resource type="Script" path="res://scripts/data/status_definition.gd" id="1_status"]
 
+[ext_resource type="Resource" path="res://resources/tags/boon.tres" id="tag_boon"]
+[ext_resource type="Resource" path="res://resources/tags/healing.tres" id="tag_healing"]
+
 [resource]
 script = ExtResource("1_status")
 display_name = "Regeneration"
 polarity = "Boon"
 status_type = "Regeneration"
 stacking_rule = "Refresh"
-tags = Array[String](["boon", "healing"])
+tags = Array[Resource]([ExtResource("tag_boon"), ExtResource("tag_healing")])
 amount = 2
 description = "At the start of this unit's turn, it heals 2 HP."

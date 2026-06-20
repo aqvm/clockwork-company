@@ -1,15 +1,25 @@
 [gd_resource type="Resource" script_class="JobDefinition" format=3 uid="uid://dak5apq7nynis"]
 
 [ext_resource type="Script" uid="uid://8cikor8oh0rp" path="res://scripts/data/job_definition.gd" id="1_job"]
+[ext_resource type="Script" uid="uid://bq86vbaajvphi" path="res://scripts/data/effect_definition.gd" id="2_8lun1"]
 [ext_resource type="Script" uid="uid://dt86e2l5m6yo4" path="res://scripts/data/skill_definition.gd" id="2_skill"]
 [ext_resource type="Script" uid="uid://bw4e1gp6l02uv" path="res://scripts/data/passive_definition.gd" id="3_passive"]
+[ext_resource type="Script" uid="uid://dskbx08s3ioej" path="res://scripts/data/status_definition.gd" id="4_0u2dm"]
 [ext_resource type="Script" uid="uid://c3ugwbjpivem3" path="res://scripts/data/reaction_definition.gd" id="4_reaction"]
 [ext_resource type="Script" uid="uid://cl3b7aebl31vg" path="res://scripts/data/tactic_definition.gd" id="5_tactic"]
+
+[ext_resource type="Resource" path="res://resources/tags/attack.tres" id="tag_attack"]
+[ext_resource type="Resource" path="res://resources/tags/job_default.tres" id="tag_job_default"]
+[ext_resource type="Resource" path="res://resources/tags/low_hp.tres" id="tag_low_hp"]
+[ext_resource type="Resource" path="res://resources/tags/magic.tres" id="tag_magic"]
+[ext_resource type="Resource" path="res://resources/tags/reaction.tres" id="tag_reaction"]
+[ext_resource type="Resource" path="res://resources/tags/support.tres" id="tag_support"]
+[ext_resource type="Resource" path="res://resources/tags/training.tres" id="tag_training"]
 
 [sub_resource type="Resource" id="Resource_apprentice_default_tactic"]
 script = ExtResource("5_tactic")
 display_name = "Practice Spark"
-tags = Array[String](["job_default"])
+tags = Array[Resource]([ExtResource("tag_job_default")])
 condition = "Enemy Alive"
 action = "Job Skill"
 
@@ -17,7 +27,7 @@ action = "Job Skill"
 resource_name = "First Aid"
 script = ExtResource("3_passive")
 display_name = "First Aid"
-tags = Array[String](["support"])
+tags = Array[Resource]([ExtResource("tag_support")])
 passive_type = "Heal Bonus"
 amount = 2
 
@@ -25,7 +35,7 @@ amount = 2
 resource_name = "Panic Lesson"
 script = ExtResource("4_reaction")
 display_name = "Panic Lesson"
-tags = Array[String](["low_hp", "reaction"])
+tags = Array[Resource]([ExtResource("tag_low_hp"), ExtResource("tag_reaction")])
 trigger = "HP Below Threshold"
 condition = "Self HP Below Percent"
 reaction_type = "Heal Self"
@@ -36,7 +46,7 @@ cooldown_turns = 3
 resource_name = "Lesson Spark"
 script = ExtResource("2_skill")
 display_name = "Lesson Spark"
-tags = Array[String](["training", "attack", "magic"])
+tags = Array[Resource]([ExtResource("tag_training"), ExtResource("tag_attack"), ExtResource("tag_magic")])
 amount_modifier = 1
 
 [resource]

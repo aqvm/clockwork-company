@@ -2,10 +2,13 @@
 
 [ext_resource type="Script" path="res://scripts/data/tactic_definition.gd" id="1_tactic"]
 
+[ext_resource type="Resource" path="res://resources/tags/ally_hurt.tres" id="tag_ally_hurt"]
+[ext_resource type="Resource" path="res://resources/tags/guard.tres" id="tag_guard"]
+
 [resource]
 script = ExtResource("1_tactic")
 display_name = "Last Candle"
-tags = ["guard", "ally_hurt"]
+tags = Array[Resource]([ExtResource("tag_guard"), ExtResource("tag_ally_hurt")])
 condition = "Ally HP Below Half"
 action = "Guard"
 target = "Self"

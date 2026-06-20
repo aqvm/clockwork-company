@@ -2,6 +2,10 @@
 
 [ext_resource type="Script" path="res://scripts/data/status_definition.gd" id="1_status"]
 
+[ext_resource type="Resource" path="res://resources/tags/boon.tres" id="tag_boon"]
+[ext_resource type="Resource" path="res://resources/tags/protection.tres" id="tag_protection"]
+[ext_resource type="Resource" path="res://resources/tags/status.tres" id="tag_status"]
+
 [resource]
 script = ExtResource("1_status")
 display_name = "Ward"
@@ -9,6 +13,6 @@ polarity = "Boon"
 status_type = "Ward"
 stacking_rule = "Intensify"
 max_stacks = 3
-tags = Array[String](["boon", "protection", "status"])
+tags = Array[Resource]([ExtResource("tag_boon"), ExtResource("tag_protection"), ExtResource("tag_status")])
 elapses_naturally = false
 description = "Prevents the next ailment from applying, then consumes one stack."

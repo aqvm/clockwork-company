@@ -2,10 +2,15 @@
 
 [ext_resource type="Script" path="res://scripts/data/item_definition.gd" id="1_item"]
 
+[ext_resource type="Resource" path="res://resources/tags/damage.tres" id="tag_damage"]
+[ext_resource type="Resource" path="res://resources/tags/magic.tres" id="tag_magic"]
+[ext_resource type="Resource" path="res://resources/tags/reward.tres" id="tag_reward"]
+[ext_resource type="Resource" path="res://resources/tags/trinket.tres" id="tag_trinket"]
+
 [resource]
 script = ExtResource("1_item")
 display_name = "Run Focus Lens"
-tags = ["trinket", "reward", "damage", "magic"]
+tags = Array[Resource]([ExtResource("tag_trinket"), ExtResource("tag_reward"), ExtResource("tag_damage"), ExtResource("tag_magic")])
 slot = "Trinket"
 max_hp_modifier = -1
 magic_damage_modifier = 2

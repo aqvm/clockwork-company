@@ -2,10 +2,14 @@
 
 [ext_resource type="Script" path="res://scripts/data/item_definition.gd" id="1_item"]
 
+[ext_resource type="Resource" path="res://resources/tags/charge.tres" id="tag_charge"]
+[ext_resource type="Resource" path="res://resources/tags/helmet.tres" id="tag_helmet"]
+[ext_resource type="Resource" path="res://resources/tags/horned.tres" id="tag_horned"]
+
 [resource]
 script = ExtResource("1_item")
 display_name = "Horncap"
-tags = ["helmet", "horned", "charge"]
+tags = Array[Resource]([ExtResource("tag_helmet"), ExtResource("tag_horned"), ExtResource("tag_charge")])
 slot = "Helmet"
 physical_damage_modifier = 1
 armor_modifier = 1

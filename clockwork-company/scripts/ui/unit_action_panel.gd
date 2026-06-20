@@ -183,7 +183,7 @@ func _add_tactic_row(index: int, option: Dictionary, tactic_count: int) -> void:
 	name_edit.text_submitted.connect(func(value): planning_tactic_changed.emit(index, "display_name", value))
 	editors.add_child(name_edit)
 	_add_tactic_selector(editors, index, "condition", tactic.condition, ["Always", "Self HP Below Half", "Ally HP Below Half", "Enemy Alive", "Target Has Status", "Target Status Stacks At Least", "Target Pending Status Damage At Least HP", "Target Slower Than Self"])
-	_add_tactic_selector(editors, index, "action", tactic.action, ["Attack", "Heal", "Guard", "Job Skill", "Assigned Skill"])
+	_add_tactic_selector(editors, index, "action", tactic.action, ["Attack", "Heal", "Guard", "Job Skill", "Secondary Skill", "Assigned Skill"])
 	_add_tactic_selector(editors, index, "target", tactic.target, ["Self", "Lowest HP Ally", "Lowest HP Ally With Status", "Frontmost Enemy"])
 	if tactic.condition in ["Target Has Status", "Target Status Stacks At Least", "Target Pending Status Damage At Least HP"] or tactic.target == "Lowest HP Ally With Status":
 		_add_tactic_status_selector(editors, index, tactic.status, option.get("statuses", []))
