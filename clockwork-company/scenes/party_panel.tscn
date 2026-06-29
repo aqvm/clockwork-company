@@ -2,7 +2,8 @@
 
 [ext_resource type="Script" path="res://scripts/ui/party_panel.gd" id="1_party_panel"]
 
-[node name="PartyPanel" type="VBoxContainer"]
+[node name="PartyPanel" type="PanelContainer"]
 custom_minimum_size = Vector2(220, 0)
+size_flags_horizontal = 3
 size_flags_vertical = 3
 script = ExtResource("1_party_panel")

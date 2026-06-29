@@ -2,7 +2,8 @@
 
 [ext_resource type="Script" path="res://scripts/ui/unit_action_panel.gd" id="1_unit_action_panel"]
 
-[node name="UnitActionPanel" type="VBoxContainer"]
+[node name="UnitActionPanel" type="PanelContainer"]
 custom_minimum_size = Vector2(220, 0)
+size_flags_horizontal = 3
 size_flags_vertical = 3
 script = ExtResource("1_unit_action_panel")

@@ -6,6 +6,7 @@ signal run_requested
 signal state_changed
 
 const CombatLabStateScript := preload("res://scripts/devtools/combat_lab_state.gd")
+const UIStyleHelperScript := preload("res://scripts/ui/ui_style_helper.gd")
 
 var lab_state = null
 var catalog_selector: OptionButton = null
@@ -203,6 +204,7 @@ func refresh() -> void:
 
 
 func _build_ui() -> void:
+	UIStyleHelperScript.apply_panel(self, "root")
 	custom_minimum_size = Vector2(0, 240)
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -222,6 +224,7 @@ func _build_ui() -> void:
 
 	var title := Label.new()
 	title.text = "Combat Lab"
+	UIStyleHelperScript.style_title(title)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
 
@@ -315,12 +318,19 @@ func _build_ui() -> void:
 
 
 func _build_team_column(parent: Container, team: String) -> VBoxContainer:
+	var panel := PanelContainer.new()
+	UIStyleHelperScript.apply_panel(panel)
+	panel.custom_minimum_size = Vector2(280, 0)
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	parent.add_child(panel)
+
 	var column := VBoxContainer.new()
 	column.custom_minimum_size = Vector2(280, 0)
 	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	column.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	column.add_theme_constant_override("separation", 4)
-	parent.add_child(column)
+	panel.add_child(column)
 
 	var header := HFlowContainer.new()
 	header.add_theme_constant_override("separation", 6)
@@ -328,6 +338,7 @@ func _build_team_column(parent: Container, team: String) -> VBoxContainer:
 
 	var label := Label.new()
 	label.text = "%s Party Order" % team
+	UIStyleHelperScript.style_heading(label)
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(label)
 
@@ -426,9 +437,14 @@ func _refresh_team(team: String, list: VBoxContainer) -> void:
 
 
 func _build_unit_row(team: String, index: int, unit: UnitDefinition, party_size: int) -> Control:
+	var panel := PanelContainer.new()
+	UIStyleHelperScript.apply_panel(panel, "row")
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
 	var container := VBoxContainer.new()
 	container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	container.add_theme_constant_override("separation", 3)
+	panel.add_child(container)
 
 	var row := HFlowContainer.new()
 	row.add_theme_constant_override("separation", 4)
@@ -494,7 +510,7 @@ func _build_unit_row(team: String, index: int, unit: UnitDefinition, party_size:
 
 	container.add_child(_build_tactics_editor(team, index, unit))
 
-	return container
+	return panel
 
 
 func _build_slot_selector(team: String, unit_index: int, slot: String) -> OptionButton:
@@ -600,6 +616,7 @@ func _build_tactics_editor(team: String, unit_index: int, unit: UnitDefinition) 
 	box.add_child(add_row)
 	var label := Label.new()
 	label.text = "Tactics"
+	UIStyleHelperScript.style_muted(label)
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	add_row.add_child(label)
 	var selector := OptionButton.new()

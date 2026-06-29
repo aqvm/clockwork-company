@@ -1,9 +1,18 @@
-extends VBoxContainer
+extends PanelContainer
 class_name ScenarioListPanel
+
+const UIStyleHelperScript := preload("res://scripts/ui/ui_style_helper.gd")
 
 signal scenario_selected(scenario: Resource)
 signal resource_tooltip_requested(source: Control, resource: Resource)
 signal tooltip_cleared
+
+var content: VBoxContainer = null
+
+
+func _ready() -> void:
+	UIStyleHelperScript.apply_panel(self)
+	_ensure_content()
 
 
 func show_scenarios(scenarios: Array, campaign_progress, selected_scenario: Resource, active_scenario_id := "", campaign_scenario_ids: Array[String] = []) -> void:
@@ -11,7 +20,8 @@ func show_scenarios(scenarios: Array, campaign_progress, selected_scenario: Reso
 
 	var title := Label.new()
 	title.text = "Scenarios"
-	add_child(title)
+	UIStyleHelperScript.style_heading(title)
+	content.add_child(title)
 
 	for scenario in scenarios:
 		if scenario == null:
@@ -22,7 +32,7 @@ func show_scenarios(scenarios: Array, campaign_progress, selected_scenario: Reso
 		button.button_pressed = selected_scenario != null and selected_scenario.scenario_id == scenario.scenario_id
 		button.pressed.connect(_on_scenario_button_pressed.bind(scenario))
 		_bind_resource_tooltip(button, scenario)
-		add_child(button)
+		content.add_child(button)
 
 
 func _on_scenario_button_pressed(scenario: Resource) -> void:
@@ -81,5 +91,15 @@ func _on_resource_mouse_exited() -> void:
 
 
 func _clear_children() -> void:
-	for child in get_children():
+	_ensure_content()
+	for child in content.get_children():
 		child.queue_free()
+
+
+func _ensure_content() -> void:
+	if content != null:
+		return
+	content = VBoxContainer.new()
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content.add_theme_constant_override("separation", 6)
+	add_child(content)

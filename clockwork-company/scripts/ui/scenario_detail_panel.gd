@@ -1,13 +1,17 @@
-extends ScrollContainer
+extends PanelContainer
 class_name ScenarioDetailPanel
+
+const UIStyleHelperScript := preload("res://scripts/ui/ui_style_helper.gd")
 
 signal resource_tooltip_requested(source: Control, resource: Resource)
 signal tooltip_cleared
 
+var scroll: ScrollContainer = null
 var content: VBoxContainer = null
 
 
 func _ready() -> void:
+	UIStyleHelperScript.apply_panel(self)
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_ensure_content()
@@ -20,7 +24,7 @@ func show_scenario(scenario: Resource, status_text: String, campaign_progress = 
 		_add_plain_text("Select a scenario to inspect its mission data.")
 		return
 
-	_add_resource_text(scenario, scenario.display_name)
+	_add_resource_text(scenario, scenario.display_name, true)
 	_add_plain_text(scenario.description)
 	if not scenario.story_intro.is_empty():
 		_add_plain_text("Intro: %s" % scenario.story_intro)
@@ -42,29 +46,31 @@ func show_scenario(scenario: Resource, status_text: String, campaign_progress = 
 		_add_plain_text("Outro: %s" % scenario.story_outro)
 	if not scenario.scenario_rules.is_empty():
 		_add_plain_text("")
-		_add_plain_text("Rules:")
+		_add_plain_text("Rules:", true)
 		for rule in scenario.scenario_rules:
 			if rule != null:
 				_add_resource_text(rule, "- %s: %s" % [rule.display_name, rule.description])
 	if not scenario.rewards.is_empty():
 		_add_plain_text("")
-		_add_plain_text("Scenario rewards:")
+		_add_plain_text("Scenario rewards:", true)
 		for reward in scenario.rewards:
 			if reward != null:
 				_add_resource_text(reward, "- %s: %s" % [reward.display_name, reward.description])
 
 
-func _add_plain_text(text: String) -> Label:
+func _add_plain_text(text: String, is_heading := false) -> Label:
 	var label := Label.new()
 	label.text = text
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	if is_heading:
+		UIStyleHelperScript.style_title(label)
 	content.add_child(label)
 	return label
 
 
-func _add_resource_text(resource: Resource, text: String) -> Label:
-	var label := _add_plain_text(text)
+func _add_resource_text(resource: Resource, text: String, is_heading := false) -> Label:
+	var label := _add_plain_text(text, is_heading)
 	label.mouse_filter = Control.MOUSE_FILTER_STOP
 	label.mouse_entered.connect(_on_resource_mouse_entered.bind(label, resource))
 	label.mouse_exited.connect(_on_resource_mouse_exited)
@@ -80,7 +86,7 @@ func _add_scouting_reports(encounters: Array) -> void:
 	if not has_report:
 		return
 	_add_plain_text("")
-	_add_plain_text("Scouting reports:")
+	_add_plain_text("Scouting reports:", true)
 	for encounter in encounters:
 		if encounter != null and "scout_text" in encounter and not String(encounter.scout_text).is_empty():
 			_add_resource_text(encounter, "- %s: %s" % [encounter.display_name, encounter.scout_text])
@@ -129,9 +135,14 @@ func _clear_content() -> void:
 func _ensure_content() -> void:
 	if content != null:
 		return
+	scroll = ScrollContainer.new()
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	add_child(scroll)
 	content = VBoxContainer.new()
 	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	add_child(content)
+	content.add_theme_constant_override("separation", 3)
+	scroll.add_child(content)
 
 
 func _join_values(values: Array, separator: String) -> String:

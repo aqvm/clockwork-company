@@ -1,6 +1,8 @@
 extends PanelContainer
 class_name PlanningWorkbenchPanel
 
+const UIStyleHelperScript := preload("res://scripts/ui/ui_style_helper.gd")
+
 signal scenario_selected(scenario: Resource)
 signal start_scenario_requested
 signal practice_scenario_requested
@@ -26,6 +28,7 @@ signal tooltip_cleared
 
 
 func _ready() -> void:
+	UIStyleHelperScript.apply_panel(self, "root")
 	scenario_list_panel.connect("scenario_selected", func(scenario): scenario_selected.emit(scenario))
 	_forward_tooltip_signals(scenario_list_panel)
 	_forward_tooltip_signals(scenario_detail_panel)

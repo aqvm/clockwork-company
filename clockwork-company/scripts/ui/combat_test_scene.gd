@@ -11,6 +11,7 @@ const RunStateScript := preload("res://scripts/run/run_state.gd")
 const CampaignManagerScript := preload("res://scripts/campaign/campaign_manager.gd")
 const UnitLoadoutDefinitionScript := preload("res://scripts/data/unit_loadout_definition.gd")
 const TooltipPresenterScript := preload("res://scripts/ui/tooltip_presenter.gd")
+const UIStyleHelperScript := preload("res://scripts/ui/ui_style_helper.gd")
 const PlanningWorkbenchPanelScene := preload("res://scenes/planning_workbench_panel.tscn")
 const COMBAT_LOG_HEADER := "Combat log:"
 const RUN_BUTTON_REPLAYING_TEXT := "Replaying..."
@@ -75,6 +76,7 @@ func _ready() -> void:
 	replay_panel.connect("structured_event_tooltip_requested", _on_panel_structured_event_tooltip_requested)
 	replay_panel.connect("tooltip_cleared", _on_tooltip_exited)
 	get_viewport().size_changed.connect(_on_viewport_size_changed)
+	_apply_readability_styles()
 	_setup_mod_menu()
 	_setup_run_controls()
 	_setup_planning_panel()
@@ -267,6 +269,16 @@ func _setup_battle_contribution_panel() -> void:
 func _setup_tooltip_presenter() -> void:
 	tooltip_presenter = TooltipPresenterScript.new()
 	add_child(tooltip_presenter)
+
+
+func _apply_readability_styles() -> void:
+	UIStyleHelperScript.style_title($MarginContainer/VBoxContainer/TitleLabel)
+	UIStyleHelperScript.style_heading(conditions_label)
+	combat_summary.add_theme_stylebox_override("normal", UIStyleHelperScript.panel_style("section"))
+	combat_summary.add_theme_color_override("default_color", UIStyleHelperScript.TEXT)
+	var combat_log: RichTextLabel = %CombatLog
+	combat_log.add_theme_stylebox_override("normal", UIStyleHelperScript.panel_style("section"))
+	combat_log.add_theme_color_override("default_color", UIStyleHelperScript.TEXT)
 
 
 func _start_new_run(should_force_loss: bool) -> void:

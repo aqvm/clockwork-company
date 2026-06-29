@@ -1,6 +1,8 @@
 extends PanelContainer
 class_name BattleContributionPanel
 
+const UIStyleHelperScript := preload("res://scripts/ui/ui_style_helper.gd")
+
 var rows_box: VBoxContainer = null
 
 
@@ -29,11 +31,13 @@ func clear_contributions() -> void:
 
 
 func _build_ui() -> void:
+	UIStyleHelperScript.apply_panel(self)
 	var root := VBoxContainer.new()
 	root.add_theme_constant_override("separation", 4)
 	add_child(root)
 	var title := Label.new()
 	title.text = "Battle Contributions"
+	UIStyleHelperScript.style_heading(title)
 	root.add_child(title)
 	rows_box = VBoxContainer.new()
 	rows_box.add_theme_constant_override("separation", 2)

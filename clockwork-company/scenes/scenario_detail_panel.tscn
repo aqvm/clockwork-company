@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/ui/scenario_detail_panel.gd" id="1_scenario_detail_panel"]
 
-[node name="ScenarioDetailPanel" type="ScrollContainer"]
+[node name="ScenarioDetailPanel" type="PanelContainer"]
 custom_minimum_size = Vector2(260, 160)
 size_flags_horizontal = 3
 size_flags_vertical = 3
