@@ -640,3 +640,51 @@ This concept is not fully authorable with the current shared vocabulary.
 - Add an Energy Shield detonation effect that removes the owner's current
   Energy Shield and exposes the removed amount as the damage amount for follow-
   up effects.
+
+## Elementalist
+
+Identity: an elemental ailment engine that creates, compresses, and preserves
+Burning, Shock, Frost, and a shared composite stack pool.
+
+### Authorable Recipe
+
+- Stat growth: strong magic-damage growth and moderate maximum-HP growth.
+- Passive:
+  - `Owner Applied Ailment`
+  - `Grant Energy Shield` targeting `Self`
+  - Amount source: `Applied Status Stacks`, multiplied by 5
+  - `repeat_within_event_chain = true`
+- Primary action: `Effects Only`, targeting the frontmost enemy.
+  - Three `Skill Used` + `Apply Status` effects apply one Burning, one Shock,
+    and one Frost to `Event Target`.
+- Bridge action:
+  - `Skill Used` + `Fuse Elemental Ailments` on `Event Target`
+  - Referenced output status: Elemental Fusion
+  - `amount_divisor = 3`; conversion rounds up
+- Reaction:
+  - Trigger: `Enemy Died With Ailments`
+  - Type: `Effects Only`
+  - Cooldown: `3`
+  - `Reaction Triggered` + `Transfer Defeated Ailments`
+  - Target: `Most Ailmented Enemy Unit`
+
+### Important Interactions
+
+The passive counts stacks actually added and excludes refreshes, capped excess,
+and transferred stacks. Elemental Fusion is a new application, so bridge-created
+stacks grant Energy Shield. The death reaction moves existing stacks, so it
+does not repeatedly reward the same ailment investment.
+
+Elemental Fusion uses one shared pool. Action completion and magic propagation
+consume one stack; a physical hit uses every remaining stack for Frost-style
+amplification and then removes the ailment.
+
+The reaction preserves each defeated ailment's stacks, remaining duration,
+permanence, and source name. Ward can prevent transferred applications. The
+recipient is deterministic: most current ailment stacks, then lowest HP, then
+stable roster order.
+
+### Resolver Gap
+
+None required for the current concept. The job Resource, final names, growth
+numbers, and balance tuning remain unimplemented.

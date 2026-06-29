@@ -47,6 +47,34 @@
 	  "amount": 0,
 	  "amount_percent": 20,
 	  "description": "The next physical hit against this unit deals 20% more post-armor physical damage per stack, rounded up, then removes Frost."
+	},
+	{
+	  "id": "shock",
+	  "display_name": "Shock",
+	  "polarity": "Ailment",
+	  "status_type": "Shock",
+	  "stacking_rule": "Intensify",
+	  "stack_cap_enabled": false,
+	  "max_stacks": 5,
+	  "tags": ["ailment", "damage", "magic", "setup"],
+	  "propagation_percent": 25,
+	  "elapses_naturally": false,
+	  "description": "When incoming magic damage can arc for at least 1 damage, lose one stack. Up to three other allies take 25% of that pre-mitigation damage, rounded down; Shock damage can discharge Shock again."
+	},
+	{
+	  "id": "elemental_fusion",
+	  "display_name": "Elemental Fusion",
+	  "polarity": "Ailment",
+	  "status_type": "Elemental Fusion",
+	  "stacking_rule": "Intensify",
+	  "stack_cap_enabled": false,
+	  "max_stacks": 5,
+	  "tags": ["ailment", "damage", "magic", "setup"],
+	  "amount": 1,
+	  "amount_percent": 20,
+	  "propagation_percent": 25,
+	  "elapses_naturally": false,
+	  "description": "Each stack behaves as Burning, Frost, and Shock."
 	}
   ],
   "ancestries": [

@@ -7,10 +7,12 @@ const STATUS_TYPE_REGENERATION := "Regeneration"
 const STATUS_TYPE_BLEED := "Bleed"
 const STATUS_TYPE_NUMB := "Numb"
 const STATUS_TYPE_FROST := "Frost"
+const STATUS_TYPE_SHOCK := "Shock"
+const STATUS_TYPE_ELEMENTAL_FUSION := "Elemental Fusion"
 const CombatEventsScript := preload("res://scripts/combat/logging/combat_events.gd")
 
 
-static func apply_status(log, parent_entry_id: int, target, status: Resource, source_name: String, duration_turns := 3, is_permanent := false, context = null, source = null, parent_event_id := -1, stack_count := 1, preserve_duration := false) -> bool:
+static func apply_status(log, parent_entry_id: int, target, status: Resource, source_name: String, duration_turns := 3, is_permanent := false, context = null, source = null, parent_event_id := -1, stack_count := 1, preserve_duration := false, is_transfer := false) -> bool:
 	if target == null:
 		return false
 	if status == null:
@@ -23,6 +25,7 @@ static func apply_status(log, parent_entry_id: int, target, status: Resource, so
 			"status": status.display_name,
 			"status_type": status.status_type,
 			"polarity": status.polarity,
+			"is_transfer": is_transfer,
 			"prevented": false,
 		}, parent_event_id, parent_entry_id, ["status", "request"])
 		if bool(request["payload"].get("prevented", false)):
@@ -68,6 +71,7 @@ static func apply_status(log, parent_entry_id: int, target, status: Resource, so
 			"application_result": result,
 			"stack_count": resulting_stack_count,
 			"added_stack_count": added_stack_count,
+			"is_transfer": is_transfer,
 			"source_name": source_name,
 		}, request_event_id, parent_entry_id, ["status", status.polarity.to_lower()])
 	return true

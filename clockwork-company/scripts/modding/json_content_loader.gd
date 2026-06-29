@@ -38,10 +38,10 @@ const DEFAULT_DEMO_ROSTER_IDS := [
 
 const TEAM_VALUES := {"Allies": true, "Enemies": true}
 const ITEM_SLOT_VALUES := {"Weapon": true, "Armor": true, "Helmet": true, "Trinket": true}
-const EFFECT_TRIGGER_VALUES := {"Battle Start": true, "Battle State Changed": true, "Turn Start": true, "Turn Complete": true, "Action Completed": true, "Skill Used": true, "Skill Completed": true, "Attack": true, "Consecutive Attack": true, "Enemy Attack Targeted": true, "Hit": true, "Kill": true, "Death": true, "Ailment Damaged": true, "Damaged": true, "Physically Damaged": true, "Magically Damaged": true, "HP Below Threshold": true, "Damage Requested": true, "Healing Requested": true, "Healing Received": true, "Ally Overhealed": true, "Reaction Requested": true, "Status Application Requested": true, "Status Removal Requested": true, "Status Applied": true, "Externally Sourced Status Applied": true, "Enemy Status Applied": true, "Status Removed": true, "Reaction Triggered": true}
+const EFFECT_TRIGGER_VALUES := {"Battle Start": true, "Battle State Changed": true, "Turn Start": true, "Turn Complete": true, "Action Completed": true, "Skill Used": true, "Skill Completed": true, "Attack": true, "Consecutive Attack": true, "Enemy Attack Targeted": true, "Hit": true, "Kill": true, "Death": true, "Ailment Damaged": true, "Damaged": true, "Physically Damaged": true, "Magically Damaged": true, "HP Below Threshold": true, "Damage Requested": true, "Healing Requested": true, "Healing Received": true, "Ally Overhealed": true, "Reaction Requested": true, "Status Application Requested": true, "Status Removal Requested": true, "Status Applied": true, "Owner Applied Ailment": true, "Externally Sourced Status Applied": true, "Enemy Status Applied": true, "Status Removed": true, "Reaction Triggered": true}
 const EFFECT_CONDITION_VALUES := {"Always": true, "Event Source Is Not Owner": true, "Owner Is Unarmed": true, "Event Count At Least": true, "Self HP Below Percent": true, "Target Has Tag": true, "Target Missing Tag": true, "Target Status Stacks At Least": true, "Target Pending Status Damage At Least HP": true, "Owner Counter At Least": true, "Target Counter At Least": true, "Requested Status Matches": true, "Applied Status Matches": true}
-const EFFECT_TARGET_VALUES := {"Self": true, "Event Source": true, "Event Target": true, "Attack Target": true, "Attacker": true, "Killer": true, "All Units": true, "Allied Units": true, "Enemy Units": true, "Lowest HP Allied Unit": true, "Random Allied Unit": true, "Random Damaged Allied Unit": true, "Random Enemy Unit": true}
-const EFFECT_TYPE_VALUES := {"Gain Armor": true, "Bonus Damage": true, "Reduce Target Armor": true, "Heal Self": true, "Damage Killer": true, "Increase Max HP": true, "Apply Status": true, "Maintain Status Aura": true, "Replace Requested Status": true, "Remove Status": true, "Consume Status": true, "Detonate Status": true, "Gather Status": true, "Transfer Statuses": true, "Restore Max HP Lost To Status": true, "Deal Damage": true, "Heal": true, "Grant Armor": true, "Grant Battle Armor": true, "Grant Energy Shield": true, "Disable Armor": true, "Delay Action": true, "Apply Haste": true, "Increase Action Speed For Battle": true, "Fortify Damage": true, "Redirect Enemy Attacks": true, "Add Attack Damage": true, "Modify Stat": true, "Modify Counter": true, "Reset Counter": true, "Seal Next Attack": true, "Prevent Request": true, "Execute Target": true, "Begin Enemy Action Healing": true, "Prepare Base Attack": true}
+const EFFECT_TARGET_VALUES := {"Self": true, "Event Source": true, "Event Target": true, "Attack Target": true, "Attacker": true, "Killer": true, "All Units": true, "Allied Units": true, "Enemy Units": true, "Lowest HP Allied Unit": true, "Random Allied Unit": true, "Random Damaged Allied Unit": true, "Random Enemy Unit": true, "Most Ailmented Enemy Unit": true}
+const EFFECT_TYPE_VALUES := {"Gain Armor": true, "Bonus Damage": true, "Reduce Target Armor": true, "Heal Self": true, "Damage Killer": true, "Increase Max HP": true, "Apply Status": true, "Maintain Status Aura": true, "Replace Requested Status": true, "Remove Status": true, "Consume Status": true, "Detonate Status": true, "Gather Status": true, "Transfer Statuses": true, "Fuse Elemental Ailments": true, "Transfer Defeated Ailments": true, "Restore Max HP Lost To Status": true, "Deal Damage": true, "Heal": true, "Grant Armor": true, "Grant Battle Armor": true, "Grant Energy Shield": true, "Disable Armor": true, "Delay Action": true, "Apply Haste": true, "Increase Action Speed For Battle": true, "Fortify Damage": true, "Redirect Enemy Attacks": true, "Add Attack Damage": true, "Modify Stat": true, "Modify Counter": true, "Reset Counter": true, "Seal Next Attack": true, "Prevent Request": true, "Execute Target": true, "Begin Enemy Action Healing": true, "Prepare Base Attack": true}
 const EFFECT_AMOUNT_SOURCE_VALUES := {"Fixed": true, "Target Current HP": true, "Target Max HP": true, "Target Max HP Times Event Status Stacks": true, "Target Recent Damage": true, "Target Damage Taken Within Interval": true, "Total Allied Magic Damage Taken Within Interval": true, "Target Predicted Next Action Damage": true, "Target Ailment Stacks": true, "Target Unique Boons": true, "Target Status Stacks": true, "Event Target Status Stacks": true, "Defeated Target Status Stacks": true, "Applied Status Stacks": true, "Total Status Stacks On Selected Group": true, "Total Status Max HP Loss On Selected Group": true, "Target Pending Status Damage": true, "Target Action Speed": true, "Event Amount": true, "Overhealing": true, "Overhealing Diminishing": true, "Owner Counter": true, "Target Counter": true}
 const EFFECT_AMOUNT_ROUNDING_VALUES := {"Floor": true, "Ceil": true}
 const EFFECT_AMOUNT_TARGET_VALUES := {"Self": true, "All Units": true, "Allied Units": true, "Enemy Units": true}
@@ -55,10 +55,10 @@ const SKILL_ACTION_VALUES := {"Attack": true, "Heal": true, "Guard": true, "Appl
 const SKILL_TARGET_VALUES := {"Self": true, "Lowest HP Ally": true, "Frontmost Enemy": true}
 const SKILL_ATTACK_DAMAGE_TYPE_VALUES := {"Physical": true, "Magic": true, "Split Evenly": true}
 const STATUS_POLARITY_VALUES := {"Boon": true, "Ailment": true}
-const STATUS_TYPE_VALUES := {"Confusion": true, "Reconstitution": true, "Regeneration": true, "Bleed": true, "Burning": true, "Numb": true, "Frost": true, "Ward": true, "Rot": true, "Renewal": true}
+const STATUS_TYPE_VALUES := {"Confusion": true, "Reconstitution": true, "Regeneration": true, "Bleed": true, "Burning": true, "Numb": true, "Frost": true, "Shock": true, "Elemental Fusion": true, "Ward": true, "Rot": true, "Renewal": true}
 const STATUS_STACKING_RULE_VALUES := {"Ignore": true, "Refresh": true, "Intensify": true}
 const PASSIVE_TYPE_VALUES := {"None": true, "Attack Damage Bonus": true, "Heal Bonus": true, "Guard Armor Bonus": true, "Forecast": true, "Extend Allied Buff Duration": true}
-const REACTION_TRIGGER_VALUES := {"Damaged": true, "Physically Damaged": true, "Magically Damaged": true, "Ally Magically Damaged": true, "HP Below Threshold": true, "Lethal Physical Attack Requested": true, "Attack Targets Another Ally": true, "Status Application Requested": true, "Ally Ailment Applied": true, "Enemy Healing Requested": true, "Enemy Status Threshold Reached": true, "Enemy Died With Status": true}
+const REACTION_TRIGGER_VALUES := {"Damaged": true, "Physically Damaged": true, "Magically Damaged": true, "Ally Magically Damaged": true, "HP Below Threshold": true, "Lethal Physical Attack Requested": true, "Attack Targets Another Ally": true, "Status Application Requested": true, "Ally Ailment Applied": true, "Enemy Healing Requested": true, "Enemy Status Threshold Reached": true, "Enemy Died With Status": true, "Enemy Died With Ailments": true}
 const REACTION_CONDITION_VALUES := {"Always": true, "Self HP Below Percent": true, "Self Status Stacks At Least": true, "Requested Status Is Ailment": true, "Requested Status Matches": true}
 const REACTION_TYPE_VALUES := {"Gain Armor": true, "Heal Self": true, "Damage Attacker": true, "Effects Only": true}
 const ANCESTRY_FEATURE_TRIGGER_VALUES := {"Battle Start": true, "Attack": true, "Kill": true, "Damaged": true, "HP Below Threshold": true}
@@ -201,6 +201,7 @@ static func _load_base_statuses() -> Dictionary:
 			"tags": TagUtilsScript.ids(resource.tags),
 			"amount": resource.amount,
 			"amount_percent": resource.amount_percent,
+			"propagation_percent": resource.propagation_percent,
 			"elapses_naturally": resource.elapses_naturally,
 			"description": resource.description,
 		}
@@ -401,6 +402,8 @@ static func _validate_merged_data(data: Dictionary) -> void:
 		assert(STATUS_TYPE_VALUES.has(status.get("status_type", "")), "Invalid status type for id %s" % status_id)
 		assert(STATUS_STACKING_RULE_VALUES.has(status.get("stacking_rule", "")), "Invalid status stacking rule for id %s" % status_id)
 		assert(int(status.get("max_stacks", 1)) >= 1, "Status max_stacks must be at least 1 for id %s" % status_id)
+		assert(int(status.get("amount_percent", 20)) in range(1, 101), "Status amount_percent must be between 1 and 100 for id %s" % status_id)
+		assert(int(status.get("propagation_percent", 25)) in range(1, 101), "Status propagation_percent must be between 1 and 100 for id %s" % status_id)
 
 	for ancestry_id in data["ancestries"].keys():
 		var ancestry: Dictionary = data["ancestries"][ancestry_id]
@@ -579,8 +582,10 @@ static func _effect_support_error(effect: Dictionary) -> String:
 			return "Replace Requested Status requires Status Application Requested"
 		if effect.get("replacement_status_ids", []).is_empty():
 			return "Replace Requested Status requires replacement_status_ids"
-	if effect_type in ["Consume Status", "Detonate Status", "Gather Status", "Restore Max HP Lost To Status"] and String(effect.get("status_id", "")).is_empty():
+	if effect_type in ["Consume Status", "Detonate Status", "Gather Status", "Fuse Elemental Ailments", "Restore Max HP Lost To Status"] and String(effect.get("status_id", "")).is_empty():
 		return "%s requires status_id" % effect_type
+	if effect_type == "Transfer Defeated Ailments" and (trigger != "Reaction Triggered" or target != "Most Ailmented Enemy Unit"):
+		return "Transfer Defeated Ailments requires Reaction Triggered + Most Ailmented Enemy Unit"
 	if effect_type == "Remove Status":
 		if effect.get("status_removal_mode", "Random Matching") == "Specific Status" and String(effect.get("status_id", "")).is_empty():
 			return "Specific Status removal requires status_id"
@@ -598,9 +603,9 @@ static func _effect_support_error(effect: Dictionary) -> String:
 		return "Prepare Base Attack requires Self"
 	if effect.get("condition", "") == "Requested Status Matches" and not trigger in ["Status Application Requested", "Status Removal Requested"]:
 		return "Requested Status Matches requires a status request trigger"
-	if effect.get("condition", "") == "Applied Status Matches" and not trigger in ["Status Applied", "Externally Sourced Status Applied", "Enemy Status Applied"]:
+	if effect.get("condition", "") == "Applied Status Matches" and not trigger in ["Status Applied", "Owner Applied Ailment", "Externally Sourced Status Applied", "Enemy Status Applied"]:
 		return "Applied Status Matches requires a status-applied trigger"
-	if effect_type in ["Apply Status", "Maintain Status Aura", "Replace Requested Status", "Remove Status", "Consume Status", "Detonate Status", "Gather Status", "Transfer Statuses", "Restore Max HP Lost To Status", "Deal Damage", "Heal", "Grant Armor", "Grant Battle Armor", "Grant Energy Shield", "Disable Armor", "Delay Action", "Apply Haste", "Increase Action Speed For Battle", "Fortify Damage", "Redirect Enemy Attacks", "Add Attack Damage", "Modify Stat", "Modify Counter", "Reset Counter", "Seal Next Attack", "Prevent Request", "Execute Target", "Begin Enemy Action Healing", "Prepare Base Attack"]:
+	if effect_type in ["Apply Status", "Maintain Status Aura", "Replace Requested Status", "Remove Status", "Consume Status", "Detonate Status", "Gather Status", "Transfer Statuses", "Fuse Elemental Ailments", "Transfer Defeated Ailments", "Restore Max HP Lost To Status", "Deal Damage", "Heal", "Grant Armor", "Grant Battle Armor", "Grant Energy Shield", "Disable Armor", "Delay Action", "Apply Haste", "Increase Action Speed For Battle", "Fortify Damage", "Redirect Enemy Attacks", "Add Attack Damage", "Modify Stat", "Modify Counter", "Reset Counter", "Seal Next Attack", "Prevent Request", "Execute Target", "Begin Enemy Action Healing", "Prepare Base Attack"]:
 		return ""
 	if trigger == "Battle Start" and effect_type == "Gain Armor" and target == "Self":
 		return ""
@@ -641,8 +646,10 @@ static func _validate_formula_fields(data: Dictionary, effect: Dictionary, label
 	var amount_status_id := String(effect.get("amount_status_id", ""))
 	if amount_status_id.is_empty():
 		amount_status_id = status_id
-	if effect.get("effect_type", "") in ["Apply Status", "Maintain Status Aura", "Consume Status", "Detonate Status", "Gather Status", "Restore Max HP Lost To Status"] or effect.get("condition", "") in ["Target Status Stacks At Least", "Target Pending Status Damage At Least HP", "Requested Status Matches"]:
+	if effect.get("effect_type", "") in ["Apply Status", "Maintain Status Aura", "Consume Status", "Detonate Status", "Gather Status", "Fuse Elemental Ailments", "Restore Max HP Lost To Status"] or effect.get("condition", "") in ["Target Status Stacks At Least", "Target Pending Status Damage At Least HP", "Requested Status Matches"]:
 		assert(data["statuses"].has(status_id), "Unknown required status id '%s' for %s" % [status_id, label])
+	if effect.get("effect_type", "") == "Fuse Elemental Ailments":
+		assert(String(data["statuses"][status_id].get("status_type", "")) == "Elemental Fusion", "Fuse Elemental Ailments requires an Elemental Fusion output status for %s" % label)
 	for replacement_id in effect.get("replacement_status_ids", []):
 		assert(data["statuses"].has(String(replacement_id)), "Unknown replacement status id for %s" % label)
 		assert(String(data["statuses"][String(replacement_id)].get("polarity", "")) == "Boon", "Replacement statuses must be boons for %s" % label)
@@ -737,6 +744,7 @@ static func _build_status_resources(statuses_data: Dictionary) -> Dictionary:
 		status.tags = _tag_array(src.get("tags", []))
 		status.amount = int(src.get("amount", 0))
 		status.amount_percent = int(src.get("amount_percent", 50))
+		status.propagation_percent = int(src.get("propagation_percent", 25))
 		status.elapses_naturally = bool(src.get("elapses_naturally", true))
 		status.description = String(src.get("description", ""))
 		out[id] = status

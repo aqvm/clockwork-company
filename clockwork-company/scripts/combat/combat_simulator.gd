@@ -363,7 +363,7 @@ func _resolve_attack(context, log, turn_entry_id: int, actor, target, skill_dama
 	_assert_damage_event_consistency(damage_taken, previous_hp, target.hp)
 	if target.is_alive():
 		ItemEffectResolverScript.apply_hit_item_effects(log, attack_entry_id, actor, target, context)
-	context.record_damage(actor, target, damage_taken, previous_hp, physical_damage_taken, magic_component, attack_hook_id, attack_entry_id, source_tags + ["attack"], mitigated_amount)
+	context.record_damage(actor, target, damage_taken, previous_hp, physical_damage_taken, magic_component, attack_hook_id, attack_entry_id, source_tags + ["attack"], mitigated_amount, int(damage_request["payload"].get("shock_propagation_basis", 0)))
 
 
 func _unit_by_id(units: Array, unit_id: String):

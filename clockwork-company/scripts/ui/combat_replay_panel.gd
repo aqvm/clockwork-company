@@ -15,8 +15,8 @@ const MIN_SECONDS_BETWEEN_REPLAY_ACTIONS := 0.1
 const REPLAY_SPEEDS: Array[float] = [0.5, 1.0, 2.0, 4.0]
 
 @onready var combat_log: RichTextLabel = %CombatLog
-@onready var allies_row: HBoxContainer = %AlliesRow
-@onready var enemies_row: HBoxContainer = %EnemiesRow
+@onready var allies_row: Container = %AlliesRow
+@onready var enemies_row: Container = %EnemiesRow
 
 var timer: Timer = null
 var log_highlight_palette = null

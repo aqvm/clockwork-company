@@ -151,7 +151,7 @@ func apply_direct_damage(source, target, amount: int, parent_event_id := -1, par
 	amount = max(0, int(damage_request["payload"].get("amount", amount)))
 	var previous_hp: int = target.hp
 	target.hp = max(0, target.hp - max(0, amount))
-	return record_damage(source, target, amount, previous_hp, 0, previous_hp - target.hp, int(damage_request["id"]), parent_log_id, tags)
+	return record_damage(source, target, amount, previous_hp, 0, previous_hp - target.hp, int(damage_request["id"]), parent_log_id, tags, 0, int(damage_request["payload"].get("shock_propagation_basis", 0)))
 
 
 func apply_physical_damage(source, target, amount: int, parent_event_id := -1, parent_log_id := -1, tags: Array = []) -> Dictionary:
@@ -178,7 +178,8 @@ func record_damage(
 	parent_event_id := -1,
 	parent_log_id := -1,
 	tags: Array = [],
-	mitigated_amount := 0
+	mitigated_amount := 0,
+	shock_propagation_basis := 0
 ) -> Dictionary:
 	var applied_amount: int = previous_hp - target.hp
 	var applied_magic_amount: int = min(max(0, magic_amount), applied_amount)
@@ -203,6 +204,7 @@ func record_damage(
 		"physical_amount": applied_physical_amount,
 		"magic_amount": applied_magic_amount,
 		"mitigated_amount": max(0, mitigated_amount),
+		"shock_propagation_basis": max(0, shock_propagation_basis),
 		"previous_hp": previous_hp,
 		"new_hp": target.hp,
 	}, parent_event_id, parent_log_id, tags)

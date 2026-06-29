@@ -59,7 +59,7 @@ theme_override_constants/separation = 8
 layout_mode = 2
 text = "Clockwork Company Scenario Workbench"
 
-[node name="ControlsRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer" unique_id=213141313]
+[node name="ControlsRow" type="HFlowContainer" parent="MarginContainer/VBoxContainer" unique_id=213141313]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 8
@@ -111,13 +111,14 @@ layout_mode = 2
 layout_mode = 2
 text = "Combat Replay"
 
-[node name="ReplaySplitRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer/LogSplit/ReplayColumn" unique_id=131313131]
+[node name="ReplaySplitRow" type="HFlowContainer" parent="MarginContainer/VBoxContainer/LogSplit/ReplayColumn" unique_id=131313131]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 8
 
 [node name="ReplayTextColumn" type="VBoxContainer" parent="MarginContainer/VBoxContainer/LogSplit/ReplayColumn/ReplaySplitRow" unique_id=141414141]
 layout_mode = 2
+custom_minimum_size = Vector2(260, 180)
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
@@ -134,6 +135,7 @@ size_flags_vertical = 3
 
 [node name="ReplayVizColumn" type="VBoxContainer" parent="MarginContainer/VBoxContainer/LogSplit/ReplayColumn/ReplaySplitRow" unique_id=161616161]
 layout_mode = 2
+custom_minimum_size = Vector2(260, 180)
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 8
@@ -142,20 +144,20 @@ theme_override_constants/separation = 8
 layout_mode = 2
 text = "Unit Replay (Prototype)"
 
-[node name="AlliesRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer/LogSplit/ReplayColumn/ReplaySplitRow/ReplayVizColumn" unique_id=181818181]
+[node name="AlliesRow" type="HFlowContainer" parent="MarginContainer/VBoxContainer/LogSplit/ReplayColumn/ReplaySplitRow/ReplayVizColumn" unique_id=181818181]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 6
-alignment = 1
 
 [node name="TeamRule" type="HSeparator" parent="MarginContainer/VBoxContainer/LogSplit/ReplayColumn/ReplaySplitRow/ReplayVizColumn" unique_id=191919191]
 layout_mode = 2
 
-[node name="EnemiesRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer/LogSplit/ReplayColumn/ReplaySplitRow/ReplayVizColumn" unique_id=202020202]
+[node name="EnemiesRow" type="HFlowContainer" parent="MarginContainer/VBoxContainer/LogSplit/ReplayColumn/ReplaySplitRow/ReplayVizColumn" unique_id=202020202]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 6
-alignment = 1
 
 [node name="ModsListPanel" type="PanelContainer" parent="." unique_id=565656565]
 unique_name_in_owner = true

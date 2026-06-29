@@ -18,8 +18,8 @@ data_*/
 mono_crash.*.json
 
 # Obsidian local workspace state
-.obsidian/workspace.json
-.obsidian/workspace-mobile.json
-.obsidian/cache/
-.obsidian/plugins/
-.trash/
+**/.obsidian/workspace.json
+**/.obsidian/workspace-mobile.json
+**/.obsidian/cache/
+**/.obsidian/plugins/
+**/.trash/

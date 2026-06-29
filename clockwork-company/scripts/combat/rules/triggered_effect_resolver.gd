@@ -3,8 +3,9 @@ class_name TriggeredEffectResolver
 
 const StatusResolverScript := preload("res://scripts/combat/rules/status_resolver.gd")
 const TagUtilsScript := preload("res://scripts/data/tag_utils.gd")
+const ELEMENTAL_FUSION_SOURCE_TYPES := ["Burning", "Shock", "Frost"]
 
-const SHARED_EFFECT_TYPES := ["Apply Status", "Maintain Status Aura", "Replace Requested Status", "Remove Status", "Consume Status", "Detonate Status", "Gather Status", "Transfer Statuses", "Restore Max HP Lost To Status", "Deal Damage", "Heal", "Grant Armor", "Grant Battle Armor", "Grant Energy Shield", "Disable Armor", "Delay Action", "Apply Haste", "Increase Action Speed For Battle", "Fortify Damage", "Redirect Enemy Attacks", "Add Attack Damage", "Modify Stat", "Modify Counter", "Reset Counter", "Seal Next Attack", "Prevent Request", "Execute Target", "Begin Enemy Action Healing", "Prepare Base Attack"]
+const SHARED_EFFECT_TYPES := ["Apply Status", "Maintain Status Aura", "Replace Requested Status", "Remove Status", "Consume Status", "Detonate Status", "Gather Status", "Transfer Statuses", "Fuse Elemental Ailments", "Transfer Defeated Ailments", "Restore Max HP Lost To Status", "Deal Damage", "Heal", "Grant Armor", "Grant Battle Armor", "Grant Energy Shield", "Disable Armor", "Delay Action", "Apply Haste", "Increase Action Speed For Battle", "Fortify Damage", "Redirect Enemy Attacks", "Add Attack Damage", "Modify Stat", "Modify Counter", "Reset Counter", "Seal Next Attack", "Prevent Request", "Execute Target", "Begin Enemy Action Healing", "Prepare Base Attack"]
 
 
 static func respond(context, event: Dictionary) -> void:
@@ -102,6 +103,10 @@ static func _resolve(context, event: Dictionary, owner, effect: EffectDefinition
 			_gather_status(context, event, owner, target, effect, source_name, effect_event_id)
 		elif effect.effect_type == "Transfer Statuses":
 			_transfer_statuses(context, event, owner, target, effect, source_name, effect_event_id)
+		elif effect.effect_type == "Fuse Elemental Ailments":
+			_fuse_elemental_ailments(context, event, owner, target, effect, source_name, effect_event_id)
+		elif effect.effect_type == "Transfer Defeated Ailments":
+			_transfer_defeated_ailments(context, event, owner, target, source_name, effect_event_id)
 		elif effect.effect_type == "Restore Max HP Lost To Status":
 			_restore_max_hp_lost_to_status(context, event, owner, target, effect, source_name, effect_event_id)
 		elif effect.effect_type == "Modify Counter":
@@ -385,8 +390,63 @@ static func _transfer_statuses(context, event: Dictionary, owner, target, effect
 			var permanent := bool(instance.get("is_permanent", false))
 			var stacks := int(instance.get("stack_count", 1))
 			if StatusResolverScript.remove_status(context.log, int(event.get("parent_log_id", -1)), source_unit, definition.display_name, source_name, context, owner, effect_event_id):
-				if not StatusResolverScript.apply_status(context.log, int(event.get("parent_log_id", -1)), target, definition, source_name, duration, permanent, context, owner, effect_event_id, stacks, true):
-					StatusResolverScript.apply_status(context.log, int(event.get("parent_log_id", -1)), source_unit, definition, source_name, duration, permanent, context, owner, effect_event_id, stacks, true)
+				if not StatusResolverScript.apply_status(context.log, int(event.get("parent_log_id", -1)), target, definition, source_name, duration, permanent, context, owner, effect_event_id, stacks, true, true):
+					StatusResolverScript.apply_status(context.log, int(event.get("parent_log_id", -1)), source_unit, definition, source_name, duration, permanent, context, owner, effect_event_id, stacks, true, true)
+
+
+static func _fuse_elemental_ailments(context, event: Dictionary, owner, target, effect: EffectDefinition, source_name: String, effect_event_id: int) -> void:
+	var consumed_stacks := 0
+	for status_type in ELEMENTAL_FUSION_SOURCE_TYPES:
+		var instance: Dictionary = target.status_instance(status_type)
+		if instance.is_empty():
+			continue
+		var definition: StatusDefinition = instance.get("definition", null)
+		if definition == null:
+			continue
+		var stacks := int(instance.get("stack_count", 1))
+		if StatusResolverScript.remove_status(context.log, int(event.get("parent_log_id", -1)), target, definition.display_name, source_name, context, owner, effect_event_id):
+			consumed_stacks += stacks
+	if consumed_stacks <= 0:
+		return
+	var fusion_stacks := int(ceil(float(consumed_stacks) / float(max(1, effect.amount_divisor))))
+	StatusResolverScript.apply_status(
+		context.log,
+		int(event.get("parent_log_id", -1)),
+		target,
+		effect.status,
+		source_name,
+		_status_duration_turns(effect, effect.status),
+		_status_is_permanent(effect, effect.status),
+		context,
+		owner,
+		effect_event_id,
+		fusion_stacks
+	)
+
+
+static func _transfer_defeated_ailments(context, event: Dictionary, owner, target, source_name: String, effect_event_id: int) -> void:
+	var defeated_unit = event.get("target", null)
+	if defeated_unit == null or target == null or not target.is_alive():
+		return
+	for instance: Dictionary in defeated_unit.statuses.duplicate():
+		var definition: StatusDefinition = instance.get("definition", null)
+		if definition == null or definition.polarity != "Ailment":
+			continue
+		StatusResolverScript.apply_status(
+			context.log,
+			int(event.get("parent_log_id", -1)),
+			target,
+			definition,
+			String(instance.get("source_name", source_name)),
+			int(instance.get("remaining_turns", definition.default_duration_turns)),
+			bool(instance.get("is_permanent", definition.default_is_permanent)),
+			context,
+			owner,
+			effect_event_id,
+			int(instance.get("stack_count", 1)),
+			true,
+			true
+		)
 
 
 static func _hasten_action(context, event: Dictionary, owner, target, effect: EffectDefinition, source_name: String, effect_event_id: int, source_tags: Array) -> void:
@@ -484,6 +544,8 @@ static func _trigger_matches(event: Dictionary, owner, trigger: String) -> bool:
 			return event_type == "unit_defeated" and (owner == null or target == owner)
 		"Status Applied":
 			return event_type == "status_applied" and (owner == null or target == owner)
+		"Owner Applied Ailment":
+			return event_type == "status_applied" and owner != null and source == owner and String(event["payload"].get("polarity", "")) == "Ailment" and not bool(event["payload"].get("is_transfer", false)) and int(event["payload"].get("added_stack_count", 0)) > 0
 		"Externally Sourced Status Applied":
 			return event_type == "status_applied" and owner != null and target == owner and source != owner
 		"Enemy Status Applied":
@@ -608,6 +670,8 @@ static func _targets(context, event: Dictionary, owner, selector: String) -> Arr
 			return _one_deterministic(_living_damaged_team_units(context.units, owner.team if owner != null else "Allies"), int(event.get("id", 0)))
 		"Random Enemy Unit":
 			return _one_deterministic(_living_team_units(context.units, _other_team(owner.team) if owner != null else "Enemies"), int(event.get("id", 0)))
+		"Most Ailmented Enemy Unit":
+			return _most_ailmented_unit(_living_team_units(context.units, _other_team(owner.team) if owner != null else "Enemies"), context.units)
 	return []
 
 
@@ -649,6 +713,27 @@ static func _lowest_hp_unit(candidates: Array) -> Array:
 		if candidate.hp < lowest.hp:
 			lowest = candidate
 	return [lowest]
+
+
+static func _most_ailmented_unit(candidates: Array, roster: Array) -> Array:
+	if candidates.is_empty():
+		return []
+	var ranked: Array[Dictionary] = []
+	for candidate in candidates:
+		ranked.append({
+			"unit": candidate,
+			"ailment_stacks": _status_stacks_by_polarity(candidate, "Ailment"),
+			"hp": int(candidate.hp),
+			"roster_index": roster.find(candidate),
+		})
+	ranked.sort_custom(func(left: Dictionary, right: Dictionary) -> bool:
+		if int(left["ailment_stacks"]) != int(right["ailment_stacks"]):
+			return int(left["ailment_stacks"]) > int(right["ailment_stacks"])
+		if int(left["hp"]) != int(right["hp"]):
+			return int(left["hp"]) < int(right["hp"])
+		return int(left["roster_index"]) < int(right["roster_index"])
+	)
+	return [ranked[0]["unit"]]
 
 
 static func _other_team(team: String) -> String:

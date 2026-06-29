@@ -9,6 +9,7 @@ Purpose: exercise as many modding code paths as possible in one toggleable pack.
 1. Status add:
 - Adds `reconstitution_it`.
 - Tests authored status reconstruction, intensify stacking, stack caps, and status-id references.
+- Adds `elemental_fusion_it` to cover composite elemental payloads, including `propagation_percent`.
 
 2. Item add:
 - Adds `tower_shield_it` (new id).
@@ -26,6 +27,7 @@ Purpose: exercise as many modding code paths as possible in one toggleable pack.
 - Tests new job creation, loadout linkage, a five-turn status-applying skill, and the `Forecast` passive capability.
 - Adds `cleanser_it` to validate an `Effects Only` skill with deterministic ailment removal.
 - `cleanser_it` also validates a secondary bridge skill, passive status and damage-request interception, an effect-only stack-gated reaction, formula-driven healing/consumption, and a status-aware default tactic.
+- Adds `elementalist_it` to validate owner-applied-ailment triggers, elemental fusion, defeated-ailment transfer, and most-ailmented deterministic targeting.
 
 5. Job override:
 - Overrides existing `apprentice`.

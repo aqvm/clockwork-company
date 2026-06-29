@@ -316,8 +316,10 @@ static func _status_text(status: Resource) -> String:
 	]
 	if status.amount != 0:
 		lines.append("Amount: %d" % status.amount)
-	if status.status_type in ["Reconstitution", "Frost"]:
+	if status.status_type in ["Reconstitution", "Frost", "Elemental Fusion"]:
 		lines.append("Amount percent: %d%%" % status.amount_percent)
+	if status.status_type in ["Shock", "Elemental Fusion"]:
+		lines.append("Propagation percent: %d%%" % status.propagation_percent)
 	if not status.elapses_naturally:
 		lines.append("Duration: requires explicit removal")
 	lines.append(status.description)
@@ -553,7 +555,7 @@ static func _value_text(value) -> String:
 		var tag_id := String(value.get("tag_id"))
 		if not display_name.is_empty() or not tag_id.is_empty():
 			return display_name if not display_name.is_empty() else tag_id
-	return String(value)
+	return str(value)
 
 
 static func _with_source_note(text: String, note: String) -> String:

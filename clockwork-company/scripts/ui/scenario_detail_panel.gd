@@ -141,7 +141,7 @@ func _join_values(values: Array, separator: String) -> String:
 	for value in values:
 		if not text.is_empty():
 			text += separator
-		text += String(value)
+		text += str(value)
 	return text
 
 

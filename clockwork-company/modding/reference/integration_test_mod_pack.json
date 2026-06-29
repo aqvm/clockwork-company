@@ -13,6 +13,21 @@
       "tags": ["boon", "healing", "integration_test"],
       "amount_percent": 50,
       "description": "At turn start, restore half the damage received since the previous turn."
+    },
+    {
+      "id": "elemental_fusion_it",
+      "display_name": "Elemental Fusion IT",
+      "polarity": "Ailment",
+      "status_type": "Elemental Fusion",
+      "stacking_rule": "Intensify",
+      "stack_cap_enabled": false,
+      "max_stacks": 5,
+      "tags": ["ailment", "damage", "magic", "integration_test"],
+      "amount": 1,
+      "amount_percent": 20,
+      "propagation_percent": 25,
+      "elapses_naturally": false,
+      "description": "Integration probe for the authored composite elemental ailment."
     }
   ],
   "items": [
@@ -176,6 +191,89 @@
         "passive_type": "None",
         "amount": 0,
         "cooldown_turns": 0
+      }
+    },
+    {
+      "id": "elementalist_it",
+      "display_name": "Elementalist IT",
+      "skill": {
+        "display_name": "Elementalist IT Triad",
+        "action": "Effects Only",
+        "default_target": "Frontmost Enemy",
+        "effects": [
+          {
+            "display_name": "Elementalist IT Burn",
+            "trigger": "Skill Used",
+            "condition": "Always",
+            "target_selector": "Event Target",
+            "effect_type": "Apply Status",
+            "status_id": "burning"
+          },
+          {
+            "display_name": "Elementalist IT Shock",
+            "trigger": "Skill Used",
+            "condition": "Always",
+            "target_selector": "Event Target",
+            "effect_type": "Apply Status",
+            "status_id": "shock"
+          },
+          {
+            "display_name": "Elementalist IT Frost",
+            "trigger": "Skill Used",
+            "condition": "Always",
+            "target_selector": "Event Target",
+            "effect_type": "Apply Status",
+            "status_id": "frost"
+          }
+        ]
+      },
+      "secondary_skill": {
+        "display_name": "Elementalist IT Fusion",
+        "action": "Effects Only",
+        "default_target": "Frontmost Enemy",
+        "effects": [
+          {
+            "display_name": "Elementalist IT Fuse",
+            "trigger": "Skill Used",
+            "condition": "Always",
+            "target_selector": "Event Target",
+            "effect_type": "Fuse Elemental Ailments",
+            "status_id": "elemental_fusion_it",
+            "amount_divisor": 3
+          }
+        ]
+      },
+      "passive": {
+        "display_name": "Elementalist IT Buffer",
+        "passive_type": "None",
+        "effects": [
+          {
+            "display_name": "Elementalist IT Shield",
+            "trigger": "Owner Applied Ailment",
+            "condition": "Always",
+            "target_selector": "Self",
+            "effect_type": "Grant Energy Shield",
+            "amount_source": "Applied Status Stacks",
+            "amount_multiplier": 5,
+            "repeat_within_event_chain": true
+          }
+        ]
+      },
+      "reaction": {
+        "display_name": "Elementalist IT Inheritance",
+        "trigger": "Enemy Died With Ailments",
+        "condition": "Always",
+        "reaction_type": "Effects Only",
+        "cooldown_turns": 3,
+        "effects": [
+          {
+            "display_name": "Elementalist IT Transfer",
+            "trigger": "Reaction Triggered",
+            "condition": "Always",
+            "target_selector": "Most Ailmented Enemy Unit",
+            "effect_type": "Transfer Defeated Ailments"
+          }
+        ]
       }
     },
     {

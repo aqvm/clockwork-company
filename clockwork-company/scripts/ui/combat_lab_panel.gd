@@ -204,11 +204,19 @@ func refresh() -> void:
 
 func _build_ui() -> void:
 	custom_minimum_size = Vector2(0, 240)
-	var root := VBoxContainer.new()
-	root.add_theme_constant_override("separation", 8)
-	add_child(root)
+	size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	add_child(scroll)
 
-	var header := HBoxContainer.new()
+	var root := VBoxContainer.new()
+	root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	root.add_theme_constant_override("separation", 8)
+	scroll.add_child(root)
+
+	var header := HFlowContainer.new()
 	header.add_theme_constant_override("separation", 8)
 	root.add_child(header)
 
@@ -227,12 +235,13 @@ func _build_ui() -> void:
 	exit_button.pressed.connect(func(): exit_requested.emit())
 	header.add_child(exit_button)
 
-	var catalog_row := HBoxContainer.new()
+	var catalog_row := HFlowContainer.new()
 	catalog_row.add_theme_constant_override("separation", 6)
 	root.add_child(catalog_row)
 
 	catalog_selector = OptionButton.new()
 	catalog_selector.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	catalog_selector.custom_minimum_size = Vector2(220, 0)
 	catalog_row.add_child(catalog_selector)
 
 	var add_ally_button := Button.new()
@@ -255,13 +264,14 @@ func _build_ui() -> void:
 	clear_all_button.pressed.connect(clear_all)
 	catalog_row.add_child(clear_all_button)
 
-	var setup_row := HBoxContainer.new()
+	var setup_row := HFlowContainer.new()
 	setup_row.add_theme_constant_override("separation", 6)
 	root.add_child(setup_row)
 
 	setup_name_edit = LineEdit.new()
 	setup_name_edit.placeholder_text = "Setup name"
 	setup_name_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	setup_name_edit.custom_minimum_size = Vector2(180, 0)
 	setup_row.add_child(setup_name_edit)
 
 	var save_button := Button.new()
@@ -270,7 +280,8 @@ func _build_ui() -> void:
 	setup_row.add_child(save_button)
 
 	setup_selector = OptionButton.new()
-	setup_selector.custom_minimum_size = Vector2(220, 0)
+	setup_selector.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	setup_selector.custom_minimum_size = Vector2(180, 0)
 	setup_row.add_child(setup_selector)
 
 	var load_button := Button.new()
@@ -286,10 +297,12 @@ func _build_ui() -> void:
 	setup_notes_edit = LineEdit.new()
 	setup_notes_edit.placeholder_text = "Setup notes"
 	setup_notes_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	setup_notes_edit.custom_minimum_size = Vector2(180, 0)
 	root.add_child(setup_notes_edit)
 
-	var parties_row := HBoxContainer.new()
+	var parties_row := HFlowContainer.new()
 	parties_row.add_theme_constant_override("separation", 10)
+	parties_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	parties_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	root.add_child(parties_row)
 
@@ -301,14 +314,15 @@ func _build_ui() -> void:
 	root.add_child(feedback_label)
 
 
-func _build_team_column(parent: HBoxContainer, team: String) -> VBoxContainer:
+func _build_team_column(parent: Container, team: String) -> VBoxContainer:
 	var column := VBoxContainer.new()
+	column.custom_minimum_size = Vector2(280, 0)
 	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	column.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	column.add_theme_constant_override("separation", 4)
 	parent.add_child(column)
 
-	var header := HBoxContainer.new()
+	var header := HFlowContainer.new()
 	header.add_theme_constant_override("separation", 6)
 	column.add_child(header)
 
@@ -413,14 +427,16 @@ func _refresh_team(team: String, list: VBoxContainer) -> void:
 
 func _build_unit_row(team: String, index: int, unit: UnitDefinition, party_size: int) -> Control:
 	var container := VBoxContainer.new()
+	container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	container.add_theme_constant_override("separation", 3)
 
-	var row := HBoxContainer.new()
+	var row := HFlowContainer.new()
 	row.add_theme_constant_override("separation", 4)
 	container.add_child(row)
 
 	var label := Label.new()
 	label.text = "%d. %s" % [index + 1, unit.display_name]
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(label)
 
@@ -449,15 +465,16 @@ func _build_unit_row(team: String, index: int, unit: UnitDefinition, party_size:
 	var equipment_label := Label.new()
 	equipment_label.text = lab_state.equipment_summary(unit)
 	equipment_label.add_theme_font_size_override("font_size", 12)
+	equipment_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	container.add_child(equipment_label)
 
-	var equipment_row := HBoxContainer.new()
+	var equipment_row := HFlowContainer.new()
 	equipment_row.add_theme_constant_override("separation", 4)
 	container.add_child(equipment_row)
 	for slot in ["Weapon", "Armor", "Helmet", "Trinket"]:
 		equipment_row.add_child(_build_slot_selector(team, index, slot))
 
-	var identity_row := HBoxContainer.new()
+	var identity_row := HFlowContainer.new()
 	identity_row.add_theme_constant_override("separation", 4)
 	container.add_child(identity_row)
 	identity_row.add_child(_build_ancestry_selector(team, index, unit))
@@ -466,7 +483,7 @@ func _build_unit_row(team: String, index: int, unit: UnitDefinition, party_size:
 	identity_row.add_child(_build_feature_selector(team, index, unit, "passive", "Passive"))
 	identity_row.add_child(_build_feature_selector(team, index, unit, "reaction", "Reaction"))
 
-	var stats_row := HBoxContainer.new()
+	var stats_row := HFlowContainer.new()
 	stats_row.add_theme_constant_override("separation", 4)
 	container.add_child(stats_row)
 	stats_row.add_child(_build_stat_editor(team, index, "max_hp", "HP", unit.max_hp, 1))
@@ -482,7 +499,8 @@ func _build_unit_row(team: String, index: int, unit: UnitDefinition, party_size:
 
 func _build_slot_selector(team: String, unit_index: int, slot: String) -> OptionButton:
 	var selector := OptionButton.new()
-	selector.custom_minimum_size = Vector2(130, 0)
+	selector.custom_minimum_size = Vector2(120, 0)
+	selector.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var options: Array[Dictionary] = lab_state.equipment_options(team, unit_index, slot)
 	var selected_index := 0
 	for option_index in options.size():
@@ -500,7 +518,8 @@ func _build_slot_selector(team: String, unit_index: int, slot: String) -> Option
 
 func _build_ancestry_selector(team: String, unit_index: int, unit: UnitDefinition) -> OptionButton:
 	var selector := OptionButton.new()
-	selector.custom_minimum_size = Vector2(150, 0)
+	selector.custom_minimum_size = Vector2(130, 0)
+	selector.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	selector.add_item("Ancestry: None", -1)
 	var selected_index := 0
 	var current_index: int = lab_state.ancestry_index_for_unit(unit)
@@ -517,7 +536,8 @@ func _build_ancestry_selector(team: String, unit_index: int, unit: UnitDefinitio
 
 func _build_job_selector(team: String, unit_index: int, unit: UnitDefinition) -> OptionButton:
 	var selector := OptionButton.new()
-	selector.custom_minimum_size = Vector2(140, 0)
+	selector.custom_minimum_size = Vector2(130, 0)
+	selector.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	selector.add_item("Job: None", -1)
 	var selected_index := 0
 	var current_index: int = lab_state.job_index_for_unit(unit)
@@ -534,7 +554,8 @@ func _build_job_selector(team: String, unit_index: int, unit: UnitDefinition) ->
 
 func _build_feature_selector(team: String, unit_index: int, unit: UnitDefinition, feature_type: String, label: String) -> OptionButton:
 	var selector := OptionButton.new()
-	selector.custom_minimum_size = Vector2(145, 0)
+	selector.custom_minimum_size = Vector2(130, 0)
+	selector.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	selector.add_item("%s: None" % label, -1)
 	var selected_index := 0
 	var current_index: int = lab_state.feature_index_for_unit(unit, feature_type)
@@ -552,6 +573,7 @@ func _build_feature_selector(team: String, unit_index: int, unit: UnitDefinition
 
 func _build_stat_editor(team: String, unit_index: int, stat_name: String, label_text: String, value: int, min_value: int) -> Control:
 	var row := HBoxContainer.new()
+	row.custom_minimum_size = Vector2(108, 0)
 	row.add_theme_constant_override("separation", 2)
 	var label := Label.new()
 	label.text = label_text
@@ -571,8 +593,9 @@ func _build_stat_editor(team: String, unit_index: int, stat_name: String, label_
 
 func _build_tactics_editor(team: String, unit_index: int, unit: UnitDefinition) -> Control:
 	var box := VBoxContainer.new()
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.add_theme_constant_override("separation", 3)
-	var add_row := HBoxContainer.new()
+	var add_row := HFlowContainer.new()
 	add_row.add_theme_constant_override("separation", 4)
 	box.add_child(add_row)
 	var label := Label.new()
@@ -580,7 +603,8 @@ func _build_tactics_editor(team: String, unit_index: int, unit: UnitDefinition) 
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	add_row.add_child(label)
 	var selector := OptionButton.new()
-	selector.custom_minimum_size = Vector2(220, 0)
+	selector.custom_minimum_size = Vector2(180, 0)
+	selector.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	for index in lab_state.catalog_tactics.size():
 		selector.add_item(lab_state.tactic_label(index), index)
 	add_row.add_child(selector)
@@ -605,10 +629,11 @@ func _build_tactics_editor(team: String, unit_index: int, unit: UnitDefinition) 
 
 
 func _build_tactic_row(team: String, unit_index: int, tactic_index: int, tactic: TacticDefinition, tactic_count: int) -> Control:
-	var row := HBoxContainer.new()
+	var row := HFlowContainer.new()
 	row.add_theme_constant_override("separation", 4)
 	var label := Label.new()
 	label.text = "%d. %s" % [tactic_index + 1, tactic.display_name]
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(label)
 	var up_button := Button.new()

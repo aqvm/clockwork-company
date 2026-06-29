@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="StatusDefinition" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/status_definition.gd" id="1_status"]
+
+[ext_resource type="Resource" path="res://resources/tags/ailment.tres" id="tag_ailment"]
+[ext_resource type="Resource" path="res://resources/tags/damage.tres" id="tag_damage"]
+[ext_resource type="Resource" path="res://resources/tags/magic.tres" id="tag_magic"]
+[ext_resource type="Resource" path="res://resources/tags/setup.tres" id="tag_setup"]
+
+[resource]
+script = ExtResource("1_status")
+display_name = "Elemental Fusion"
+polarity = "Ailment"
+status_type = "Elemental Fusion"
+stacking_rule = "Intensify"
+stack_cap_enabled = false
+max_stacks = 5
+tags = Array[Resource]([ExtResource("tag_ailment"), ExtResource("tag_damage"), ExtResource("tag_magic"), ExtResource("tag_setup")])
+amount = 1
+amount_percent = 20
+propagation_percent = 25
+elapses_naturally = false
+description = "Each stack behaves as Burning, Frost, and Shock: action damage consumes one stack, magic damage can discharge one stack, and physical damage gains 20% damage per stack then removes the ailment."

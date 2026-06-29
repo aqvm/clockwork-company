@@ -17,36 +17,6 @@ These concepts have been discussed but are not implemented or committed designs.
 
 ## Candidate Ailments
 
-### Shock
-
-**Discussion state:** Candidate direction selected during job ideation.
-
-Shock is a "poisoned haste" lightning ailment. Rather than making the target
-take more damage, it overclocks the afflicted unit: after the unit completes an
-action, Shock hurts it and pulls its next action slightly earlier.
-
-Candidate rule:
-
-- After the afflicted unit completes an action, it takes magic damage equal to
-  its current Shock stacks.
-- It then loses one Shock stack.
-- Its next scheduled action is moved earlier by an authored timeline amount.
-
-This makes Shock a risky tempo mechanic. On enemies, it can punish repeated
-actions but also gives them more turns. On allies, it can be used as dangerous
-self-overclocking if a build can absorb or exploit the damage.
-
-Questions to settle before implementation:
-
-- Is the action acceleration fixed per trigger, per consumed stack, or based on
-  remaining stacks?
-- Does the damage happen before or after the next-action acceleration?
-- Is the damage ailment-caused magic HP loss for [[Sanguinist]]-style hooks?
-- Should Shock be finite, naturally elapsing, or only decay through action
-  completion?
-- How should Energy Shield absorption interact with the intended self-harm and
-  tempo upside?
-
 ### Doom
 
 **Discussion state:** User-confirmed prior discussion; no checked-in design text preserves the exact rule.

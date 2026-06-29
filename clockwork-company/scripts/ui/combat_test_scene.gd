@@ -112,6 +112,8 @@ func _on_run_button_pressed() -> void:
 
 func _on_viewport_size_changed() -> void:
 	call_deferred("_resize_conditions_pane")
+	if mods_list_panel != null and mods_list_panel.visible:
+		call_deferred("_position_mods_panel")
 
 
 func _on_mods_button_pressed() -> void:
@@ -792,17 +794,17 @@ func _on_planning_tactic_changed(index: int, field: String, value: Variant) -> v
 		return
 	var tactic: TacticDefinition = unit.loadout.tactics[index]
 	if field == "condition":
-		tactic.condition = String(value)
+		tactic.condition = str(value)
 		if (tactic.condition in ["Target Has Status", "Target Status Stacks At Least", "Target Pending Status Damage At Least HP"] or tactic.target == "Lowest HP Ally With Status") and tactic.status == null:
 			var statuses: Array[StatusDefinition] = campaign_manager.available_statuses()
 			if not statuses.is_empty():
 				tactic.status = statuses[0]
 	elif field == "action":
-		tactic.action = String(value)
+		tactic.action = str(value)
 	elif field == "target":
-		tactic.target = String(value)
+		tactic.target = str(value)
 	elif field == "display_name":
-		tactic.display_name = String(value).strip_edges()
+		tactic.display_name = str(value).strip_edges()
 		if tactic.display_name.is_empty():
 			tactic.display_name = "New Tactic"
 	elif field == "status":
@@ -1008,7 +1010,7 @@ func _on_mod_checkbox_toggled(pressed: bool, pack_id: String) -> void:
 func _position_mods_panel() -> void:
 	var button_rect: Rect2 = run_controls.mods_button_rect()
 	var viewport_rect := get_viewport_rect()
-	var desired_size := Vector2(300.0, 220.0)
+	var desired_size := Vector2(min(300.0, max(160.0, viewport_rect.size.x - 16.0)), min(220.0, max(120.0, viewport_rect.size.y - 16.0)))
 	var x: float = min(button_rect.position.x, viewport_rect.size.x - desired_size.x - 8.0)
 	var y: float = min(button_rect.end.y + 4.0, viewport_rect.size.y - desired_size.y - 8.0)
 	mods_list_panel.global_position = Vector2(max(8.0, x), max(8.0, y))
@@ -1087,7 +1089,7 @@ func _resize_conditions_pane() -> void:
 	if combat_summary.get_line_count() == 0 or log_split.size.y <= 0:
 		return
 
-	var max_conditions_height := int(log_split.size.y * 0.5)
+	var max_conditions_height: int = maxi(MIN_CONDITIONS_HEIGHT, int(log_split.size.y * 0.5))
 	var desired_conditions_height := combat_summary.get_content_height() + int(conditions_label.size.y) + 12
 	log_split.split_offset = clamp(desired_conditions_height, MIN_CONDITIONS_HEIGHT, max_conditions_height)
 

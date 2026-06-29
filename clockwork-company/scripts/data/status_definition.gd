@@ -2,8 +2,9 @@
 extends Resource
 class_name StatusDefinition
 
-const AMOUNT_STATUS_TYPES := ["Bleed", "Burning", "Regeneration", "Renewal"]
-const AMOUNT_PERCENT_STATUS_TYPES := ["Reconstitution"]
+const AMOUNT_STATUS_TYPES := ["Bleed", "Burning", "Elemental Fusion", "Regeneration", "Renewal"]
+const AMOUNT_PERCENT_STATUS_TYPES := ["Reconstitution", "Frost", "Elemental Fusion"]
+const PROPAGATION_PERCENT_STATUS_TYPES := ["Shock", "Elemental Fusion"]
 
 ## Label shown in the Inspector, combat logs, status dots, and tooltips. The resource name mirrors this value.
 @export var display_name := "":
@@ -13,7 +14,7 @@ const AMOUNT_PERCENT_STATUS_TYPES := ["Reconstitution"]
 ## Whether this status is beneficial or harmful. Used by cleansing, Ward, replacement reactions, log coloring, and status-polarity formulas.
 @export_enum("Boon", "Ailment") var polarity := "Boon"
 ## Mechanical identity read by combat rules. Pick the implemented rules hook this status should use.
-@export_enum("Confusion", "Reconstitution", "Regeneration", "Bleed", "Burning", "Numb", "Frost", "Ward", "Rot", "Renewal") var status_type := "Reconstitution":
+@export_enum("Confusion", "Reconstitution", "Regeneration", "Bleed", "Burning", "Numb", "Frost", "Shock", "Elemental Fusion", "Ward", "Rot", "Renewal") var status_type := "Reconstitution":
 	set(value):
 		status_type = value
 		notify_property_list_changed()
@@ -38,10 +39,12 @@ const AMOUNT_PERCENT_STATUS_TYPES := ["Reconstitution"]
 @export_range(1, 99, 1) var max_stacks := 1
 ## Shared TagDefinition resources for filtering, content organization, and future conditions.
 @export var tags: Array[Resource] = []
-## Flat numeric payload read by specific status rules: Bleed/Burning action damage, Regeneration healing, and Renewal healing.
+## Flat numeric payload read by specific status rules: action damage, Regeneration healing, and Renewal healing.
 @export_range(0, 99, 1) var amount := 0
-## Percent payload read by Reconstitution recovery.
+## Percent payload read by Reconstitution recovery and physical amplification.
 @export_range(1, 100, 1) var amount_percent := 50
+## Percent of incoming pre-shield magic damage propagated by conductive ailments.
+@export_range(1, 100, 1) var propagation_percent := 25
 ## If true, finite statuses lose remaining turns on the owner's turn flow. Permanent applications ignore natural elapse.
 @export var elapses_naturally := true
 ## Human-facing rules text shown in status tooltips and authoring references.
@@ -57,6 +60,8 @@ func _validate_property(property: Dictionary) -> void:
 	elif property_name == "amount" and not AMOUNT_STATUS_TYPES.has(status_type):
 		_hide(property)
 	elif property_name == "amount_percent" and not AMOUNT_PERCENT_STATUS_TYPES.has(status_type):
+		_hide(property)
+	elif property_name == "propagation_percent" and not PROPAGATION_PERCENT_STATUS_TYPES.has(status_type):
 		_hide(property)
 
 

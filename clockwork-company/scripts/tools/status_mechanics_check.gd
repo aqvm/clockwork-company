@@ -12,6 +12,7 @@ const ConfusionStatus := preload("res://resources/statuses/confusion.tres")
 const BleedStatus := preload("res://resources/statuses/bleed.tres")
 const NumbStatus := preload("res://resources/statuses/numb.tres")
 const FrostStatus := preload("res://resources/statuses/frost.tres")
+const ShockStatus := preload("res://resources/statuses/shock.tres")
 const BurningStatus := preload("res://resources/statuses/burning.tres")
 const WardStatus := preload("res://resources/statuses/ward.tres")
 const RotStatus := preload("res://resources/statuses/rot.tres")
@@ -89,8 +90,9 @@ func _init() -> void:
 
 	_assert_hook_driven_statuses()
 	_assert_high_value_statuses()
+	_assert_shock_propagation()
 
-	print("Status mechanics validation passed: core hooks plus Burn/Scorched, Ward, Rot, and Renewal worked.")
+	print("Status mechanics validation passed: core hooks plus Burn/Scorched, Shock, Ward, Rot, and Renewal worked.")
 	quit(0)
 
 
@@ -163,7 +165,7 @@ func _assert_high_value_statuses() -> void:
 	var loaded_status_types: Array[String] = []
 	for status in JsonContentLoaderScript.load_status_definitions([]):
 		loaded_status_types.append(status.status_type)
-	for required_type in ["Burning", "Ward", "Rot", "Renewal"]:
+	for required_type in ["Burning", "Shock", "Elemental Fusion", "Ward", "Rot", "Renewal"]:
 		assert(loaded_status_types.has(required_type), "%s should appear in the authorable status library." % required_type)
 	assert(not loaded_status_types.has("Scorched"), "Scorched is an immediate consequence, not a status.")
 
@@ -205,3 +207,89 @@ func _assert_high_value_statuses() -> void:
 	var hp_before_renewal: int = burning_unit.hp
 	assert(StatusResolverScript.remove_status(log, root_entry_id, burning_unit, "Rot", "test cleanse", context, supporter))
 	assert(burning_unit.hp == hp_before_renewal + RenewalStatus.amount, "Removing an ailment should trigger Renewal healing.")
+
+
+func _assert_shock_propagation() -> void:
+	var attacker = UnitStateScript.new(TEST_UNIT, 0)
+	attacker.unit_name = "Shock Attacker"
+	attacker.team = "Enemies"
+	var conductor = UnitStateScript.new(TEST_UNIT, 1)
+	conductor.unit_name = "Conductor"
+	conductor.energy_shield = 18
+	var insulated = UnitStateScript.new(TEST_UNIT, 2)
+	insulated.unit_name = "Insulated"
+	insulated.energy_shield = 3
+	var low_shield = UnitStateScript.new(TEST_UNIT, 3)
+	low_shield.unit_name = "Low Shield"
+	low_shield.energy_shield = 1
+	var medium_shield = UnitStateScript.new(TEST_UNIT, 4)
+	medium_shield.unit_name = "Medium Shield"
+	medium_shield.energy_shield = 2
+	var unshielded = UnitStateScript.new(TEST_UNIT, 5)
+	unshielded.unit_name = "Unshielded"
+	var log = CombatLogScript.new()
+	var root_entry_id: int = log.add("Shock propagation check")
+	var context = CombatContextScript.new([attacker, conductor, insulated, low_shield, medium_shield, unshielded], log)
+	context.add_responder(CombatHookResolverScript.respond)
+	assert(StatusResolverScript.apply_status(log, root_entry_id, conductor, ShockStatus, "Test", 3, false, context, attacker))
+	var conductor_hp_before: int = conductor.hp
+	var insulated_hp_before: int = insulated.hp
+	var low_shield_hp_before: int = low_shield.hp
+	var medium_shield_hp_before: int = medium_shield.hp
+	var unshielded_hp_before: int = unshielded.hp
+	context.apply_direct_damage(attacker, conductor, 20, -1, root_entry_id, ["test", "magic"])
+	assert(conductor.hp == conductor_hp_before - 2 and conductor.energy_shield == 0, "Shock should use pre-shield incoming magic while Energy Shield still protects the conductor normally.")
+	assert(not conductor.has_status("Shock"), "A successful Shock discharge should consume one stack.")
+	assert(insulated.hp == insulated_hp_before and insulated.energy_shield == 3, "Shock should hit at most three allies and exclude the highest-shield tie candidate.")
+	assert(low_shield.hp == low_shield_hp_before - 4 and low_shield.energy_shield == 0, "Shock targeting should prefer lower Energy Shield when stack counts tie.")
+	assert(medium_shield.hp == medium_shield_hp_before - 3 and medium_shield.energy_shield == 0, "Shock arcs should resolve as ordinary magic damage against recipient Energy Shield.")
+	assert(unshielded.hp == unshielded_hp_before - 5, "A 20-damage incoming hit should arc 5 magic damage at 25 percent.")
+
+	var ping = UnitStateScript.new(TEST_UNIT, 0)
+	ping.unit_name = "Ping"
+	ping.max_hp = 200
+	ping.hp = 200
+	var pong = UnitStateScript.new(TEST_UNIT, 1)
+	pong.unit_name = "Pong"
+	pong.max_hp = 200
+	pong.hp = 200
+	var ping_log = CombatLogScript.new()
+	var ping_root_id: int = ping_log.add("Shock recursion check")
+	var ping_context = CombatContextScript.new([attacker, ping, pong], ping_log)
+	ping_context.add_responder(CombatHookResolverScript.respond)
+	assert(StatusResolverScript.apply_status(ping_log, ping_root_id, ping, ShockStatus, "Test", 3, false, ping_context, attacker, -1, 3))
+	assert(StatusResolverScript.apply_status(ping_log, ping_root_id, pong, ShockStatus, "Test", 3, false, ping_context, attacker, -1, 3))
+	ping_context.apply_direct_damage(attacker, ping, 64, -1, ping_root_id, ["test", "magic"])
+	assert(ping.hp == 132 and pong.hp == 183, "Shock should ping-pong 64 -> 16 -> 4 -> 1 before floor rounding ends the chain.")
+	assert(ping.status_stack_count("Shock") == 1 and pong.status_stack_count("Shock") == 2, "Only discharges that arc at least one damage should consume Shock.")
+	var propagated_events: Array[Dictionary] = []
+	for damage_event: Dictionary in ping_context.events_of_type("damage_dealt"):
+		if damage_event.get("tags", []).has("shock"):
+			propagated_events.append(damage_event)
+	assert(propagated_events.size() == 3, "The recursive chain should create three propagated damage events before terminating.")
+	for propagated_event: Dictionary in propagated_events:
+		assert(propagated_event.get("source", null) == attacker, "Every Shock arc should preserve the original damage source.")
+
+	var fragile = UnitStateScript.new(TEST_UNIT, 0)
+	fragile.unit_name = "Fragile Conductor"
+	fragile.max_hp = 10
+	fragile.hp = 10
+	var witness = UnitStateScript.new(TEST_UNIT, 1)
+	var fragile_log = CombatLogScript.new()
+	var fragile_root_id: int = fragile_log.add("Shock overkill check")
+	var fragile_context = CombatContextScript.new([attacker, fragile, witness], fragile_log)
+	fragile_context.add_responder(CombatHookResolverScript.respond)
+	assert(StatusResolverScript.apply_status(fragile_log, fragile_root_id, fragile, ShockStatus, "Test", 3, false, fragile_context, attacker))
+	var witness_hp_before: int = witness.hp
+	fragile_context.apply_direct_damage(attacker, fragile, 100, -1, fragile_root_id, ["test", "magic"])
+	assert(witness.hp == witness_hp_before - 2, "Shock should cap its incoming basis to pre-hit HP plus Energy Shield and ignore overkill.")
+
+	var weak_conductor = UnitStateScript.new(TEST_UNIT, 0)
+	var weak_ally = UnitStateScript.new(TEST_UNIT, 1)
+	var weak_log = CombatLogScript.new()
+	var weak_root_id: int = weak_log.add("Shock floor check")
+	var weak_context = CombatContextScript.new([attacker, weak_conductor, weak_ally], weak_log)
+	weak_context.add_responder(CombatHookResolverScript.respond)
+	assert(StatusResolverScript.apply_status(weak_log, weak_root_id, weak_conductor, ShockStatus, "Test", 3, false, weak_context, attacker))
+	weak_context.apply_direct_damage(attacker, weak_conductor, 3, -1, weak_root_id, ["test", "magic"])
+	assert(weak_conductor.has_status("Shock"), "Incoming magic below four should neither arc nor consume Shock at 25 percent rounded down.")

@@ -51,6 +51,7 @@ Jobs are the trained identity layer described by [[Jobs and Progression]].
 - [[Sanguinist]]
 - [[Aegiswright]]
 - [[Arcane Warden]]
+- [[Elementalist]]
 
 ## Implementation
 
