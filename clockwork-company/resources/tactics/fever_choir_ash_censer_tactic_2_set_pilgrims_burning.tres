@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="TacticDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/tactic_definition.gd" id="tactic_script"]
+
+[resource]
+script = ExtResource("tactic_script")
+display_name = "Set Pilgrims Burning"
+tooltip_text = "Set Pilgrims Burning is an enemy tactic for Fever Choir Rehearsal."
+condition = "Enemy Alive"
+action = "Job Skill"
+target = "Frontmost Enemy"

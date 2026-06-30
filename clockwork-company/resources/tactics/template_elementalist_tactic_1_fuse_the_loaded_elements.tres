@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="TacticDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/tactic_definition.gd" id="tactic_script"]
+[ext_resource type="Resource" path="res://resources/statuses/burning.tres" id="status"]
+
+[resource]
+script = ExtResource("tactic_script")
+display_name = "Fuse the Loaded Elements"
+tooltip_text = "If the front enemy is Burning, compress elemental ailments into Elemental Fusion."
+condition = "Target Has Status"
+action = "Secondary Skill"
+target = "Frontmost Enemy"
+status = ExtResource("status")

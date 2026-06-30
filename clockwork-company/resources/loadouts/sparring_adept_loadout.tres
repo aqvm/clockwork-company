@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="UnitLoadoutDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/unit_loadout_definition.gd" id="loadout_script"]
+[ext_resource type="Resource" path="res://resources/jobs/elementalist.tres" id="job"]
+
+[resource]
+script = ExtResource("loadout_script")
+display_name = "Sparring Adept Loadout"
+tooltip_text = "Minimal clean-slate enemy loadout for preserved scenario encounters."
+current_job = ExtResource("job")

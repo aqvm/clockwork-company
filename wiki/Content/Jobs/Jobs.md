@@ -2,7 +2,7 @@
 type: index
 category: job
 state: implemented
-design_maturity: prototype
+design_maturity: playable draft
 tags:
   - job
   - content
@@ -13,29 +13,11 @@ tags:
 
 Jobs are the trained identity layer described by [[Jobs and Progression]].
 
-> [!warning] Prototype job catalog
-> The 16 jobs below have authored, runnable Resources, but they are scaffold/catalog content used to exercise current systems. None should be treated as a final job design, including Spellsword.
+The current Resource catalog is a clean slate: old prototype/scaffold jobs, units, loadouts, items, tactics, and ancestries have been removed. Each designed job below has an authored `JobDefinition` Resource plus one allied template unit/loadout for manual testing.
 
-## Runnable Prototype Jobs
+Some jobs are exact fits for the current shared effect vocabulary. Jobs whose design pages call out resolver gaps use conservative current-engine approximations in their Resources until the missing mechanics are implemented.
 
-- [[Apprentice]]: fast magic trainee with healing support and self-recovery.
-- [[Archivist]]: forecasting support healer.
-- [[Bellguard]]: slow, durable guard specialist.
-- [[Chirurgeon]]: armored healer.
-- [[Cutpurse]]: fast physical attacker.
-- [[Debt Knight]]: armored attacker with retaliation.
-- [[Foundry Monk]]: self-guarding durable job.
-- [[Guard]]: straightforward defensive job.
-- [[Lamplighter]]: fast support healer with retaliation.
-- [[Ratcatcher]]: physical hunter with retaliation.
-- [[Red Scribe]]: fast blood-themed healer.
-- [[Roofer]]: fast physical duelist.
-- [[Scout]]: fast physical attacker.
-- [[Spellsword]]: developed-recruit hybrid with standalone learned features.
-- [[Turnkey]]: armor-heavy guard/control job.
-- [[Witness]]: flexible magic attacker with self-recovery.
-
-## Designed but Unimplemented Jobs
+## Implemented Draft Jobs
 
 - [[Pyromancer]]
 - [[Cryomancer]]
@@ -53,8 +35,15 @@ Jobs are the trained identity layer described by [[Jobs and Progression]].
 - [[Arcane Warden]]
 - [[Elementalist]]
 
+## Character Templates
+
+- `clockwork-company/resources/units/` contains one allied `template_` unit per job and minimal `sparring_` enemies used by preserved encounters.
+- `clockwork-company/resources/loadouts/` contains one matching equipment-free `template_` loadout per job.
+
 ## Implementation
 
 - `clockwork-company/resources/jobs/`
+- `clockwork-company/resources/units/`
+- `clockwork-company/resources/loadouts/`
 - `clockwork-company/scripts/data/job_definition.gd`
 - `clockwork-company/scripts/combat/rules/job_effect_resolver.gd`

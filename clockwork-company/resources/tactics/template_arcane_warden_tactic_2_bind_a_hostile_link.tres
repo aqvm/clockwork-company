@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="TacticDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/tactic_definition.gd" id="tactic_script"]
+
+[resource]
+script = ExtResource("tactic_script")
+display_name = "Bind a Hostile Link"
+tooltip_text = "Use Hostile Link to pressure the front enemy with magic damage."
+condition = "Enemy Alive"
+action = "Job Skill"
+target = "Frontmost Enemy"

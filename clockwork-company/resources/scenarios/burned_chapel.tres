@@ -5,8 +5,6 @@
 [ext_resource type="Resource" path="res://resources/encounters/catalog_test_debt_office.tres" id="3_encounter_b"]
 [ext_resource type="Resource" path="res://resources/encounters/phase7_fight_04_vault_annex.tres" id="4_encounter_c"]
 [ext_resource type="Resource" path="res://resources/scenario_rules/ash_chapel_confusion.tres" id="5_rule"]
-[ext_resource type="Resource" path="res://resources/rewards/focus_lens_for_sol.tres" id="6_reward"]
-[ext_resource type="Resource" path="res://resources/rewards/catalog_reward_brass_lung.tres" id="7_reward"]
 
 [ext_resource type="Resource" path="res://resources/tags/ash.tres" id="tag_ash"]
 [ext_resource type="Resource" path="res://resources/tags/chapel.tres" id="tag_chapel"]
@@ -26,5 +24,5 @@ tier = 2
 recommended_level_min = 1
 recommended_level_max = 3
 tags = Array[Resource]([ExtResource("tag_chapel"), ExtResource("tag_ash"), ExtResource("tag_status")])
-rewards = [ExtResource("6_reward"), ExtResource("7_reward")]
+rewards = []
 content_unlocks = ["ash_chapel_rite_notes"]

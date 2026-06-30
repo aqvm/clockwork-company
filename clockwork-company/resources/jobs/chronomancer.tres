@@ -1,0 +1,90 @@
+[gd_resource type="Resource" script_class="JobDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/job_definition.gd" id="job_script"]
+[ext_resource type="Script" path="res://scripts/data/skill_definition.gd" id="skill_script"]
+[ext_resource type="Script" path="res://scripts/data/passive_definition.gd" id="passive_script"]
+[ext_resource type="Script" path="res://scripts/data/reaction_definition.gd" id="reaction_script"]
+[ext_resource type="Script" path="res://scripts/data/tactic_definition.gd" id="tactic_script"]
+[ext_resource type="Script" path="res://scripts/data/effect_definition.gd" id="effect_script"]
+
+[sub_resource type="Resource" id="Chrono_Rewind_Heal"]
+script = ExtResource("effect_script")
+display_name = "Rewind Healing"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Skill Used"
+target_selector = "Event Target"
+effect_type = "Heal"
+amount_source = "Target Damage Taken Within Interval"
+interval_time = 10
+
+[sub_resource type="Resource" id="Chrono_Predicted_Damage"]
+script = ExtResource("effect_script")
+display_name = "Predicted Damage"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Skill Used"
+target_selector = "Event Target"
+effect_type = "Deal Damage"
+amount_source = "Target Predicted Next Action Damage"
+damage_type = "Magic"
+
+[sub_resource type="Resource" id="Chrono_Magic_Shield"]
+script = ExtResource("effect_script")
+display_name = "Magic Damage Shield"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Reaction Triggered"
+target_selector = "Allied Units"
+effect_type = "Grant Energy Shield"
+amount_source = "Total Allied Magic Damage Taken Within Interval"
+amount_divisor = 2
+interval_time = 10
+
+[sub_resource type="Resource" id="Skill_Rewind_Hurt"]
+script = ExtResource("skill_script")
+display_name = "Rewind Hurt"
+tooltip_text = "Heal an ally by recent damage taken."
+action = "Effects Only"
+default_target = "Lowest HP Ally"
+effects = [SubResource("Chrono_Rewind_Heal")]
+
+[sub_resource type="Resource" id="Skill_Borrowed_Tomorrow"]
+script = ExtResource("skill_script")
+display_name = "Borrowed Tomorrow"
+tooltip_text = "Damage an enemy based on its predicted next action damage."
+action = "Effects Only"
+effects = [SubResource("Chrono_Predicted_Damage")]
+
+[sub_resource type="Resource" id="Passive_Forecast"]
+script = ExtResource("passive_script")
+display_name = "Forecast"
+tooltip_text = "Enable deterministic combat forecasting."
+passive_type = "Forecast"
+
+[sub_resource type="Resource" id="Reaction_Temporal_Shelter"]
+script = ExtResource("reaction_script")
+display_name = "Temporal Shelter"
+tooltip_text = "After allied magic damage, grant party Energy Shield based on recent allied magic damage."
+trigger = "Ally Magically Damaged"
+condition = "Always"
+reaction_type = "Effects Only"
+effects = [SubResource("Chrono_Magic_Shield")]
+
+[sub_resource type="Resource" id="Tactic_Use_Rewind_Hurt"]
+script = ExtResource("tactic_script")
+display_name = "Use Rewind Hurt"
+tooltip_text = "Use Rewind Hurt is this job template default tactic."
+condition = "Enemy Alive"
+action = "Job Skill"
+target = "Lowest HP Ally"
+
+[resource]
+script = ExtResource("job_script")
+display_name = "Chronomancer"
+tooltip_text = "Chronomancer is a clean-slate authored job Resource based on the current design notes. Growth and abilities are visible for tuning."
+max_hp_growth = 1
+magic_damage_growth = 2
+action_speed_growth = 1
+skill = SubResource("Skill_Rewind_Hurt")
+secondary_skill = SubResource("Skill_Borrowed_Tomorrow")
+passive = SubResource("Passive_Forecast")
+reaction = SubResource("Reaction_Temporal_Shelter")
+default_tactic = SubResource("Tactic_Use_Rewind_Hurt")

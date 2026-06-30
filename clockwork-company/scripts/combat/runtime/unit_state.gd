@@ -87,8 +87,8 @@ func _init(definition: UnitDefinition = null, unit_slot_index: int = 0) -> void:
 		current_skill = current_job.skill if _job_feature_unlocked(definition.job_progress, current_job, "skill") else null
 		current_secondary_skill = current_job.secondary_skill if _job_feature_unlocked(definition.job_progress, current_job, "skill") else null
 		assigned_skill = loadout.equipped_skill if _feature_is_unlocked(definition.job_progress, loadout.equipped_skill, "skill") else null
-		current_passive = loadout.equipped_passive if _feature_is_unlocked(definition.job_progress, loadout.equipped_passive, "passive") else null
-		current_reaction = loadout.equipped_reaction if _feature_is_unlocked(definition.job_progress, loadout.equipped_reaction, "reaction") else null
+		current_passive = loadout.equipped_passive if _feature_is_unlocked(definition.job_progress, loadout.equipped_passive, "passive") else current_job.passive
+		current_reaction = loadout.equipped_reaction if _feature_is_unlocked(definition.job_progress, loadout.equipped_reaction, "reaction") else current_job.reaction
 		if current_job.default_tactic != null:
 			tactics.append(current_job.default_tactic)
 
@@ -203,14 +203,16 @@ func _duplicate_statuses(source_statuses: Array[Dictionary]) -> Array[Dictionary
 	return copies
 
 
-func add_status(status: Resource, source_name: String, duration_turns: int, is_permanent: bool) -> String:
+func add_status(status: Resource, source_name: String, duration_turns: int, is_permanent: bool, source = null) -> String:
 	if status == null or status.display_name.is_empty():
 		return "invalid"
+	var source_unit_id := String(source.unit_id) if source != null else ""
 	var existing := status_instance_by_name(status.display_name)
 	if not existing.is_empty():
 		if status.stacking_rule == "Ignore":
 			return "ignored"
 		existing["source_name"] = source_name
+		existing["source_unit_id"] = source_unit_id
 		existing["has_independent_source"] = true
 		existing["remaining_turns"] = max(int(existing.get("remaining_turns", 1)), max(1, duration_turns))
 		existing["is_permanent"] = bool(existing.get("is_permanent", false)) or is_permanent
@@ -223,6 +225,7 @@ func add_status(status: Resource, source_name: String, duration_turns: int, is_p
 		"instance_id": next_status_instance_id,
 		"definition": status,
 		"source_name": source_name,
+		"source_unit_id": source_unit_id,
 		"remaining_turns": max(1, duration_turns),
 		"is_permanent": is_permanent,
 		"stack_count": 1,
@@ -518,6 +521,7 @@ func status_snapshots() -> Array[Dictionary]:
 			"polarity": definition.polarity,
 			"description": definition.description,
 			"source_name": String(instance.get("source_name", "")),
+			"source_unit_id": String(instance.get("source_unit_id", "")),
 			"remaining_turns": int(instance.get("remaining_turns", 0)),
 			"is_permanent": bool(instance.get("is_permanent", false)),
 			"stack_count": int(instance.get("stack_count", 1)),

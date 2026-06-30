@@ -261,7 +261,8 @@ Optional fields:
 - `passive` (`Dictionary`): current job passive payload. See `jobs[].passive` below.
 - `reaction` (`Dictionary`): current job reaction payload. See `jobs[].reaction` below.
 - `default_tactic` (`Dictionary`): tactic automatically appended while this is the unit's current job. See `jobs[].default_tactic` below.
-- Job unlock timing is fixed: level 1 chooses skill or reaction, level 2 unlocks the passive, and level 3 unlocks the remaining skill or reaction. A job's secondary skill unlocks with its normal skill and is not a separate learned assignment.
+- Runtime current-job kit: a unit's current job supplies its primary skill, secondary skill, passive, reaction, and default tactic. Loadout `equipped_*_job_id` fields are learned cross-job overrides, not required for the current job's own passive/reaction to work.
+- Job unlock timing is fixed for learned cross-job assignment: level 1 chooses skill or reaction, level 2 unlocks the passive, and level 3 unlocks the remaining skill or reaction. A job's secondary skill unlocks with its normal skill and is not a separate learned assignment.
 
 Equipment note:
 - Equipment is allowed by default. Use `forbid_weapon`, `forbid_armor`, `forbid_helmet`, and `forbid_trinket` only when a job concept explicitly forbids a category.
@@ -382,8 +383,8 @@ Optional fields:
 - `tooltip_text` (`String`): optional player-facing prose shown at the top of resource tooltips.
 - `current_job_id` (`String` or empty string)
 - `equipped_skill_job_id` (`String` or empty string): source job for the assigned cross-job skill.
-- `equipped_passive_job_id` (`String` or empty string): source job for the assigned learned passive.
-- `equipped_reaction_job_id` (`String` or empty string): source job for the assigned learned reaction.
+- `equipped_passive_job_id` (`String` or empty string): source job for the assigned learned passive. Empty means the current job's passive remains active.
+- `equipped_reaction_job_id` (`String` or empty string): source job for the assigned learned reaction. Empty means the current job's reaction remains active.
 - `weapon_id` (`String` or empty string)
 - `armor_id` (`String` or empty string)
 - `helmet_id` (`String` or empty string)

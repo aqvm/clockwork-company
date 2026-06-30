@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="UnitDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/unit_definition.gd" id="unit_script"]
+[ext_resource type="Resource" path="res://resources/loadouts/sparring_vanguard_loadout.tres" id="loadout"]
+
+[resource]
+script = ExtResource("unit_script")
+display_name = "Sparring Vanguard"
+tooltip_text = "Minimal clean-slate enemy template used by preserved encounters after placeholder character content was removed."
+team = "Enemies"
+max_hp = 40
+physical_damage = 7
+magic_damage = 1
+armor = 2
+action_speed = 8
+loadout = ExtResource("loadout")

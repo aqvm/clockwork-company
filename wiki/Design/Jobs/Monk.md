@@ -16,6 +16,6 @@ Monk is an unarmed support attacker that absorbs allied burdens, recovers throug
 - Heal after three completed actions without being targeted by an enemy attack.
 - Seal an enemy's next attack after three consecutive attacks against it.
 
-This is distinct from the implemented [[Foundry Monk]].
+This replaces the earlier Foundry Monk prototype rather than preserving it as a separate current job.
 
 Detailed recipe: [[JOB_CONTENT_DESIGN#Monk]]

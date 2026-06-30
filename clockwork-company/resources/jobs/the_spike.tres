@@ -1,0 +1,109 @@
+[gd_resource type="Resource" script_class="JobDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/job_definition.gd" id="job_script"]
+[ext_resource type="Script" path="res://scripts/data/skill_definition.gd" id="skill_script"]
+[ext_resource type="Script" path="res://scripts/data/passive_definition.gd" id="passive_script"]
+[ext_resource type="Script" path="res://scripts/data/reaction_definition.gd" id="reaction_script"]
+[ext_resource type="Script" path="res://scripts/data/tactic_definition.gd" id="tactic_script"]
+[ext_resource type="Script" path="res://scripts/data/effect_definition.gd" id="effect_script"]
+
+[sub_resource type="Resource" id="Spike_Fortify"]
+script = ExtResource("effect_script")
+display_name = "Fortify Self"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Skill Completed"
+target_selector = "Self"
+effect_type = "Fortify Damage"
+modifier_duration_turns = 2
+
+[sub_resource type="Resource" id="Spike_Redirect"]
+script = ExtResource("effect_script")
+display_name = "Redirect Enemy Attacks"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Skill Used"
+target_selector = "Self"
+effect_type = "Redirect Enemy Attacks"
+modifier_duration_turns = 2
+
+[sub_resource type="Resource" id="Spike_Disable_Armor"]
+script = ExtResource("effect_script")
+display_name = "Disable Armor"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Battle Start"
+target_selector = "Self"
+effect_type = "Disable Armor"
+
+[sub_resource type="Resource" id="Spike_Retaliate"]
+script = ExtResource("effect_script")
+display_name = "Physical Retaliation"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Physically Damaged"
+target_selector = "Event Source"
+effect_type = "Deal Damage"
+amount = 4
+damage_type = "Physical"
+
+[sub_resource type="Resource" id="Spike_Reflect_Lethal"]
+script = ExtResource("effect_script")
+display_name = "Reflect Lethal Damage"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Reaction Triggered"
+target_selector = "Event Target"
+effect_type = "Deal Damage"
+amount_source = "Event Amount"
+damage_type = "Physical"
+
+[sub_resource type="Resource" id="Skill_Barbed_Stance"]
+script = ExtResource("skill_script")
+display_name = "Barbed Stance"
+tooltip_text = "Attack, then fortify incoming damage."
+action = "Attack"
+effects = [SubResource("Spike_Fortify")]
+
+[sub_resource type="Resource" id="Skill_Come_at_Me"]
+script = ExtResource("skill_script")
+display_name = "Come at Me"
+tooltip_text = "Redirect enemy attacks to self."
+action = "Effects Only"
+default_target = "Self"
+cooldown_turns = 4
+effects = [SubResource("Spike_Redirect")]
+
+[sub_resource type="Resource" id="Passive_No_Soft_Parts"]
+script = ExtResource("passive_script")
+display_name = "No Soft Parts"
+tooltip_text = "Disable armor and retaliate against physical damage."
+passive_type = "None"
+effects = [SubResource("Spike_Disable_Armor"), SubResource("Spike_Retaliate")]
+
+[sub_resource type="Resource" id="Reaction_Last_Barb"]
+script = ExtResource("reaction_script")
+display_name = "Last Barb"
+tooltip_text = "Prevent a lethal physical attack and reflect its pending damage."
+trigger = "Lethal Physical Attack Requested"
+condition = "Always"
+reaction_type = "Effects Only"
+prevents_triggering_request = true
+cooldown_turns = 5
+effects = [SubResource("Spike_Reflect_Lethal")]
+
+[sub_resource type="Resource" id="Tactic_Use_Barbed_Stance"]
+script = ExtResource("tactic_script")
+display_name = "Use Barbed Stance"
+tooltip_text = "Use Barbed Stance is this job template default tactic."
+condition = "Enemy Alive"
+action = "Job Skill"
+target = "Frontmost Enemy"
+
+[resource]
+script = ExtResource("job_script")
+display_name = "The Spike"
+tooltip_text = "The Spike is a clean-slate authored job Resource based on the current design notes. Growth and abilities are visible for tuning."
+max_hp_growth = 4
+physical_damage_growth = 1
+forbid_armor = true
+skill = SubResource("Skill_Barbed_Stance")
+secondary_skill = SubResource("Skill_Come_at_Me")
+passive = SubResource("Passive_No_Soft_Parts")
+reaction = SubResource("Reaction_Last_Barb")
+default_tactic = SubResource("Tactic_Use_Barbed_Stance")

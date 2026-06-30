@@ -2,7 +2,7 @@ extends SceneTree
 
 const CombatSimulatorScript := preload("res://scripts/combat/combat_simulator.gd")
 const UnitLoadoutDefinitionScript := preload("res://scripts/data/unit_loadout_definition.gd")
-const HealTactic := preload("res://resources/tactics/heal_lowest_ally_below_half.tres")
+const TacticDefinitionScript := preload("res://scripts/data/tactic_definition.gd")
 
 
 func _init() -> void:
@@ -33,7 +33,7 @@ func _battle_definitions() -> Array[UnitDefinition]:
 	var healer := _unit("Field Healer", "Allies", 16, 1, 0, 10)
 	var healer_loadout := UnitLoadoutDefinitionScript.new()
 	healer_loadout.display_name = "Contribution Check Healer"
-	healer_loadout.tactics = [HealTactic]
+	healer_loadout.tactics = [_heal_tactic()]
 	healer.loadout = healer_loadout
 	var enemy := _unit("Iron Caller", "Enemies", 18, 17, 5, 20)
 	return [tank, healer, enemy]
@@ -49,6 +49,15 @@ func _unit(display_name: String, team: String, hp: int, physical_damage: int, ar
 	unit.armor = armor
 	unit.action_speed = action_speed
 	return unit
+
+
+func _heal_tactic() -> TacticDefinition:
+	var tactic := TacticDefinitionScript.new()
+	tactic.display_name = "Patch Up Ally"
+	tactic.condition = "Ally HP Below Half"
+	tactic.action = "Heal"
+	tactic.target = "Lowest HP Ally"
+	return tactic
 
 
 func _row_named(rows: Array, unit_name: String) -> Dictionary:

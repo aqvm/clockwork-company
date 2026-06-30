@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="UnitLoadoutDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/unit_loadout_definition.gd" id="loadout_script"]
+[ext_resource type="Resource" path="res://resources/jobs/bog_priest.tres" id="job"]
+[ext_resource type="Resource" path="res://resources/tactics/fever_choir_mire_confessor_tactic_1_cash_out_the_rot.tres" id="tactic_1"]
+[ext_resource type="Resource" path="res://resources/tactics/fever_choir_mire_confessor_tactic_2_mend_the_choir.tres" id="tactic_2"]
+[ext_resource type="Resource" path="res://resources/tactics/fever_choir_mire_confessor_tactic_3_overwater_the_faithful.tres" id="tactic_3"]
+
+[resource]
+script = ExtResource("loadout_script")
+display_name = "Mire Confessor Sable Loadout"
+tooltip_text = "Authored enemy loadout for Fever Choir Rehearsal."
+current_job = ExtResource("job")
+tactics = [ExtResource("tactic_1"), ExtResource("tactic_2"), ExtResource("tactic_3")]

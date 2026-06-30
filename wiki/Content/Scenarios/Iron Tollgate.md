@@ -12,7 +12,7 @@ Iron Tollgate is a tier-3 scenario that points toward armor and mitigation check
 - **Recommended levels:** 2-4
 - **Encounters:** Toll Gate, Foundry Bells, Clocktower
 - **Rule:** its visible rule Resource is an authoring note, not a runtime stat patch.
-- **Rewards:** Guardplate for Alden or Bellhammer
+- **Rewards:** none
 - **Unlocks:** Clocktower Claim and tollgate contracts
 
 Armor pressure should come from normal enemy jobs, gear, tactics, and encounter composition rather than hidden scenario bonuses.

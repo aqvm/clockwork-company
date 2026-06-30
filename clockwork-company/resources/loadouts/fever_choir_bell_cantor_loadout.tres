@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UnitLoadoutDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/unit_loadout_definition.gd" id="loadout_script"]
+[ext_resource type="Resource" path="res://resources/jobs/bard.tres" id="job"]
+[ext_resource type="Resource" path="res://resources/tactics/fever_choir_bell_cantor_tactic_1_restore_the_fever_chorus.tres" id="tactic_1"]
+[ext_resource type="Resource" path="res://resources/tactics/fever_choir_bell_cantor_tactic_2_ring_the_fever_tempo.tres" id="tactic_2"]
+
+[resource]
+script = ExtResource("loadout_script")
+display_name = "Bell Cantor Voss Loadout"
+tooltip_text = "Authored enemy loadout for Fever Choir Rehearsal."
+current_job = ExtResource("job")
+tactics = [ExtResource("tactic_1"), ExtResource("tactic_2")]

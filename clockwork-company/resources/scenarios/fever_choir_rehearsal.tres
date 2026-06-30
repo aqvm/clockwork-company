@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="ScenarioDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/scenario_definition.gd" id="1_scenario"]
+[ext_resource type="Resource" path="res://resources/encounters/fever_choir_rehearsal.tres" id="2_encounter"]
+[ext_resource type="Resource" path="res://resources/tags/chapel.tres" id="tag_chapel"]
+[ext_resource type="Resource" path="res://resources/tags/fire.tres" id="tag_fire"]
+[ext_resource type="Resource" path="res://resources/tags/control.tres" id="tag_control"]
+
+[resource]
+script = ExtResource("1_scenario")
+scenario_id = "fever_choir_rehearsal"
+display_name = "Fever Choir Rehearsal"
+description = "A combat-lab-friendly scenario against a synergistic chapel cell built around Burning, Frost, corrupt healing, and tempo support."
+story_intro = "The ruined vestry is warm before the doors open. Four voices rehearse a hymn that sounds less like music than a fever learning to count."
+story_outro = "The last bell-note dies in the rafters. Whatever they were rehearsing will not be performed tonight."
+party_size = 4
+encounters = [ExtResource("2_encounter")]
+tier = 2
+recommended_level_min = 2
+recommended_level_max = 3
+tags = Array[Resource]([ExtResource("tag_chapel"), ExtResource("tag_fire"), ExtResource("tag_control")])
+rewards = []
+content_unlocks = ["fever_choir_silenced"]

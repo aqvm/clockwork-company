@@ -1,22 +1,121 @@
-[gd_resource type="Resource" script_class="JobDefinition" format=3 uid="uid://dhia8j303k1s7"]
+[gd_resource type="Resource" script_class="JobDefinition" format=3]
 
-[ext_resource type="Script" uid="uid://8cikor8oh0rp" path="res://scripts/data/job_definition.gd" id="1_job"]
-[ext_resource type="Resource" path="res://resources/job_features/Pyromancer/apply_burn.tres" id="2_skill"]
-[ext_resource type="Resource" path="res://resources/job_features/Pyromancer/hot_on_their_heels.tres" id="3_secondary"]
-[ext_resource type="Resource" path="res://resources/job_features/Pyromancer/fiery_soul.tres" id="4_passive"]
-[ext_resource type="Resource" path="res://resources/job_features/Pyromancer/ember_reversal.tres" id="5_reaction"]
-[ext_resource type="Resource" path="res://resources/job_features/Pyromancer/default_tactic.tres" id="6_tactic"]
-[ext_resource type="Resource" path="res://resources/tags/ailment.tres" id="tag_ailment"]
-[ext_resource type="Resource" path="res://resources/tags/burn.tres" id="tag_burn"]
-[ext_resource type="Resource" path="res://resources/tags/job.tres" id="tag_job"]
+[ext_resource type="Script" path="res://scripts/data/job_definition.gd" id="job_script"]
+[ext_resource type="Script" path="res://scripts/data/skill_definition.gd" id="skill_script"]
+[ext_resource type="Script" path="res://scripts/data/passive_definition.gd" id="passive_script"]
+[ext_resource type="Script" path="res://scripts/data/reaction_definition.gd" id="reaction_script"]
+[ext_resource type="Script" path="res://scripts/data/tactic_definition.gd" id="tactic_script"]
+[ext_resource type="Script" path="res://scripts/data/effect_definition.gd" id="effect_script"]
+[ext_resource type="Resource" path="res://resources/statuses/burning.tres" id="status_burning"]
+[ext_resource type="Resource" path="res://resources/statuses/reconstitution.tres" id="status_reconstitution"]
+[ext_resource type="Resource" path="res://resources/statuses/regeneration.tres" id="status_regeneration"]
+[ext_resource type="Resource" path="res://resources/statuses/renewal.tres" id="status_renewal"]
+[ext_resource type="Resource" path="res://resources/statuses/ward.tres" id="status_ward"]
+
+[sub_resource type="Resource" id="Pyro_Ailment_Haste"]
+script = ExtResource("effect_script")
+display_name = "Ailment-Fueled Haste"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Skill Used"
+target_selector = "Event Target"
+effect_type = "Apply Haste"
+modifier_duration_turns = 2
+amount_source = "Target Ailment Stacks"
+max_action_speed_percent = 200
+
+[sub_resource type="Resource" id="Pyro_Burn_Immunity"]
+script = ExtResource("effect_script")
+display_name = "Burn Immunity"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Status Application Requested"
+condition = "Requested Status Matches"
+target_selector = "Self"
+effect_type = "Prevent Request"
+status = ExtResource("status_burning")
+
+[sub_resource type="Resource" id="Pyro_Battle_Heat"]
+script = ExtResource("effect_script")
+display_name = "Battle-Start Heat"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Battle Start"
+target_selector = "All Units"
+effect_type = "Apply Status"
+status_stacks = 1
+status = ExtResource("status_burning")
+
+[sub_resource type="Resource" id="Pyro_Turn_Heat"]
+script = ExtResource("effect_script")
+display_name = "Turn-Start Heat"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Turn Start"
+target_selector = "All Units"
+effect_type = "Apply Status"
+status_stacks = 1
+status = ExtResource("status_burning")
+
+[sub_resource type="Resource" id="Pyro_Double_Source_Burning"]
+script = ExtResource("effect_script")
+display_name = "Double Source Burning"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Reaction Triggered"
+target_selector = "Event Target"
+effect_type = "Apply Status"
+amount_source = "Target Status Stacks"
+status = ExtResource("status_burning")
+amount_status = ExtResource("status_burning")
+
+[sub_resource type="Resource" id="Skill_Apply_Burn"]
+script = ExtResource("skill_script")
+display_name = "Apply Burn"
+tooltip_text = "Apply Burning to the frontmost enemy."
+action = "Apply Status"
+attack_damage_type = "Magic"
+status = ExtResource("status_burning")
+
+[sub_resource type="Resource" id="Skill_Hot_on_Their_Heels"]
+script = ExtResource("skill_script")
+display_name = "Hot on Their Heels"
+tooltip_text = "Hasten an ally by its current ailment burden."
+action = "Effects Only"
+default_target = "Lowest HP Ally"
+effects = [SubResource("Pyro_Ailment_Haste")]
+
+[sub_resource type="Resource" id="Passive_Fiery_Soul"]
+script = ExtResource("passive_script")
+display_name = "Fiery Soul"
+tooltip_text = "Prevent incoming Burning and pulse Burning across the battlefield."
+passive_type = "None"
+effects = [SubResource("Pyro_Burn_Immunity"), SubResource("Pyro_Battle_Heat"), SubResource("Pyro_Turn_Heat")]
+
+[sub_resource type="Resource" id="Reaction_Ember_Reversal"]
+script = ExtResource("reaction_script")
+display_name = "Ember Reversal"
+tooltip_text = "Prevent an incoming ailment, replace it with a boon, and double the source's Burning."
+trigger = "Status Application Requested"
+condition = "Requested Status Is Ailment"
+reaction_type = "Effects Only"
+prevents_triggering_request = true
+cooldown_turns = 3
+replacement_statuses = [ExtResource("status_ward"), ExtResource("status_renewal"), ExtResource("status_regeneration"), ExtResource("status_reconstitution")]
+effects = [SubResource("Pyro_Double_Source_Burning")]
+
+[sub_resource type="Resource" id="Tactic_Use_Apply_Burn"]
+script = ExtResource("tactic_script")
+display_name = "Use Apply Burn"
+tooltip_text = "Use Apply Burn is this job template default tactic."
+condition = "Enemy Alive"
+action = "Job Skill"
+target = "Frontmost Enemy"
 
 [resource]
-script = ExtResource("1_job")
+script = ExtResource("job_script")
 display_name = "Pyromancer"
-tooltip_text = "Pyromancer is a job path with no stat growth per level. Its skill, passive, reaction, and default tactic define the role this unit is learning into."
-tags = Array[Resource]([ExtResource("tag_job"), ExtResource("tag_burn"), ExtResource("tag_ailment")])
-skill = ExtResource("2_skill")
-secondary_skill = ExtResource("3_secondary")
-passive = ExtResource("4_passive")
-reaction = ExtResource("5_reaction")
-default_tactic = ExtResource("6_tactic")
+tooltip_text = "Pyromancer is a clean-slate authored job Resource based on the current design notes. Growth and abilities are visible for tuning."
+max_hp_growth = 1
+magic_damage_growth = 2
+action_speed_growth = 1
+skill = SubResource("Skill_Apply_Burn")
+secondary_skill = SubResource("Skill_Hot_on_Their_Heels")
+passive = SubResource("Passive_Fiery_Soul")
+reaction = SubResource("Reaction_Ember_Reversal")
+default_tactic = SubResource("Tactic_Use_Apply_Burn")

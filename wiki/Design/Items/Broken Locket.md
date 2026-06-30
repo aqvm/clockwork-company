@@ -19,8 +19,8 @@ This is item-shaped because it creates a party-building problem rather than gran
 
 ## Promising Job Synergies
 
-- [[Guard]], [[Bellguard]], or [[Turnkey]] can turn their armor and guard tools into indirect protection for another wearer.
-- [[Chirurgeon]], [[Red Scribe]], or [[Lamplighter]] can make distributed damage easier to heal efficiently.
+- [[Aegiswright]], [[Paladin]], or [[Bruiser]] can turn defensive tools into indirect protection for another wearer.
+- [[Bog Priest]], [[Bard]], or [[Chronomancer]] can make distributed damage easier to heal efficiently.
 - [[Sanguinist]] can treat shared HP loss as fuel for damage-acceptance and recovery patterns.
 
 ## Open Questions

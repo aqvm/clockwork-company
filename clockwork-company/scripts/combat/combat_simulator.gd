@@ -66,6 +66,9 @@ func run_battle_report_from_units(units: Array, battle_title := "Run battle", sc
 	log.add("Combat log:")
 
 	while TargetingRulesScript.team_has_living_unit(units, CombatConstantsScript.TEAM_ALLY) and TargetingRulesScript.team_has_living_unit(units, CombatConstantsScript.TEAM_ENEMY):
+		if context.event_limit_exceeded:
+			log.add("Battle stopped after %d structured events to avoid an infinite event loop." % context.max_events_per_battle)
+			break
 		if actions_taken >= CombatConstantsScript.MAX_ACTIONS:
 			log.add("Battle stopped after %d actions to avoid an infinite fight." % CombatConstantsScript.MAX_ACTIONS)
 			break
@@ -81,12 +84,20 @@ func run_battle_report_from_units(units: Array, battle_title := "Run battle", sc
 			continue
 		actor.tick_ability_cooldowns()
 		context.publish("turn_started", actor, actor, {"time": current_time}, -1, turn_entry_id, ["turn"])
+		if context.event_limit_exceeded:
+			break
 		_clear_guard_if_needed(context, log, turn_entry_id, actor)
 		var active_status_instance_ids: Array[int] = actor.status_instance_ids()
 		StatusResolverScript.apply_turn_start_statuses(log, turn_entry_id, actor, context)
+		if context.event_limit_exceeded:
+			break
 		_take_tactical_action(context, log, turn_entry_id, actor, units)
+		if context.event_limit_exceeded:
+			break
 		StatusResolverScript.elapse_turn_statuses(log, turn_entry_id, actor, active_status_instance_ids, context)
 		context.publish("turn_completed", actor, actor, {"time": current_time}, -1, turn_entry_id, ["turn"])
+		if context.event_limit_exceeded:
+			break
 		actions_taken += 1
 		if actor.is_alive():
 			TurnSchedulerScript.schedule_next_turn(actor)

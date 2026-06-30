@@ -28,12 +28,12 @@ const MODS_DIR := "res://mods"
 const MODDING_REFERENCE_DIR := "res://modding/reference"
 
 const DEFAULT_DEMO_ROSTER_IDS := [
-	"alden_guard",
-	"mira_scout",
-	"sol_apprentice",
-	"iron_brute",
-	"ash_cutpurse",
-	"glass_wisp",
+	"template_pyromancer",
+	"template_bruiser",
+	"template_bard",
+	"sparring_vanguard",
+	"sparring_adept",
+	"sparring_support",
 ]
 
 const TEAM_VALUES := {"Allies": true, "Enemies": true}
@@ -280,10 +280,10 @@ static func _load_base_jobs() -> Dictionary:
 			"forbid_armor": resource.forbid_armor,
 			"forbid_helmet": resource.forbid_helmet,
 			"forbid_trinket": resource.forbid_trinket,
-			"skill": _skill_resource_to_data(resource.skill),
-			"secondary_skill": _skill_resource_to_data(resource.secondary_skill),
-			"passive": _passive_resource_to_data(resource.passive),
-			"reaction": _reaction_resource_to_data(resource.reaction),
+			"skill": _skill_resource_to_data(resource.skill, "%s:skill" % id),
+			"secondary_skill": _skill_resource_to_data(resource.secondary_skill, "%s:secondary_skill" % id),
+			"passive": _passive_resource_to_data(resource.passive, "%s:passive" % id),
+			"reaction": _reaction_resource_to_data(resource.reaction, "%s:reaction" % id),
 			"default_tactic": _tactic_resource_to_data(resource.default_tactic),
 		}
 	return out
@@ -301,6 +301,9 @@ static func _load_base_tactics() -> Dictionary:
 			"condition": resource.condition,
 			"action": resource.action,
 			"target": resource.target,
+			"status_id": _resource_ref_id(resource.status),
+			"status_stack_threshold": resource.status_stack_threshold,
+			"foretell_enabled": resource.foretell_enabled,
 		}
 	return out
 
@@ -1037,10 +1040,11 @@ static func _effect_resources_to_data(effects: Array[EffectDefinition]) -> Array
 	return out
 
 
-static func _skill_resource_to_data(skill: SkillDefinition) -> Dictionary:
+static func _skill_resource_to_data(skill: SkillDefinition, id := "") -> Dictionary:
 	if skill == null:
 		return {}
 	return {
+		"id": id,
 		"display_name": skill.display_name,
 		"tooltip_text": skill.tooltip_text,
 		"tags": TagUtilsScript.ids(skill.tags),
@@ -1058,10 +1062,11 @@ static func _skill_resource_to_data(skill: SkillDefinition) -> Dictionary:
 	}
 
 
-static func _passive_resource_to_data(passive: PassiveDefinition) -> Dictionary:
+static func _passive_resource_to_data(passive: PassiveDefinition, id := "") -> Dictionary:
 	if passive == null:
 		return {}
 	return {
+		"id": id,
 		"display_name": passive.display_name,
 		"tooltip_text": passive.tooltip_text,
 		"tags": TagUtilsScript.ids(passive.tags),
@@ -1072,10 +1077,11 @@ static func _passive_resource_to_data(passive: PassiveDefinition) -> Dictionary:
 	}
 
 
-static func _reaction_resource_to_data(reaction: ReactionDefinition) -> Dictionary:
+static func _reaction_resource_to_data(reaction: ReactionDefinition, id := "") -> Dictionary:
 	if reaction == null:
 		return {}
 	return {
+		"id": id,
 		"display_name": reaction.display_name,
 		"tooltip_text": reaction.tooltip_text,
 		"tags": TagUtilsScript.ids(reaction.tags),

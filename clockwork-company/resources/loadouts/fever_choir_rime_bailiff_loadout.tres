@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UnitLoadoutDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/unit_loadout_definition.gd" id="loadout_script"]
+[ext_resource type="Resource" path="res://resources/jobs/cryomancer.tres" id="job"]
+[ext_resource type="Resource" path="res://resources/tactics/fever_choir_rime_bailiff_tactic_1_collect_cold_blood.tres" id="tactic_1"]
+[ext_resource type="Resource" path="res://resources/tactics/fever_choir_rime_bailiff_tactic_2_issue_frost_writ.tres" id="tactic_2"]
+
+[resource]
+script = ExtResource("loadout_script")
+display_name = "Rime Bailiff Oren Loadout"
+tooltip_text = "Authored enemy loadout for Fever Choir Rehearsal."
+current_job = ExtResource("job")
+tactics = [ExtResource("tactic_1"), ExtResource("tactic_2")]

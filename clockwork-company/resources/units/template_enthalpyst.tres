@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="UnitDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/unit_definition.gd" id="unit_script"]
+[ext_resource type="Script" path="res://scripts/data/job_progress_definition.gd" id="progress_script"]
+[ext_resource type="Resource" path="res://resources/jobs/enthalpyst.tres" id="job"]
+[ext_resource type="Resource" path="res://resources/loadouts/template_enthalpyst.tres" id="loadout"]
+
+[sub_resource type="Resource" id="Progress_Enthalpyst"]
+script = ExtResource("progress_script")
+job = ExtResource("job")
+level = 3
+skill_unlocked = true
+passive_unlocked = true
+reaction_unlocked = true
+
+[resource]
+script = ExtResource("unit_script")
+display_name = "Template Enthalpyst"
+tooltip_text = "Clean-slate allied template for the Enthalpyst job. Base stats are intentionally plain so job growth and authored features are easy to inspect."
+team = "Allies"
+max_hp = 30
+physical_damage = 4
+magic_damage = 3
+armor = 1
+action_speed = 10
+job_progress = [SubResource("Progress_Enthalpyst")]
+loadout = ExtResource("loadout")

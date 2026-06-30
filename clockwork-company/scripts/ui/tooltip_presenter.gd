@@ -5,7 +5,10 @@ const ResourceTooltipBuilderScript := preload("res://scripts/ui/resource_tooltip
 
 const MOUSE_OFFSET := Vector2(18, 18)
 const MAX_WIDTH := 380.0
+const MIN_WIDTH := 160.0
 const PANEL_PADDING := Vector2(28, 22)
+const PIN_HOVER_SECONDS := 1.0
+const HIDE_GRACE_SECONDS := 0.18
 
 var label: RichTextLabel = null
 var header_row: HBoxContainer = null
@@ -16,6 +19,9 @@ var related_list: VBoxContainer = null
 var back_button: Button = null
 var follow_mouse := false
 var pinned := false
+var pointer_over_tooltip := false
+var pin_hover_token := 0
+var hide_token := 0
 var current_resource = null
 var resource_history: Array = []
 
@@ -24,6 +30,8 @@ func _ready() -> void:
 	visible = false
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	z_index = 100
+	mouse_entered.connect(_on_tooltip_mouse_entered)
+	mouse_exited.connect(_on_tooltip_mouse_exited)
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.048, 0.052, 0.06, 0.98)
 	style.border_color = Color(0.52, 0.58, 0.68, 1.0)
@@ -65,7 +73,7 @@ func _ready() -> void:
 	label.bbcode_enabled = true
 	label.fit_content = true
 	label.scroll_active = false
-	label.custom_minimum_size = Vector2(MAX_WIDTH, 0)
+	label.custom_minimum_size = Vector2(MIN_WIDTH, 0)
 	label.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.add_theme_color_override("default_color", Color(0.88, 0.9, 0.94))
@@ -98,6 +106,7 @@ func _process(_delta: float) -> void:
 func show_resource(resource) -> void:
 	if pinned:
 		return
+	_cancel_hide()
 	current_resource = resource
 	resource_history.clear()
 	_show_resource_content(resource)
@@ -125,10 +134,10 @@ func show_text(text: String) -> void:
 		hide_tooltip(true)
 		return
 	label.clear()
-	label.append_text(_format_tooltip_text(text))
+	_set_label_text(text)
 	visible = true
-	follow_mouse = true
-	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	follow_mouse = false
+	mouse_filter = Control.MOUSE_FILTER_PASS
 	await get_tree().process_frame
 	_place_near_mouse()
 
@@ -136,9 +145,15 @@ func show_text(text: String) -> void:
 func hide_tooltip(force := false) -> void:
 	if pinned and not force:
 		return
+	if not force and visible:
+		_schedule_hide()
+		return
 	visible = false
 	follow_mouse = false
 	pinned = false
+	pointer_over_tooltip = false
+	pin_hover_token += 1
+	hide_token += 1
 	current_resource = null
 	resource_history.clear()
 	_clear_related_links()
@@ -159,17 +174,9 @@ func handle_input(event: InputEvent) -> bool:
 	var mouse_event := event as InputEventMouseButton
 	if not mouse_event.pressed or mouse_event.button_index != MOUSE_BUTTON_LEFT:
 		return false
-	if pinned:
-		if not get_global_rect().has_point(mouse_event.global_position):
-			hide_tooltip(true)
-			return true
-		return false
-	pinned = true
-	follow_mouse = false
-	mouse_filter = Control.MOUSE_FILTER_STOP
-	_set_pinned_header_visible(true)
-	_render_related_links()
-	_place_near_mouse()
+	if pinned and not get_global_rect().has_point(mouse_event.global_position):
+		hide_tooltip(true)
+		return true
 	return false
 
 
@@ -190,7 +197,7 @@ func _show_resource_content(resource) -> void:
 		return
 	var text: String = ResourceTooltipBuilderScript.text_for_resource(resource)
 	label.clear()
-	label.append_text(_format_tooltip_text(text))
+	_set_label_text(text)
 	current_resource = resource
 	visible = true
 	if pinned:
@@ -198,8 +205,8 @@ func _show_resource_content(resource) -> void:
 		mouse_filter = Control.MOUSE_FILTER_STOP
 		_render_related_links()
 	else:
-		follow_mouse = true
-		mouse_filter = Control.MOUSE_FILTER_IGNORE
+		follow_mouse = false
+		mouse_filter = Control.MOUSE_FILTER_PASS
 		_clear_related_links()
 	await get_tree().process_frame
 	_place_near_mouse()
@@ -244,6 +251,49 @@ func _set_pinned_header_visible(is_visible: bool) -> void:
 		header_row.visible = is_visible
 
 
+func _pin_from_tooltip_hover() -> void:
+	if not visible or pinned:
+		return
+	pinned = true
+	follow_mouse = false
+	mouse_filter = Control.MOUSE_FILTER_STOP
+	_set_pinned_header_visible(true)
+	_render_related_links()
+	_place_near_mouse()
+
+
+func _schedule_hide() -> void:
+	hide_token += 1
+	var token := hide_token
+	await get_tree().create_timer(HIDE_GRACE_SECONDS).timeout
+	if token != hide_token or pinned or pointer_over_tooltip:
+		return
+	hide_tooltip(true)
+
+
+func _cancel_hide() -> void:
+	hide_token += 1
+
+
+func _on_tooltip_mouse_entered() -> void:
+	if not visible:
+		return
+	pointer_over_tooltip = true
+	_cancel_hide()
+	if pinned:
+		return
+	pin_hover_token += 1
+	var token := pin_hover_token
+	await get_tree().create_timer(PIN_HOVER_SECONDS).timeout
+	if token == pin_hover_token and pointer_over_tooltip and visible and not pinned:
+		_pin_from_tooltip_hover()
+
+
+func _on_tooltip_mouse_exited() -> void:
+	pointer_over_tooltip = false
+	pin_hover_token += 1
+
+
 func _on_related_resource_pressed(resource) -> void:
 	if current_resource != null:
 		resource_history.append(current_resource)
@@ -277,3 +327,26 @@ func _format_tooltip_text(text: String) -> String:
 
 func _escape_bbcode(text: String) -> String:
 	return text.replace("[", "[lb]").replace("]", "[rb]")
+
+
+func _set_label_text(text: String) -> void:
+	label.custom_minimum_size = Vector2(_desired_text_width(text), 0)
+	label.append_text(_format_tooltip_text(text))
+	size = Vector2.ZERO
+
+
+func _desired_text_width(text: String) -> float:
+	var viewport_width := get_viewport_rect().size.x
+	var max_allowed_width: float = min(MAX_WIDTH, max(MIN_WIDTH, viewport_width - 32.0))
+	var font := label.get_theme_font("normal_font")
+	var normal_size := label.get_theme_font_size("normal_font_size")
+	var title_size := 16
+	var widest := MIN_WIDTH
+	var lines := text.split("\n")
+	for index in lines.size():
+		var line := String(lines[index]).strip_edges()
+		if line.is_empty():
+			continue
+		var size_to_use := title_size if index == 0 else normal_size
+		widest = max(widest, font.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, size_to_use).x + 4.0)
+	return clamp(widest, MIN_WIDTH, max_allowed_width)

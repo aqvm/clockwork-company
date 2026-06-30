@@ -4,8 +4,6 @@
 [ext_resource type="Resource" path="res://resources/encounters/phase7_fight_01_street_corner.tres" id="2_encounter_a"]
 [ext_resource type="Resource" path="res://resources/encounters/catalog_test_rooftop_knives.tres" id="3_encounter_b"]
 [ext_resource type="Resource" path="res://resources/encounters/phase7_fight_03_rooftop.tres" id="4_encounter_c"]
-[ext_resource type="Resource" path="res://resources/rewards/honed_blade_for_mira.tres" id="5_reward"]
-[ext_resource type="Resource" path="res://resources/rewards/catalog_reward_mercy_coin.tres" id="6_reward"]
 
 [ext_resource type="Resource" path="res://resources/tags/bandits.tres" id="tag_bandits"]
 [ext_resource type="Resource" path="res://resources/tags/road.tres" id="tag_road"]
@@ -24,5 +22,5 @@ tier = 1
 recommended_level_min = 1
 recommended_level_max = 2
 tags = Array[Resource]([ExtResource("tag_road"), ExtResource("tag_bandits"), ExtResource("tag_starter")])
-rewards = [ExtResource("5_reward"), ExtResource("6_reward")]
+rewards = []
 content_unlocks = ["first_road_bandit_notes"]

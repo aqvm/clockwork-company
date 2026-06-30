@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UnitLoadoutDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/unit_loadout_definition.gd" id="loadout_script"]
+[ext_resource type="Resource" path="res://resources/jobs/paladin.tres" id="job"]
+[ext_resource type="Resource" path="res://resources/tactics/template_paladin_tactic_1_raise_the_spiritual_barrier.tres" id="tactic_1"]
+[ext_resource type="Resource" path="res://resources/tactics/template_paladin_tactic_2_strike_with_consecration.tres" id="tactic_2"]
+
+[resource]
+script = ExtResource("loadout_script")
+display_name = "Template Paladin"
+tooltip_text = "Clean-slate template loadout for testing the Paladin job with explicit primary and bridge tactics."
+current_job = ExtResource("job")
+tactics = [ExtResource("tactic_1"), ExtResource("tactic_2")]

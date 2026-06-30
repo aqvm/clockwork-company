@@ -20,7 +20,7 @@ This is item-shaped because it rewards setup from jobs, allies, or prior actions
 
 - [[Pyromancer]] can intensify [[Burning]] through magical skill pressure.
 - [[Cryomancer]] or [[Enthalpyst]] can deepen Frost/Burning style stack plans.
-- [[Witness]], [[Apprentice]], or [[Spellsword]] can become payoff pieces in a party that already applies ailments.
+- [[Elementalist]], [[Chronomancer]], or [[Arcane Warden]] can become payoff pieces in a party that already applies ailments.
 
 ## Open Questions
 

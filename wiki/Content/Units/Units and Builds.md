@@ -20,9 +20,10 @@ This separation lets the same build archetype move between different bodies with
 
 ## Current Catalog
 
-- Named unit definitions: `clockwork-company/resources/units/`
-- Reusable loadouts: `clockwork-company/resources/loadouts/`
-- Reusable tactic templates: `clockwork-company/resources/tactics/`
+- One allied `template_` unit per implemented draft job: `clockwork-company/resources/units/`
+- Matching equipment-free `template_` loadouts: `clockwork-company/resources/loadouts/`
+- Minimal `sparring_` enemies for preserved encounters: `clockwork-company/resources/units/`
+- Standalone reusable tactic templates are currently empty; job default tactics are embedded in job Resources.
 
 Individual unit/loadout pages should be added only when a named character or build has enough biography, unique mechanics, or design relationships to justify independent lookup.
 

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="TacticDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/tactic_definition.gd" id="tactic_script"]
+
+[resource]
+script = ExtResource("tactic_script")
+display_name = "Body Blow the Slow"
+tooltip_text = "Use Body Blow against slower enemies to open a fight with current-HP pressure."
+condition = "Target Slower Than Self"
+action = "Secondary Skill"
+target = "Frontmost Enemy"

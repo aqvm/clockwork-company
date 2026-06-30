@@ -40,7 +40,7 @@ static func apply_status(log, parent_entry_id: int, target, status: Resource, so
 	if context != null and not preserve_duration and not is_permanent and status.polarity == "Boon" and status.elapses_naturally:
 		applied_duration = context.allied_buff_duration(target, duration_turns)
 	for _stack in range(max(1, stack_count)):
-		var application_result: String = target.add_status(status, source_name, applied_duration, is_permanent)
+		var application_result: String = target.add_status(status, source_name, applied_duration, is_permanent, source)
 		if application_result == "ignored":
 			if result == "invalid":
 				result = application_result

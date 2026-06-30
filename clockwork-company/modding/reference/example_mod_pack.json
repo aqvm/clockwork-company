@@ -1,32 +1,27 @@
 {
-	"pack_id": "example_swift_guard_pack",
-	"pack_version": 1,
-	"items": [
-		{
-			"id": "tower_shield",
-			"display_name": "Tower Shield",
-			"slot": "Armor",
-			"max_hp_modifier": 8,
-			"armor_modifier": 3,
-			"action_speed_modifier": -2,
-			"physical_damage_modifier": 0,
-			"magic_damage_modifier": 0,
-			"tooltip_text": "Tower Shield is a Armor item with HP +8, armor +3, speed -2."
-		}
-	],
-	"loadouts": [
-		{
-			"id": "guard_buckler",
-			"armor_id": "tower_shield"
-		}
-	],
+	"pack_id": "example_clean_template_pack",
+	"display_name": "Example Clean Template Pack",
+	"pack_version": 2,
 	"units": [
 		{
-			"id": "mira_scout",
-			"action_speed": 14,
-			"physical_damage": 1,
-			"magic_damage": 0,
-			"ancestry_id": "brassbound"
+			"id": "template_pyromancer",
+			"display_name": "Template Pyromancer (Example Override)",
+			"team": "Allies",
+			"max_hp": 30,
+			"physical_damage": 4,
+			"magic_damage": 6,
+			"armor": 0,
+			"action_speed": 11,
+			"loadout_id": "template_pyromancer",
+			"tooltip_text": "Example override that tweaks the clean-slate Pyromancer template without referencing removed placeholder content."
 		}
+	],
+	"demo_roster": [
+		"template_pyromancer",
+		"template_bruiser",
+		"template_bard",
+		"sparring_vanguard",
+		"sparring_adept",
+		"sparring_support"
 	]
 }

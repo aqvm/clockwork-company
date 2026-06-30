@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="TacticDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/tactic_definition.gd" id="tactic_script"]
+
+[resource]
+script = ExtResource("tactic_script")
+display_name = "Shoulder the Party Burden"
+tooltip_text = "When the party is hurt, pull allied ailments onto the Monk before resuming pressure."
+condition = "Ally HP Below Half"
+action = "Secondary Skill"
+target = "Self"

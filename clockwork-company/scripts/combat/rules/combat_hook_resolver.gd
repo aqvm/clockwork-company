@@ -92,7 +92,7 @@ static func respond(context, event: Dictionary) -> void:
 			var burning_status: Resource = burning.get("definition", null)
 			var burning_amount := int(burning_status.amount) * int(burning.get("stack_count", 1))
 			if burning_amount > 0:
-				context.apply_direct_damage(null, source, burning_amount, int(event.get("id", -1)), parent_log_id, ["status", "burning"])
+				context.apply_direct_damage(_status_source_unit(context, burning), source, burning_amount, int(event.get("id", -1)), parent_log_id, ["status", "burning"])
 			_consume_status_stack(context, event, source, burning, "decayed after triggering")
 		var fusion: Dictionary = source.status_instance(STATUS_TYPE_ELEMENTAL_FUSION)
 		if not fusion.is_empty():
@@ -207,6 +207,16 @@ static func _apply_conductive_discharge(context, event: Dictionary, original_sou
 	context.log.add_child(int(event.get("parent_log_id", -1)), "%s's %s arcs for %d magic damage to %s." % [shocked_unit.unit_name, status.display_name, arc_damage, _unit_names(recipients)])
 	for recipient in recipients:
 		context.apply_direct_damage(original_source, recipient, arc_damage, int(event.get("id", -1)), int(event.get("parent_log_id", -1)), ["status", "shock", "magic", "propagated"])
+
+
+static func _status_source_unit(context, status_instance: Dictionary):
+	var source_unit_id := String(status_instance.get("source_unit_id", ""))
+	if source_unit_id.is_empty():
+		return null
+	for unit in context.units:
+		if unit != null and String(unit.unit_id) == source_unit_id:
+			return unit
+	return null
 
 
 static func _shock_recipients(units: Array, shocked_unit) -> Array:

@@ -19,7 +19,11 @@ Scenarios are handcrafted multi-encounter missions governed by [[Scenarios and C
 3. [[Iron Tollgate]]
 4. [[Clocktower Claim]]
 
-The campaign begins with Alden Guard, Mira Scout, and Sol Apprentice. Each completed scenario unlocks the next; Clocktower Claim completes the sample campaign.
+The campaign begins with Template Pyromancer, Template Bruiser, and Template Bard. Each completed scenario unlocks the next; Clocktower Claim completes the sample campaign.
+
+## Standalone Test Scenarios
+
+- [[Fever Choir Rehearsal]]: a combat-lab-friendly fight against a coordinated chapel cell built from clean-slate job templates.
 
 ## Implementation
 

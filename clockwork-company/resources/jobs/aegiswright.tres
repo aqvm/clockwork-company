@@ -1,0 +1,89 @@
+[gd_resource type="Resource" script_class="JobDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/job_definition.gd" id="job_script"]
+[ext_resource type="Script" path="res://scripts/data/skill_definition.gd" id="skill_script"]
+[ext_resource type="Script" path="res://scripts/data/passive_definition.gd" id="passive_script"]
+[ext_resource type="Script" path="res://scripts/data/reaction_definition.gd" id="reaction_script"]
+[ext_resource type="Script" path="res://scripts/data/tactic_definition.gd" id="tactic_script"]
+[ext_resource type="Script" path="res://scripts/data/effect_definition.gd" id="effect_script"]
+
+[sub_resource type="Resource" id="Aegis_Shield_Allies"]
+script = ExtResource("effect_script")
+display_name = "Shield Allies"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Skill Used"
+target_selector = "Allied Units"
+effect_type = "Grant Energy Shield"
+amount = 6
+
+[sub_resource type="Resource" id="Aegis_Self_Shield"]
+script = ExtResource("effect_script")
+display_name = "Self Shield Battery"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Action Completed"
+target_selector = "Self"
+effect_type = "Grant Energy Shield"
+amount = 4
+
+[sub_resource type="Resource" id="Aegis_Lethal_Shield"]
+script = ExtResource("effect_script")
+display_name = "Lethal Shield"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Reaction Triggered"
+target_selector = "Event Target"
+effect_type = "Grant Energy Shield"
+amount = 10
+
+[sub_resource type="Resource" id="Skill_Piercing_Aegis"]
+script = ExtResource("skill_script")
+display_name = "Piercing Aegis"
+tooltip_text = "Magic attack stand-in for the intended Energy-Shield-piercing strike."
+action = "Attack"
+attack_damage_type = "Magic"
+
+[sub_resource type="Resource" id="Skill_Shared_Reserve"]
+script = ExtResource("skill_script")
+display_name = "Shared Reserve"
+tooltip_text = "Approximation: grant Energy Shield to all allies."
+action = "Effects Only"
+default_target = "Self"
+effects = [SubResource("Aegis_Shield_Allies")]
+
+[sub_resource type="Resource" id="Passive_Shield_Battery"]
+script = ExtResource("passive_script")
+display_name = "Shield Battery"
+tooltip_text = "Current-engine approximation: after each action, grant self Energy Shield."
+passive_type = "None"
+effects = [SubResource("Aegis_Self_Shield")]
+
+[sub_resource type="Resource" id="Reaction_Emergency_Aegis"]
+script = ExtResource("reaction_script")
+display_name = "Emergency Aegis"
+tooltip_text = "Approximation: prevent a lethal physical attack and shield the target."
+trigger = "Lethal Physical Attack Requested"
+condition = "Always"
+reaction_type = "Effects Only"
+prevents_triggering_request = true
+cooldown_turns = 5
+effects = [SubResource("Aegis_Lethal_Shield")]
+
+[sub_resource type="Resource" id="Tactic_Use_Piercing_Aegis"]
+script = ExtResource("tactic_script")
+display_name = "Use Piercing Aegis"
+tooltip_text = "Use Piercing Aegis is this job template default tactic."
+condition = "Enemy Alive"
+action = "Job Skill"
+target = "Frontmost Enemy"
+
+[resource]
+script = ExtResource("job_script")
+display_name = "Aegiswright"
+tooltip_text = "Aegiswright is a clean-slate authored job Resource based on the current design notes. Growth and abilities are visible for tuning."
+max_hp_growth = 3
+magic_damage_growth = 1
+armor_growth = 2
+skill = SubResource("Skill_Piercing_Aegis")
+secondary_skill = SubResource("Skill_Shared_Reserve")
+passive = SubResource("Passive_Shield_Battery")
+reaction = SubResource("Reaction_Emergency_Aegis")
+default_tactic = SubResource("Tactic_Use_Piercing_Aegis")

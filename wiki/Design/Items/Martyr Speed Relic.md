@@ -21,7 +21,7 @@ This is item-shaped because it is volatile and scenario-dependent. It creates a 
 
 - [[Executioner]] can turn near-loss states into a finishing rampage.
 - [[Sanguinist]] fits the blood/death conversion fantasy without requiring the item for the class to function.
-- [[Scout]], [[Roofer]], or [[Cutpurse]] can become cleanup threats when a fight goes badly.
+- [[Monk]], [[Bard]], or [[Arcane Warden]] can become tempo-sensitive cleanup threats when a fight goes badly.
 
 ## Open Questions
 

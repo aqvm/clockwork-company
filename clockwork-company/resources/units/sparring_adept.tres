@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="UnitDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/unit_definition.gd" id="unit_script"]
+[ext_resource type="Resource" path="res://resources/loadouts/sparring_adept_loadout.tres" id="loadout"]
+
+[resource]
+script = ExtResource("unit_script")
+display_name = "Sparring Adept"
+tooltip_text = "Minimal clean-slate enemy template used by preserved encounters after placeholder character content was removed."
+team = "Enemies"
+max_hp = 26
+physical_damage = 3
+magic_damage = 7
+armor = 0
+action_speed = 10
+loadout = ExtResource("loadout")

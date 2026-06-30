@@ -11,9 +11,9 @@ class_name UnitLoadoutDefinition
 @export var current_job: JobDefinition = null
 ## Learned cross-job skill assigned separately from current-job `Job Skill` and `Secondary Skill`.
 @export var equipped_skill: SkillDefinition = null
-## Learned passive assigned from job progress. Null means no learned passive is equipped.
+## Learned passive assigned from job progress. Null means the current job's passive remains active.
 @export var equipped_passive: PassiveDefinition = null
-## Learned reaction assigned from job progress. Null means no learned reaction is equipped.
+## Learned reaction assigned from job progress. Null means the current job's reaction remains active.
 @export var equipped_reaction: ReactionDefinition = null
 ## Weapon item. Skipped at runtime if current job or ancestry forbids weapons.
 @export var weapon: ItemDefinition = null

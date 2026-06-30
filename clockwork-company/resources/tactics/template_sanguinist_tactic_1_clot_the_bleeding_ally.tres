@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="TacticDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/tactic_definition.gd" id="tactic_script"]
+[ext_resource type="Resource" path="res://resources/statuses/bleed.tres" id="status"]
+
+[resource]
+script = ExtResource("tactic_script")
+display_name = "Clot the Bleeding Ally"
+tooltip_text = "If an ally is Bleeding, convert recent harm into Energy Shield."
+condition = "Enemy Alive"
+action = "Secondary Skill"
+target = "Lowest HP Ally With Status"
+status = ExtResource("status")

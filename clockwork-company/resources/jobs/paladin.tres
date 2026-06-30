@@ -1,0 +1,89 @@
+[gd_resource type="Resource" script_class="JobDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/job_definition.gd" id="job_script"]
+[ext_resource type="Script" path="res://scripts/data/skill_definition.gd" id="skill_script"]
+[ext_resource type="Script" path="res://scripts/data/passive_definition.gd" id="passive_script"]
+[ext_resource type="Script" path="res://scripts/data/reaction_definition.gd" id="reaction_script"]
+[ext_resource type="Script" path="res://scripts/data/tactic_definition.gd" id="tactic_script"]
+[ext_resource type="Script" path="res://scripts/data/effect_definition.gd" id="effect_script"]
+[ext_resource type="Resource" path="res://resources/statuses/bleed.tres" id="status_bleed"]
+[ext_resource type="Resource" path="res://resources/statuses/reconstitution.tres" id="status_reconstitution"]
+[ext_resource type="Resource" path="res://resources/statuses/regeneration.tres" id="status_regeneration"]
+[ext_resource type="Resource" path="res://resources/statuses/renewal.tres" id="status_renewal"]
+[ext_resource type="Resource" path="res://resources/statuses/ward.tres" id="status_ward"]
+
+[sub_resource type="Resource" id="Pal_Boon_Barrier"]
+script = ExtResource("effect_script")
+display_name = "Boon Barrier"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Skill Used"
+target_selector = "Event Target"
+effect_type = "Grant Battle Armor"
+amount_source = "Target Unique Boons"
+amount_multiplier = 8
+once_per_battle = true
+
+[sub_resource type="Resource" id="Pal_Aura_Reconstitution"]
+script = ExtResource("effect_script")
+display_name = "Maintain Reconstitution"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Battle State Changed"
+target_selector = "Allied Units"
+effect_type = "Maintain Status Aura"
+status = ExtResource("status_reconstitution")
+
+[sub_resource type="Resource" id="Skill_Consecrated_Strike"]
+script = ExtResource("skill_script")
+display_name = "Consecrated Strike"
+tooltip_text = "Attack with split physical and magic damage."
+action = "Attack"
+attack_damage_type = "Split Evenly"
+
+[sub_resource type="Resource" id="Skill_Spiritual_Barrier"]
+script = ExtResource("skill_script")
+display_name = "Spiritual Barrier"
+tooltip_text = "Once per battle, grant armor based on unique boons."
+action = "Effects Only"
+default_target = "Lowest HP Ally"
+effects = [SubResource("Pal_Boon_Barrier")]
+
+[sub_resource type="Resource" id="Passive_Reconstituting_Aura"]
+script = ExtResource("passive_script")
+display_name = "Reconstituting Aura"
+tooltip_text = "Maintain Reconstitution on allied units."
+passive_type = "None"
+effects = [SubResource("Pal_Aura_Reconstitution")]
+
+[sub_resource type="Resource" id="Reaction_Chosen_Mercy"]
+script = ExtResource("reaction_script")
+display_name = "Chosen Mercy"
+tooltip_text = "Prevent incoming Bleed and replace it with a boon."
+trigger = "Status Application Requested"
+condition = "Requested Status Matches"
+reaction_type = "Effects Only"
+prevents_triggering_request = true
+cooldown_turns = 3
+status = ExtResource("status_bleed")
+replacement_statuses = [ExtResource("status_ward"), ExtResource("status_renewal"), ExtResource("status_regeneration"), ExtResource("status_reconstitution")]
+
+[sub_resource type="Resource" id="Tactic_Use_Consecrated_Strike"]
+script = ExtResource("tactic_script")
+display_name = "Use Consecrated Strike"
+tooltip_text = "Use Consecrated Strike is this job template default tactic."
+condition = "Enemy Alive"
+action = "Job Skill"
+target = "Frontmost Enemy"
+
+[resource]
+script = ExtResource("job_script")
+display_name = "Paladin"
+tooltip_text = "Paladin is a clean-slate authored job Resource based on the current design notes. Growth and abilities are visible for tuning."
+max_hp_growth = 2
+physical_damage_growth = 1
+magic_damage_growth = 1
+armor_growth = 1
+skill = SubResource("Skill_Consecrated_Strike")
+secondary_skill = SubResource("Skill_Spiritual_Barrier")
+passive = SubResource("Passive_Reconstituting_Aura")
+reaction = SubResource("Reaction_Chosen_Mercy")
+default_tactic = SubResource("Tactic_Use_Consecrated_Strike")

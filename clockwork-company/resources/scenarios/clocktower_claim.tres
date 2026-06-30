@@ -4,8 +4,6 @@
 [ext_resource type="Resource" path="res://resources/encounters/phase7_fight_04_vault_annex.tres" id="2_encounter_a"]
 [ext_resource type="Resource" path="res://resources/encounters/catalog_test_debt_office.tres" id="3_encounter_b"]
 [ext_resource type="Resource" path="res://resources/encounters/phase7_fight_05_clocktower.tres" id="4_encounter_c"]
-[ext_resource type="Resource" path="res://resources/rewards/catalog_reward_bellhammer.tres" id="5_reward"]
-[ext_resource type="Resource" path="res://resources/rewards/catalog_reward_brass_lung.tres" id="6_reward"]
 
 [ext_resource type="Resource" path="res://resources/tags/campaign-chain.tres" id="tag_campaign_chain"]
 [ext_resource type="Resource" path="res://resources/tags/clocktower.tres" id="tag_clocktower"]
@@ -24,5 +22,5 @@ tier = 4
 recommended_level_min = 3
 recommended_level_max = 5
 tags = Array[Resource]([ExtResource("tag_clocktower"), ExtResource("tag_debt"), ExtResource("tag_campaign_chain")])
-rewards = [ExtResource("5_reward"), ExtResource("6_reward")]
+rewards = []
 content_unlocks = ["clocktower_claim_ledger"]

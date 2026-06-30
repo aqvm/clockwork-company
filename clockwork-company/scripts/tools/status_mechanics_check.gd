@@ -17,11 +17,10 @@ const BurningStatus := preload("res://resources/statuses/burning.tres")
 const WardStatus := preload("res://resources/statuses/ward.tres")
 const RotStatus := preload("res://resources/statuses/rot.tres")
 const RenewalStatus := preload("res://resources/statuses/renewal.tres")
-const TEST_UNIT := preload("res://resources/units/alden_guard.tres")
 
 
 func _init() -> void:
-	var unit = UnitStateScript.new(TEST_UNIT, 0)
+	var unit = UnitStateScript.new(_test_unit_definition(), 0)
 	var log = CombatLogScript.new()
 	var root_entry_id: int = log.add("Status mechanics check")
 
@@ -69,7 +68,7 @@ func _init() -> void:
 		StatusResolverScript.elapse_turn_statuses(log, root_entry_id, unit, unit.status_instance_ids())
 	assert(unit.has_status("Confusion"), "Explicitly permanent statuses should not expire.")
 
-	var finite_unit = UnitStateScript.new(TEST_UNIT, 1)
+	var finite_unit = UnitStateScript.new(_test_unit_definition(), 1)
 	assert(StatusResolverScript.apply_status(log, root_entry_id, finite_unit, ConfusionStatus, "Finite duration test", 2))
 	for _turn in range(2):
 		StatusResolverScript.elapse_turn_statuses(log, root_entry_id, finite_unit, finite_unit.status_instance_ids())
@@ -89,6 +88,7 @@ func _init() -> void:
 	assert(int(mod_unit.status_instance("Reconstitution").get("remaining_turns", 0)) == 3, "JSON status applications should default to finite three-turn duration.")
 
 	_assert_hook_driven_statuses()
+	_assert_burning_source_attribution()
 	_assert_high_value_statuses()
 	_assert_shock_propagation()
 
@@ -97,7 +97,7 @@ func _init() -> void:
 
 
 func _assert_hook_driven_statuses() -> void:
-	var bleeding_unit = UnitStateScript.new(TEST_UNIT, 0)
+	var bleeding_unit = UnitStateScript.new(_test_unit_definition(), 0)
 	var log = CombatLogScript.new()
 	var context = CombatContextScript.new([bleeding_unit], log)
 	context.add_responder(CombatHookResolverScript.respond)
@@ -111,7 +111,7 @@ func _assert_hook_driven_statuses() -> void:
 	StatusResolverScript.elapse_turn_statuses(log, root_entry_id, bleeding_unit, bleeding_unit.status_instance_ids(), context)
 	assert(bleeding_unit.has_status("Bleed"), "Bleed should not expire naturally.")
 
-	var attacker = UnitStateScript.new(TEST_UNIT, 1)
+	var attacker = UnitStateScript.new(_test_unit_definition(), 1)
 	var reaction := ReactionDefinitionScript.new()
 	reaction.display_name = "Test Counter"
 	reaction.trigger = "Damaged"
@@ -161,6 +161,26 @@ func _assert_hook_driven_statuses() -> void:
 	assert(int(capped_frost_request["payload"]["amount"]) == 20, "Five Frost stacks should double the next post-armor physical hit.")
 
 
+func _assert_burning_source_attribution() -> void:
+	var pyromancer = UnitStateScript.new(_test_unit_definition(), 0)
+	pyromancer.unit_name = "Attribution Pyromancer"
+	pyromancer.unit_id = "attribution_pyromancer"
+	var burning_unit = UnitStateScript.new(_test_unit_definition(), 1)
+	burning_unit.unit_name = "Burning Target"
+	var log = CombatLogScript.new()
+	var context = CombatContextScript.new([pyromancer, burning_unit], log)
+	context.add_responder(CombatHookResolverScript.respond)
+	var root_entry_id: int = log.add("Burning attribution check")
+	assert(StatusResolverScript.apply_status(log, root_entry_id, burning_unit, BurningStatus, "Attribution Pyromancer", 3, false, context, pyromancer))
+	context.publish("action_completed", burning_unit, burning_unit, {"action": "Test"}, -1, root_entry_id, ["action"])
+	var burn_damage_events := []
+	for damage_event: Dictionary in context.events_of_type("damage_dealt"):
+		if damage_event.get("tags", []).has("burning"):
+			burn_damage_events.append(damage_event)
+	assert(burn_damage_events.size() == 1, "Burning should produce a structured damage event.")
+	assert(burn_damage_events[0].get("source", null) == pyromancer, "Burning damage should credit the unit that applied Burning.")
+
+
 func _assert_high_value_statuses() -> void:
 	var loaded_status_types: Array[String] = []
 	for status in JsonContentLoaderScript.load_status_definitions([]):
@@ -169,10 +189,10 @@ func _assert_high_value_statuses() -> void:
 		assert(loaded_status_types.has(required_type), "%s should appear in the authorable status library." % required_type)
 	assert(not loaded_status_types.has("Scorched"), "Scorched is an immediate consequence, not a status.")
 
-	var supporter = UnitStateScript.new(TEST_UNIT, 0)
+	var supporter = UnitStateScript.new(_test_unit_definition(), 0)
 	supporter.unit_name = "Supporter"
 	supporter.next_action_time = 10
-	var burning_unit = UnitStateScript.new(TEST_UNIT, 1)
+	var burning_unit = UnitStateScript.new(_test_unit_definition(), 1)
 	burning_unit.unit_name = "Burning Unit"
 	var log = CombatLogScript.new()
 	var root_entry_id: int = log.add("High-value status check")
@@ -210,22 +230,22 @@ func _assert_high_value_statuses() -> void:
 
 
 func _assert_shock_propagation() -> void:
-	var attacker = UnitStateScript.new(TEST_UNIT, 0)
+	var attacker = UnitStateScript.new(_test_unit_definition(), 0)
 	attacker.unit_name = "Shock Attacker"
 	attacker.team = "Enemies"
-	var conductor = UnitStateScript.new(TEST_UNIT, 1)
+	var conductor = UnitStateScript.new(_test_unit_definition(), 1)
 	conductor.unit_name = "Conductor"
 	conductor.energy_shield = 18
-	var insulated = UnitStateScript.new(TEST_UNIT, 2)
+	var insulated = UnitStateScript.new(_test_unit_definition(), 2)
 	insulated.unit_name = "Insulated"
 	insulated.energy_shield = 3
-	var low_shield = UnitStateScript.new(TEST_UNIT, 3)
+	var low_shield = UnitStateScript.new(_test_unit_definition(), 3)
 	low_shield.unit_name = "Low Shield"
 	low_shield.energy_shield = 1
-	var medium_shield = UnitStateScript.new(TEST_UNIT, 4)
+	var medium_shield = UnitStateScript.new(_test_unit_definition(), 4)
 	medium_shield.unit_name = "Medium Shield"
 	medium_shield.energy_shield = 2
-	var unshielded = UnitStateScript.new(TEST_UNIT, 5)
+	var unshielded = UnitStateScript.new(_test_unit_definition(), 5)
 	unshielded.unit_name = "Unshielded"
 	var log = CombatLogScript.new()
 	var root_entry_id: int = log.add("Shock propagation check")
@@ -245,11 +265,11 @@ func _assert_shock_propagation() -> void:
 	assert(medium_shield.hp == medium_shield_hp_before - 3 and medium_shield.energy_shield == 0, "Shock arcs should resolve as ordinary magic damage against recipient Energy Shield.")
 	assert(unshielded.hp == unshielded_hp_before - 5, "A 20-damage incoming hit should arc 5 magic damage at 25 percent.")
 
-	var ping = UnitStateScript.new(TEST_UNIT, 0)
+	var ping = UnitStateScript.new(_test_unit_definition(), 0)
 	ping.unit_name = "Ping"
 	ping.max_hp = 200
 	ping.hp = 200
-	var pong = UnitStateScript.new(TEST_UNIT, 1)
+	var pong = UnitStateScript.new(_test_unit_definition(), 1)
 	pong.unit_name = "Pong"
 	pong.max_hp = 200
 	pong.hp = 200
@@ -270,11 +290,11 @@ func _assert_shock_propagation() -> void:
 	for propagated_event: Dictionary in propagated_events:
 		assert(propagated_event.get("source", null) == attacker, "Every Shock arc should preserve the original damage source.")
 
-	var fragile = UnitStateScript.new(TEST_UNIT, 0)
+	var fragile = UnitStateScript.new(_test_unit_definition(), 0)
 	fragile.unit_name = "Fragile Conductor"
 	fragile.max_hp = 10
 	fragile.hp = 10
-	var witness = UnitStateScript.new(TEST_UNIT, 1)
+	var witness = UnitStateScript.new(_test_unit_definition(), 1)
 	var fragile_log = CombatLogScript.new()
 	var fragile_root_id: int = fragile_log.add("Shock overkill check")
 	var fragile_context = CombatContextScript.new([attacker, fragile, witness], fragile_log)
@@ -284,8 +304,8 @@ func _assert_shock_propagation() -> void:
 	fragile_context.apply_direct_damage(attacker, fragile, 100, -1, fragile_root_id, ["test", "magic"])
 	assert(witness.hp == witness_hp_before - 2, "Shock should cap its incoming basis to pre-hit HP plus Energy Shield and ignore overkill.")
 
-	var weak_conductor = UnitStateScript.new(TEST_UNIT, 0)
-	var weak_ally = UnitStateScript.new(TEST_UNIT, 1)
+	var weak_conductor = UnitStateScript.new(_test_unit_definition(), 0)
+	var weak_ally = UnitStateScript.new(_test_unit_definition(), 1)
 	var weak_log = CombatLogScript.new()
 	var weak_root_id: int = weak_log.add("Shock floor check")
 	var weak_context = CombatContextScript.new([attacker, weak_conductor, weak_ally], weak_log)
@@ -293,3 +313,15 @@ func _assert_shock_propagation() -> void:
 	assert(StatusResolverScript.apply_status(weak_log, weak_root_id, weak_conductor, ShockStatus, "Test", 3, false, weak_context, attacker))
 	weak_context.apply_direct_damage(attacker, weak_conductor, 3, -1, weak_root_id, ["test", "magic"])
 	assert(weak_conductor.has_status("Shock"), "Incoming magic below four should neither arc nor consume Shock at 25 percent rounded down.")
+
+
+func _test_unit_definition() -> UnitDefinition:
+	var unit := UnitDefinition.new()
+	unit.display_name = "Status Check Unit"
+	unit.team = "Allies"
+	unit.max_hp = 20
+	unit.physical_damage = 4
+	unit.magic_damage = 4
+	unit.armor = 0
+	unit.action_speed = 10
+	return unit

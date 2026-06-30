@@ -1,12 +1,11 @@
-[gd_resource type="Resource" script_class="EncounterDefinition" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="EncounterDefinition" format=3]
 
 [ext_resource type="Script" path="res://scripts/data/encounter_definition.gd" id="1_encounter"]
-[ext_resource type="Resource" path="res://resources/units/union_shield.tres" id="2_shield"]
-[ext_resource type="Resource" path="res://resources/units/roofline_duelist.tres" id="3_duelist"]
-[ext_resource type="Resource" path="res://resources/units/backroom_mender.tres" id="4_mender"]
+[ext_resource type="Resource" path="res://resources/units/sparring_vanguard.tres" id="2_enemy"]
+[ext_resource type="Resource" path="res://resources/units/sparring_support.tres" id="3_enemy"]
 
 [resource]
 script = ExtResource("1_encounter")
 display_name = "Rooftop Arbitration"
 scout_text = "A balanced enemy party with a sturdier scout threat."
-enemy_units = [ExtResource("2_shield"), ExtResource("3_duelist"), ExtResource("4_mender")]
+enemy_units = [ExtResource("2_enemy"), ExtResource("3_enemy")]

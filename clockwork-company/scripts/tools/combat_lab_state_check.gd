@@ -2,6 +2,7 @@ extends SceneTree
 
 const CombatLabStateScript := preload("res://scripts/devtools/combat_lab_state.gd")
 const DefinitionCloneHelperScript := preload("res://scripts/data/definition_clone_helper.gd")
+const UnitStateScript := preload("res://scripts/combat/runtime/unit_state.gd")
 
 
 func _init() -> void:
@@ -26,6 +27,7 @@ func _init() -> void:
 	assert(not state.catalog_passives.is_empty(), "Combat Lab should expose authored job passives.")
 	assert(not state.catalog_reactions.is_empty(), "Combat Lab should expose authored job reactions.")
 	assert(not state.catalog_tactics.is_empty(), "Combat Lab should load authored tactic templates.")
+	_assert_template_pyromancer_job_kit_is_active(state)
 
 	assert(state.duplicate_unit(CombatLabStateScript.TEAM_ALLIES, 0), "Duplicate should succeed for an existing allied unit.")
 	assert(state.allied_units.size() == 2, "Duplicate should add one allied unit.")
@@ -87,6 +89,7 @@ func _init() -> void:
 	_assert_report_surfaces(second_report)
 	assert(first_report != second_report, "Changing the matchup and rerunning should produce a newly resolved report.")
 	assert(_report_contains_text(second_report, equipped_item.display_name), "Equipment edits should survive a rerun after changing the matchup.")
+	_assert_large_lab_matchup_runs()
 
 	state.allied_units[0].max_hp = original_allied_hp + 99
 	assert(allied_catalog.max_hp == original_allied_hp, "Mutating a lab clone must not mutate the original catalog unit.")
@@ -104,6 +107,40 @@ func _assert_report_surfaces(report: Dictionary) -> void:
 	assert(report.has("replay_snapshots") and not report["replay_snapshots"].is_empty(), "Report should include replay snapshots.")
 	assert(report.has("contribution_summary") and not report["contribution_summary"].is_empty(), "Report should include battle contribution rows.")
 	assert(report.has("winner"), "Report should include a winner.")
+
+
+func _assert_template_pyromancer_job_kit_is_active(state) -> void:
+	for unit in state.catalog_units:
+		if DefinitionCloneHelperScript.content_id(unit) != "template_pyromancer":
+			continue
+		var runtime_unit = UnitStateScript.new(unit, 0)
+		assert(runtime_unit.current_skill != null and runtime_unit.current_skill.display_name == "Apply Burn", "Template Pyromancer should use the Pyromancer primary action.")
+		assert(runtime_unit.current_secondary_skill != null and runtime_unit.current_secondary_skill.display_name == "Hot on Their Heels", "Template Pyromancer should use the Pyromancer bridge action.")
+		assert(runtime_unit.current_passive != null and runtime_unit.current_passive.display_name == "Fiery Soul", "Template Pyromancer should activate the Pyromancer passive.")
+		assert(runtime_unit.current_reaction != null and runtime_unit.current_reaction.display_name == "Ember Reversal", "Template Pyromancer should activate the Pyromancer reaction.")
+		return
+	assert(false, "Combat Lab catalog should include template_pyromancer.")
+
+
+func _assert_large_lab_matchup_runs() -> void:
+	var large_state = CombatLabStateScript.new()
+	large_state.load_catalog([])
+	large_state.clear_all()
+	_add_units_for_team(large_state, CombatLabStateScript.TEAM_ALLIES, 3)
+	_add_units_for_team(large_state, CombatLabStateScript.TEAM_ENEMIES, 4)
+	assert(large_state.allied_units.size() == 3 and large_state.enemy_units.size() == 4, "Large lab matchup fixture should build the intended party sizes.")
+	var report: Dictionary = large_state.run_battle_report()
+	_assert_report_surfaces(report)
+	assert(not String("\n".join(report.get("lines", []))).contains("Combat event count exceeded"), "Large lab matchup should not hit the structured event safety limit.")
+
+
+func _add_units_for_team(state, team: String, count: int) -> void:
+	for unit in state.catalog_units:
+		if unit.team != team:
+			continue
+		state.add_catalog_unit_to_team(unit, team)
+		if state.team_units(team).size() >= count:
+			return
 
 
 func _first_catalog_unit_for_team(state, team: String) -> UnitDefinition:

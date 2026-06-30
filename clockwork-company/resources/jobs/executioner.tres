@@ -1,0 +1,105 @@
+[gd_resource type="Resource" script_class="JobDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/job_definition.gd" id="job_script"]
+[ext_resource type="Script" path="res://scripts/data/skill_definition.gd" id="skill_script"]
+[ext_resource type="Script" path="res://scripts/data/passive_definition.gd" id="passive_script"]
+[ext_resource type="Script" path="res://scripts/data/reaction_definition.gd" id="reaction_script"]
+[ext_resource type="Script" path="res://scripts/data/tactic_definition.gd" id="tactic_script"]
+[ext_resource type="Script" path="res://scripts/data/effect_definition.gd" id="effect_script"]
+
+[sub_resource type="Resource" id="Exec_Max_HP_Hit"]
+script = ExtResource("effect_script")
+display_name = "Maximum-HP Hit"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Skill Completed"
+target_selector = "Event Target"
+effect_type = "Deal Damage"
+amount_source = "Target Max HP"
+amount_rounding = "Ceil"
+amount_multiplier = 15
+amount_divisor = 100
+damage_type = "Physical"
+
+[sub_resource type="Resource" id="Exec_Prepare_Attack"]
+script = ExtResource("effect_script")
+display_name = "Prepare Base Attack"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Skill Used"
+target_selector = "Self"
+effect_type = "Prepare Base Attack"
+
+[sub_resource type="Resource" id="Exec_Execute"]
+script = ExtResource("effect_script")
+display_name = "Execute Wounded Target"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Hit"
+target_selector = "Attack Target"
+effect_type = "Execute Target"
+threshold_percent = 10
+
+[sub_resource type="Resource" id="Exec_Enemy_Action_Healing"]
+script = ExtResource("effect_script")
+display_name = "Enemy-Action Healing"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Reaction Triggered"
+target_selector = "Self"
+effect_type = "Begin Enemy Action Healing"
+amount_source = "Target Max HP"
+amount_rounding = "Ceil"
+amount_multiplier = 4
+amount_divisor = 100
+
+[sub_resource type="Resource" id="Skill_Headsman_s_Cut"]
+script = ExtResource("skill_script")
+display_name = "Headsman's Cut"
+tooltip_text = "Attack, then add physical damage based on target maximum HP."
+action = "Attack"
+effects = [SubResource("Exec_Max_HP_Hit")]
+
+[sub_resource type="Resource" id="Skill_Ready_the_Swing"]
+script = ExtResource("skill_script")
+display_name = "Ready the Swing"
+tooltip_text = "Prepare a base attack against the next enemy to begin an action."
+action = "Effects Only"
+default_target = "Self"
+effects = [SubResource("Exec_Prepare_Attack")]
+
+[sub_resource type="Resource" id="Passive_No_Loose_Ends"]
+script = ExtResource("passive_script")
+display_name = "No Loose Ends"
+tooltip_text = "Physical hits that leave an enemy at or below 10% HP execute it."
+passive_type = "None"
+effects = [SubResource("Exec_Execute")]
+
+[sub_resource type="Resource" id="Reaction_Stay_of_Execution"]
+script = ExtResource("reaction_script")
+display_name = "Stay of Execution"
+tooltip_text = "At low HP, heal after enemy turns until the Executioner's next action."
+trigger = "HP Below Threshold"
+condition = "Always"
+reaction_type = "Effects Only"
+threshold_percent = 30
+cooldown_turns = 5
+effects = [SubResource("Exec_Enemy_Action_Healing")]
+
+[sub_resource type="Resource" id="Tactic_Use_Headsman_s_Cut"]
+script = ExtResource("tactic_script")
+display_name = "Use Headsman's Cut"
+tooltip_text = "Use Headsman's Cut is this job template default tactic."
+condition = "Enemy Alive"
+action = "Job Skill"
+target = "Frontmost Enemy"
+
+[resource]
+script = ExtResource("job_script")
+display_name = "Executioner"
+tooltip_text = "Executioner is a clean-slate authored job Resource based on the current design notes. Growth and abilities are visible for tuning."
+max_hp_growth = 2
+physical_damage_growth = 3
+armor_growth = 1
+action_speed_growth = -1
+skill = SubResource("Skill_Headsman_s_Cut")
+secondary_skill = SubResource("Skill_Ready_the_Swing")
+passive = SubResource("Passive_No_Loose_Ends")
+reaction = SubResource("Reaction_Stay_of_Execution")
+default_tactic = SubResource("Tactic_Use_Headsman_s_Cut")

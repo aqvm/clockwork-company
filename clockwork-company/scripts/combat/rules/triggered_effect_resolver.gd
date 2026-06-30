@@ -70,6 +70,8 @@ static func _resolve(context, event: Dictionary, owner, effect: EffectDefinition
 			"effect_type": effect.effect_type,
 			"trigger": effect.trigger,
 		}, int(event.get("id", -1)), int(event.get("parent_log_id", -1)), source_tags + ["triggered_effect"])
+		if context.log != null and not context.speculative:
+			context.log.add_child(int(event.get("parent_log_id", -1)), "%s resolves %s on %s." % [source_name, effect.display_name, target.unit_name])
 		if effect.effect_type == "Apply Status":
 			var stack_count: int = _effect_amount(event, owner, target, effect, context)
 			if stack_count <= 0:

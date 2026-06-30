@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UnitLoadoutDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/unit_loadout_definition.gd" id="loadout_script"]
+[ext_resource type="Resource" path="res://resources/jobs/arcane_warden.tres" id="job"]
+[ext_resource type="Resource" path="res://resources/tactics/template_arcane_warden_tactic_1_bind_a_protective_link.tres" id="tactic_1"]
+[ext_resource type="Resource" path="res://resources/tactics/template_arcane_warden_tactic_2_bind_a_hostile_link.tres" id="tactic_2"]
+
+[resource]
+script = ExtResource("loadout_script")
+display_name = "Template Arcane Warden"
+tooltip_text = "Clean-slate template loadout for testing the Arcane Warden job with explicit primary and bridge tactics."
+current_job = ExtResource("job")
+tactics = [ExtResource("tactic_1"), ExtResource("tactic_2")]

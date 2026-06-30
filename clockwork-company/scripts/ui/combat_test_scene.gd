@@ -11,6 +11,7 @@ const RunStateScript := preload("res://scripts/run/run_state.gd")
 const CampaignManagerScript := preload("res://scripts/campaign/campaign_manager.gd")
 const UnitLoadoutDefinitionScript := preload("res://scripts/data/unit_loadout_definition.gd")
 const TooltipPresenterScript := preload("res://scripts/ui/tooltip_presenter.gd")
+const ResourceTooltipBuilderScript := preload("res://scripts/ui/resource_tooltip_builder.gd")
 const UIStyleHelperScript := preload("res://scripts/ui/ui_style_helper.gd")
 const PlanningWorkbenchPanelScene := preload("res://scenes/planning_workbench_panel.tscn")
 const COMBAT_LOG_HEADER := "Combat log:"
@@ -42,6 +43,7 @@ var cached_static_lines: Array[String] = []
 var cached_structured_events: Array[Dictionary] = []
 var cached_roster_units: Array[Dictionary] = []
 var cached_replay_snapshots: Array[Dictionary] = []
+var cached_log_tooltip_lookup := {}
 var replay_is_active := false
 var available_mod_packs: Array[Dictionary] = []
 var enabled_mod_pack_ids := {}
@@ -73,6 +75,7 @@ func _ready() -> void:
 	replay_panel.call("setup", replay_timer, log_highlight_palette)
 	replay_panel.connect("replay_finished", _on_replay_finished)
 	replay_panel.connect("runtime_tooltip_requested", _on_panel_runtime_tooltip_requested)
+	replay_panel.connect("text_tooltip_requested", _on_panel_text_tooltip_requested)
 	replay_panel.connect("structured_event_tooltip_requested", _on_panel_structured_event_tooltip_requested)
 	replay_panel.connect("tooltip_cleared", _on_tooltip_exited)
 	get_viewport().size_changed.connect(_on_viewport_size_changed)
@@ -140,6 +143,8 @@ func _load_combat_preview() -> void:
 	cached_structured_events = report.get("events", []).duplicate(true)
 	cached_roster_units = report.get("roster_units", []).duplicate(true)
 	cached_replay_snapshots = report.get("replay_snapshots", []).duplicate(true)
+	cached_log_tooltip_lookup = _build_log_tooltip_lookup(run_state.build_current_fight_definitions(), cached_roster_units)
+	replay_panel.call("set_log_tooltip_lookup", cached_log_tooltip_lookup)
 	_show_battle_contributions(report)
 	_collect_static_log_lines(log_lines, static_lines)
 	cached_static_lines = _build_run_static_lines(static_lines)
@@ -156,6 +161,8 @@ func _show_run_state_without_combat_preview() -> void:
 	cached_structured_events.clear()
 	cached_roster_units.clear()
 	cached_replay_snapshots.clear()
+	cached_log_tooltip_lookup.clear()
+	replay_panel.call("set_log_tooltip_lookup", cached_log_tooltip_lookup)
 	_clear_battle_contributions()
 	_clear_replay_log()
 	if run_state == null:
@@ -255,6 +262,7 @@ func _setup_combat_lab_panel() -> void:
 	combat_lab_panel.connect("exit_requested", _on_combat_lab_exit_requested)
 	combat_lab_panel.connect("run_requested", _on_combat_lab_run_requested)
 	combat_lab_panel.connect("state_changed", _on_combat_lab_state_changed)
+	_connect_panel_tooltips(combat_lab_panel)
 	parent_vbox.add_child(combat_lab_panel)
 	parent_vbox.move_child(combat_lab_panel, log_split.get_index())
 
@@ -276,6 +284,8 @@ func _apply_readability_styles() -> void:
 	UIStyleHelperScript.style_heading(conditions_label)
 	combat_summary.add_theme_stylebox_override("normal", UIStyleHelperScript.panel_style("section"))
 	combat_summary.add_theme_color_override("default_color", UIStyleHelperScript.TEXT)
+	combat_summary.meta_hover_started.connect(_on_combat_summary_meta_hover_started)
+	combat_summary.meta_hover_ended.connect(_on_combat_summary_meta_hover_ended)
 	var combat_log: RichTextLabel = %CombatLog
 	combat_log.add_theme_stylebox_override("normal", UIStyleHelperScript.panel_style("section"))
 	combat_log.add_theme_color_override("default_color", UIStyleHelperScript.TEXT)
@@ -438,6 +448,8 @@ func _load_combat_lab_report(report: Dictionary) -> void:
 	cached_structured_events = report.get("events", []).duplicate(true)
 	cached_roster_units = report.get("roster_units", []).duplicate(true)
 	cached_replay_snapshots = report.get("replay_snapshots", []).duplicate(true)
+	cached_log_tooltip_lookup = _build_log_tooltip_lookup(combat_lab_state.build_battle_definitions(), cached_roster_units)
+	replay_panel.call("set_log_tooltip_lookup", cached_log_tooltip_lookup)
 	_show_battle_contributions(report)
 	var static_lines: Array[String] = []
 	_collect_static_log_lines(report.get("lines", []), static_lines)
@@ -451,6 +463,8 @@ func _load_combat_lab_report(report: Dictionary) -> void:
 func _show_combat_lab_landing() -> void:
 	_clear_logs()
 	cached_battle_report.clear()
+	cached_log_tooltip_lookup.clear()
+	replay_panel.call("set_log_tooltip_lookup", cached_log_tooltip_lookup)
 	_clear_battle_contributions()
 	cached_static_lines = _build_combat_lab_static_lines([])
 	_append_lines(combat_summary, cached_static_lines)
@@ -465,7 +479,7 @@ func _show_combat_lab_message(message: String) -> void:
 		return
 	if combat_summary.get_parsed_text().find(message) != -1:
 		return
-	CombatLogRichTextFormatterScript.append_line(combat_summary, message, log_highlight_palette)
+	CombatLogRichTextFormatterScript.append_line(combat_summary, message, log_highlight_palette, cached_log_tooltip_lookup)
 	call_deferred("_resize_conditions_pane")
 
 
@@ -857,6 +871,8 @@ func _on_planning_equip_pressed(index: int) -> void:
 func _connect_panel_tooltips(panel: Control) -> void:
 	if panel.has_signal("resource_tooltip_requested"):
 		panel.connect("resource_tooltip_requested", _on_panel_resource_tooltip_requested)
+	if panel.has_signal("text_tooltip_requested"):
+		panel.connect("text_tooltip_requested", _on_panel_text_tooltip_requested)
 	if panel.has_signal("glossary_tooltip_requested"):
 		panel.connect("glossary_tooltip_requested", _on_panel_glossary_tooltip_requested)
 	if panel.has_signal("tooltip_cleared"):
@@ -866,6 +882,22 @@ func _connect_panel_tooltips(panel: Control) -> void:
 func _on_panel_resource_tooltip_requested(_source: Control, resource: Resource) -> void:
 	if tooltip_presenter != null:
 		tooltip_presenter.show_resource(resource)
+
+
+func _on_panel_text_tooltip_requested(_source: Control, text: String) -> void:
+	if tooltip_presenter != null:
+		tooltip_presenter.show_text(text)
+
+
+func _on_combat_summary_meta_hover_started(meta: Variant) -> void:
+	var text := CombatLogRichTextFormatterScript.tooltip_for_meta(meta, cached_log_tooltip_lookup)
+	if text.is_empty():
+		return
+	_on_panel_text_tooltip_requested(combat_summary, text)
+
+
+func _on_combat_summary_meta_hover_ended(_meta: Variant) -> void:
+	_on_tooltip_exited()
 
 
 func _on_panel_runtime_tooltip_requested(_source: Control, snapshot: Dictionary) -> void:
@@ -969,8 +1001,8 @@ func _show_campaign_landing() -> void:
 func _show_campaign_message(message: String) -> void:
 	_show_campaign_landing()
 	if not message.is_empty():
-		CombatLogRichTextFormatterScript.append_line(combat_summary, "", log_highlight_palette)
-		CombatLogRichTextFormatterScript.append_line(combat_summary, message, log_highlight_palette)
+		CombatLogRichTextFormatterScript.append_line(combat_summary, "", log_highlight_palette, cached_log_tooltip_lookup)
+		CombatLogRichTextFormatterScript.append_line(combat_summary, message, log_highlight_palette, cached_log_tooltip_lookup)
 		call_deferred("_resize_conditions_pane")
 
 
@@ -1094,7 +1126,80 @@ func _collect_static_log_lines(log_lines: Array[String], static_lines: Array[Str
 
 func _append_lines(target_log: RichTextLabel, lines: Array[String]) -> void:
 	for line in lines:
-		CombatLogRichTextFormatterScript.append_line(target_log, line, log_highlight_palette)
+		CombatLogRichTextFormatterScript.append_line(target_log, line, log_highlight_palette, cached_log_tooltip_lookup)
+
+
+func _build_log_tooltip_lookup(definitions: Array[UnitDefinition], roster_units: Array[Dictionary]) -> Dictionary:
+	var lookup := {}
+	for roster_unit in roster_units:
+		var name := String(roster_unit.get("name", ""))
+		if not name.is_empty():
+			lookup[name] = "Unit: %s\nTeam: %s\nSource: battle roster" % [name, String(roster_unit.get("team", ""))]
+	var content := JsonContentLoaderScript.load_content_resources(_enabled_mod_pack_ids_array())
+	for status in content.get("statuses", {}).values():
+		_register_tooltip_resource(lookup, status)
+	for item in content.get("items", {}).values():
+		_register_tooltip_resource(lookup, item)
+	for tactic in content.get("tactics", {}).values():
+		_register_tooltip_resource(lookup, tactic)
+	for job in content.get("jobs", {}).values():
+		_register_tooltip_resource(lookup, job)
+	for unit in definitions:
+		_register_tooltip_resource(lookup, unit)
+		if unit != null:
+			_register_tooltip_resource(lookup, unit.ancestry)
+			_register_loadout_tooltip_resources(lookup, unit.loadout)
+	return lookup
+
+
+func _register_loadout_tooltip_resources(lookup: Dictionary, loadout: UnitLoadoutDefinition) -> void:
+	if loadout == null:
+		return
+	_register_tooltip_resource(lookup, loadout)
+	_register_tooltip_resource(lookup, loadout.current_job)
+	_register_tooltip_resource(lookup, loadout.equipped_skill)
+	_register_tooltip_resource(lookup, loadout.equipped_passive)
+	_register_tooltip_resource(lookup, loadout.equipped_reaction)
+	_register_tooltip_resource(lookup, loadout.weapon)
+	_register_tooltip_resource(lookup, loadout.armor)
+	_register_tooltip_resource(lookup, loadout.helmet)
+	_register_tooltip_resource(lookup, loadout.trinket)
+	for tactic in loadout.tactics:
+		_register_tooltip_resource(lookup, tactic)
+
+
+func _register_tooltip_resource(lookup: Dictionary, resource) -> void:
+	if resource == null:
+		return
+	var display_value = resource.get("display_name")
+	var display_name := String(display_value) if display_value != null else ""
+	if display_name.is_empty():
+		return
+	lookup[display_name] = ResourceTooltipBuilderScript.text_for_resource(resource)
+	if resource is JobDefinition:
+		_register_tooltip_resource(lookup, resource.skill)
+		_register_tooltip_resource(lookup, resource.secondary_skill)
+		_register_tooltip_resource(lookup, resource.passive)
+		_register_tooltip_resource(lookup, resource.reaction)
+		_register_tooltip_resource(lookup, resource.default_tactic)
+	elif resource is SkillDefinition:
+		_register_tooltip_resource(lookup, resource.status)
+		for effect in resource.effects:
+			_register_tooltip_resource(lookup, effect)
+	elif resource is PassiveDefinition:
+		for effect in resource.effects:
+			_register_tooltip_resource(lookup, effect)
+	elif resource is ReactionDefinition:
+		_register_tooltip_resource(lookup, resource.status)
+		for status in resource.replacement_statuses:
+			_register_tooltip_resource(lookup, status)
+		for effect in resource.effects:
+			_register_tooltip_resource(lookup, effect)
+	elif resource is ItemDefinition:
+		for effect in resource.effects:
+			_register_tooltip_resource(lookup, effect)
+	elif resource is TacticDefinition:
+		_register_tooltip_resource(lookup, resource.status)
 
 
 func _resize_conditions_pane() -> void:
