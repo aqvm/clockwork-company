@@ -11,6 +11,7 @@
 [resource]
 script = ExtResource("1_unit")
 display_name = "Orin Lamplighter"
+tooltip_text = "Orin Lamplighter is an allied combatant. Their tooltip summarizes base stats, ancestry, loadout, and job progress so you can read their role before opening deeper panels."
 tags = Array[Resource]([ExtResource("tag_support"), ExtResource("tag_light")])
 team = "Allies"
 ancestry = ExtResource("3_ancestry")

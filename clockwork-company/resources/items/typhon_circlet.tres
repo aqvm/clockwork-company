@@ -10,6 +10,7 @@
 [sub_resource type="Resource" id="Resource_typhon_circlet_start"]
 script = ExtResource("2_effect")
 display_name = "Second Brow"
+tooltip_text = "Second Brow is a triggered effect. When Battle Start happens and Always passes, it applies Gain Armor to Self."
 tags = Array[Resource]([ExtResource("tag_helmet"), ExtResource("tag_prophecy")])
 trigger = "Battle Start"
 target_selector = "Self"
@@ -19,6 +20,7 @@ amount = 1
 [resource]
 script = ExtResource("1_item")
 display_name = "Typhon Circlet"
+tooltip_text = "Typhon Circlet is a Helmet item with magic damage +1 and one or more triggered effects. Use it to compare what changes immediately and what only appears during combat."
 tags = Array[Resource]([ExtResource("tag_helmet"), ExtResource("tag_magic"), ExtResource("tag_prophecy")])
 slot = "Helmet"
 magic_damage_modifier = 1

@@ -9,6 +9,7 @@
 resource_name = "Apply Burn"
 script = ExtResource("1_skill")
 display_name = "Apply Burn"
+tooltip_text = "Apply Burn applies ExtResource(\"2_burning\") through an active skill. Its main value comes from setting up status-driven tactics and reactions."
 tags = Array[Resource]([ExtResource("tag_burn"), ExtResource("tag_status")])
 action = "Apply Status"
 attack_damage_type = "Magic"

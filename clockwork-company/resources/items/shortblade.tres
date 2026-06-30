@@ -12,6 +12,7 @@
 resource_name = "Shortblade Notch"
 script = ExtResource("2_effect")
 display_name = "Shortblade Notch"
+tooltip_text = "Shortblade Notch is a triggered effect. When Hit happens and Always passes, it applies Reduce Target Armor to Attack Target."
 tags = Array[Resource]([ExtResource("tag_armor_break"), ExtResource("tag_blade")])
 trigger = "Hit"
 target_selector = "Attack Target"
@@ -21,6 +22,7 @@ amount = 1
 [resource]
 script = ExtResource("1_shortblade")
 display_name = "Shortblade"
+tooltip_text = "Shortblade is an equipment item with physical damage +2 and one or more triggered effects. Use it to compare what changes immediately and what only appears during combat."
 tags = Array[Resource]([ExtResource("tag_weapon"), ExtResource("tag_blade")])
 physical_damage_modifier = 2
 effects = Array[ExtResource("2_effect")]([SubResource("Resource_shortblade_hit")])

@@ -12,6 +12,7 @@
 [resource]
 script = ExtResource("1_unit")
 display_name = "Maeve Turnkey"
+tooltip_text = "Maeve Turnkey is an enemy combatant. Their tooltip summarizes base stats, ancestry, loadout, and job progress so you can read their role before opening deeper panels."
 tags = Array[Resource]([ExtResource("tag_frontline"), ExtResource("tag_armored"), ExtResource("tag_control")])
 team = "Enemies"
 ancestry = ExtResource("3_ancestry")

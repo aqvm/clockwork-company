@@ -8,6 +8,7 @@
 [resource]
 script = ExtResource("1_tactic")
 display_name = "Cast Sparkblade"
+tooltip_text = "Cast Sparkblade is an ordered AI rule: when Enemy Alive is valid, use Job Skill on Frontmost Enemy. Earlier tactics get first chance to act."
 tags = Array[Resource]([ExtResource("tag_learned"), ExtResource("tag_job_skill")])
 condition = "Enemy Alive"
 action = "Job Skill"

@@ -215,6 +215,7 @@ static func _load_base_ancestries() -> Dictionary:
 		out[id] = {
 			"id": id,
 			"display_name": resource.display_name,
+			"tooltip_text": resource.tooltip_text,
 			"tags": TagUtilsScript.ids(resource.tags),
 			"min_max_hp": resource.min_max_hp,
 			"max_max_hp": resource.max_max_hp,
@@ -248,6 +249,7 @@ static func _load_base_items() -> Dictionary:
 		out[id] = {
 			"id": id,
 			"display_name": resource.display_name,
+			"tooltip_text": resource.tooltip_text,
 			"tags": TagUtilsScript.ids(resource.tags),
 			"slot": resource.slot,
 			"max_hp_modifier": resource.max_hp_modifier,
@@ -267,6 +269,7 @@ static func _load_base_jobs() -> Dictionary:
 		out[id] = {
 			"id": id,
 			"display_name": resource.display_name,
+			"tooltip_text": resource.tooltip_text,
 			"tags": TagUtilsScript.ids(resource.tags),
 			"max_hp_growth": resource.max_hp_growth,
 			"physical_damage_growth": resource.physical_damage_growth,
@@ -293,6 +296,7 @@ static func _load_base_tactics() -> Dictionary:
 		out[id] = {
 			"id": id,
 			"display_name": resource.display_name,
+			"tooltip_text": resource.tooltip_text,
 			"tags": TagUtilsScript.ids(resource.tags),
 			"condition": resource.condition,
 			"action": resource.action,
@@ -308,6 +312,7 @@ static func _load_base_loadouts() -> Dictionary:
 		out[id] = {
 			"id": id,
 			"display_name": resource.display_name,
+			"tooltip_text": resource.tooltip_text,
 			"current_job_id": _resource_ref_id(resource.current_job),
 			"equipped_skill_job_id": _base_job_id_for_feature(resource.equipped_skill, "skill"),
 			"equipped_passive_job_id": _base_job_id_for_feature(resource.equipped_passive, "passive"),
@@ -337,6 +342,7 @@ static func _load_base_units() -> Dictionary:
 		out[id] = {
 			"id": id,
 			"display_name": resource.display_name,
+			"tooltip_text": resource.tooltip_text,
 			"tags": TagUtilsScript.ids(resource.tags),
 			"team": resource.team,
 			"ancestry_id": _resource_ref_id(resource.ancestry),
@@ -758,6 +764,7 @@ static func _build_ancestry_resources(ancestries_data: Dictionary) -> Dictionary
 		var ancestry = AncestryDefinitionScript.new()
 		_set_content_id(ancestry, id)
 		ancestry.display_name = String(src.get("display_name", id))
+		ancestry.tooltip_text = String(src.get("tooltip_text", ""))
 		ancestry.tags = _tag_array(src.get("tags", []))
 		ancestry.min_max_hp = int(src.get("min_max_hp", 1))
 		ancestry.max_max_hp = int(src.get("max_max_hp", ancestry.min_max_hp))
@@ -791,6 +798,7 @@ static func _build_ancestry_feature_resource(raw: Variant):
 	var feature = AncestryFeatureDefinitionScript.new()
 	_set_content_id(feature, String(src.get("id", "")))
 	feature.display_name = String(src.get("display_name", "Ancestry Feature"))
+	feature.tooltip_text = String(src.get("tooltip_text", ""))
 	feature.tags = _tag_array(src.get("tags", []))
 	feature.trigger = String(src.get("trigger", "Battle Start"))
 	feature.condition = String(src.get("condition", "Always"))
@@ -809,6 +817,7 @@ static func _build_item_resources(items_data: Dictionary, statuses_by_id: Dictio
 		var item: ItemDefinition = ItemDefinitionScript.new()
 		_set_content_id(item, id)
 		item.display_name = String(src.get("display_name", id))
+		item.tooltip_text = String(src.get("tooltip_text", ""))
 		item.tags = _tag_array(src.get("tags", []))
 		item.slot = String(src.get("slot", "Weapon"))
 		item.max_hp_modifier = int(src.get("max_hp_modifier", 0))
@@ -828,6 +837,7 @@ static func _build_effect_resources(effects_data: Array, statuses_by_id: Diction
 		var effect: EffectDefinition = EffectDefinitionScript.new()
 		_set_content_id(effect, String(src.get("id", "")))
 		effect.display_name = String(src.get("display_name", ""))
+		effect.tooltip_text = String(src.get("tooltip_text", ""))
 		effect.tags = _tag_array(src.get("tags", []))
 		effect.trigger = String(src.get("trigger", "Battle Start"))
 		effect.condition = String(src.get("condition", "Always"))
@@ -877,6 +887,7 @@ static func _build_job_resources(jobs_data: Dictionary, statuses_by_id: Dictiona
 		var job: JobDefinition = JobDefinitionScript.new()
 		_set_content_id(job, id)
 		job.display_name = String(src.get("display_name", id))
+		job.tooltip_text = String(src.get("tooltip_text", ""))
 		job.tags = _tag_array(src.get("tags", []))
 		job.max_hp_growth = int(src.get("max_hp_growth", 0))
 		job.physical_damage_growth = int(src.get("physical_damage_growth", 0))
@@ -903,6 +914,7 @@ static func _build_skill_resource(raw: Variant, statuses_by_id: Dictionary) -> S
 	var skill: SkillDefinition = SkillDefinitionScript.new()
 	_set_content_id(skill, String(src.get("id", "")))
 	skill.display_name = String(src.get("display_name", "Job Skill"))
+	skill.tooltip_text = String(src.get("tooltip_text", ""))
 	skill.tags = _tag_array(src.get("tags", []))
 	skill.action = String(src.get("action", "Attack"))
 	skill.default_target = String(src.get("default_target", "Frontmost Enemy"))
@@ -924,6 +936,7 @@ static func _build_passive_resource(raw: Variant, statuses_by_id: Dictionary) ->
 		var passive: PassiveDefinition = PassiveDefinitionScript.new()
 		_set_content_id(passive, String(src.get("id", "")))
 		passive.display_name = String(src.get("display_name", "Job Passive"))
+		passive.tooltip_text = String(src.get("tooltip_text", ""))
 		passive.tags = _tag_array(src.get("tags", []))
 		passive.passive_type = String(src.get("passive_type", "None"))
 		passive.amount = int(src.get("amount", 0))
@@ -940,6 +953,7 @@ static func _build_reaction_resource(raw: Variant, statuses_by_id: Dictionary) -
 	var reaction: ReactionDefinition = ReactionDefinitionScript.new()
 	_set_content_id(reaction, String(src.get("id", "")))
 	reaction.display_name = String(src.get("display_name", "Job Reaction"))
+	reaction.tooltip_text = String(src.get("tooltip_text", ""))
 	reaction.tags = _tag_array(src.get("tags", []))
 	reaction.trigger = String(src.get("trigger", "Damaged"))
 	reaction.condition = String(src.get("condition", "Always"))
@@ -965,6 +979,7 @@ static func _build_tactic_resource(raw: Variant, statuses_by_id: Dictionary) -> 
 	var tactic: TacticDefinition = TacticDefinitionScript.new()
 	_set_content_id(tactic, String(src.get("id", "")))
 	tactic.display_name = String(src.get("display_name", "Use Job Skill"))
+	tactic.tooltip_text = String(src.get("tooltip_text", ""))
 	tactic.tags = _tag_array(src.get("tags", []))
 	tactic.condition = String(src.get("condition", "Enemy Alive"))
 	tactic.action = String(src.get("action", "Job Skill"))
@@ -982,6 +997,7 @@ static func _effect_resources_to_data(effects: Array[EffectDefinition]) -> Array
 			continue
 		out.append({
 			"display_name": effect.display_name,
+			"tooltip_text": effect.tooltip_text,
 			"tags": TagUtilsScript.ids(effect.tags),
 			"trigger": effect.trigger,
 			"condition": effect.condition,
@@ -1026,6 +1042,7 @@ static func _skill_resource_to_data(skill: SkillDefinition) -> Dictionary:
 		return {}
 	return {
 		"display_name": skill.display_name,
+		"tooltip_text": skill.tooltip_text,
 		"tags": TagUtilsScript.ids(skill.tags),
 		"action": skill.action,
 		"default_target": skill.default_target,
@@ -1046,6 +1063,7 @@ static func _passive_resource_to_data(passive: PassiveDefinition) -> Dictionary:
 		return {}
 	return {
 		"display_name": passive.display_name,
+		"tooltip_text": passive.tooltip_text,
 		"tags": TagUtilsScript.ids(passive.tags),
 		"passive_type": passive.passive_type,
 		"amount": passive.amount,
@@ -1059,6 +1077,7 @@ static func _reaction_resource_to_data(reaction: ReactionDefinition) -> Dictiona
 		return {}
 	return {
 		"display_name": reaction.display_name,
+		"tooltip_text": reaction.tooltip_text,
 		"tags": TagUtilsScript.ids(reaction.tags),
 		"trigger": reaction.trigger,
 		"condition": reaction.condition,
@@ -1079,6 +1098,7 @@ static func _ancestry_feature_resource_to_data(feature) -> Dictionary:
 		return {}
 	return {
 		"display_name": feature.display_name,
+		"tooltip_text": feature.tooltip_text,
 		"tags": TagUtilsScript.ids(feature.tags),
 		"trigger": feature.trigger,
 		"condition": feature.condition,
@@ -1095,6 +1115,7 @@ static func _tactic_resource_to_data(tactic: TacticDefinition) -> Dictionary:
 		return {}
 	return {
 		"display_name": tactic.display_name,
+		"tooltip_text": tactic.tooltip_text,
 		"tags": TagUtilsScript.ids(tactic.tags),
 		"condition": tactic.condition,
 		"action": tactic.action,
@@ -1167,6 +1188,7 @@ static func _build_tactic_resources(tactics_data: Dictionary, statuses_by_id: Di
 		var tactic: TacticDefinition = TacticDefinitionScript.new()
 		_set_content_id(tactic, id)
 		tactic.display_name = String(src.get("display_name", id))
+		tactic.tooltip_text = String(src.get("tooltip_text", ""))
 		tactic.tags = _tag_array(src.get("tags", []))
 		tactic.condition = String(src.get("condition", "Always"))
 		tactic.action = String(src.get("action", "Attack"))
@@ -1185,6 +1207,7 @@ static func _build_loadout_resources(loadouts_data: Dictionary, jobs_by_id: Dict
 		var loadout: UnitLoadoutDefinition = UnitLoadoutDefinitionScript.new()
 		_set_content_id(loadout, id)
 		loadout.display_name = String(src.get("display_name", id))
+		loadout.tooltip_text = String(src.get("tooltip_text", ""))
 		loadout.current_job = jobs_by_id.get(String(src.get("current_job_id", "")), null)
 		var skill_job: JobDefinition = jobs_by_id.get(String(src.get("equipped_skill_job_id", "")), null)
 		var passive_job: JobDefinition = jobs_by_id.get(String(src.get("equipped_passive_job_id", "")), null)
@@ -1213,6 +1236,7 @@ static func _build_unit_resources(units_data: Dictionary, loadouts_by_id: Dictio
 		var unit: UnitDefinition = UnitDefinitionScript.new()
 		_set_content_id(unit, id)
 		unit.display_name = String(src.get("display_name", id))
+		unit.tooltip_text = String(src.get("tooltip_text", ""))
 		unit.tags = _tag_array(src.get("tags", []))
 		unit.team = String(src.get("team", "Allies"))
 		unit.ancestry = ancestries_by_id.get(String(src.get("ancestry_id", "")), null)

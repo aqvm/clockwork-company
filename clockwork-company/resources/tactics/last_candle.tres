@@ -8,6 +8,7 @@
 [resource]
 script = ExtResource("1_tactic")
 display_name = "Last Candle"
+tooltip_text = "Last Candle is an ordered AI rule: when Ally HP Below Half is valid, use Guard on Self. Earlier tactics get first chance to act."
 tags = Array[Resource]([ExtResource("tag_guard"), ExtResource("tag_ally_hurt")])
 condition = "Ally HP Below Half"
 action = "Guard"

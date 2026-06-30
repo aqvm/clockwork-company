@@ -12,6 +12,7 @@
 [resource]
 script = ExtResource("1_unit")
 display_name = "Nameless Witness"
+tooltip_text = "Nameless Witness is an enemy combatant. Their tooltip summarizes base stats, ancestry, loadout, and job progress so you can read their role before opening deeper panels."
 tags = Array[Resource]([ExtResource("tag_memory"), ExtResource("tag_fragile"), ExtResource("tag_death_backlash")])
 team = "Enemies"
 ancestry = ExtResource("3_ancestry")

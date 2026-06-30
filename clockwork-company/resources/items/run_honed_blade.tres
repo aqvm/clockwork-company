@@ -9,6 +9,7 @@
 [resource]
 script = ExtResource("1_item")
 display_name = "Run Honed Blade"
+tooltip_text = "Run Honed Blade is a Weapon item with physical damage +2. Use it to compare what changes immediately and what only appears during combat."
 tags = Array[Resource]([ExtResource("tag_weapon"), ExtResource("tag_reward"), ExtResource("tag_damage")])
 slot = "Weapon"
 physical_damage_modifier = 2

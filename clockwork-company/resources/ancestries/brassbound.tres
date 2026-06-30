@@ -12,6 +12,7 @@
 resource_name = "Spring Return"
 script = ExtResource("2_feature")
 display_name = "Spring Return"
+tooltip_text = "Spring Return is an ancestry feature that can trigger on Damaged. If Always passes, it resolves damage attacker."
 tags = Array[Resource]([ExtResource("tag_machine"), ExtResource("tag_counter")])
 trigger = "Damaged"
 feature_type = "Damage Attacker"
@@ -23,6 +24,7 @@ notes = "A deterministic counter-ping for machine-bodied units."
 resource_name = "Brassbound"
 script = ExtResource("1_ancestry")
 display_name = "Brassbound"
+tooltip_text = "Built from hinges, debt, and someone else's warranty."
 tags = Array[Resource]([ExtResource("tag_ancestry"), ExtResource("tag_machine"), ExtResource("tag_clockwork")])
 min_max_hp = 17
 max_max_hp = 23

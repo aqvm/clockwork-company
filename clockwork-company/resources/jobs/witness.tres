@@ -18,6 +18,7 @@
 [sub_resource type="Resource" id="Resource_witness_skill"]
 script = ExtResource("2_skill")
 display_name = "Remembered Blow"
+tooltip_text = "Remembered Blow is an active attack skill. It uses physical damage, hits 1 time(s), and follows tactics for target choice."
 tags = Array[Resource]([ExtResource("tag_memory"), ExtResource("tag_attack"), ExtResource("tag_magic")])
 action = "Attack"
 default_target = "Frontmost Enemy"
@@ -26,6 +27,7 @@ amount_modifier = 1
 [sub_resource type="Resource" id="Resource_witness_passive"]
 script = ExtResource("3_passive")
 display_name = "Careful Eye"
+tooltip_text = "Careful Eye is a passive rule that stays available while equipped. It provides an attack damage bonus and may add nested effects or cooldown timing."
 tags = Array[Resource]([ExtResource("tag_memory")])
 passive_type = "Attack Damage Bonus"
 amount = 1
@@ -34,6 +36,7 @@ cooldown_turns = 2
 [sub_resource type="Resource" id="Resource_witness_reaction"]
 script = ExtResource("4_reaction")
 display_name = "Testimony"
+tooltip_text = "Testimony is a reaction that can fire on HP Below Threshold. It checks Self HP Below Percent before resolving heal self."
 tags = Array[Resource]([ExtResource("tag_low_hp"), ExtResource("tag_reaction")])
 trigger = "HP Below Threshold"
 condition = "Self HP Below Percent"
@@ -45,6 +48,7 @@ cooldown_turns = 3
 [sub_resource type="Resource" id="Resource_witness_default_tactic"]
 script = ExtResource("5_tactic")
 display_name = "Recall the Strike"
+tooltip_text = "Recall the Strike is an ordered AI rule: when Enemy Alive is valid, use Job Skill on Frontmost Enemy. Earlier tactics get first chance to act."
 tags = Array[Resource]([ExtResource("tag_job_default")])
 condition = "Enemy Alive"
 action = "Job Skill"
@@ -53,6 +57,7 @@ target = "Frontmost Enemy"
 [resource]
 script = ExtResource("1_job")
 display_name = "Witness"
+tooltip_text = "Witness is a job path with HP +1, magic damage +1 per level. Its skill, passive, reaction, and default tactic define the role this unit is learning into."
 tags = Array[Resource]([ExtResource("tag_job"), ExtResource("tag_flex"), ExtResource("tag_memory")])
 max_hp_growth = 1
 physical_damage_growth = 0

@@ -9,6 +9,7 @@
 [resource]
 script = ExtResource("1_reaction")
 display_name = "Ward Flare"
+tooltip_text = "Ward Flare is a reaction that can fire on HP Below Threshold. It checks Self HP Below Percent before resolving gain armor."
 tags = Array[Resource]([ExtResource("tag_spellblade"), ExtResource("tag_reaction"), ExtResource("tag_ward")])
 trigger = "HP Below Threshold"
 condition = "Self HP Below Percent"

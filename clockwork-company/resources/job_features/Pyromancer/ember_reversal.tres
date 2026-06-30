@@ -15,6 +15,7 @@
 resource_name = "Ember Reversal"
 script = ExtResource("1_reaction")
 display_name = "Ember Reversal"
+tooltip_text = "Ember Reversal is a reaction that can fire on Status Application Requested. It checks Requested Status Is Ailment before resolving effects only."
 tags = Array[Resource]([ExtResource("tag_burn"), ExtResource("tag_reaction")])
 trigger = "Status Application Requested"
 condition = "Requested Status Is Ailment"

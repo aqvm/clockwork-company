@@ -13,12 +13,14 @@
 resource_name = "Rainbarrel Slosh"
 script = ExtResource("2_effect")
 display_name = "Rainbarrel Slosh"
+tooltip_text = "Rainbarrel Slosh is a triggered effect. When Battle Start happens and Always passes, it applies an effect to Self."
 tags = Array[Resource]([ExtResource("tag_armor"), ExtResource("tag_battle_start")])
 amount = 1
 
 [resource]
 script = ExtResource("1_item")
 display_name = "Rainbarrel Plate"
+tooltip_text = "Rainbarrel Plate is a Armor item with HP +8, armor +3, speed -3 and one or more triggered effects. Use it to compare what changes immediately and what only appears during combat."
 tags = Array[Resource]([ExtResource("tag_armor"), ExtResource("tag_heavy"), ExtResource("tag_armored")])
 slot = "Armor"
 max_hp_modifier = 8

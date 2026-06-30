@@ -8,6 +8,7 @@
 [resource]
 script = ExtResource("1_tactic")
 display_name = "Steady Strike"
+tooltip_text = "Steady Strike is an ordered AI rule: when Always is valid, use Attack on Frontmost Enemy. Earlier tactics get first chance to act."
 tags = Array[Resource]([ExtResource("tag_attack"), ExtResource("tag_default")])
 condition = "Always"
 action = "Attack"

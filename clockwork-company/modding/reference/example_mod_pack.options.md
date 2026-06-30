@@ -22,6 +22,7 @@ Demonstrates three common mod actions:
 - `items[]`:
   - `id`
   - `display_name`
+  - `tooltip_text` may be added to provide player-facing hover prose.
   - `slot`
   - `max_hp_modifier`
   - `physical_damage_modifier`

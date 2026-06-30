@@ -12,6 +12,7 @@
 [resource]
 script = ExtResource("1_loadout")
 display_name = "Roger Spellsword"
+tooltip_text = "Roger Spellsword is a planning package: current job, assigned learned features, equipment, and tactic order. It is the main reason a unit behaves differently from its base stat line."
 current_job = ExtResource("2_job")
 equipped_passive = ExtResource("7_passive")
 equipped_reaction = ExtResource("8_reaction")

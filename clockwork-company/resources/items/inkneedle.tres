@@ -11,6 +11,7 @@
 [sub_resource type="Resource" id="Resource_inkneedle_puncture"]
 script = ExtResource("2_effect")
 display_name = "Inkneedle Puncture"
+tooltip_text = "Inkneedle Puncture is a triggered effect. When Hit happens and Always passes, it applies Reduce Target Armor to Attack Target."
 tags = Array[Resource]([ExtResource("tag_armor_break"), ExtResource("tag_needle")])
 trigger = "Hit"
 target_selector = "Attack Target"
@@ -20,6 +21,7 @@ amount = 1
 [resource]
 script = ExtResource("1_item")
 display_name = "Inkneedle"
+tooltip_text = "Inkneedle is a Weapon item with physical damage +1, speed +1 and one or more triggered effects. Use it to compare what changes immediately and what only appears during combat."
 tags = Array[Resource]([ExtResource("tag_weapon"), ExtResource("tag_needle"), ExtResource("tag_swift"), ExtResource("tag_armor_break")])
 slot = "Weapon"
 physical_damage_modifier = 1

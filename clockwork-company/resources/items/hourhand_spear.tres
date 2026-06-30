@@ -13,6 +13,7 @@
 [sub_resource type="Resource" id="Resource_hourhand_puncture"]
 script = ExtResource("2_effect")
 display_name = "Hourhand Puncture"
+tooltip_text = "Hourhand Puncture is a triggered effect. When Attack happens and Always passes, it applies Bonus Damage to Attack Target."
 tags = Array[Resource]([ExtResource("tag_damage"), ExtResource("tag_clockwork"), ExtResource("tag_magic")])
 trigger = "Attack"
 target_selector = "Attack Target"
@@ -22,6 +23,7 @@ amount = 1
 [resource]
 script = ExtResource("1_item")
 display_name = "Hourhand Spear"
+tooltip_text = "Hourhand Spear is a Weapon item with magic damage +3, speed -1 and one or more triggered effects. Use it to compare what changes immediately and what only appears during combat."
 tags = Array[Resource]([ExtResource("tag_weapon"), ExtResource("tag_spear"), ExtResource("tag_tempo")])
 slot = "Weapon"
 magic_damage_modifier = 3

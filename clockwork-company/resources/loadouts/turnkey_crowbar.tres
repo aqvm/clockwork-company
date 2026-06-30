@@ -11,6 +11,7 @@
 [resource]
 script = ExtResource("1_loadout")
 display_name = "Turnkey Crowbar"
+tooltip_text = "Turnkey Crowbar is a planning package: current job, assigned learned features, equipment, and tactic order. It is the main reason a unit behaves differently from its base stat line."
 current_job = ExtResource("2_job")
 weapon = ExtResource("3_weapon")
 armor = ExtResource("4_armor")

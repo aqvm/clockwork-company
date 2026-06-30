@@ -5,6 +5,7 @@
 [resource]
 script = ExtResource("1_tactic")
 display_name = "Heal Lowest Ally"
+tooltip_text = "Heal Lowest Ally is an ordered AI rule: when Ally HP Below Half is valid, use Heal on Lowest HP Ally. Earlier tactics get first chance to act."
 condition = "Ally HP Below Half"
 action = "Heal"
 target = "Lowest HP Ally"

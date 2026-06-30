@@ -11,6 +11,7 @@
 [sub_resource type="Resource" id="Resource_namesake_locket_memory"]
 script = ExtResource("2_effect")
 display_name = "Namesake Memory"
+tooltip_text = "Namesake Memory is a triggered effect. When Damaged happens and Self HP Below Percent passes, it applies Heal Self to Self."
 tags = Array[Resource]([ExtResource("tag_survival"), ExtResource("tag_damaged")])
 trigger = "Damaged"
 condition = "Self HP Below Percent"
@@ -21,6 +22,7 @@ threshold_percent = 60
 [resource]
 script = ExtResource("1_item")
 display_name = "Namesake Locket"
+tooltip_text = "Namesake Locket is a Trinket item with HP +3 and one or more triggered effects. Use it to compare what changes immediately and what only appears during combat."
 tags = Array[Resource]([ExtResource("tag_trinket"), ExtResource("tag_survival"), ExtResource("tag_memory")])
 slot = "Trinket"
 max_hp_modifier = 3

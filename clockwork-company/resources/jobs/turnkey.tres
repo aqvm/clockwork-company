@@ -16,6 +16,7 @@
 [sub_resource type="Resource" id="Resource_turnkey_skill"]
 script = ExtResource("2_skill")
 display_name = "Lockstep"
+tooltip_text = "Lockstep is a guard skill. It spends the action on protection instead of damage and can be improved by guard bonuses or attached effects."
 tags = Array[Resource]([ExtResource("tag_control"), ExtResource("tag_guard")])
 action = "Guard"
 default_target = "Self"
@@ -24,6 +25,7 @@ amount_modifier = 1
 [sub_resource type="Resource" id="Resource_turnkey_passive"]
 script = ExtResource("3_passive")
 display_name = "Key-Ring Guard"
+tooltip_text = "Key-Ring Guard is a passive rule that stays available while equipped. It provides a guard armor bonus and may add nested effects or cooldown timing."
 tags = Array[Resource]([ExtResource("tag_guard")])
 passive_type = "Guard Armor Bonus"
 amount = 1
@@ -32,6 +34,7 @@ cooldown_turns = 1
 [sub_resource type="Resource" id="Resource_turnkey_reaction"]
 script = ExtResource("4_reaction")
 display_name = "Door Slam"
+tooltip_text = "Door Slam is a reaction that can fire on Damaged. It checks Always before resolving damage attacker."
 tags = Array[Resource]([ExtResource("tag_damaged"), ExtResource("tag_reaction")])
 trigger = "Damaged"
 condition = "Always"
@@ -43,6 +46,7 @@ cooldown_turns = 4
 [sub_resource type="Resource" id="Resource_turnkey_default_tactic"]
 script = ExtResource("5_tactic")
 display_name = "Lock the Line"
+tooltip_text = "Lock the Line is an ordered AI rule: when Enemy Alive is valid, use Job Skill on Self. Earlier tactics get first chance to act."
 tags = Array[Resource]([ExtResource("tag_job_default")])
 condition = "Enemy Alive"
 action = "Job Skill"
@@ -51,6 +55,7 @@ target = "Self"
 [resource]
 script = ExtResource("1_job")
 display_name = "Turnkey"
+tooltip_text = "Turnkey is a job path with HP +1, armor +2 per level. Its skill, passive, reaction, and default tactic define the role this unit is learning into."
 tags = Array[Resource]([ExtResource("tag_job"), ExtResource("tag_guard"), ExtResource("tag_control")])
 max_hp_growth = 1
 physical_damage_growth = 0

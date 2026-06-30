@@ -13,6 +13,7 @@
 resource_name = "Ledger Notch"
 script = ExtResource("2_effect")
 display_name = "Ledger Notch"
+tooltip_text = "Ledger Notch is a triggered effect. When Hit happens and Always passes, it applies Reduce Target Armor to Attack Target."
 tags = Array[Resource]([ExtResource("tag_armor_break"), ExtResource("tag_blade")])
 trigger = "Hit"
 target_selector = "Attack Target"
@@ -22,6 +23,7 @@ amount = 1
 [resource]
 script = ExtResource("1_item")
 display_name = "Ledger Knife"
+tooltip_text = "Ledger Knife is an equipment item with physical damage +1, speed +1 and one or more triggered effects. Use it to compare what changes immediately and what only appears during combat."
 tags = Array[Resource]([ExtResource("tag_weapon"), ExtResource("tag_blade"), ExtResource("tag_debt"), ExtResource("tag_armor_break")])
 physical_damage_modifier = 1
 action_speed_modifier = 1

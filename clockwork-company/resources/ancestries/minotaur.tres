@@ -13,6 +13,7 @@
 resource_name = "Goring Charge"
 script = ExtResource("2_feature")
 display_name = "Goring Charge"
+tooltip_text = "Goring Charge is an ancestry feature that can trigger on Attack. If Always passes, it resolves bonus damage."
 tags = Array[Resource]([ExtResource("tag_physical"), ExtResource("tag_charge")])
 trigger = "Attack"
 feature_type = "Bonus Damage"
@@ -24,6 +25,7 @@ notes = "A front-loaded body check. Strong, memorable, and intentionally cooldow
 resource_name = "Minotaur"
 script = ExtResource("1_ancestry")
 display_name = "Minotaur"
+tooltip_text = "Big bodies, short tempers, and excellent door-opening arguments."
 tags = Array[Resource]([ExtResource("tag_ancestry"), ExtResource("tag_large"), ExtResource("tag_horned")])
 min_max_hp = 22
 max_max_hp = 28

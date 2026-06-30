@@ -13,6 +13,7 @@
 resource_name = "Lender Coat Receipt"
 script = ExtResource("2_effect")
 display_name = "Lender Coat Receipt"
+tooltip_text = "Lender Coat Receipt is a triggered effect. When Damaged happens and Self HP Below Percent passes, it applies Heal Self to Self."
 tags = Array[Resource]([ExtResource("tag_survival"), ExtResource("tag_low_hp")])
 trigger = "Damaged"
 condition = "Self HP Below Percent"
@@ -23,6 +24,7 @@ once_per_battle = true
 [resource]
 script = ExtResource("1_item")
 display_name = "Lender Coat"
+tooltip_text = "Lender Coat is a Armor item with HP +6, armor +1 and one or more triggered effects. Use it to compare what changes immediately and what only appears during combat."
 tags = Array[Resource]([ExtResource("tag_armor"), ExtResource("tag_debt"), ExtResource("tag_survival")])
 slot = "Armor"
 max_hp_modifier = 6

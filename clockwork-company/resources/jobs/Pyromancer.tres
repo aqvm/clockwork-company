@@ -13,6 +13,7 @@
 [resource]
 script = ExtResource("1_job")
 display_name = "Pyromancer"
+tooltip_text = "Pyromancer is a job path with no stat growth per level. Its skill, passive, reaction, and default tactic define the role this unit is learning into."
 tags = Array[Resource]([ExtResource("tag_job"), ExtResource("tag_burn"), ExtResource("tag_ailment")])
 skill = ExtResource("2_skill")
 secondary_skill = ExtResource("3_secondary")

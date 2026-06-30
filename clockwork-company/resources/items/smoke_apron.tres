@@ -13,12 +13,14 @@
 resource_name = "Smoke Apron Cough"
 script = ExtResource("2_effect")
 display_name = "Smoke Apron Cough"
+tooltip_text = "Smoke Apron Cough is a triggered effect. When Battle Start happens and Always passes, it applies an effect to Self."
 tags = Array[Resource]([ExtResource("tag_armor"), ExtResource("tag_battle_start")])
 amount = 1
 
 [resource]
 script = ExtResource("1_item")
 display_name = "Smoke Apron"
+tooltip_text = "Smoke Apron is a Armor item with HP +4, armor +1, speed +1 and one or more triggered effects. Use it to compare what changes immediately and what only appears during combat."
 tags = Array[Resource]([ExtResource("tag_armor"), ExtResource("tag_light"), ExtResource("tag_foundry")])
 slot = "Armor"
 max_hp_modifier = 4

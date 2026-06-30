@@ -37,6 +37,8 @@ Core data Resources use conditional Inspector visibility and property tooltips t
 
 Hidden fields may still exist on older Resources and can remain serialized if they were previously set. Content validation is still the authoritative safety net for unsupported combinations, missing references, or stale hidden values.
 
+Gameplay Resources that appear in hover tooltips should fill `tooltip_text` with one or two player-facing sentences before relying on mechanical fields. The tooltip builder displays that prose first, then appends structured details such as tags, triggers, targets, stats, and effects.
+
 For bespoke jobs, prefer standalone feature Resources under `res://resources/job_features/<Job Name>/` and reference them from the job. This keeps skills, passives, reactions, and shared effects reusable and easier to inspect than nested subresources.
 
 ## Detailed Reference

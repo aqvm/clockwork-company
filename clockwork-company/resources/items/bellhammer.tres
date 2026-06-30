@@ -13,6 +13,7 @@
 resource_name = "Bellhammer Crack"
 script = ExtResource("2_effect")
 display_name = "Bellhammer Crack"
+tooltip_text = "Bellhammer Crack is a triggered effect. When Hit happens and Always passes, it applies Reduce Target Armor to Attack Target."
 tags = Array[Resource]([ExtResource("tag_armor_break"), ExtResource("tag_hammer")])
 trigger = "Hit"
 target_selector = "Attack Target"
@@ -22,6 +23,7 @@ amount = 2
 [resource]
 script = ExtResource("1_item")
 display_name = "Bellhammer"
+tooltip_text = "Bellhammer is an equipment item with physical damage +4, armor +1, speed -2 and one or more triggered effects. Use it to compare what changes immediately and what only appears during combat."
 tags = Array[Resource]([ExtResource("tag_weapon"), ExtResource("tag_hammer"), ExtResource("tag_slow"), ExtResource("tag_armor_break")])
 physical_damage_modifier = 4
 armor_modifier = 1

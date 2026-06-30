@@ -12,6 +12,7 @@
 [resource]
 script = ExtResource("1_unit")
 display_name = "Nyx Cutpurse"
+tooltip_text = "Nyx Cutpurse is an allied combatant. Their tooltip summarizes base stats, ancestry, loadout, and job progress so you can read their role before opening deeper panels."
 tags = Array[Resource]([ExtResource("tag_swift"), ExtResource("tag_fragile"), ExtResource("tag_blade")])
 team = "Allies"
 ancestry = ExtResource("3_ancestry")

@@ -9,6 +9,7 @@
 [resource]
 script = ExtResource("1_item")
 display_name = "Salt Garter"
+tooltip_text = "Salt Garter is a Trinket item with HP +2, speed +1. Use it to compare what changes immediately and what only appears during combat."
 tags = Array[Resource]([ExtResource("tag_trinket"), ExtResource("tag_speed"), ExtResource("tag_survival")])
 slot = "Trinket"
 max_hp_modifier = 2

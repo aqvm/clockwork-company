@@ -11,6 +11,7 @@
 [sub_resource type="Resource" id="Feature_crowned"]
 script = ExtResource("2_feature")
 display_name = "Many-Crowned"
+tooltip_text = "Many-Crowned is an ancestry feature that can trigger on Battle Start. If Always passes, it resolves gain armor."
 tags = Array[Resource]([ExtResource("tag_helmet"), ExtResource("tag_prophecy")])
 trigger = "Battle Start"
 condition = "Always"
@@ -23,6 +24,7 @@ notes = "Scaffold for the future two-helmet ancestry. Current implementation is 
 [resource]
 script = ExtResource("1_ancestry")
 display_name = "Typhon-born"
+tooltip_text = "Eventual goal: this ancestry can wear two helmets once equipment-slot capacity exists. That is intentionally not implemented yet."
 tags = Array[Resource]([ExtResource("tag_ancestry"), ExtResource("tag_many_headed"), ExtResource("tag_helmet")])
 min_max_hp = 16
 max_max_hp = 23

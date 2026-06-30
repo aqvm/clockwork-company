@@ -8,6 +8,7 @@
 [resource]
 script = ExtResource("1_tactic")
 display_name = "Mercy First"
+tooltip_text = "Mercy First is an ordered AI rule: when Ally HP Below Half is valid, use Heal on Lowest HP Ally. Earlier tactics get first chance to act."
 tags = Array[Resource]([ExtResource("tag_heal"), ExtResource("tag_support")])
 condition = "Ally HP Below Half"
 action = "Heal"

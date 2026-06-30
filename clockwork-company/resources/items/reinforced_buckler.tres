@@ -12,12 +12,14 @@
 resource_name = "Buckler Brace"
 script = ExtResource("2_effect")
 display_name = "Buckler Brace"
+tooltip_text = "Buckler Brace is a triggered effect. When Battle Start happens and Always passes, it applies an effect to Self."
 tags = Array[Resource]([ExtResource("tag_armor"), ExtResource("tag_battle_start")])
 amount = 1
 
 [resource]
 script = ExtResource("1_buckler")
 display_name = "Reinforced Buckler"
+tooltip_text = "Reinforced Buckler is a Armor item with HP +6, armor +2, speed -1 and one or more triggered effects. Use it to compare what changes immediately and what only appears during combat."
 tags = Array[Resource]([ExtResource("tag_armor"), ExtResource("tag_guard")])
 slot = "Armor"
 max_hp_modifier = 6

@@ -12,6 +12,7 @@
 [sub_resource type="Resource" id="Resource_red_string_snap"]
 script = ExtResource("2_effect")
 display_name = "Red String Snap"
+tooltip_text = "Red String Snap is a triggered effect. When Death happens and Always passes, it applies Damage Killer to Killer."
 tags = Array[Resource]([ExtResource("tag_death"), ExtResource("tag_backlash")])
 trigger = "Death"
 target_selector = "Killer"
@@ -21,6 +22,7 @@ amount = 2
 [resource]
 script = ExtResource("1_item")
 display_name = "Red String"
+tooltip_text = "Red String is a Trinket item with physical damage +1 and one or more triggered effects. Use it to compare what changes immediately and what only appears during combat."
 tags = Array[Resource]([ExtResource("tag_trinket"), ExtResource("tag_death_backlash"), ExtResource("tag_fragile")])
 slot = "Trinket"
 physical_damage_modifier = 1

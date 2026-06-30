@@ -13,12 +13,14 @@
 resource_name = "Bent Crown Posture"
 script = ExtResource("2_effect")
 display_name = "Bent Crown Posture"
+tooltip_text = "Bent Crown Posture is a triggered effect. When Battle Start happens and Always passes, it applies an effect to Self."
 tags = Array[Resource]([ExtResource("tag_armor"), ExtResource("tag_battle_start")])
 amount = 1
 
 [resource]
 script = ExtResource("1_item")
 display_name = "Bent Crown"
+tooltip_text = "Bent Crown is a Trinket item with armor +2, speed -2 and one or more triggered effects. Use it to compare what changes immediately and what only appears during combat."
 tags = Array[Resource]([ExtResource("tag_trinket"), ExtResource("tag_armor"), ExtResource("tag_slow")])
 slot = "Trinket"
 armor_modifier = 2

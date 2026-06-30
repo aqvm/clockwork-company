@@ -18,6 +18,8 @@ const TARGET_TAG_CONDITIONS := ["Target Has Tag", "Target Missing Tag"]
 	set(value):
 		display_name = value
 		resource_name = value
+## Player-facing summary shown at the top of resource tooltips.
+@export_multiline var tooltip_text := ""
 ## Shared TagDefinition resources. Target tag conditions compare these IDs against runtime unit tags.
 @export var tags: Array[Resource] = []
 ## Combat event that can wake this effect. Changing it may reveal event-only fields such as requested/applied status matching.

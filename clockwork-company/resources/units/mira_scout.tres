@@ -7,6 +7,7 @@
 [resource]
 script = ExtResource("1_mira")
 display_name = "Mira Scout"
+tooltip_text = "Mira Scout is an allied combatant. Their tooltip summarizes base stats, ancestry, loadout, and job progress so you can read their role before opening deeper panels."
 team = "Allies"
 ancestry = ExtResource("3_ancestry")
 max_hp = 22

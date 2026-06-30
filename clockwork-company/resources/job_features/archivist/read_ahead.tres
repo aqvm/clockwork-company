@@ -9,5 +9,6 @@
 [resource]
 script = ExtResource("1_passive")
 display_name = "Read Ahead"
+tooltip_text = "Read Ahead is a passive rule that stays available while equipped. It forecasts combat outcomes and may add nested effects or cooldown timing."
 tags = Array[Resource]([ExtResource("tag_forecast"), ExtResource("tag_support"), ExtResource("tag_time")])
 passive_type = "Forecast"

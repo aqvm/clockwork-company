@@ -5,6 +5,8 @@ class_name UnitLoadoutDefinition
 
 ## Loadout name shown in planning panels and tooltips.
 @export var display_name := ""
+## Player-facing summary shown at the top of resource tooltips.
+@export_multiline var tooltip_text := ""
 ## Job currently active for this loadout. Supplies current-job skills, restrictions, growth, and default tactic.
 @export var current_job: JobDefinition = null
 ## Learned cross-job skill assigned separately from current-job `Job Skill` and `Secondary Skill`.

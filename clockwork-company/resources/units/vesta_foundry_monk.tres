@@ -12,6 +12,7 @@
 [resource]
 script = ExtResource("1_unit")
 display_name = "Vesta Foundry Monk"
+tooltip_text = "Vesta Foundry Monk is an allied combatant. Their tooltip summarizes base stats, ancestry, loadout, and job progress so you can read their role before opening deeper panels."
 tags = Array[Resource]([ExtResource("tag_machine"), ExtResource("tag_frontline"), ExtResource("tag_armored")])
 team = "Allies"
 ancestry = ExtResource("3_ancestry")

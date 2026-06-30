@@ -13,6 +13,7 @@
 resource_name = "Tollhook Snare"
 script = ExtResource("2_effect")
 display_name = "Tollhook Snare"
+tooltip_text = "Tollhook Snare is a triggered effect. When Attack happens and Target Has Tag passes, it applies Bonus Damage to Attack Target."
 tags = Array[Resource]([ExtResource("tag_armored")])
 trigger = "Attack"
 condition = "Target Has Tag"
@@ -23,6 +24,7 @@ amount = 2
 [resource]
 script = ExtResource("1_item")
 display_name = "Tollhook"
+tooltip_text = "Tollhook is an equipment item with physical damage +2 and one or more triggered effects. Use it to compare what changes immediately and what only appears during combat."
 tags = Array[Resource]([ExtResource("tag_weapon"), ExtResource("tag_hook"), ExtResource("tag_anti_armor")])
 physical_damage_modifier = 2
 effects = Array[ExtResource("2_effect")]([SubResource("Resource_tollhook_snare")])

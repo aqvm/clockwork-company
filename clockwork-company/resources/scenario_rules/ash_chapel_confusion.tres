@@ -13,6 +13,7 @@
 resource_name = "Ash-Choked Confusion"
 script = ExtResource("2_effect")
 display_name = "Ash-Choked Confusion"
+tooltip_text = "Ash-Choked Confusion is a triggered effect. When Battle Start happens and Always passes, it applies Apply Status to All Units."
 target_selector = "All Units"
 effect_type = "Apply Status"
 status = ExtResource("3_confusion")

@@ -8,6 +8,7 @@
 [resource]
 script = ExtResource("1_boots")
 display_name = "Light-Step Boots"
+tooltip_text = "Light-Step Boots is a Trinket item with armor -1, speed +2. Use it to compare what changes immediately and what only appears during combat."
 tags = Array[Resource]([ExtResource("tag_speed"), ExtResource("tag_trinket")])
 slot = "Trinket"
 armor_modifier = -1

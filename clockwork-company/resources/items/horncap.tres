@@ -9,6 +9,7 @@
 [resource]
 script = ExtResource("1_item")
 display_name = "Horncap"
+tooltip_text = "Horncap is a Helmet item with physical damage +1, armor +1. Use it to compare what changes immediately and what only appears during combat."
 tags = Array[Resource]([ExtResource("tag_helmet"), ExtResource("tag_horned"), ExtResource("tag_charge")])
 slot = "Helmet"
 physical_damage_modifier = 1

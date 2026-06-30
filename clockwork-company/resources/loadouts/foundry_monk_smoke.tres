@@ -10,6 +10,7 @@
 [resource]
 script = ExtResource("1_loadout")
 display_name = "Foundry Monk Smoke"
+tooltip_text = "Foundry Monk Smoke is a planning package: current job, assigned learned features, equipment, and tactic order. It is the main reason a unit behaves differently from its base stat line."
 current_job = ExtResource("2_job")
 armor = ExtResource("3_armor")
 trinket = ExtResource("4_trinket")

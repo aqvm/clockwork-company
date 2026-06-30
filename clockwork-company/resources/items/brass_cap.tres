@@ -11,6 +11,7 @@
 resource_name = "Ringing Dent"
 script = ExtResource("2_effect")
 display_name = "Ringing Dent"
+tooltip_text = "Ringing Dent is a triggered effect. When HP Below Threshold happens and Self HP Below Percent passes, it applies Increase Max HP to Self."
 tags = Array[Resource]([ExtResource("tag_helmet"), ExtResource("tag_machine")])
 trigger = "HP Below Threshold"
 condition = "Self HP Below Percent"
@@ -21,6 +22,7 @@ once_per_battle = true
 [resource]
 script = ExtResource("1_item")
 display_name = "Brass Cap"
+tooltip_text = "Brass Cap is a Helmet item with armor +1 and one or more triggered effects. Use it to compare what changes immediately and what only appears during combat."
 tags = Array[Resource]([ExtResource("tag_helmet"), ExtResource("tag_machine")])
 slot = "Helmet"
 armor_modifier = 1

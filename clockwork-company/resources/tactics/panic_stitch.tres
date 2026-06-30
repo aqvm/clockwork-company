@@ -8,6 +8,7 @@
 [resource]
 script = ExtResource("1_tactic")
 display_name = "Panic Stitch"
+tooltip_text = "Panic Stitch is an ordered AI rule: when Self HP Below Half is valid, use Heal on Self. Earlier tactics get first chance to act."
 tags = Array[Resource]([ExtResource("tag_heal"), ExtResource("tag_low_hp")])
 condition = "Self HP Below Half"
 action = "Heal"

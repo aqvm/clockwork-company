@@ -12,6 +12,7 @@
 resource_name = "Blood Rush"
 script = ExtResource("2_feature")
 display_name = "Blood Rush"
+tooltip_text = "Blood Rush is an ancestry feature that can trigger on Kill. If Always passes, it resolves increase own action speed."
 tags = Array[Resource]([ExtResource("tag_swift"), ExtResource("tag_physical")])
 trigger = "Kill"
 feature_type = "Increase Own Action Speed"
@@ -23,6 +24,7 @@ notes = "Future tuning may pair this with temporary damage; for now it proves ki
 resource_name = "Redcap"
 script = ExtResource("1_ancestry")
 display_name = "Redcap"
+tooltip_text = "Wins by turning one clean finish into the next action arriving sooner."
 tags = Array[Resource]([ExtResource("tag_ancestry"), ExtResource("tag_swift"), ExtResource("tag_bloodied")])
 min_max_hp = 14
 max_max_hp = 19

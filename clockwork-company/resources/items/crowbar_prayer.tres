@@ -10,6 +10,7 @@
 [sub_resource type="Resource" id="Resource_crowbar_prayer_pry"]
 script = ExtResource("2_effect")
 display_name = "Crowbar Prayer Pry"
+tooltip_text = "Crowbar Prayer Pry is a triggered effect. When Hit happens and Always passes, it applies Reduce Target Armor to Attack Target."
 tags = Array[Resource]([ExtResource("tag_armor_break"), ExtResource("tag_tool")])
 trigger = "Hit"
 target_selector = "Attack Target"
@@ -19,6 +20,7 @@ amount = 1
 [resource]
 script = ExtResource("1_item")
 display_name = "Crowbar Prayer"
+tooltip_text = "Crowbar Prayer is a Weapon item with HP +2, physical damage +2 and one or more triggered effects. Use it to compare what changes immediately and what only appears during combat."
 tags = Array[Resource]([ExtResource("tag_weapon"), ExtResource("tag_tool"), ExtResource("tag_armor_break")])
 slot = "Weapon"
 max_hp_modifier = 2

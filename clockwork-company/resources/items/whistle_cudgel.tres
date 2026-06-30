@@ -11,6 +11,7 @@
 [sub_resource type="Resource" id="Resource_whistle_cudgel_rattle"]
 script = ExtResource("2_effect")
 display_name = "Whistle Cudgel Rattle"
+tooltip_text = "Whistle Cudgel Rattle is a triggered effect. When Hit happens and Always passes, it applies Reduce Target Armor to Attack Target."
 tags = Array[Resource]([ExtResource("tag_armor_break"), ExtResource("tag_club")])
 trigger = "Hit"
 target_selector = "Attack Target"
@@ -20,6 +21,7 @@ amount = 1
 [resource]
 script = ExtResource("1_item")
 display_name = "Whistle Cudgel"
+tooltip_text = "Whistle Cudgel is a Weapon item with physical damage +1, armor +1 and one or more triggered effects. Use it to compare what changes immediately and what only appears during combat."
 tags = Array[Resource]([ExtResource("tag_weapon"), ExtResource("tag_club"), ExtResource("tag_guard")])
 slot = "Weapon"
 physical_damage_modifier = 1

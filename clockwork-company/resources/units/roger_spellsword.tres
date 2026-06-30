@@ -21,6 +21,7 @@ reaction_unlocked = true
 [resource]
 script = ExtResource("1_unit")
 display_name = "Roger Spellsword"
+tooltip_text = "Roger Spellsword is an allied combatant. Their tooltip summarizes base stats, ancestry, loadout, and job progress so you can read their role before opening deeper panels."
 tags = Array[Resource]([ExtResource("tag_ally_candidate"), ExtResource("tag_spellblade"), ExtResource("tag_learned_build")])
 team = "Allies"
 ancestry = ExtResource("3_ancestry")

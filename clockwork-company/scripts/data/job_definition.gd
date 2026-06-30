@@ -5,6 +5,8 @@ class_name JobDefinition
 
 ## Job name shown in planning, combat setup logs, and tooltips.
 @export var display_name := ""
+## Player-facing summary shown at the top of resource tooltips.
+@export_multiline var tooltip_text := ""
 ## Shared TagDefinition resources for filtering, content organization, and future conditions.
 @export var tags: Array[Resource] = []
 ## HP gained per level in this job, applied from durable job progress when a runtime unit is built.

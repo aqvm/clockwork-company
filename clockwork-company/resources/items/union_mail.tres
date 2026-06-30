@@ -13,12 +13,14 @@
 resource_name = "Union Mail Link"
 script = ExtResource("2_effect")
 display_name = "Union Mail Link"
+tooltip_text = "Union Mail Link is a triggered effect. When Battle Start happens and Always passes, it applies an effect to Self."
 tags = Array[Resource]([ExtResource("tag_armor"), ExtResource("tag_battle_start")])
 amount = 2
 
 [resource]
 script = ExtResource("1_item")
 display_name = "Union Mail"
+tooltip_text = "Union Mail is a Armor item with HP +6, armor +2, speed -2 and one or more triggered effects. Use it to compare what changes immediately and what only appears during combat."
 tags = Array[Resource]([ExtResource("tag_armor"), ExtResource("tag_union"), ExtResource("tag_armored")])
 slot = "Armor"
 max_hp_modifier = 6

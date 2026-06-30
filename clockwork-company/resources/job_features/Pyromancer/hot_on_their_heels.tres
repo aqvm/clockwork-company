@@ -11,6 +11,7 @@
 resource_name = "Hot on Their Heels"
 script = ExtResource("1_skill")
 display_name = "Hot on Their Heels"
+tooltip_text = "Hot on Their Heels is an effects-only skill. Its behavior comes from the nested effects rather than a built-in attack, heal, guard, or status action."
 tags = Array[Resource]([ExtResource("tag_bridge"), ExtResource("tag_ailment"), ExtResource("tag_speed")])
 action = "Effects Only"
 default_target = "Lowest HP Ally"

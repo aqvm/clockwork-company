@@ -1,466 +1,543 @@
 {
-  "pack_id": "integration_test_mod_pack",
-  "display_name": "Integration Test Mod Pack",
-  "pack_version": 1,
-  "statuses": [
-    {
-      "id": "reconstitution_it",
-      "display_name": "Reconstitution IT",
-      "polarity": "Boon",
-      "status_type": "Reconstitution",
-      "stacking_rule": "Intensify",
-      "max_stacks": 3,
-      "tags": ["boon", "healing", "integration_test"],
-      "amount_percent": 50,
-      "description": "At turn start, restore half the damage received since the previous turn."
-    },
-    {
-      "id": "elemental_fusion_it",
-      "display_name": "Elemental Fusion IT",
-      "polarity": "Ailment",
-      "status_type": "Elemental Fusion",
-      "stacking_rule": "Intensify",
-      "stack_cap_enabled": false,
-      "max_stacks": 5,
-      "tags": ["ailment", "damage", "magic", "integration_test"],
-      "amount": 1,
-      "amount_percent": 20,
-      "propagation_percent": 25,
-      "elapses_naturally": false,
-      "description": "Integration probe for the authored composite elemental ailment."
-    }
-  ],
-  "items": [
-    {
-      "id": "tower_shield_it",
-      "display_name": "Tower Shield IT",
-      "slot": "Armor",
-      "max_hp_modifier": 10,
-      "armor_modifier": 4,
-      "action_speed_modifier": -3,
-      "effects": [
-        {
-          "display_name": "Tower Shield IT Brace",
-          "tags": ["armor", "battle_start"],
-          "trigger": "Battle Start",
-          "condition": "Always",
-          "target_selector": "Self",
-          "effect_type": "Gain Armor",
-          "amount": 2,
-          "threshold_percent": 50,
-          "once_per_battle": false
-        },
-        {
-          "display_name": "Tower Shield IT Reconstitution",
-          "tags": ["boon", "status", "integration_test"],
-          "trigger": "Battle Start",
-          "condition": "Always",
-          "target_selector": "Self",
-          "effect_type": "Apply Status",
-          "status_id": "reconstitution_it",
-          "status_duration_turns": 3,
-          "status_is_permanent": false,
-          "amount": 0,
-          "threshold_percent": 50,
-          "once_per_battle": false
-        }
-      ],
-      "physical_damage_modifier": 0,
-      "magic_damage_modifier": 0
-    },
-    {
-      "id": "resolver_vocabulary_it",
-      "display_name": "Resolver Vocabulary IT",
-      "slot": "Trinket",
-      "effects": [
-        {
-          "display_name": "Resolver IT Tempo",
-          "trigger": "Turn Start",
-          "condition": "Always",
-          "target_selector": "Self",
-          "effect_type": "Modify Stat",
-          "modified_stat": "Action Speed",
-          "modifier_duration_turns": 2,
-          "amount": 1
-        },
-        {
-          "display_name": "Resolver IT Dispel",
-          "trigger": "Damaged",
-          "condition": "Always",
-          "target_selector": "Self",
-          "effect_type": "Remove Status",
-          "status_id": "reconstitution_it",
-          "status_polarity": "Boon",
-          "status_removal_mode": "Specific Status",
-          "amount": 0
-        }
-      ]
-    },
-    {
-      "id": "formula_counter_probe_it",
-      "display_name": "Formula Counter Probe IT",
-      "slot": "Trinket",
-      "effects": [
-        {
-          "display_name": "Count Turns IT",
-          "trigger": "Turn Start",
-          "condition": "Always",
-          "target_selector": "Self",
-          "effect_type": "Modify Counter",
-          "counter_name": "probe_turns",
-          "repeat_within_event_chain": true,
-          "amount": 1
-        },
-        {
-          "display_name": "Apply Counter Burning IT",
-          "trigger": "Turn Start",
-          "condition": "Owner Counter At Least",
-          "target_selector": "Self",
-          "effect_type": "Apply Status",
-          "status_id": "burning",
-          "status_stacks": 3,
-          "counter_name": "probe_turns",
-          "counter_threshold": 2,
-          "amount_source": "Target Counter",
-          "amount_multiplier": 2,
-          "amount_divisor": 1,
-          "interval_time": 12
-        }
-      ]
-    },
-    {
-      "id": "glass_focus",
-      "display_name": "Glass Focus (IT Override)",
-      "slot": "Trinket",
-      "max_hp_modifier": -6,
-      "armor_modifier": 0,
-      "action_speed_modifier": -1,
-      "effects": [
-        {
-          "display_name": "Glass Focus IT Burst",
-          "tags": ["damage", "focus", "magic"],
-          "trigger": "Attack",
-          "condition": "Always",
-          "target_selector": "Attack Target",
-          "effect_type": "Bonus Damage",
-          "amount": 4,
-          "threshold_percent": 50,
-          "once_per_battle": false
-        }
-      ],
-      "physical_damage_modifier": 0,
-      "magic_damage_modifier": 0
-    }
-  ],
-  "jobs": [
-    {
-      "id": "warden_it",
-      "display_name": "Warden IT",
-      "forbid_weapon": false,
-      "forbid_armor": false,
-      "forbid_helmet": false,
-      "forbid_trinket": false,
-      "skill": {
-        "display_name": "Warden IT Reconstitution",
-        "tags": ["boon", "status", "integration_test"],
-        "action": "Apply Status",
-        "default_target": "Self",
-        "status_id": "reconstitution_it",
-        "status_duration_turns": 5,
-        "status_is_permanent": false,
-        "amount_modifier": 0
-      },
-      "passive": {
-        "display_name": "Warden IT Habit",
-        "tags": [],
-        "passive_type": "Forecast",
-        "amount": 0,
-        "cooldown_turns": 0
-      }
-    },
-    {
-      "id": "apprentice",
-      "display_name": "Apprentice (IT Override)",
-      "forbid_weapon": false,
-      "forbid_armor": false,
-      "forbid_helmet": false,
-      "forbid_trinket": false,
-      "passive": {
-        "display_name": "Apprentice (IT Override) Habit",
-        "tags": [],
-        "passive_type": "None",
-        "amount": 0,
-        "cooldown_turns": 0
-      }
-    },
-    {
-      "id": "elementalist_it",
-      "display_name": "Elementalist IT",
-      "skill": {
-        "display_name": "Elementalist IT Triad",
-        "action": "Effects Only",
-        "default_target": "Frontmost Enemy",
-        "effects": [
-          {
-            "display_name": "Elementalist IT Burn",
-            "trigger": "Skill Used",
-            "condition": "Always",
-            "target_selector": "Event Target",
-            "effect_type": "Apply Status",
-            "status_id": "burning"
-          },
-          {
-            "display_name": "Elementalist IT Shock",
-            "trigger": "Skill Used",
-            "condition": "Always",
-            "target_selector": "Event Target",
-            "effect_type": "Apply Status",
-            "status_id": "shock"
-          },
-          {
-            "display_name": "Elementalist IT Frost",
-            "trigger": "Skill Used",
-            "condition": "Always",
-            "target_selector": "Event Target",
-            "effect_type": "Apply Status",
-            "status_id": "frost"
-          }
-        ]
-      },
-      "secondary_skill": {
-        "display_name": "Elementalist IT Fusion",
-        "action": "Effects Only",
-        "default_target": "Frontmost Enemy",
-        "effects": [
-          {
-            "display_name": "Elementalist IT Fuse",
-            "trigger": "Skill Used",
-            "condition": "Always",
-            "target_selector": "Event Target",
-            "effect_type": "Fuse Elemental Ailments",
-            "status_id": "elemental_fusion_it",
-            "amount_divisor": 3
-          }
-        ]
-      },
-      "passive": {
-        "display_name": "Elementalist IT Buffer",
-        "passive_type": "None",
-        "effects": [
-          {
-            "display_name": "Elementalist IT Shield",
-            "trigger": "Owner Applied Ailment",
-            "condition": "Always",
-            "target_selector": "Self",
-            "effect_type": "Grant Energy Shield",
-            "amount_source": "Applied Status Stacks",
-            "amount_multiplier": 5,
-            "repeat_within_event_chain": true
-          }
-        ]
-      },
-      "reaction": {
-        "display_name": "Elementalist IT Inheritance",
-        "trigger": "Enemy Died With Ailments",
-        "condition": "Always",
-        "reaction_type": "Effects Only",
-        "cooldown_turns": 3,
-        "effects": [
-          {
-            "display_name": "Elementalist IT Transfer",
-            "trigger": "Reaction Triggered",
-            "condition": "Always",
-            "target_selector": "Most Ailmented Enemy Unit",
-            "effect_type": "Transfer Defeated Ailments"
-          }
-        ]
-      }
-    },
-    {
-      "id": "cleanser_it",
-      "display_name": "Cleanser IT",
-      "skill": {
-        "display_name": "Cleanser IT Purge",
-        "tags": ["cleanse", "integration_test"],
-        "action": "Effects Only",
-        "attack_count": 2,
-        "default_target": "Self",
-        "effects": [
-          {
-            "display_name": "Cleanser IT Remove Ailment",
-            "trigger": "Skill Used",
-            "condition": "Always",
-            "target_selector": "Self",
-            "effect_type": "Remove Status",
-            "status_polarity": "Ailment",
-            "status_removal_mode": "Random Matching"
-          }
-        ]
-      },
-      "secondary_skill": {
-        "display_name": "Cleanser IT Bridge",
-        "tags": ["bridge", "integration_test"],
-        "action": "Effects Only",
-        "default_target": "Lowest HP Ally",
-        "effects": [
-          {
-            "display_name": "Cleanser IT Bridge Haste",
-            "trigger": "Skill Used",
-            "condition": "Always",
-            "target_selector": "Event Target",
-            "effect_type": "Modify Stat",
-            "modified_stat": "Action Speed",
-            "modifier_direction": "Increase",
-            "modifier_duration_turns": 2,
-            "amount_source": "Target Ailment Stacks"
-          }
-        ]
-      },
-      "passive": {
-        "display_name": "Bloodless IT",
-        "passive_type": "None",
-        "effects": [
-          {
-            "display_name": "Prevent Bleed IT",
-            "trigger": "Status Application Requested",
-            "condition": "Requested Status Matches",
-            "target_selector": "Self",
-            "effect_type": "Prevent Request",
-            "status_id": "bleed"
-          },
-          {
-            "display_name": "Prevent Damage IT",
-            "trigger": "Damage Requested",
-            "condition": "Always",
-            "target_selector": "Self",
-            "effect_type": "Prevent Request"
-          }
-        ]
-      },
-      "reaction": {
-        "display_name": "Cauterize IT",
-        "trigger": "Damaged",
-        "condition": "Self Status Stacks At Least",
-        "reaction_type": "Effects Only",
-        "status_id": "burning",
-        "status_stack_threshold": 3,
-        "effects": [
-          {
-            "display_name": "Heal Burning IT",
-            "trigger": "Reaction Triggered",
-            "condition": "Always",
-            "target_selector": "Self",
-            "effect_type": "Heal",
-            "status_id": "burning",
-            "amount_source": "Target Pending Status Damage"
-          },
-          {
-            "display_name": "Consume Burning IT",
-            "trigger": "Reaction Triggered",
-            "condition": "Always",
-            "target_selector": "Self",
-            "effect_type": "Consume Status",
-            "status_id": "burning",
-            "amount_source": "Target Status Stacks"
-          }
-        ]
-      },
-      "default_tactic": {
-        "display_name": "Finish Burning IT",
-        "condition": "Target Pending Status Damage At Least HP",
-        "action": "Job Skill",
-        "target": "Frontmost Enemy",
-        "status_id": "burning"
-      }
-    }
-  ],
-  "tactics": [
-    {
-      "id": "foretell_heal_it",
-      "display_name": "Foretell Heal IT",
-      "tags": ["forecast", "heal"],
-      "condition": "Ally HP Below Half",
-      "action": "Heal",
-      "target": "Lowest HP Ally",
-      "foretell_enabled": true
-    },
-    {
-      "id": "guard_then_attack_it",
-      "condition": "Enemy Alive",
-      "action": "Guard",
-      "target": "Self"
-    },
-    {
-      "id": "attack_frontmost",
-      "condition": "Always",
-      "action": "Attack",
-      "target": "Frontmost Enemy"
-    },
-    {
-      "id": "attack_slow_target_it",
-      "condition": "Target Slower Than Self",
-      "action": "Attack",
-      "target": "Frontmost Enemy"
-    }
-  ],
-  "loadouts": [
-    {
-      "id": "warden_anchor_it",
-      "display_name": "Warden Anchor IT",
-      "current_job_id": "warden_it",
-      "weapon_id": "shortblade",
-      "armor_id": "tower_shield_it",
-      "trinket_id": "glass_focus",
-      "tactic_ids": [
-        "guard_then_attack_it",
-        "attack_frontmost"
-      ]
-    },
-    {
-      "id": "scout_support_boots",
-      "display_name": "Scout Support Boots (IT Override)",
-      "current_job_id": "scout",
-      "weapon_id": "",
-      "armor_id": "",
-      "trinket_id": "light_step_boots",
-      "tactic_ids": [
-        "heal_lowest_ally_below_half",
-        "attack_frontmost"
-      ]
-    }
-  ],
-  "units": [
-    {
-      "id": "borin_anchor_it",
-      "display_name": "Borin Anchor IT",
-      "team": "Allies",
-      "max_hp": 46,
-      "armor": 3,
-      "action_speed": 7,
-      "loadout_id": "warden_anchor_it",
-      "physical_damage": 5,
-      "magic_damage": 0,
-      "ancestry_id": "brassbound"
-    },
-    {
-      "id": "mira_scout",
-      "display_name": "Mira Scout (IT Override)",
-      "team": "Allies",
-      "max_hp": 24,
-      "armor": 1,
-      "action_speed": 1,
-      "loadout_id": "scout_support_boots",
-      "physical_damage": 4,
-      "magic_damage": 0,
-      "ancestry_id": "brassbound"
-    }
-  ],
-  "demo_roster": [
-    "borin_anchor_it",
-    "mira_scout",
-    "sol_apprentice",
-    "iron_brute",
-    "ash_cutpurse",
-    "glass_wisp"
-  ]
+	"pack_id": "integration_test_mod_pack",
+	"display_name": "Integration Test Mod Pack",
+	"pack_version": 1,
+	"statuses": [
+		{
+			"id": "reconstitution_it",
+			"display_name": "Reconstitution IT",
+			"polarity": "Boon",
+			"status_type": "Reconstitution",
+			"stacking_rule": "Intensify",
+			"max_stacks": 3,
+			"tags": [
+				"boon",
+				"healing",
+				"integration_test"
+			],
+			"amount_percent": 50,
+			"description": "At turn start, restore half the damage received since the previous turn."
+		},
+		{
+			"id": "elemental_fusion_it",
+			"display_name": "Elemental Fusion IT",
+			"polarity": "Ailment",
+			"status_type": "Elemental Fusion",
+			"stacking_rule": "Intensify",
+			"stack_cap_enabled": false,
+			"max_stacks": 5,
+			"tags": [
+				"ailment",
+				"damage",
+				"magic",
+				"integration_test"
+			],
+			"amount": 1,
+			"amount_percent": 20,
+			"propagation_percent": 25,
+			"elapses_naturally": false,
+			"description": "Integration probe for the authored composite elemental ailment."
+		}
+	],
+	"items": [
+		{
+			"id": "tower_shield_it",
+			"display_name": "Tower Shield IT",
+			"slot": "Armor",
+			"max_hp_modifier": 10,
+			"armor_modifier": 4,
+			"action_speed_modifier": -3,
+			"effects": [
+				{
+					"display_name": "Tower Shield IT Brace",
+					"tags": [
+						"armor",
+						"battle_start"
+					],
+					"trigger": "Battle Start",
+					"condition": "Always",
+					"target_selector": "Self",
+					"effect_type": "Gain Armor",
+					"amount": 2,
+					"threshold_percent": 50,
+					"once_per_battle": false,
+					"tooltip_text": "Tower Shield IT Brace is a triggered effect: when Battle Start happens and Always passes, it applies Gain Armor to Self."
+				},
+				{
+					"display_name": "Tower Shield IT Reconstitution",
+					"tags": [
+						"boon",
+						"status",
+						"integration_test"
+					],
+					"trigger": "Battle Start",
+					"condition": "Always",
+					"target_selector": "Self",
+					"effect_type": "Apply Status",
+					"status_id": "reconstitution_it",
+					"status_duration_turns": 3,
+					"status_is_permanent": false,
+					"amount": 0,
+					"threshold_percent": 50,
+					"once_per_battle": false,
+					"tooltip_text": "Tower Shield IT Reconstitution is a triggered effect: when Battle Start happens and Always passes, it applies Apply Status to Self."
+				}
+			],
+			"physical_damage_modifier": 0,
+			"magic_damage_modifier": 0,
+			"tooltip_text": "Tower Shield IT is a Armor item with HP +10, armor +4, speed -3 and triggered effects."
+		},
+		{
+			"id": "resolver_vocabulary_it",
+			"display_name": "Resolver Vocabulary IT",
+			"slot": "Trinket",
+			"effects": [
+				{
+					"display_name": "Resolver IT Tempo",
+					"trigger": "Turn Start",
+					"condition": "Always",
+					"target_selector": "Self",
+					"effect_type": "Modify Stat",
+					"modified_stat": "Action Speed",
+					"modifier_duration_turns": 2,
+					"amount": 1,
+					"tooltip_text": "Resolver IT Tempo is a triggered effect: when Turn Start happens and Always passes, it applies Modify Stat to Self."
+				},
+				{
+					"display_name": "Resolver IT Dispel",
+					"trigger": "Damaged",
+					"condition": "Always",
+					"target_selector": "Self",
+					"effect_type": "Remove Status",
+					"status_id": "reconstitution_it",
+					"status_polarity": "Boon",
+					"status_removal_mode": "Specific Status",
+					"amount": 0,
+					"tooltip_text": "Resolver IT Dispel is a triggered effect: when Damaged happens and Always passes, it applies Remove Status to Self."
+				}
+			],
+			"tooltip_text": "Resolver Vocabulary IT is a Trinket item with no direct stat change and triggered effects."
+		},
+		{
+			"id": "formula_counter_probe_it",
+			"display_name": "Formula Counter Probe IT",
+			"slot": "Trinket",
+			"effects": [
+				{
+					"display_name": "Count Turns IT",
+					"trigger": "Turn Start",
+					"condition": "Always",
+					"target_selector": "Self",
+					"effect_type": "Modify Counter",
+					"counter_name": "probe_turns",
+					"repeat_within_event_chain": true,
+					"amount": 1,
+					"tooltip_text": "Count Turns IT is a triggered effect: when Turn Start happens and Always passes, it applies Modify Counter to Self."
+				},
+				{
+					"display_name": "Apply Counter Burning IT",
+					"trigger": "Turn Start",
+					"condition": "Owner Counter At Least",
+					"target_selector": "Self",
+					"effect_type": "Apply Status",
+					"status_id": "burning",
+					"status_stacks": 3,
+					"counter_name": "probe_turns",
+					"counter_threshold": 2,
+					"amount_source": "Target Counter",
+					"amount_multiplier": 2,
+					"amount_divisor": 1,
+					"interval_time": 12,
+					"tooltip_text": "Apply Counter Burning IT is a triggered effect: when Turn Start happens and Owner Counter At Least passes, it applies Apply Status to Self."
+				}
+			],
+			"tooltip_text": "Formula Counter Probe IT is a Trinket item with no direct stat change and triggered effects."
+		},
+		{
+			"id": "glass_focus",
+			"display_name": "Glass Focus (IT Override)",
+			"slot": "Trinket",
+			"max_hp_modifier": -6,
+			"armor_modifier": 0,
+			"action_speed_modifier": -1,
+			"effects": [
+				{
+					"display_name": "Glass Focus IT Burst",
+					"tags": [
+						"damage",
+						"focus",
+						"magic"
+					],
+					"trigger": "Attack",
+					"condition": "Always",
+					"target_selector": "Attack Target",
+					"effect_type": "Bonus Damage",
+					"amount": 4,
+					"threshold_percent": 50,
+					"once_per_battle": false,
+					"tooltip_text": "Glass Focus IT Burst is a triggered effect: when Attack happens and Always passes, it applies Bonus Damage to Attack Target."
+				}
+			],
+			"physical_damage_modifier": 0,
+			"magic_damage_modifier": 0,
+			"tooltip_text": "Glass Focus (IT Override) is a Trinket item with HP -6, speed -1 and triggered effects."
+		}
+	],
+	"jobs": [
+		{
+			"id": "warden_it",
+			"display_name": "Warden IT",
+			"forbid_weapon": false,
+			"forbid_armor": false,
+			"forbid_helmet": false,
+			"forbid_trinket": false,
+			"skill": {
+				"display_name": "Warden IT Reconstitution",
+				"tags": [
+					"boon",
+					"status",
+					"integration_test"
+				],
+				"action": "Apply Status",
+				"default_target": "Self",
+				"status_id": "reconstitution_it",
+				"status_duration_turns": 5,
+				"status_is_permanent": false,
+				"amount_modifier": 0,
+				"tooltip_text": "Warden IT Reconstitution is an active apply status skill. Tactics decide when and where the unit uses it."
+			},
+			"passive": {
+				"display_name": "Warden IT Habit",
+				"tags": [],
+				"passive_type": "Forecast",
+				"amount": 0,
+				"cooldown_turns": 0,
+				"tooltip_text": "Warden IT Habit is a passive rule that stays available while equipped."
+			},
+			"tooltip_text": "Warden IT is a job path with no stat growth per level. Its features define the role a unit learns into."
+		},
+		{
+			"id": "apprentice",
+			"display_name": "Apprentice (IT Override)",
+			"forbid_weapon": false,
+			"forbid_armor": false,
+			"forbid_helmet": false,
+			"forbid_trinket": false,
+			"passive": {
+				"display_name": "Apprentice (IT Override) Habit",
+				"tags": [],
+				"passive_type": "None",
+				"amount": 0,
+				"cooldown_turns": 0,
+				"tooltip_text": "Apprentice (IT Override) Habit is a passive rule that stays available while equipped."
+			},
+			"tooltip_text": "Apprentice (IT Override) is a job path with no stat growth per level. Its features define the role a unit learns into."
+		},
+		{
+			"id": "elementalist_it",
+			"display_name": "Elementalist IT",
+			"skill": {
+				"display_name": "Elementalist IT Triad",
+				"action": "Effects Only",
+				"default_target": "Frontmost Enemy",
+				"effects": [
+					{
+						"display_name": "Elementalist IT Burn",
+						"trigger": "Skill Used",
+						"condition": "Always",
+						"target_selector": "Event Target",
+						"effect_type": "Apply Status",
+						"status_id": "burning",
+						"tooltip_text": "Elementalist IT Burn is a triggered effect: when Skill Used happens and Always passes, it applies Apply Status to Event Target."
+					},
+					{
+						"display_name": "Elementalist IT Shock",
+						"trigger": "Skill Used",
+						"condition": "Always",
+						"target_selector": "Event Target",
+						"effect_type": "Apply Status",
+						"status_id": "shock",
+						"tooltip_text": "Elementalist IT Shock is a triggered effect: when Skill Used happens and Always passes, it applies Apply Status to Event Target."
+					},
+					{
+						"display_name": "Elementalist IT Frost",
+						"trigger": "Skill Used",
+						"condition": "Always",
+						"target_selector": "Event Target",
+						"effect_type": "Apply Status",
+						"status_id": "frost",
+						"tooltip_text": "Elementalist IT Frost is a triggered effect: when Skill Used happens and Always passes, it applies Apply Status to Event Target."
+					}
+				],
+				"tooltip_text": "Elementalist IT Triad is an active effects only skill. Tactics decide when and where the unit uses it."
+			},
+			"secondary_skill": {
+				"display_name": "Elementalist IT Fusion",
+				"action": "Effects Only",
+				"default_target": "Frontmost Enemy",
+				"effects": [
+					{
+						"display_name": "Elementalist IT Fuse",
+						"trigger": "Skill Used",
+						"condition": "Always",
+						"target_selector": "Event Target",
+						"effect_type": "Fuse Elemental Ailments",
+						"status_id": "elemental_fusion_it",
+						"amount_divisor": 3,
+						"tooltip_text": "Elementalist IT Fuse is a triggered effect: when Skill Used happens and Always passes, it applies Fuse Elemental Ailments to Event Target."
+					}
+				],
+				"tooltip_text": "Elementalist IT Fusion is an active effects only skill. Tactics decide when and where the unit uses it."
+			},
+			"passive": {
+				"display_name": "Elementalist IT Buffer",
+				"passive_type": "None",
+				"effects": [
+					{
+						"display_name": "Elementalist IT Shield",
+						"trigger": "Owner Applied Ailment",
+						"condition": "Always",
+						"target_selector": "Self",
+						"effect_type": "Grant Energy Shield",
+						"amount_source": "Applied Status Stacks",
+						"amount_multiplier": 5,
+						"repeat_within_event_chain": true,
+						"tooltip_text": "Elementalist IT Shield is a triggered effect: when Owner Applied Ailment happens and Always passes, it applies Grant Energy Shield to Self."
+					}
+				],
+				"tooltip_text": "Elementalist IT Buffer is a passive rule that stays available while equipped."
+			},
+			"reaction": {
+				"display_name": "Elementalist IT Inheritance",
+				"trigger": "Enemy Died With Ailments",
+				"condition": "Always",
+				"reaction_type": "Effects Only",
+				"cooldown_turns": 3,
+				"effects": [
+					{
+						"display_name": "Elementalist IT Transfer",
+						"trigger": "Reaction Triggered",
+						"condition": "Always",
+						"target_selector": "Most Ailmented Enemy Unit",
+						"effect_type": "Transfer Defeated Ailments",
+						"tooltip_text": "Elementalist IT Transfer is a triggered effect: when Reaction Triggered happens and Always passes, it applies Transfer Defeated Ailments to Most Ailmented Enemy Unit."
+					}
+				],
+				"tooltip_text": "Elementalist IT Inheritance is a reaction that can fire on Enemy Died With Ailments after checking Always."
+			},
+			"tooltip_text": "Elementalist IT is a job path with no stat growth per level. Its features define the role a unit learns into."
+		},
+		{
+			"id": "cleanser_it",
+			"display_name": "Cleanser IT",
+			"skill": {
+				"display_name": "Cleanser IT Purge",
+				"tags": [
+					"cleanse",
+					"integration_test"
+				],
+				"action": "Effects Only",
+				"attack_count": 2,
+				"default_target": "Self",
+				"effects": [
+					{
+						"display_name": "Cleanser IT Remove Ailment",
+						"trigger": "Skill Used",
+						"condition": "Always",
+						"target_selector": "Self",
+						"effect_type": "Remove Status",
+						"status_polarity": "Ailment",
+						"status_removal_mode": "Random Matching",
+						"tooltip_text": "Cleanser IT Remove Ailment is a triggered effect: when Skill Used happens and Always passes, it applies Remove Status to Self."
+					}
+				],
+				"tooltip_text": "Cleanser IT Purge is an active effects only skill. Tactics decide when and where the unit uses it."
+			},
+			"secondary_skill": {
+				"display_name": "Cleanser IT Bridge",
+				"tags": [
+					"bridge",
+					"integration_test"
+				],
+				"action": "Effects Only",
+				"default_target": "Lowest HP Ally",
+				"effects": [
+					{
+						"display_name": "Cleanser IT Bridge Haste",
+						"trigger": "Skill Used",
+						"condition": "Always",
+						"target_selector": "Event Target",
+						"effect_type": "Modify Stat",
+						"modified_stat": "Action Speed",
+						"modifier_direction": "Increase",
+						"modifier_duration_turns": 2,
+						"amount_source": "Target Ailment Stacks",
+						"tooltip_text": "Cleanser IT Bridge Haste is a triggered effect: when Skill Used happens and Always passes, it applies Modify Stat to Event Target."
+					}
+				],
+				"tooltip_text": "Cleanser IT Bridge is an active effects only skill. Tactics decide when and where the unit uses it."
+			},
+			"passive": {
+				"display_name": "Bloodless IT",
+				"passive_type": "None",
+				"effects": [
+					{
+						"display_name": "Prevent Bleed IT",
+						"trigger": "Status Application Requested",
+						"condition": "Requested Status Matches",
+						"target_selector": "Self",
+						"effect_type": "Prevent Request",
+						"status_id": "bleed",
+						"tooltip_text": "Prevent Bleed IT is a triggered effect: when Status Application Requested happens and Requested Status Matches passes, it applies Prevent Request to Self."
+					},
+					{
+						"display_name": "Prevent Damage IT",
+						"trigger": "Damage Requested",
+						"condition": "Always",
+						"target_selector": "Self",
+						"effect_type": "Prevent Request",
+						"tooltip_text": "Prevent Damage IT is a triggered effect: when Damage Requested happens and Always passes, it applies Prevent Request to Self."
+					}
+				],
+				"tooltip_text": "Bloodless IT is a passive rule that stays available while equipped."
+			},
+			"reaction": {
+				"display_name": "Cauterize IT",
+				"trigger": "Damaged",
+				"condition": "Self Status Stacks At Least",
+				"reaction_type": "Effects Only",
+				"status_id": "burning",
+				"status_stack_threshold": 3,
+				"effects": [
+					{
+						"display_name": "Heal Burning IT",
+						"trigger": "Reaction Triggered",
+						"condition": "Always",
+						"target_selector": "Self",
+						"effect_type": "Heal",
+						"status_id": "burning",
+						"amount_source": "Target Pending Status Damage",
+						"tooltip_text": "Heal Burning IT is a triggered effect: when Reaction Triggered happens and Always passes, it applies Heal to Self."
+					},
+					{
+						"display_name": "Consume Burning IT",
+						"trigger": "Reaction Triggered",
+						"condition": "Always",
+						"target_selector": "Self",
+						"effect_type": "Consume Status",
+						"status_id": "burning",
+						"amount_source": "Target Status Stacks",
+						"tooltip_text": "Consume Burning IT is a triggered effect: when Reaction Triggered happens and Always passes, it applies Consume Status to Self."
+					}
+				],
+				"tooltip_text": "Cauterize IT is a reaction that can fire on Damaged after checking Self Status Stacks At Least."
+			},
+			"default_tactic": {
+				"display_name": "Finish Burning IT",
+				"condition": "Target Pending Status Damage At Least HP",
+				"action": "Job Skill",
+				"target": "Frontmost Enemy",
+				"status_id": "burning",
+				"tooltip_text": "Finish Burning IT is an ordered AI rule: when Target Pending Status Damage At Least HP is valid, use Job Skill on Frontmost Enemy."
+			},
+			"tooltip_text": "Cleanser IT is a job path with no stat growth per level. Its features define the role a unit learns into."
+		}
+	],
+	"tactics": [
+		{
+			"id": "foretell_heal_it",
+			"display_name": "Foretell Heal IT",
+			"tags": [
+				"forecast",
+				"heal"
+			],
+			"condition": "Ally HP Below Half",
+			"action": "Heal",
+			"target": "Lowest HP Ally",
+			"foretell_enabled": true,
+			"tooltip_text": "Foretell Heal IT is an ordered AI rule: when Ally HP Below Half is valid, use Heal on Lowest HP Ally."
+		},
+		{
+			"id": "guard_then_attack_it",
+			"condition": "Enemy Alive",
+			"action": "Guard",
+			"target": "Self"
+		},
+		{
+			"id": "attack_frontmost",
+			"condition": "Always",
+			"action": "Attack",
+			"target": "Frontmost Enemy"
+		},
+		{
+			"id": "attack_slow_target_it",
+			"condition": "Target Slower Than Self",
+			"action": "Attack",
+			"target": "Frontmost Enemy"
+		}
+	],
+	"loadouts": [
+		{
+			"id": "warden_anchor_it",
+			"display_name": "Warden Anchor IT",
+			"current_job_id": "warden_it",
+			"weapon_id": "shortblade",
+			"armor_id": "tower_shield_it",
+			"trinket_id": "glass_focus",
+			"tactic_ids": [
+				"guard_then_attack_it",
+				"attack_frontmost"
+			],
+			"tooltip_text": "Warden Anchor IT is a planning package: current job, equipment, assigned learned features, and tactic order."
+		},
+		{
+			"id": "scout_support_boots",
+			"display_name": "Scout Support Boots (IT Override)",
+			"current_job_id": "scout",
+			"weapon_id": "",
+			"armor_id": "",
+			"trinket_id": "light_step_boots",
+			"tactic_ids": [
+				"heal_lowest_ally_below_half",
+				"attack_frontmost"
+			],
+			"tooltip_text": "Scout Support Boots (IT Override) is a planning package: current job, equipment, assigned learned features, and tactic order."
+		}
+	],
+	"units": [
+		{
+			"id": "borin_anchor_it",
+			"display_name": "Borin Anchor IT",
+			"team": "Allies",
+			"max_hp": 46,
+			"armor": 3,
+			"action_speed": 7,
+			"loadout_id": "warden_anchor_it",
+			"physical_damage": 5,
+			"magic_damage": 0,
+			"ancestry_id": "brassbound",
+			"tooltip_text": "Borin Anchor IT is a allied combatant with authored stats, ancestry, job progress, and loadout."
+		},
+		{
+			"id": "mira_scout",
+			"display_name": "Mira Scout (IT Override)",
+			"team": "Allies",
+			"max_hp": 24,
+			"armor": 1,
+			"action_speed": 1,
+			"loadout_id": "scout_support_boots",
+			"physical_damage": 4,
+			"magic_damage": 0,
+			"ancestry_id": "brassbound",
+			"tooltip_text": "Mira Scout (IT Override) is a allied combatant with authored stats, ancestry, job progress, and loadout."
+		}
+	],
+	"demo_roster": [
+		"borin_anchor_it",
+		"mira_scout",
+		"sol_apprentice",
+		"iron_brute",
+		"ash_cutpurse",
+		"glass_wisp"
+	]
 }

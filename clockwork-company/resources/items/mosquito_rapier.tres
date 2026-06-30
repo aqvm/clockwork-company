@@ -13,6 +13,7 @@
 resource_name = "Mosquito Lunge"
 script = ExtResource("2_effect")
 display_name = "Mosquito Lunge"
+tooltip_text = "Mosquito Lunge is a triggered effect. When Attack happens and Always passes, it applies Bonus Damage to Attack Target."
 tags = Array[Resource]([ExtResource("tag_damage"), ExtResource("tag_swift")])
 trigger = "Attack"
 target_selector = "Attack Target"
@@ -22,6 +23,7 @@ amount = 1
 [resource]
 script = ExtResource("1_item")
 display_name = "Mosquito Rapier"
+tooltip_text = "Mosquito Rapier is an equipment item with physical damage +1, armor -1, speed +2 and one or more triggered effects. Use it to compare what changes immediately and what only appears during combat."
 tags = Array[Resource]([ExtResource("tag_weapon"), ExtResource("tag_blade"), ExtResource("tag_swift")])
 physical_damage_modifier = 1
 armor_modifier = -1

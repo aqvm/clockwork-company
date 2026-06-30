@@ -19,6 +19,7 @@ metadata/_custom_type_script = "uid://bq86vbaajvphi"
 [resource]
 script = ExtResource("1_item")
 display_name = "Redcap Hood"
+tooltip_text = "Redcap Hood is a Helmet item with physical damage +1, speed +1 and one or more triggered effects. Use it to compare what changes immediately and what only appears during combat."
 tags = Array[Resource]([ExtResource("tag_helmet"), ExtResource("tag_swift"), ExtResource("tag_bloodied")])
 slot = "Helmet"
 physical_damage_modifier = 1

@@ -11,6 +11,7 @@
 [resource]
 script = ExtResource("1_loadout")
 display_name = "Archivist Last-Candle"
+tooltip_text = "Archivist Last-Candle is a planning package: current job, assigned learned features, equipment, and tactic order. It is the main reason a unit behaves differently from its base stat line."
 current_job = ExtResource("2_job")
 equipped_passive = ExtResource("6_passive")
 trinket = ExtResource("3_trinket")

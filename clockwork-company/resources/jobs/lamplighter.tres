@@ -18,6 +18,7 @@
 [sub_resource type="Resource" id="Resource_lamplighter_skill"]
 script = ExtResource("2_skill")
 display_name = "Lamp Touch"
+tooltip_text = "Lamp Touch is an active healing skill. Tactics decide who receives it, while amount modifiers and effects decide how much extra help it provides."
 tags = Array[Resource]([ExtResource("tag_light"), ExtResource("tag_heal"), ExtResource("tag_magic")])
 action = "Heal"
 default_target = "Lowest HP Ally"
@@ -26,6 +27,7 @@ amount_modifier = 1
 [sub_resource type="Resource" id="Resource_lamplighter_passive"]
 script = ExtResource("3_passive")
 display_name = "Clear Flame"
+tooltip_text = "Clear Flame is a passive rule that stays available while equipped. It provides a heal bonus and may add nested effects or cooldown timing."
 tags = Array[Resource]([ExtResource("tag_support")])
 passive_type = "Heal Bonus"
 amount = 1
@@ -34,6 +36,7 @@ cooldown_turns = 1
 [sub_resource type="Resource" id="Resource_lamplighter_reaction"]
 script = ExtResource("4_reaction")
 display_name = "Backdraft"
+tooltip_text = "Backdraft is a reaction that can fire on Damaged. It checks Always before resolving damage attacker."
 tags = Array[Resource]([ExtResource("tag_damaged"), ExtResource("tag_reaction")])
 trigger = "Damaged"
 condition = "Always"
@@ -45,6 +48,7 @@ cooldown_turns = 4
 [sub_resource type="Resource" id="Resource_lamplighter_default_tactic"]
 script = ExtResource("5_tactic")
 display_name = "Tend the Dim"
+tooltip_text = "Tend the Dim is an ordered AI rule: when Ally HP Below Half is valid, use Job Skill on Lowest HP Ally. Earlier tactics get first chance to act."
 tags = Array[Resource]([ExtResource("tag_job_default")])
 condition = "Ally HP Below Half"
 action = "Job Skill"
@@ -53,6 +57,7 @@ target = "Lowest HP Ally"
 [resource]
 script = ExtResource("1_job")
 display_name = "Lamplighter"
+tooltip_text = "Lamplighter is a job path with HP +1, magic damage +1, speed +1 per level. Its skill, passive, reaction, and default tactic define the role this unit is learning into."
 tags = Array[Resource]([ExtResource("tag_job"), ExtResource("tag_support"), ExtResource("tag_light")])
 max_hp_growth = 1
 physical_damage_growth = 0

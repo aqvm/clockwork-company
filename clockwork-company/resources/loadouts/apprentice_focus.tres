@@ -9,6 +9,7 @@
 [resource]
 script = ExtResource("1_loadout")
 display_name = "Apprentice Focus"
+tooltip_text = "Apprentice Focus is a planning package: current job, assigned learned features, equipment, and tactic order. It is the main reason a unit behaves differently from its base stat line."
 current_job = ExtResource("2_job")
 trinket = ExtResource("3_trinket")
 tactics = [ExtResource("4_attack")]

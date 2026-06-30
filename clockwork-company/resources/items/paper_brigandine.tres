@@ -13,6 +13,7 @@
 resource_name = "Paper Brigandine Fold"
 script = ExtResource("2_effect")
 display_name = "Paper Brigandine Fold"
+tooltip_text = "Paper Brigandine Fold is a triggered effect. When HP Below Threshold happens and Self HP Below Percent passes, it applies Heal Self to Self."
 tags = Array[Resource]([ExtResource("tag_survival"), ExtResource("tag_low_hp")])
 trigger = "HP Below Threshold"
 condition = "Self HP Below Percent"
@@ -24,6 +25,7 @@ once_per_battle = true
 [resource]
 script = ExtResource("1_item")
 display_name = "Paper Brigandine"
+tooltip_text = "Paper Brigandine is a Armor item with HP +2, armor +1, speed +1 and one or more triggered effects. Use it to compare what changes immediately and what only appears during combat."
 tags = Array[Resource]([ExtResource("tag_armor"), ExtResource("tag_paper"), ExtResource("tag_low_hp")])
 slot = "Armor"
 max_hp_modifier = 2

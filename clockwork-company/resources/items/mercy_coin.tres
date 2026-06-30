@@ -14,6 +14,7 @@
 resource_name = "Mercy Coin Tithe"
 script = ExtResource("2_effect")
 display_name = "Mercy Coin Tithe"
+tooltip_text = "Mercy Coin Tithe is a triggered effect. When Kill happens and Always passes, it applies Heal Self to Self."
 tags = Array[Resource]([ExtResource("tag_heal"), ExtResource("tag_kill")])
 trigger = "Kill"
 effect_type = "Heal Self"
@@ -22,6 +23,7 @@ amount = 4
 [resource]
 script = ExtResource("1_item")
 display_name = "Mercy Coin"
+tooltip_text = "Mercy Coin is a Trinket item with no direct stat change and one or more triggered effects. Use it to compare what changes immediately and what only appears during combat."
 tags = Array[Resource]([ExtResource("tag_trinket"), ExtResource("tag_sustain"), ExtResource("tag_finisher")])
 slot = "Trinket"
 effects = Array[ExtResource("2_effect")]([SubResource("Resource_mercy_coin_tithe")])

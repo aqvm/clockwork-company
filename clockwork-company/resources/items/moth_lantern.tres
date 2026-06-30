@@ -13,6 +13,7 @@
 resource_name = "Moth Lantern Glow"
 script = ExtResource("2_effect")
 display_name = "Moth Lantern Glow"
+tooltip_text = "Moth Lantern Glow is a triggered effect. When Attack happens and Target Has Tag passes, it applies Bonus Damage to Attack Target."
 tags = Array[Resource]([ExtResource("tag_fragile")])
 trigger = "Attack"
 condition = "Target Has Tag"
@@ -23,6 +24,7 @@ amount = 1
 [resource]
 script = ExtResource("1_item")
 display_name = "Moth Lantern"
+tooltip_text = "Moth Lantern is a Trinket item with no direct stat change and one or more triggered effects. Use it to compare what changes immediately and what only appears during combat."
 tags = Array[Resource]([ExtResource("tag_trinket"), ExtResource("tag_anti_fragile"), ExtResource("tag_light")])
 slot = "Trinket"
 effects = Array[ExtResource("2_effect")]([SubResource("Resource_moth_lantern_glow")])

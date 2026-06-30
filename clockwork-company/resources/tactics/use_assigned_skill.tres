@@ -8,6 +8,7 @@
 [resource]
 script = ExtResource("1_tactic")
 display_name = "Use Assigned Skill"
+tooltip_text = "Use Assigned Skill is an ordered AI rule: when Enemy Alive is valid, use Assigned Skill on Frontmost Enemy. Earlier tactics get first chance to act."
 tags = Array[Resource]([ExtResource("tag_skill"), ExtResource("tag_assigned")])
 condition = "Enemy Alive"
 action = "Assigned Skill"

@@ -20,6 +20,7 @@ passive_unlocked = true
 [resource]
 script = ExtResource("1_unit")
 display_name = "Marra Archivist"
+tooltip_text = "Marra Archivist is an allied combatant. Their tooltip summarizes base stats, ancestry, loadout, and job progress so you can read their role before opening deeper panels."
 tags = Array[Resource]([ExtResource("tag_support"), ExtResource("tag_paper"), ExtResource("tag_fragile")])
 team = "Allies"
 ancestry = ExtResource("3_ancestry")

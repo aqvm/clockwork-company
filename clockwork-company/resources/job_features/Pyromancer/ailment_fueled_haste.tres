@@ -6,6 +6,7 @@
 resource_name = "Ailment-Fueled Haste"
 script = ExtResource("1_effect")
 display_name = "Ailment-Fueled Haste"
+tooltip_text = "Ailment-Fueled Haste is a triggered effect. When Skill Used happens and Always passes, it applies Apply Haste to Event Target."
 trigger = "Skill Used"
 target_selector = "Event Target"
 effect_type = "Apply Haste"

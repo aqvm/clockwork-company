@@ -1,31 +1,32 @@
 {
-  "pack_id": "example_swift_guard_pack",
-  "pack_version": 1,
-  "items": [
-	{
-	  "id": "tower_shield",
-	  "display_name": "Tower Shield",
-	  "slot": "Armor",
-	  "max_hp_modifier": 8,
-	  "armor_modifier": 3,
-	  "action_speed_modifier": -2,
-	  "physical_damage_modifier": 0,
-	  "magic_damage_modifier": 0
-	}
-  ],
-  "loadouts": [
-	{
-	  "id": "guard_buckler",
-	  "armor_id": "tower_shield"
-	}
-  ],
-  "units": [
-	{
-	  "id": "mira_scout",
-	  "action_speed": 14,
-	  "physical_damage": 1,
-	  "magic_damage": 0,
-	  "ancestry_id": "brassbound"
-	}
-  ]
+	"pack_id": "example_swift_guard_pack",
+	"pack_version": 1,
+	"items": [
+		{
+			"id": "tower_shield",
+			"display_name": "Tower Shield",
+			"slot": "Armor",
+			"max_hp_modifier": 8,
+			"armor_modifier": 3,
+			"action_speed_modifier": -2,
+			"physical_damage_modifier": 0,
+			"magic_damage_modifier": 0,
+			"tooltip_text": "Tower Shield is a Armor item with HP +8, armor +3, speed -2."
+		}
+	],
+	"loadouts": [
+		{
+			"id": "guard_buckler",
+			"armor_id": "tower_shield"
+		}
+	],
+	"units": [
+		{
+			"id": "mira_scout",
+			"action_speed": 14,
+			"physical_damage": 1,
+			"magic_damage": 0,
+			"ancestry_id": "brassbound"
+		}
+	]
 }

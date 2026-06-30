@@ -8,6 +8,8 @@ class_name AncestryDefinition
 	set(value):
 		display_name = value
 		resource_name = value
+## Player-facing summary shown at the top of resource tooltips.
+@export_multiline var tooltip_text := ""
 ## Shared TagDefinition resources for filtering, content organization, and future conditions.
 @export var tags: Array[Resource] = []
 ## Minimum suggested HP when authoring a unit of this ancestry. Existing units keep their explicit stats.

@@ -5,6 +5,7 @@
 [resource]
 script = ExtResource("1_tactic")
 display_name = "Guard While Threatened"
+tooltip_text = "Guard While Threatened is an ordered AI rule: when Enemy Alive is valid, use Guard on Self. Earlier tactics get first chance to act."
 condition = "Enemy Alive"
 action = "Guard"
 target = "Self"

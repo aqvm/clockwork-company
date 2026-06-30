@@ -11,6 +11,7 @@
 [sub_resource type="Resource" id="Resource_oath_pin_set"]
 script = ExtResource("2_effect")
 display_name = "Oath Pin Set"
+tooltip_text = "Oath Pin Set is a triggered effect. When Battle Start happens and Always passes, it applies Gain Armor to Self."
 tags = Array[Resource]([ExtResource("tag_armor"), ExtResource("tag_battle_start")])
 trigger = "Battle Start"
 target_selector = "Self"
@@ -20,6 +21,7 @@ amount = 1
 [resource]
 script = ExtResource("1_item")
 display_name = "Oath Pin"
+tooltip_text = "Oath Pin is a Trinket item with armor +1 and one or more triggered effects. Use it to compare what changes immediately and what only appears during combat."
 tags = Array[Resource]([ExtResource("tag_trinket"), ExtResource("tag_guard"), ExtResource("tag_armor")])
 slot = "Trinket"
 armor_modifier = 1

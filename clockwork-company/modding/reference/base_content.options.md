@@ -77,6 +77,7 @@ Required:
 
 Optional fields:
 - `display_name` (`String`)
+- `tooltip_text` (`String`): optional player-facing prose shown at the top of resource tooltips.
 - `tags` (`Array[String]`): canonical tag IDs. Resource-authored content uses shared `TagDefinition` resources for the same IDs.
 - `min_max_hp` / `max_max_hp` (`int`): future deterministic generation range for starting max HP.
 - `min_physical_damage` / `max_physical_damage` (`int`): future generation range for starting physical damage.
@@ -104,6 +105,7 @@ Current behavior:
 
 Optional fields:
 - `display_name` (`String`)
+- `tooltip_text` (`String`): optional player-facing prose shown at the top of resource tooltips.
 - `tags` (`Array[String]`): canonical tag IDs. Resource-authored content uses shared `TagDefinition` resources for the same IDs.
 - `trigger` (`String enum`): `Battle Start`, `Attack`, `Kill`, `Damaged`, `HP Below Threshold`
 - `condition` (`String enum`): `Always`, `Self HP Below Percent`
@@ -129,6 +131,7 @@ Required:
 
 Optional fields:
 - `display_name` (`String`)
+- `tooltip_text` (`String`): optional player-facing prose shown at the top of resource tooltips.
 - `tags` (`Array[String]`): canonical tag IDs for future conditions, filtering, and content organization. Resource-authored content uses shared `TagDefinition` resources for the same IDs.
 - `slot` (`String enum`): `Weapon`, `Armor`, `Helmet`, `Trinket`
 - `max_hp_modifier` (`int`)
@@ -144,6 +147,7 @@ Item effects must be authored in `effects[]`. The old top-level `trigger`, `effe
 
 Optional fields:
 - `display_name` (`String`)
+- `tooltip_text` (`String`): optional player-facing prose shown at the top of resource tooltips.
 - `tags` (`Array[String]`): canonical tag IDs used by tag conditions and future content tools. Resource-authored content uses shared `TagDefinition` resources for the same IDs.
 - `trigger` (`String enum`): `Battle Start`, `Battle State Changed`, `Turn Start`, `Turn Complete`, `Action Completed`, `Skill Used`, `Skill Completed`, `Attack`, `Consecutive Attack`, `Enemy Attack Targeted`, `Hit`, `Kill`, `Death`, `Ailment Damaged`, `Damaged`, `Physically Damaged`, `Magically Damaged`, `HP Below Threshold`, `Damage Requested`, `Healing Requested`, `Healing Received`, `Ally Overhealed`, `Reaction Requested`, `Status Application Requested`, `Status Removal Requested`, `Status Applied`, `Owner Applied Ailment`, `Externally Sourced Status Applied`, `Enemy Status Applied`, `Status Removed`, `Reaction Triggered`
 - `condition` (`String enum`): `Always`, `Event Source Is Not Owner`, `Owner Is Unarmed`, `Event Count At Least`, `Self HP Below Percent`, `Target Has Tag`, `Target Missing Tag`, `Target Status Stacks At Least`, `Target Pending Status Damage At Least HP`, `Owner Counter At Least`, `Target Counter At Least`, `Requested Status Matches`, `Applied Status Matches`
@@ -241,6 +245,7 @@ Required:
 
 Optional fields:
 - `display_name` (`String`)
+- `tooltip_text` (`String`): optional player-facing prose shown at the top of resource tooltips.
 - `tags` (`Array[String]`): canonical tag IDs. Resource-authored content uses shared `TagDefinition` resources for the same IDs.
 - `max_hp_growth` (`int`): permanent HP gained per level in this job.
 - `physical_damage_growth` (`int`): permanent physical damage gained per level in this job.
@@ -266,6 +271,7 @@ Equipment note:
 
 Optional fields:
 - `display_name` (`String`)
+- `tooltip_text` (`String`): optional player-facing prose shown at the top of resource tooltips.
 - `tags` (`Array[String]`): canonical tag IDs. Resource-authored content uses shared `TagDefinition` resources for the same IDs.
 - `action` (`String enum`): `Attack`, `Heal`, `Guard`, `Apply Status`, `Effects Only`
 - `default_target` (`String enum`): `Self`, `Lowest HP Ally`, `Frontmost Enemy`
@@ -290,6 +296,7 @@ Currently implemented skill actions:
 
 Optional fields:
 - `display_name` (`String`)
+- `tooltip_text` (`String`): optional player-facing prose shown at the top of resource tooltips.
 - `tags` (`Array[String]`): canonical tag IDs. Resource-authored content uses shared `TagDefinition` resources for the same IDs.
 - `passive_type` (`String enum`): `None`, `Attack Damage Bonus`, `Heal Bonus`, `Guard Armor Bonus`, `Forecast`, `Extend Allied Buff Duration`
 - `Extend Allied Buff Duration` uses `amount` as a percentage. The strongest living allied copy applies once to finite naturally-elapsing Boons, positive temporary stat modifiers, and temporary Haste from any source. It does not alter transferred existing durations or battle-long action-speed increases.
@@ -303,6 +310,7 @@ Optional fields:
 
 Optional fields:
 - `display_name` (`String`)
+- `tooltip_text` (`String`): optional player-facing prose shown at the top of resource tooltips.
 - `tags` (`Array[String]`): canonical tag IDs. Resource-authored content uses shared `TagDefinition` resources for the same IDs.
 - `trigger` (`String enum`): `Damaged`, `Physically Damaged`, `Magically Damaged`, `Ally Magically Damaged`, `HP Below Threshold`, `Lethal Physical Attack Requested`, `Attack Targets Another Ally`, `Status Application Requested`, `Ally Ailment Applied`, `Enemy Healing Requested`, `Enemy Status Threshold Reached`, `Enemy Died With Status`, `Enemy Died With Ailments`
 - `condition` (`String enum`): `Always`, `Self HP Below Percent`, `Self Status Stacks At Least`, `Requested Status Is Ailment`, `Requested Status Matches`
@@ -339,6 +347,7 @@ Currently implemented reaction timing:
 
 Optional fields:
 - `display_name` (`String`)
+- `tooltip_text` (`String`): optional player-facing prose shown at the top of resource tooltips.
 - `tags` (`Array[String]`): canonical tag IDs. Resource-authored content uses shared `TagDefinition` resources for the same IDs.
 - `condition` (`String enum`): `Always`, `Self HP Below Half`, `Ally HP Below Half`, `Enemy Alive`, `Target Has Status`, `Target Status Stacks At Least`, `Target Pending Status Damage At Least HP`, `Target Slower Than Self`
 - `action` (`String enum`): `Attack`, `Heal`, `Guard`, `Job Skill`, `Secondary Skill`, `Assigned Skill`
@@ -353,6 +362,7 @@ Required:
 
 Optional fields:
 - `display_name` (`String`)
+- `tooltip_text` (`String`): optional player-facing prose shown at the top of resource tooltips.
 - `tags` (`Array[String]`): canonical tag IDs. Resource-authored content uses shared `TagDefinition` resources for the same IDs.
 - `condition` (`String enum`): `Always`, `Self HP Below Half`, `Ally HP Below Half`, `Enemy Alive`, `Target Has Status`, `Target Status Stacks At Least`, `Target Pending Status Damage At Least HP`, `Target Slower Than Self`
 - `action` (`String enum`): `Attack`, `Heal`, `Guard`, `Job Skill`, `Secondary Skill`, `Assigned Skill`
@@ -369,6 +379,7 @@ Required:
 
 Optional fields:
 - `display_name` (`String`)
+- `tooltip_text` (`String`): optional player-facing prose shown at the top of resource tooltips.
 - `current_job_id` (`String` or empty string)
 - `equipped_skill_job_id` (`String` or empty string): source job for the assigned cross-job skill.
 - `equipped_passive_job_id` (`String` or empty string): source job for the assigned learned passive.
@@ -399,6 +410,7 @@ Required:
 
 Optional fields:
 - `display_name` (`String`)
+- `tooltip_text` (`String`): optional player-facing prose shown at the top of resource tooltips.
 - `tags` (`Array[String]`): canonical tag IDs. Resource-authored content uses shared `TagDefinition` resources for the same IDs.
 - `team` (`String enum`): `Allies`, `Enemies`
 - `ancestry_id` (`String` or empty string)

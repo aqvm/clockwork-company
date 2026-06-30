@@ -7,6 +7,7 @@
 resource_name = "Burn Immunity"
 script = ExtResource("1_effect")
 display_name = "Burn Immunity"
+tooltip_text = "Burn Immunity is a triggered effect. When Status Application Requested happens and Requested Status Matches passes, it applies Prevent Request to Self."
 trigger = "Status Application Requested"
 condition = "Requested Status Matches"
 effect_type = "Prevent Request"

@@ -7,6 +7,8 @@ const STATUS_AWARE_CONDITIONS := ["Target Has Status", "Target Status Stacks At 
 
 ## Label shown in planning UI, logs, and tooltips.
 @export var display_name := ""
+## Player-facing summary shown at the top of resource tooltips.
+@export_multiline var tooltip_text := ""
 ## Shared TagDefinition resources for filtering and future tactic authoring tools.
 @export var tags: Array[Resource] = []
 ## Test that must pass before this tactic can select its action. Some conditions depend on `target`, `status`, or `status_stack_threshold`.

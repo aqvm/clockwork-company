@@ -5,6 +5,7 @@
 [resource]
 script = ExtResource("1_tactic")
 display_name = "Attack Frontmost"
+tooltip_text = "Attack Frontmost is an ordered AI rule: when Always is valid, use Attack on Frontmost Enemy. Earlier tactics get first chance to act."
 condition = "Always"
 action = "Attack"
 target = "Frontmost Enemy"

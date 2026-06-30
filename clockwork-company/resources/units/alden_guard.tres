@@ -7,6 +7,7 @@
 [resource]
 script = ExtResource("1_alden")
 display_name = "Alden Guard"
+tooltip_text = "Alden Guard is an allied combatant. Their tooltip summarizes base stats, ancestry, loadout, and job progress so you can read their role before opening deeper panels."
 ancestry = ExtResource("3_ancestry")
 max_hp = 34
 physical_damage = 6

@@ -17,6 +17,7 @@
 [sub_resource type="Resource" id="Resource_ratcatcher_skill"]
 script = ExtResource("2_skill")
 display_name = "Snare Jab"
+tooltip_text = "Snare Jab is an active attack skill. It uses physical damage, hits 1 time(s), and follows tactics for target choice."
 tags = Array[Resource]([ExtResource("tag_hunter"), ExtResource("tag_attack")])
 action = "Attack"
 default_target = "Frontmost Enemy"
@@ -25,6 +26,7 @@ amount_modifier = 1
 [sub_resource type="Resource" id="Resource_ratcatcher_passive"]
 script = ExtResource("3_passive")
 display_name = "Cornered Prey"
+tooltip_text = "Cornered Prey is a passive rule that stays available while equipped. It provides an attack damage bonus and may add nested effects or cooldown timing."
 tags = Array[Resource]([ExtResource("tag_hunter")])
 passive_type = "Attack Damage Bonus"
 amount = 2
@@ -33,6 +35,7 @@ cooldown_turns = 2
 [sub_resource type="Resource" id="Resource_ratcatcher_reaction"]
 script = ExtResource("4_reaction")
 display_name = "Trap Spring"
+tooltip_text = "Trap Spring is a reaction that can fire on Damaged. It checks Always before resolving damage attacker."
 tags = Array[Resource]([ExtResource("tag_damaged"), ExtResource("tag_reaction")])
 trigger = "Damaged"
 condition = "Always"
@@ -44,6 +47,7 @@ cooldown_turns = 3
 [sub_resource type="Resource" id="Resource_ratcatcher_default_tactic"]
 script = ExtResource("5_tactic")
 display_name = "Spring the Snare"
+tooltip_text = "Spring the Snare is an ordered AI rule: when Enemy Alive is valid, use Job Skill on Frontmost Enemy. Earlier tactics get first chance to act."
 tags = Array[Resource]([ExtResource("tag_job_default")])
 condition = "Enemy Alive"
 action = "Job Skill"
@@ -52,6 +56,7 @@ target = "Frontmost Enemy"
 [resource]
 script = ExtResource("1_job")
 display_name = "Ratcatcher"
+tooltip_text = "Ratcatcher is a job path with physical damage +2 per level. Its skill, passive, reaction, and default tactic define the role this unit is learning into."
 tags = Array[Resource]([ExtResource("tag_job"), ExtResource("tag_hunter"), ExtResource("tag_swift")])
 max_hp_growth = 0
 physical_damage_growth = 2

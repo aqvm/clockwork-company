@@ -8,6 +8,7 @@
 [resource]
 script = ExtResource("1_tactic")
 display_name = "Bloodied Brace"
+tooltip_text = "Bloodied Brace is an ordered AI rule: when Self HP Below Half is valid, use Guard on Self. Earlier tactics get first chance to act."
 tags = Array[Resource]([ExtResource("tag_guard"), ExtResource("tag_low_hp")])
 condition = "Self HP Below Half"
 action = "Guard"

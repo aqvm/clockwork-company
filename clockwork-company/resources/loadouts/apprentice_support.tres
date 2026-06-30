@@ -8,5 +8,6 @@
 [resource]
 script = ExtResource("1_loadout")
 display_name = "Apprentice Support"
+tooltip_text = "Apprentice Support is a planning package: current job, assigned learned features, equipment, and tactic order. It is the main reason a unit behaves differently from its base stat line."
 current_job = ExtResource("2_job")
 tactics = [ExtResource("3_heal"), ExtResource("4_attack")]

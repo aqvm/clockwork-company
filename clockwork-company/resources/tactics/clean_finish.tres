@@ -8,6 +8,7 @@
 [resource]
 script = ExtResource("1_tactic")
 display_name = "Clean Finish"
+tooltip_text = "Clean Finish is an ordered AI rule: when Enemy Alive is valid, use Attack on Frontmost Enemy. Earlier tactics get first chance to act."
 tags = Array[Resource]([ExtResource("tag_attack"), ExtResource("tag_enemy_alive")])
 condition = "Enemy Alive"
 action = "Attack"

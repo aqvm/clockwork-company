@@ -7,6 +7,7 @@
 [resource]
 script = ExtResource("1_tactic")
 display_name = "Spread the Fire"
+tooltip_text = "Spread the Fire is an ordered AI rule: when Enemy Alive is valid, use Job Skill on Frontmost Enemy. Earlier tactics get first chance to act."
 tags = Array[Resource]([ExtResource("tag_job_default"), ExtResource("tag_burn")])
 condition = "Enemy Alive"
 action = "Job Skill"

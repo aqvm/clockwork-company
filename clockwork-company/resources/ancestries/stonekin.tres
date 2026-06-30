@@ -12,6 +12,7 @@
 resource_name = "Stone Memory"
 script = ExtResource("2_feature")
 display_name = "Stone Memory"
+tooltip_text = "Stone Memory is an ancestry feature that can trigger on Battle Start. If Always passes, it resolves its feature effect."
 tags = Array[Resource]([ExtResource("tag_guard"), ExtResource("tag_stone")])
 amount = 4
 notes = "A slow ancestry that starts battles already braced."
@@ -20,6 +21,7 @@ notes = "A slow ancestry that starts battles already braced."
 resource_name = "Stonekin"
 script = ExtResource("1_ancestry")
 display_name = "Stonekin"
+tooltip_text = "Baseline tank ancestry; not flashy, but very hard to shove off the line."
 tags = Array[Resource]([ExtResource("tag_ancestry"), ExtResource("tag_stone"), ExtResource("tag_durable")])
 min_max_hp = 20
 max_max_hp = 26

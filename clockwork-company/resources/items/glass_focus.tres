@@ -12,6 +12,7 @@
 resource_name = "Glass Focus Attack Burst"
 script = ExtResource("2_effect")
 display_name = "Glass Focus Attack Burst"
+tooltip_text = "Glass Focus Attack Burst is a triggered effect. When Attack happens and Always passes, it applies Bonus Damage to Attack Target."
 tags = Array[Resource]([ExtResource("tag_damage"), ExtResource("tag_focus"), ExtResource("tag_magic")])
 trigger = "Attack"
 target_selector = "Attack Target"
@@ -21,6 +22,7 @@ amount = 2
 [resource]
 script = ExtResource("1_focus")
 display_name = "Glass Focus"
+tooltip_text = "Glass Focus is a Trinket item with HP -2, magic damage +3 and one or more triggered effects. Use it to compare what changes immediately and what only appears during combat."
 tags = Array[Resource]([ExtResource("tag_focus"), ExtResource("tag_damage")])
 slot = "Trinket"
 max_hp_modifier = -2

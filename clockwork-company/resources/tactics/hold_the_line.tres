@@ -8,6 +8,7 @@
 [resource]
 script = ExtResource("1_tactic")
 display_name = "Hold the Line"
+tooltip_text = "Hold the Line is an ordered AI rule: when Enemy Alive is valid, use Guard on Self. Earlier tactics get first chance to act."
 tags = Array[Resource]([ExtResource("tag_guard"), ExtResource("tag_frontline")])
 condition = "Enemy Alive"
 action = "Guard"

@@ -13,6 +13,7 @@
 resource_name = "Second Breath"
 script = ExtResource("2_effect")
 display_name = "Second Breath"
+tooltip_text = "Second Breath is a triggered effect. When HP Below Threshold happens and Self HP Below Percent passes, it applies Increase Max HP to Self."
 tags = Array[Resource]([ExtResource("tag_survival"), ExtResource("tag_low_hp")])
 trigger = "HP Below Threshold"
 condition = "Self HP Below Percent"
@@ -24,6 +25,7 @@ once_per_battle = true
 [resource]
 script = ExtResource("1_item")
 display_name = "Brass Lung"
+tooltip_text = "Brass Lung is a Trinket item with HP +5, speed -1 and one or more triggered effects. Use it to compare what changes immediately and what only appears during combat."
 tags = Array[Resource]([ExtResource("tag_trinket"), ExtResource("tag_survival"), ExtResource("tag_machine")])
 slot = "Trinket"
 max_hp_modifier = 5

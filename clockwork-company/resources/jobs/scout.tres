@@ -18,6 +18,7 @@
 [sub_resource type="Resource" id="Resource_scout_default_tactic"]
 script = ExtResource("5_tactic")
 display_name = "Find the Opening"
+tooltip_text = "Find the Opening is an ordered AI rule: when Enemy Alive is valid, use Job Skill on Frontmost Enemy. Earlier tactics get first chance to act."
 tags = Array[Resource]([ExtResource("tag_job_default")])
 condition = "Enemy Alive"
 action = "Job Skill"
@@ -26,6 +27,7 @@ action = "Job Skill"
 resource_name = "Sharpened Edge"
 script = ExtResource("3_passive")
 display_name = "Sharpened Edge"
+tooltip_text = "Sharpened Edge is a passive rule that stays available while equipped. It provides an attack damage bonus and may add nested effects or cooldown timing."
 tags = Array[Resource]([ExtResource("tag_blade")])
 passive_type = "Attack Damage Bonus"
 amount = 1
@@ -34,6 +36,7 @@ amount = 1
 resource_name = "Slip Away"
 script = ExtResource("4_reaction")
 display_name = "Slip Away"
+tooltip_text = "Slip Away is a reaction that can fire on a combat event. It checks Always before resolving its reaction effect."
 tags = Array[Resource]([ExtResource("tag_damaged"), ExtResource("tag_reaction")])
 amount = 2
 cooldown_turns = 3
@@ -42,12 +45,14 @@ cooldown_turns = 3
 resource_name = "Opening Cut"
 script = ExtResource("2_skill")
 display_name = "Opening Cut"
+tooltip_text = "Opening Cut is an active attack skill. It uses physical damage, hits 1 time(s), and follows tactics for target choice."
 tags = Array[Resource]([ExtResource("tag_swift"), ExtResource("tag_attack")])
 amount_modifier = 1
 
 [resource]
 script = ExtResource("1_job")
 display_name = "Scout"
+tooltip_text = "Scout is a job path with physical damage +1, speed +1 per level. Its skill, passive, reaction, and default tactic define the role this unit is learning into."
 physical_damage_growth = 1
 action_speed_growth = 1
 skill = SubResource("Resource_scout_skill")

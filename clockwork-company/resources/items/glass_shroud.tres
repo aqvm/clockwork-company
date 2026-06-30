@@ -12,6 +12,7 @@
 [sub_resource type="Resource" id="Resource_glass_shroud_shatter"]
 script = ExtResource("2_effect")
 display_name = "Glass Shroud Shatter"
+tooltip_text = "Glass Shroud Shatter is a triggered effect. When Death happens and Always passes, it applies Damage Killer to Killer."
 tags = Array[Resource]([ExtResource("tag_death"), ExtResource("tag_backlash")])
 trigger = "Death"
 target_selector = "Killer"
@@ -21,6 +22,7 @@ amount = 4
 [resource]
 script = ExtResource("1_item")
 display_name = "Glass Shroud"
+tooltip_text = "Glass Shroud is a Armor item with HP -4, speed +1 and one or more triggered effects. Use it to compare what changes immediately and what only appears during combat."
 tags = Array[Resource]([ExtResource("tag_armor"), ExtResource("tag_fragile"), ExtResource("tag_death_backlash")])
 slot = "Armor"
 max_hp_modifier = -4

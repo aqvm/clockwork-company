@@ -13,6 +13,7 @@
 resource_name = "Chalk Line"
 script = ExtResource("2_effect")
 display_name = "Chalk Line"
+tooltip_text = "Chalk Line is a triggered effect. When Attack happens and Target Missing Tag passes, it applies Bonus Damage to Attack Target."
 tags = Array[Resource]([ExtResource("tag_armored")])
 trigger = "Attack"
 condition = "Target Missing Tag"
@@ -23,6 +24,7 @@ amount = 1
 [resource]
 script = ExtResource("1_item")
 display_name = "White-Chalk Sabre"
+tooltip_text = "White-Chalk Sabre is an equipment item with physical damage +2 and one or more triggered effects. Use it to compare what changes immediately and what only appears during combat."
 tags = Array[Resource]([ExtResource("tag_weapon"), ExtResource("tag_blade"), ExtResource("tag_duelist")])
 physical_damage_modifier = 2
 effects = Array[ExtResource("2_effect")]([SubResource("Resource_chalk_line")])

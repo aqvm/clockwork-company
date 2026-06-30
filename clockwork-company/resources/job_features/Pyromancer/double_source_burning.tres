@@ -7,6 +7,7 @@
 resource_name = "Apply Burning"
 script = ExtResource("1_effect")
 display_name = "Apply Burning"
+tooltip_text = "Apply Burning is a triggered effect. When Reaction Triggered happens and Always passes, it applies Apply Status to Event Target."
 trigger = "Reaction Triggered"
 target_selector = "Event Target"
 effect_type = "Apply Status"

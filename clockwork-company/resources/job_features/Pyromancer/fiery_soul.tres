@@ -12,5 +12,6 @@
 resource_name = "Fiery Soul"
 script = ExtResource("1_passive")
 display_name = "Fiery Soul"
+tooltip_text = "Fiery Soul is a passive rule that stays available while equipped. It uses authored effects and may add nested effects or cooldown timing."
 tags = Array[Resource]([ExtResource("tag_burn"), ExtResource("tag_aura")])
 effects = Array[ExtResource("2_effect")]([ExtResource("3_immunity"), ExtResource("4_battle_start"), ExtResource("5_round_start")])

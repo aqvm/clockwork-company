@@ -12,6 +12,7 @@
 resource_name = "Ember Vein"
 script = ExtResource("2_feature")
 display_name = "Ember Vein"
+tooltip_text = "Ember Vein is an ancestry feature that can trigger on Attack. If Always passes, it resolves bonus damage."
 tags = Array[Resource]([ExtResource("tag_magic"), ExtResource("tag_fire")])
 trigger = "Attack"
 feature_type = "Bonus Damage"
@@ -23,6 +24,7 @@ notes = "A periodic magic-damage rider that rewards magic tags and ignores armor
 resource_name = "Emberkin"
 script = ExtResource("1_ancestry")
 display_name = "Emberkin"
+tooltip_text = "Glassier ancestry for characters who want their blood to be a bad idea."
 tags = Array[Resource]([ExtResource("tag_ancestry"), ExtResource("tag_ember"), ExtResource("tag_magic")])
 min_max_hp = 13
 max_max_hp = 18

@@ -9,6 +9,7 @@
 [resource]
 script = ExtResource("1_item")
 display_name = "Pocket Sundial"
+tooltip_text = "Pocket Sundial is a Trinket item with physical damage -1, speed +2. Use it to compare what changes immediately and what only appears during combat."
 tags = Array[Resource]([ExtResource("tag_trinket"), ExtResource("tag_speed"), ExtResource("tag_focus")])
 slot = "Trinket"
 physical_damage_modifier = -1

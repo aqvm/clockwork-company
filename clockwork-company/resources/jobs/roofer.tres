@@ -19,6 +19,7 @@
 [sub_resource type="Resource" id="Resource_roofer_default_tactic"]
 script = ExtResource("5_tactic")
 display_name = "Drop From Above"
+tooltip_text = "Drop From Above is an ordered AI rule: when Enemy Alive is valid, use Job Skill on Frontmost Enemy. Earlier tactics get first chance to act."
 tags = Array[Resource]([ExtResource("tag_job_default")])
 condition = "Enemy Alive"
 action = "Job Skill"
@@ -27,6 +28,7 @@ action = "Job Skill"
 resource_name = "High Ground"
 script = ExtResource("3_passive")
 display_name = "High Ground"
+tooltip_text = "High Ground is a passive rule that stays available while equipped. It provides an attack damage bonus and may add nested effects or cooldown timing."
 tags = Array[Resource]([ExtResource("tag_duelist")])
 passive_type = "Attack Damage Bonus"
 amount = 1
@@ -36,6 +38,7 @@ cooldown_turns = 1
 resource_name = "Roll Off"
 script = ExtResource("4_reaction")
 display_name = "Roll Off"
+tooltip_text = "Roll Off is a reaction that can fire on a combat event. It checks Always before resolving its reaction effect."
 tags = Array[Resource]([ExtResource("tag_damaged"), ExtResource("tag_reaction")])
 amount = 2
 cooldown_turns = 3
@@ -44,12 +47,14 @@ cooldown_turns = 3
 resource_name = "Drop Strike"
 script = ExtResource("2_skill")
 display_name = "Drop Strike"
+tooltip_text = "Drop Strike is an active attack skill. It uses physical damage, hits 1 time(s), and follows tactics for target choice."
 tags = Array[Resource]([ExtResource("tag_duelist"), ExtResource("tag_attack")])
 amount_modifier = 1
 
 [resource]
 script = ExtResource("1_job")
 display_name = "Roofer"
+tooltip_text = "Roofer is a job path with physical damage +1, speed +1 per level. Its skill, passive, reaction, and default tactic define the role this unit is learning into."
 tags = Array[Resource]([ExtResource("tag_job"), ExtResource("tag_swift"), ExtResource("tag_duelist")])
 physical_damage_growth = 1
 action_speed_growth = 1

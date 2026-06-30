@@ -10,6 +10,7 @@
 [resource]
 script = ExtResource("1_loadout")
 display_name = "Ratcatcher Inkneedle"
+tooltip_text = "Ratcatcher Inkneedle is a planning package: current job, assigned learned features, equipment, and tactic order. It is the main reason a unit behaves differently from its base stat line."
 current_job = ExtResource("2_job")
 weapon = ExtResource("3_weapon")
 trinket = ExtResource("4_trinket")

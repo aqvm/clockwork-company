@@ -7,6 +7,7 @@
 [resource]
 script = ExtResource("1_unit")
 display_name = "Roofline Duelist"
+tooltip_text = "Roofline Duelist is an enemy combatant. Their tooltip summarizes base stats, ancestry, loadout, and job progress so you can read their role before opening deeper panels."
 team = "Enemies"
 ancestry = ExtResource("3_ancestry")
 max_hp = 22

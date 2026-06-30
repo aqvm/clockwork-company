@@ -12,6 +12,7 @@
 [resource]
 script = ExtResource("1_job")
 display_name = "Spellsword"
+tooltip_text = "Spellsword is a job path with no stat growth per level. Its skill, passive, reaction, and default tactic define the role this unit is learning into."
 tags = Array[Resource]([ExtResource("tag_spellblade"), ExtResource("tag_learned_build")])
 skill = ExtResource("2_skill")
 passive = ExtResource("3_passive")

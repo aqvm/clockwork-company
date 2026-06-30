@@ -12,6 +12,7 @@
 resource_name = "Second Echo"
 script = ExtResource("2_feature")
 display_name = "Second Echo"
+tooltip_text = "Second Echo is an ancestry feature that can trigger on HP Below Threshold. If Self HP Below Percent passes, it resolves heal self."
 tags = Array[Resource]([ExtResource("tag_echo"), ExtResource("tag_survival")])
 trigger = "HP Below Threshold"
 condition = "Self HP Below Percent"
@@ -25,6 +26,7 @@ notes = "A dramatic one-battle self-stabilizer when a fragile unit gets cracked 
 resource_name = "Hollow"
 script = ExtResource("1_ancestry")
 display_name = "Hollow"
+tooltip_text = "Fast and uncanny, with a survival pulse instead of sturdiness."
 tags = Array[Resource]([ExtResource("tag_ancestry"), ExtResource("tag_echo"), ExtResource("tag_fragile")])
 min_max_hp = 11
 max_max_hp = 16

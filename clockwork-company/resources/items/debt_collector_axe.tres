@@ -15,6 +15,7 @@
 resource_name = "Debt Collector Receipt"
 script = ExtResource("2_effect")
 display_name = "Debt Collector Receipt"
+tooltip_text = "Debt Collector Receipt is a triggered effect. When Kill happens and Always passes, it applies Heal Self to Self."
 tags = Array[Resource]([ExtResource("tag_heal"), ExtResource("tag_kill")])
 trigger = "Kill"
 effect_type = "Heal Self"
@@ -23,6 +24,7 @@ amount = 5
 [resource]
 script = ExtResource("1_item")
 display_name = "Debt Collector Axe"
+tooltip_text = "Debt Collector Axe is an equipment item with physical damage +5, speed -3 and one or more triggered effects. Use it to compare what changes immediately and what only appears during combat."
 tags = Array[Resource]([ExtResource("tag_weapon"), ExtResource("tag_axe"), ExtResource("tag_slow"), ExtResource("tag_finisher")])
 physical_damage_modifier = 5
 action_speed_modifier = -3
