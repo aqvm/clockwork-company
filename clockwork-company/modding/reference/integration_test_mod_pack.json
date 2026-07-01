@@ -30,6 +30,16 @@
 			"passive": {
 				"display_name": "Cleanser IT Forecast",
 				"passive_type": "Forecast",
+				"effects": [
+					{
+						"display_name": "Cleanser IT Opening Reconstitution",
+						"trigger": "Battle Start",
+						"condition": "Always",
+						"effect_type": "Apply Status",
+						"target_selector": "Self",
+						"status_id": "reconstitution_it"
+					}
+				],
 				"tooltip_text": "Small JSON-pack passive used to validate passive loading."
 			},
 			"default_tactic": {
@@ -47,6 +57,17 @@
 			"display_name": "Cleanser IT Loadout",
 			"current_job_id": "cleanser_it",
 			"tooltip_text": "Self-contained JSON loadout for the integration test unit."
+		}
+	],
+	"tactics": [
+		{
+			"id": "foretell_heal_it",
+			"display_name": "Foretell Heal IT",
+			"condition": "Ally HP Below Half",
+			"action": "Heal",
+			"target": "Lowest HP Ally",
+			"foretell_enabled": true,
+			"tooltip_text": "Small JSON-pack tactic used to validate Foretell authoring."
 		}
 	],
 	"units": [

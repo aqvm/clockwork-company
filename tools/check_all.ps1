@@ -6,19 +6,34 @@ param(
 $ErrorActionPreference = "Stop"
 
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
+$godotLogPath = Join-Path $repoRoot.Path "clockwork-company\godot-check.log"
 $checks = @(
 	@{ Name = "Godot script parse"; Arguments = @("--check-only", "--script", "res://scripts/ui/combat_test_scene.gd") },
 	@{ Name = "Content validation"; Arguments = @("--script", "res://scripts/tools/content_validation_check.gd") },
+	@{ Name = "Content schema"; Arguments = @("--script", "res://scripts/tools/content_schema_check.gd") },
+	@{ Name = "Definition clone isolation"; Arguments = @("--script", "res://scripts/tools/definition_clone_check.gd") },
 	@{ Name = "Combat event pipeline"; Arguments = @("--script", "res://scripts/tools/combat_event_pipeline_check.gd") },
 	@{ Name = "Battle contributions"; Arguments = @("--script", "res://scripts/tools/battle_contribution_summary_check.gd") },
 	@{ Name = "Battle contribution panel"; Arguments = @("--script", "res://scripts/tools/battle_contribution_panel_check.gd") },
 	@{ Name = "Combat Lab state"; Arguments = @("--script", "res://scripts/tools/combat_lab_state_check.gd") },
 	@{ Name = "Combat Lab UI"; Arguments = @("--script", "res://scripts/tools/combat_lab_ui_check.gd") },
 	@{ Name = "Status mechanics"; Arguments = @("--script", "res://scripts/tools/status_mechanics_check.gd") },
+	@{ Name = "Triggered effect dispatch"; Arguments = @("--script", "res://scripts/tools/triggered_effect_dispatch_check.gd") },
 	@{ Name = "Triggered effects"; Arguments = @("--script", "res://scripts/tools/triggered_effect_mechanics_check.gd") },
 	@{ Name = "Tactic authoring"; Arguments = @("--script", "res://scripts/tools/tactic_authoring_check.gd") },
 	@{ Name = "Foretell mechanics"; Arguments = @("--script", "res://scripts/tools/forecast_mechanics_check.gd") }
 )
+
+function Get-GodotLogTail {
+	if (-not (Test-Path -LiteralPath $godotLogPath)) {
+		return "Godot log was not written: $godotLogPath"
+	}
+	$tail = Get-Content -LiteralPath $godotLogPath -Tail 80
+	if ($null -eq $tail -or $tail.Count -eq 0) {
+		return "Godot log is empty: $godotLogPath"
+	}
+	return ($tail -join [Environment]::NewLine)
+}
 
 function Invoke-GodotValidation {
 	param(
@@ -43,11 +58,11 @@ function Invoke-GodotValidation {
 	try {
 		if ($null -eq (Wait-Job -Job $job -Timeout $PerCheckTimeoutSeconds)) {
 			Stop-Job -Job $job
-			throw "$Name timed out after $PerCheckTimeoutSeconds seconds. Inspect clockwork-company/godot-check.log."
+			throw "$Name timed out after $PerCheckTimeoutSeconds seconds. Godot log tail:$([Environment]::NewLine)$(Get-GodotLogTail)"
 		}
 		$exitCode = Receive-Job -Job $job
 		if ($exitCode -ne 0) {
-			throw "$Name failed with exit code $exitCode. Inspect clockwork-company/godot-check.log."
+			throw "$Name failed with exit code $exitCode. Godot log tail:$([Environment]::NewLine)$(Get-GodotLogTail)"
 		}
 	}
 	finally {

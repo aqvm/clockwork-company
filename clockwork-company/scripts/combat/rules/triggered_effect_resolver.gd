@@ -72,125 +72,142 @@ static func _resolve(context, event: Dictionary, owner, effect: EffectDefinition
 		}, int(event.get("id", -1)), int(event.get("parent_log_id", -1)), source_tags + ["triggered_effect"])
 		if context.log != null and not context.speculative:
 			context.log.add_child(int(event.get("parent_log_id", -1)), "%s resolves %s on %s." % [source_name, effect.display_name, target.unit_name])
-		if effect.effect_type == "Apply Status":
+		_apply_triggered_effect(context, event, owner, target, effect, source_name, source_tags, effect_event_id)
+
+
+static func _apply_triggered_effect(context, event: Dictionary, owner, target, effect: EffectDefinition, source_name: String, source_tags: Array, effect_event_id: int) -> void:
+	match effect.effect_type:
+		"Apply Status", "Maintain Status Aura", "Replace Requested Status", "Remove Status", "Consume Status", "Detonate Status", "Gather Status", "Transfer Statuses", "Fuse Elemental Ailments", "Transfer Defeated Ailments", "Restore Max HP Lost To Status":
+			_apply_status_effect(context, event, owner, target, effect, source_name, effect_event_id)
+		"Modify Stat":
+			_apply_modifier(context, event, owner, target, effect, source_name, effect_event_id)
+		"Modify Counter", "Reset Counter", "Seal Next Attack", "Prevent Request", "Add Attack Damage":
+			_apply_counter_or_request_effect(context, event, owner, target, effect, source_name, source_tags, effect_event_id)
+		"Deal Damage", "Heal", "Grant Armor", "Grant Battle Armor", "Grant Energy Shield", "Disable Armor":
+			_apply_damage_heal_armor_effect(context, event, owner, target, effect, source_name, source_tags, effect_event_id)
+		"Delay Action", "Apply Haste", "Increase Action Speed For Battle", "Fortify Damage", "Redirect Enemy Attacks", "Execute Target", "Begin Enemy Action Healing", "Prepare Base Attack":
+			_apply_timeline_or_state_effect(context, event, owner, target, effect, source_name, source_tags, effect_event_id)
+
+
+static func _apply_status_effect(context, event: Dictionary, owner, target, effect: EffectDefinition, source_name: String, effect_event_id: int) -> void:
+	match effect.effect_type:
+		"Apply Status":
 			var stack_count: int = _effect_amount(event, owner, target, effect, context)
 			if stack_count <= 0:
-				continue
-			StatusResolverScript.apply_status(
-				context.log,
-				int(event.get("parent_log_id", -1)),
-				target,
-				effect.status,
-				source_name,
-				_status_duration_turns(effect, effect.status),
-				_status_is_permanent(effect, effect.status),
-				context,
-				owner,
-				effect_event_id,
-				stack_count
-			)
-		elif effect.effect_type == "Maintain Status Aura":
+				return
+			StatusResolverScript.apply_status(context.log, int(event.get("parent_log_id", -1)), target, effect.status, source_name, _status_duration_turns(effect, effect.status), _status_is_permanent(effect, effect.status), context, owner, effect_event_id, stack_count)
+		"Maintain Status Aura":
 			_maintain_status_aura(context, event, owner, target, effect, source_name, effect_event_id)
-		elif effect.effect_type == "Replace Requested Status":
+		"Replace Requested Status":
 			_replace_requested_status(context, event, owner, target, effect, source_name, effect_event_id)
-		elif effect.effect_type == "Remove Status":
+		"Remove Status":
 			_remove_status(context, event, owner, target, effect, source_name, effect_event_id)
-		elif effect.effect_type == "Modify Stat":
-			_apply_modifier(context, event, owner, target, effect, source_name, effect_event_id)
-		elif effect.effect_type == "Consume Status":
+		"Consume Status":
 			_consume_status(context, event, owner, target, effect, source_name, effect_event_id)
-		elif effect.effect_type == "Detonate Status":
+		"Detonate Status":
 			_detonate_status(context, event, owner, target, effect, source_name, effect_event_id)
-		elif effect.effect_type == "Gather Status":
+		"Gather Status":
 			_gather_status(context, event, owner, target, effect, source_name, effect_event_id)
-		elif effect.effect_type == "Transfer Statuses":
+		"Transfer Statuses":
 			_transfer_statuses(context, event, owner, target, effect, source_name, effect_event_id)
-		elif effect.effect_type == "Fuse Elemental Ailments":
+		"Fuse Elemental Ailments":
 			_fuse_elemental_ailments(context, event, owner, target, effect, source_name, effect_event_id)
-		elif effect.effect_type == "Transfer Defeated Ailments":
+		"Transfer Defeated Ailments":
 			_transfer_defeated_ailments(context, event, owner, target, source_name, effect_event_id)
-		elif effect.effect_type == "Restore Max HP Lost To Status":
+		"Restore Max HP Lost To Status":
 			_restore_max_hp_lost_to_status(context, event, owner, target, effect, source_name, effect_event_id)
-		elif effect.effect_type == "Modify Counter":
+
+
+static func _apply_counter_or_request_effect(context, event: Dictionary, owner, target, effect: EffectDefinition, source_name: String, source_tags: Array, effect_event_id: int) -> void:
+	match effect.effect_type:
+		"Modify Counter":
 			_modify_counter(context, event, owner, target, effect, source_name, effect_event_id)
-		elif effect.effect_type == "Reset Counter":
+		"Reset Counter":
 			target.reset_counter(effect.counter_name)
 			context.publish("counter_changed", owner, target, {"counter": effect.counter_name, "amount": 0, "new": 0}, effect_event_id, int(event.get("parent_log_id", -1)), ["counter"])
-		elif effect.effect_type == "Seal Next Attack":
+		"Seal Next Attack":
 			if owner != null and target.add_attack_seal(owner.unit_id):
 				owner.reset_attack_streak()
 				context.log.add_child(int(event.get("parent_log_id", -1)), "%s seals %s's next attack." % [source_name, target.unit_name])
 				context.publish("attack_sealed", owner, target, {"source_name": source_name}, effect_event_id, int(event.get("parent_log_id", -1)), source_tags + ["attack", "seal"])
-		elif effect.effect_type == "Prevent Request":
+		"Prevent Request":
 			event["payload"]["prevented"] = true
 			event["payload"]["prevented_reason"] = source_name
-		elif effect.effect_type == "Add Attack Damage":
+		"Add Attack Damage":
 			event["payload"]["bonus_damage"] = int(event["payload"].get("bonus_damage", 0)) + _effect_amount(event, owner, target, effect, context)
-		elif effect.effect_type == "Deal Damage":
+
+
+static func _apply_damage_heal_armor_effect(context, event: Dictionary, owner, target, effect: EffectDefinition, source_name: String, source_tags: Array, effect_event_id: int) -> void:
+	match effect.effect_type:
+		"Deal Damage":
 			var damage_amount := _effect_amount(event, owner, target, effect, context)
 			if effect.damage_type == "Physical":
 				context.apply_physical_damage(owner, target, damage_amount, effect_event_id, int(event.get("parent_log_id", -1)), source_tags)
 			else:
 				context.apply_direct_damage(owner, target, damage_amount, effect_event_id, int(event.get("parent_log_id", -1)), source_tags + [effect.damage_type.to_lower()])
-		elif effect.effect_type == "Heal":
+		"Heal":
 			context.apply_healing(owner if owner != null else target, target, _effect_amount(event, owner, target, effect, context), effect_event_id, int(event.get("parent_log_id", -1)), source_tags)
-		elif effect.effect_type == "Grant Armor":
+		"Grant Armor":
 			var armor_amount := _effect_amount(event, owner, target, effect, context)
 			if armor_amount <= 0:
-				continue
+				return
 			target.guard_armor += armor_amount
 			context.log.add_child(int(event.get("parent_log_id", -1)), "%s grants %s %d temporary armor." % [source_name, target.unit_name, armor_amount])
 			context.publish("armor_gained", owner, target, {"amount": armor_amount, "armor_kind": "temporary"}, effect_event_id, int(event.get("parent_log_id", -1)), source_tags + ["armor"])
-		elif effect.effect_type == "Grant Battle Armor":
+		"Grant Battle Armor":
 			var battle_armor_amount := _effect_amount(event, owner, target, effect, context)
 			if battle_armor_amount <= 0:
-				continue
+				return
 			target.battle_armor += battle_armor_amount
 			context.log.add_child(int(event.get("parent_log_id", -1)), "%s grants %s %d armor for this battle." % [source_name, target.unit_name, battle_armor_amount])
 			context.publish("armor_gained", owner, target, {"amount": battle_armor_amount, "armor_kind": "battle"}, effect_event_id, int(event.get("parent_log_id", -1)), source_tags + ["armor"])
-		elif effect.effect_type == "Grant Energy Shield":
+		"Grant Energy Shield":
 			var shield_amount := _effect_amount(event, owner, target, effect, context)
 			if shield_amount <= 0:
-				continue
+				return
 			var new_shield: int = target.add_energy_shield(shield_amount)
 			context.log.add_child(int(event.get("parent_log_id", -1)), "%s grants %s %d Energy Shield; total %d." % [source_name, target.unit_name, shield_amount, new_shield])
 			context.publish("energy_shield_gained", owner, target, {"amount": shield_amount, "new": new_shield}, effect_event_id, int(event.get("parent_log_id", -1)), source_tags + ["energy_shield"])
-		elif effect.effect_type == "Disable Armor":
+		"Disable Armor":
 			target.armor_disabled = true
 			context.log.add_child(int(event.get("parent_log_id", -1)), "%s prevents %s from benefiting from armor." % [source_name, target.unit_name])
 			context.publish("armor_disabled", owner, target, {"source_name": source_name}, effect_event_id, int(event.get("parent_log_id", -1)), source_tags + ["armor"])
-		elif effect.effect_type == "Delay Action":
+
+
+static func _apply_timeline_or_state_effect(context, event: Dictionary, owner, target, effect: EffectDefinition, source_name: String, source_tags: Array, effect_event_id: int) -> void:
+	match effect.effect_type:
+		"Delay Action":
 			var delay_amount := _effect_amount(event, owner, target, effect, context)
 			if delay_amount <= 0 or not target.is_alive():
-				continue
+				return
 			target.next_action_time += delay_amount
 			context.log.add_child(int(event.get("parent_log_id", -1)), "%s delays %s's next action by %d." % [source_name, target.unit_name, delay_amount])
 			context.publish("action_delayed", owner, target, {"amount": delay_amount, "reason": source_name, "new_time": target.next_action_time}, effect_event_id, int(event.get("parent_log_id", -1)), source_tags + ["timeline"])
-		elif effect.effect_type == "Apply Haste":
+		"Apply Haste":
 			_hasten_action(context, event, owner, target, effect, source_name, effect_event_id, source_tags)
-		elif effect.effect_type == "Increase Action Speed For Battle":
+		"Increase Action Speed For Battle":
 			var event_source = event.get("source", null)
 			var current_time: int = event_source.next_action_time if event_source != null else 0
 			var applied_haste: int = target.add_battle_action_haste(_effect_amount(event, owner, target, effect, context), current_time)
 			if applied_haste > 0:
 				context.log.add_child(int(event.get("parent_log_id", -1)), "%s increases %s's action speed by %d for this battle." % [source_name, target.unit_name, applied_haste])
 				context.publish("action_hastened", owner, target, {"amount": applied_haste, "speed_amount": applied_haste, "duration_actions": 0, "new_time": target.next_action_time}, effect_event_id, int(event.get("parent_log_id", -1)), source_tags + ["timeline"])
-		elif effect.effect_type == "Fortify Damage":
+		"Fortify Damage":
 			target.begin_fortification(effect.modifier_duration_turns)
 			context.log.add_child(int(event.get("parent_log_id", -1)), "%s fortifies %s against immediate damage for %d completed actions." % [source_name, target.unit_name, effect.modifier_duration_turns])
-		elif effect.effect_type == "Redirect Enemy Attacks":
+		"Redirect Enemy Attacks":
 			target.begin_attack_redirection(effect.modifier_duration_turns)
 			context.log.add_child(int(event.get("parent_log_id", -1)), "%s redirects enemy attacks to %s for %d completed actions." % [source_name, target.unit_name, effect.modifier_duration_turns])
-		elif effect.effect_type == "Execute Target":
+		"Execute Target":
 			if int(event["payload"].get("physical_amount", 0)) > 0 and target.hp * 100 <= target.max_hp * effect.threshold_percent:
 				context.execute_unit(owner, target, source_name, effect_event_id, int(event.get("parent_log_id", -1)))
-		elif effect.effect_type == "Begin Enemy Action Healing":
+		"Begin Enemy Action Healing":
 			var healing_amount := _effect_amount(event, owner, target, effect, context)
 			if healing_amount > 0:
 				target.begin_enemy_action_healing(healing_amount, source_name)
 				context.log.add_child(int(event.get("parent_log_id", -1)), "%s will heal %s after each enemy turn completed before their next turn." % [source_name, target.unit_name])
 				context.publish("enemy_action_healing_started", owner, target, {"amount": healing_amount, "source_name": source_name}, effect_event_id, int(event.get("parent_log_id", -1)), source_tags + ["healing", "window"])
-		elif effect.effect_type == "Prepare Base Attack":
+		"Prepare Base Attack":
 			target.prepare_base_attack(source_name)
 			context.log.add_child(int(event.get("parent_log_id", -1)), "%s prepares %s's base attack against the next enemy to begin a turn." % [source_name, target.unit_name])
 			context.publish("base_attack_prepared", owner, target, {"source_name": source_name}, effect_event_id, int(event.get("parent_log_id", -1)), source_tags + ["attack", "prepared"])

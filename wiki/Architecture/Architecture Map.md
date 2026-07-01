@@ -21,6 +21,7 @@ tags:
 
 - Combat orchestration: `clockwork-company/scripts/combat/combat_simulator.gd`
 - Runtime unit state: `clockwork-company/scripts/combat/runtime/unit_state.gd`
+- Runtime clone isolation: `clockwork-company/scripts/combat/runtime/unit_state_clone_helper.gd`
 - Scheduling: `clockwork-company/scripts/combat/runtime/turn_scheduler.gd`
 - Event causality: `clockwork-company/scripts/combat/runtime/combat_context.gd`
 - Central hooks: `clockwork-company/scripts/combat/rules/combat_hook_resolver.gd`
@@ -29,9 +30,11 @@ tags:
 - Campaign progression: `clockwork-company/scripts/campaign/campaign_manager.gd`
 - Durable roster: `clockwork-company/scripts/campaign/campaign_roster_state.gd`
 - Workbench coordination: `clockwork-company/scripts/ui/combat_test_scene.gd`
+- Workbench persisted mod settings: `clockwork-company/scripts/ui/mod_settings_store.gd`
 - Combat Lab assembly state: `clockwork-company/scripts/devtools/combat_lab_state.gd`
 - Combat Lab presentation: `clockwork-company/scripts/ui/combat_lab_panel.gd`
 - Combat Lab setup fixtures: `clockwork-company/devtools/combat_lab_setups/`
 - JSON content bridge: `clockwork-company/scripts/modding/json_content_loader.gd`
+- JSON content schema/result: `clockwork-company/scripts/data/content_schema.gd`, `clockwork-company/scripts/modding/content_load_result.gd`
 
 For the detailed ownership inventory, see [[ARCHITECTURE]].

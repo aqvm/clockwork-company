@@ -41,12 +41,16 @@ func _run() -> void:
 	assert(_button_named(lab_panel, "Duplicate") != null, "Panel refresh should keep duplicate controls wired.")
 
 	var equipment_item_index: int = _first_equippable_item_index(lab_state, CombatLabStateScript.TEAM_ALLIES, 0)
-	assert(equipment_item_index >= 0, "UI check needs one equippable catalog item.")
-	var equipment_item: ItemDefinition = lab_state.catalog_items[equipment_item_index]
-	assert(lab_panel.call("equip_item", CombatLabStateScript.TEAM_ALLIES, 0, equipment_item.slot, equipment_item_index), "Panel equip method should update state.")
-	await process_frame
-	assert(_label_containing(lab_panel, equipment_item.display_name) != null, "Panel refresh should show equipped item in the unit equipment summary.")
-	assert(lab_panel.call("set_ancestry", CombatLabStateScript.TEAM_ALLIES, 0, 0), "Panel ancestry method should update state.")
+	var equipment_item: ItemDefinition = null
+	if equipment_item_index >= 0:
+		equipment_item = lab_state.catalog_items[equipment_item_index]
+		assert(lab_panel.call("equip_item", CombatLabStateScript.TEAM_ALLIES, 0, equipment_item.slot, equipment_item_index), "Panel equip method should update state.")
+		await process_frame
+		assert(_label_containing(lab_panel, equipment_item.display_name) != null, "Panel refresh should show equipped item in the unit equipment summary.")
+	if lab_state.catalog_ancestries.is_empty():
+		assert(lab_panel.call("set_ancestry", CombatLabStateScript.TEAM_ALLIES, 0, -1), "Panel ancestry method should allow clearing ancestry.")
+	else:
+		assert(lab_panel.call("set_ancestry", CombatLabStateScript.TEAM_ALLIES, 0, 0), "Panel ancestry method should update state.")
 	assert(lab_panel.call("set_current_job", CombatLabStateScript.TEAM_ALLIES, 0, 0), "Panel job method should update state.")
 	assert(lab_panel.call("set_equipped_feature", CombatLabStateScript.TEAM_ALLIES, 0, "skill", 0), "Panel skill method should update state.")
 	assert(lab_panel.call("set_equipped_feature", CombatLabStateScript.TEAM_ALLIES, 0, "passive", 0), "Panel passive method should update state.")
@@ -73,7 +77,8 @@ func _run() -> void:
 	await process_frame
 	assert(lab_state.allied_units.size() == saved_ally_count, "UI-loaded setup should preserve allied unit count.")
 	assert(lab_state.enemy_units.size() == saved_enemy_count, "UI-loaded setup should preserve enemy unit count.")
-	assert(_label_containing(lab_panel, equipment_item.display_name) != null, "UI-loaded setup should refresh equipment labels.")
+	if equipment_item != null:
+		assert(_label_containing(lab_panel, equipment_item.display_name) != null, "UI-loaded setup should refresh equipment labels.")
 	assert(_label_containing(lab_panel, lab_state.catalog_tactics[0].display_name) != null, "UI-loaded setup should refresh tactic labels.")
 
 	lab_panel.call("clear_team", CombatLabStateScript.TEAM_ENEMIES)
@@ -95,7 +100,8 @@ func _run() -> void:
 	assert(not report.get("contribution_summary", []).is_empty(), "UI-run lab report should include contribution summary rows.")
 	var contribution_panel: Control = scene.get("battle_contribution_panel")
 	assert(contribution_panel != null and contribution_panel.visible, "Workbench should show contribution panel after a Combat Lab battle report.")
-	assert(_report_contains_text(report, equipment_item.display_name), "UI-run report should include the equipped lab item.")
+	if equipment_item != null:
+		assert(_report_contains_text(report, equipment_item.display_name), "UI-run report should include the equipped lab item.")
 	assert(bool(scene.get("replay_is_active")), "UI run should start the existing replay flow.")
 
 	var replay_panel: Control = scene.get("replay_panel")

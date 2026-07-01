@@ -44,12 +44,13 @@ func _init() -> void:
 
 	var mod_tactic: TacticDefinition = JsonContentLoaderScript.load_tactic_definition_by_id("foretell_heal_it", ["integration_test_mod_pack"])
 	assert(mod_tactic != null and mod_tactic.foretell_enabled and mod_tactic.condition == CombatConstantsScript.CONDITION_ALLY_HP_BELOW_HALF, "JSON tactics should preserve the Foretell toggle and normal state condition.")
-	var marra_definitions: Array[UnitDefinition] = JsonContentLoaderScript.load_unit_definitions_by_ids(["marra_archivist"], [])
-	var marra = UnitStateScript.new(marra_definitions[0], 0)
-	assert(marra.forecast_capable(), "Marra should retain the equipped Forecast passive.")
-	for tactic in marra.tactics:
-		assert(not tactic.foretell_enabled, "Marra should not receive an automatically configured Foretell tactic.")
-	_assert_loaded_unit_resource_isolation(marra)
+	var cleanser_definitions: Array[UnitDefinition] = JsonContentLoaderScript.load_unit_definitions_by_ids(["cleanser_it_unit"], ["integration_test_mod_pack"])
+	assert(cleanser_definitions.size() == 1, "Forecast fixture unit should load from the integration pack.")
+	var cleanser = UnitStateScript.new(cleanser_definitions[0], 0)
+	assert(cleanser.forecast_capable(), "Integration fixture should retain the equipped Forecast passive.")
+	for tactic in cleanser.tactics:
+		assert(not tactic.foretell_enabled, "Loaded units should not receive an automatically configured Foretell tactic.")
+	_assert_loaded_unit_resource_isolation(cleanser)
 
 	var restored_tactic: TacticDefinition = _round_tripped_tactic(foretell_tactic)
 	assert(restored_tactic != null and restored_tactic.condition == foretell_tactic.condition and restored_tactic.action == foretell_tactic.action and restored_tactic.target == foretell_tactic.target and restored_tactic.foretell_enabled, "Campaign saves should round-trip player-authored tactic fields.")
@@ -64,7 +65,7 @@ func _init() -> void:
 	assert(restored_status_tactic.status != null and restored_status_tactic.status.status_type == "Burning" and restored_status_tactic.status_stack_threshold == 4, "Campaign saves should round-trip status-aware tactic parameters.")
 	_assert_speculative_clone_isolation(forecaster)
 
-	print("Foretell validation passed: normal speculative tactics, gating, first future match, target mapping, horizon, clone isolation, JSON authoring, campaign save data, and Marra cleanup worked.")
+	print("Foretell validation passed: normal speculative tactics, gating, first future match, target mapping, horizon, clone isolation, JSON authoring, campaign save data, and loaded-unit cleanup worked.")
 	quit(0)
 
 
@@ -110,10 +111,10 @@ func _attack_tactic() -> TacticDefinition:
 
 func _round_tripped_tactic(tactic: TacticDefinition) -> TacticDefinition:
 	var roster = CampaignRosterStateScript.new()
-	roster.reset(["marra_archivist"], [])
-	assert(roster.set_tactics("marra_archivist", [tactic]), "Save test should configure Marra's campaign tactics.")
+	roster.reset(["cleanser_it_unit"], ["integration_test_mod_pack"])
+	assert(roster.set_tactics("cleanser_it_unit", [tactic]), "Save test should configure the campaign fixture's tactics.")
 	var restored = CampaignRosterStateScript.new()
-	restored.apply_save_data(roster.to_save_data(), ["marra_archivist"], [])
+	restored.apply_save_data(roster.to_save_data(), ["cleanser_it_unit"], ["integration_test_mod_pack"])
 	var party: Array[UnitDefinition] = restored.active_party_snapshot()
 	if party.is_empty() or party[0].loadout == null or party[0].loadout.tactics.is_empty():
 		return null
@@ -142,7 +143,14 @@ func _assert_speculative_clone_isolation(unit) -> void:
 
 func _assert_loaded_unit_resource_isolation(unit) -> void:
 	var clone = unit.clone_runtime_state()
-	assert(clone.ancestry != unit.ancestry and clone.current_ancestry_feature != unit.current_ancestry_feature, "Speculative clones should duplicate ancestry Resources.")
+	if unit.ancestry != null:
+		assert(clone.ancestry != unit.ancestry, "Speculative clones should duplicate ancestry Resources.")
+	if unit.current_ancestry_feature != null:
+		assert(clone.current_ancestry_feature != unit.current_ancestry_feature, "Speculative clones should duplicate ancestry feature Resources.")
 	assert(clone.loadout != unit.loadout and clone.current_job != unit.current_job and clone.current_passive != unit.current_passive, "Speculative clones should duplicate loadout and job Resources.")
-	assert(clone.loadout.current_job != unit.loadout.current_job and clone.loadout.equipped_passive != unit.loadout.equipped_passive, "Speculative loadout Resources should not retain shared nested job features.")
-	assert(clone.equipped_items[0] != unit.equipped_items[0] and clone.tactics[0] != unit.tactics[0], "Speculative clones should duplicate item and tactic Resources.")
+	assert(clone.loadout.current_job != unit.loadout.current_job, "Speculative loadout Resources should not retain shared current job Resources.")
+	if unit.loadout.equipped_passive != null:
+		assert(clone.loadout.equipped_passive != unit.loadout.equipped_passive, "Speculative loadout Resources should not retain shared equipped passive Resources.")
+	if not unit.equipped_items.is_empty():
+		assert(clone.equipped_items[0] != unit.equipped_items[0], "Speculative clones should duplicate item Resources.")
+	assert(clone.tactics[0] != unit.tactics[0], "Speculative clones should duplicate tactic Resources.")

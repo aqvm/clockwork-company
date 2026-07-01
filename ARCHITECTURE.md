@@ -170,13 +170,15 @@ The first playable test now opens as a scenario workbench with the older combat 
 - `clockwork-company/scripts/ui/planning_stat_preview.gd` builds read-only planning stat summaries from `UnitState` and battle-start resolver hooks without advancing combat turns.
 - `clockwork-company/scripts/ui/resource_tooltip_builder.gd` converts known game Resources into readable tooltip text and related-Resource link data for pinned tooltip traversal.
 - `clockwork-company/scripts/ui/tooltip_presenter.gd` owns the shared floating tooltip panel used by hoverable Resource rows/buttons. Hover shows tooltips, left click pins the visible tooltip, pinned Resource tooltips show related Resource buttons with Back navigation, and Escape or an outside click closes a pinned tooltip.
-- `clockwork-company/scripts/ui/combat_test_scene.gd` now also owns the local mod-pack toggle UI state (checkbox dropdown), including enabled-pack persistence and preview refresh behavior.
+- `clockwork-company/scripts/ui/combat_test_scene.gd` now also owns the local mod-pack toggle UI state (checkbox dropdown) and preview refresh behavior.
+- `clockwork-company/scripts/ui/mod_settings_store.gd` owns enabled mod-pack persistence for the workbench UI.
 - `clockwork-company/scripts/ui/unit_status_dot.gd` owns drawing one unit's circular replay marker, health arc, cooldown bar with shimmer, ready badge, and defeated overlay.
 - `clockwork-company/scripts/combat/combat_simulator.gd` owns the combat rules.
 - `clockwork-company/scripts/combat/combat_constants.gd` owns shared combat labels and numeric constants.
 - `clockwork-company/scripts/combat/logging/combat_log.gd` owns hierarchical log entry storage and line rendering.
 - `clockwork-company/scripts/combat/logging/combat_text_formatter.gd` owns combat summary text formatting helpers.
 - `clockwork-company/scripts/combat/runtime/unit_state.gd` owns per-unit runtime combat state initialization and helpers.
+- `clockwork-company/scripts/combat/runtime/unit_state_clone_helper.gd` owns runtime clone and Resource rebind mechanics for speculative combat isolation.
 - `clockwork-company/scripts/combat/runtime/turn_scheduler.gd` owns deterministic next-actor selection and action re-scheduling.
 - `clockwork-company/scripts/combat/rules/targeting_rules.gd` owns team and target selection helpers.
 - `clockwork-company/scripts/combat/rules/tactic_resolver.gd` owns tactic evaluation/selection decisions.
@@ -191,6 +193,7 @@ The first playable test now opens as a scenario workbench with the older combat 
 - `clockwork-company/scripts/campaign/campaign_manager.gd` owns campaign unlock progression: available scenarios, attempted scenarios, completed scenarios, unlocked content ids, and campaign completion.
 - `clockwork-company/scripts/campaign/campaign_roster_state.gd` owns durable campaign roster state: starting roster construction from campaign unit ids, stable campaign unit instance ids, campaign-party snapshots for scenario starts, victory commits from `RunState`, campaign inventory, and roster/inventory JSON save data.
 - `clockwork-company/scripts/modding/json_content_loader.gd` owns JSON pack loading/merging/validation and runtime Resource reconstruction for statuses, ancestries, items, jobs, tactics, loadouts, and units.
+- `clockwork-company/scripts/data/content_schema.gd` owns shared JSON/content vocabulary, and `clockwork-company/scripts/modding/content_load_result.gd` owns structured load-result diagnostics.
 - Base `.tres` loadouts can author equipped learned passives/reactions/skills by referencing the same standalone feature Resource as the owning job; `JsonContentLoader` infers that job provenance before reconstructing content.
 - `clockwork-company/scripts/tools/content_validation_check.gd` owns repository content sanity checks for scenarios, scenario rules, scenario rewards, campaign identity/graph reachability/starting-roster references, JSON pack loading, and required JSON sidecar docs. The loader validation it invokes also rejects equipped learned features without matching unlocked job progress.
 - `CombatLog` and `CombatLogEntry` are dedicated helper classes in `scripts/combat/logging/combat_log.gd` that build readable text logs and structured event metadata.

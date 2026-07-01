@@ -2,6 +2,7 @@ extends RefCounted
 class_name UnitState
 
 const TurnSchedulerScript := preload("res://scripts/combat/runtime/turn_scheduler.gd")
+const UnitStateCloneHelperScript := preload("res://scripts/combat/runtime/unit_state_clone_helper.gd")
 const TagUtilsScript := preload("res://scripts/data/tag_utils.gd")
 
 var unit_name := ""
@@ -117,90 +118,7 @@ func forecast_capable() -> bool:
 
 
 func clone_runtime_state():
-	var clone = get_script().new()
-	clone.unit_name = unit_name
-	clone.unit_id = unit_id
-	clone.campaign_unit_id = campaign_unit_id
-	clone.tags = tags.duplicate()
-	clone.team = team
-	clone.ancestry = _duplicate_resource(ancestry)
-	clone.current_ancestry_feature = _duplicate_resource(current_ancestry_feature)
-	clone.max_hp = max_hp
-	clone.hp = hp
-	clone.physical_damage = physical_damage
-	clone.magic_damage = magic_damage
-	clone.armor = armor
-	clone.action_speed = action_speed
-	clone.base_action_speed = base_action_speed
-	clone.action_speed_cap_percent = action_speed_cap_percent
-	clone.action_speed_cap_active = action_speed_cap_active
-	clone.next_action_time = next_action_time
-	clone.slot_index = slot_index
-	clone.loadout = _duplicate_resource(loadout)
-	clone.current_job = _duplicate_resource(current_job)
-	clone.current_skill = _duplicate_resource(current_skill)
-	clone.current_secondary_skill = _duplicate_resource(current_secondary_skill)
-	clone.assigned_skill = _duplicate_resource(assigned_skill)
-	clone.current_passive = _duplicate_resource(current_passive)
-	clone.current_reaction = _duplicate_resource(current_reaction)
-	clone.equipped_items = _duplicate_items(equipped_items)
-	clone.skipped_items = _duplicate_items(skipped_items)
-	clone.tactics = _duplicate_tactics(tactics)
-	clone.guard_armor = guard_armor
-	clone.battle_armor = battle_armor
-	clone.effect_usage_counts = effect_usage_counts.duplicate(true)
-	clone.ability_cooldowns = ability_cooldowns.duplicate(true)
-	clone.statuses = _duplicate_statuses(statuses)
-	clone.next_status_instance_id = next_status_instance_id
-	clone.temporary_modifiers = temporary_modifiers.duplicate(true)
-	clone.next_temporary_modifier_id = next_temporary_modifier_id
-	clone.dynamic_modifiers = dynamic_modifiers.duplicate(true)
-	clone.counters = counters.duplicate(true)
-	clone.attack_streak_target_id = attack_streak_target_id
-	clone.attack_streak_count = attack_streak_count
-	clone.attack_seals = attack_seals.duplicate()
-	clone.armor_disabled = armor_disabled
-	clone.deferred_damage = deferred_damage
-	clone.fortification_actions_remaining = fortification_actions_remaining
-	clone.fortification_pending_start = fortification_pending_start
-	clone.attack_redirection_actions_remaining = attack_redirection_actions_remaining
-	clone.attack_redirection_pending_start = attack_redirection_pending_start
-	clone.energy_shield = energy_shield
-	clone.damage_current_action_window = damage_current_action_window
-	clone.damage_previous_action_window = damage_previous_action_window
-	clone.enemy_action_healing_amount = enemy_action_healing_amount
-	clone.enemy_action_healing_source = enemy_action_healing_source
-	clone.prepared_base_attack_source = prepared_base_attack_source
-	return clone
-
-
-func _duplicate_resource(resource: Resource):
-	if resource == null:
-		return null
-	return resource.duplicate(true)
-
-
-func _duplicate_items(items: Array[ItemDefinition]) -> Array[ItemDefinition]:
-	var copies: Array[ItemDefinition] = []
-	for item in items:
-		copies.append(_duplicate_resource(item))
-	return copies
-
-
-func _duplicate_tactics(source_tactics: Array[TacticDefinition]) -> Array[TacticDefinition]:
-	var copies: Array[TacticDefinition] = []
-	for tactic in source_tactics:
-		copies.append(_duplicate_resource(tactic))
-	return copies
-
-
-func _duplicate_statuses(source_statuses: Array[Dictionary]) -> Array[Dictionary]:
-	var copies: Array[Dictionary] = []
-	for source in source_statuses:
-		var copy := source.duplicate(true)
-		copy["definition"] = _duplicate_resource(source.get("definition", null))
-		copies.append(copy)
-	return copies
+	return UnitStateCloneHelperScript.clone_runtime_state(self)
 
 
 func add_status(status: Resource, source_name: String, duration_turns: int, is_permanent: bool, source = null) -> String:

@@ -13,12 +13,10 @@ const UnitLoadoutDefinitionScript := preload("res://scripts/data/unit_loadout_de
 const TooltipPresenterScript := preload("res://scripts/ui/tooltip_presenter.gd")
 const ResourceTooltipBuilderScript := preload("res://scripts/ui/resource_tooltip_builder.gd")
 const UIStyleHelperScript := preload("res://scripts/ui/ui_style_helper.gd")
+const ModSettingsStoreScript := preload("res://scripts/ui/mod_settings_store.gd")
 const PlanningWorkbenchPanelScene := preload("res://scenes/planning_workbench_panel.tscn")
 const COMBAT_LOG_HEADER := "Combat log:"
 const RUN_BUTTON_REPLAYING_TEXT := "Replaying..."
-const MOD_SETTINGS_PATH := "user://mod_settings.cfg"
-const MOD_SETTINGS_SECTION := "mods"
-const MOD_SETTINGS_KEY_ENABLED_IDS := "enabled_pack_ids"
 const CAMPAIGN_SAVE_PATH := "user://first_road_campaign_save.json"
 const MIN_CONDITIONS_HEIGHT := 120
 const FIRST_ROAD_CAMPAIGN := preload("res://resources/campaigns/first_road_campaign.tres")
@@ -178,7 +176,7 @@ func _setup_mod_menu() -> void:
 	available_mod_packs = JsonContentLoaderScript.list_available_mod_packs()
 	enabled_mod_pack_ids.clear()
 
-	var saved_enabled_ids := _load_saved_enabled_mod_pack_ids()
+	var saved_enabled_ids := ModSettingsStoreScript.load_enabled_ids()
 	var has_saved_selection := not saved_enabled_ids.is_empty()
 	for pack in available_mod_packs:
 		var pack_id := String(pack.get("id", ""))
@@ -1040,7 +1038,7 @@ func _on_mod_checkbox_toggled(pressed: bool, pack_id: String) -> void:
 	else:
 		enabled_mod_pack_ids.erase(pack_id)
 
-	_save_enabled_mod_pack_ids(_enabled_mod_pack_ids_array())
+	ModSettingsStoreScript.save_enabled_ids(_enabled_mod_pack_ids_array())
 	if combat_lab_active:
 		_enter_combat_lab()
 	elif _has_active_scenario_run() and run_state.active_scenario != null:
@@ -1084,25 +1082,6 @@ func _enabled_mod_pack_ids_array() -> Array[String]:
 		ids.append(String(pack_id))
 	ids.sort()
 	return ids
-
-
-func _load_saved_enabled_mod_pack_ids() -> Dictionary:
-	var out := {}
-	var config := ConfigFile.new()
-	if config.load(MOD_SETTINGS_PATH) != OK:
-		return out
-	var raw_ids: Array = config.get_value(MOD_SETTINGS_SECTION, MOD_SETTINGS_KEY_ENABLED_IDS, [])
-	for id in raw_ids:
-		out[String(id)] = true
-	return out
-
-
-func _save_enabled_mod_pack_ids(enabled_ids: Array[String]) -> void:
-	var config := ConfigFile.new()
-	config.set_value(MOD_SETTINGS_SECTION, MOD_SETTINGS_KEY_ENABLED_IDS, enabled_ids)
-	var err := config.save(MOD_SETTINGS_PATH)
-	if err != OK:
-		push_warning("Failed to save mod settings to %s" % MOD_SETTINGS_PATH)
 
 
 func _collect_static_log_lines(log_lines: Array[String], static_lines: Array[String]) -> void:

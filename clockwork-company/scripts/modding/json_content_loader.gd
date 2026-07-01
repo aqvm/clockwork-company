@@ -16,6 +16,8 @@ const AncestryFeatureDefinitionScript := preload("res://scripts/data/ancestry_fe
 const StatusDefinitionScript := preload("res://scripts/data/status_definition.gd")
 const TagDefinitionScript := preload("res://scripts/data/tag_definition.gd")
 const TagUtilsScript := preload("res://scripts/data/tag_utils.gd")
+const ContentSchemaScript := preload("res://scripts/data/content_schema.gd")
+const ContentLoadResultScript := preload("res://scripts/modding/content_load_result.gd")
 
 const BASE_ITEMS_DIR := "res://resources/items"
 const BASE_JOBS_DIR := "res://resources/jobs"
@@ -36,37 +38,6 @@ const DEFAULT_DEMO_ROSTER_IDS := [
 	"sparring_support",
 ]
 
-const TEAM_VALUES := {"Allies": true, "Enemies": true}
-const ITEM_SLOT_VALUES := {"Weapon": true, "Armor": true, "Helmet": true, "Trinket": true}
-const EFFECT_TRIGGER_VALUES := {"Battle Start": true, "Battle State Changed": true, "Turn Start": true, "Turn Complete": true, "Action Completed": true, "Skill Used": true, "Skill Completed": true, "Attack": true, "Consecutive Attack": true, "Enemy Attack Targeted": true, "Hit": true, "Kill": true, "Death": true, "Ailment Damaged": true, "Damaged": true, "Physically Damaged": true, "Magically Damaged": true, "HP Below Threshold": true, "Damage Requested": true, "Healing Requested": true, "Healing Received": true, "Ally Overhealed": true, "Reaction Requested": true, "Status Application Requested": true, "Status Removal Requested": true, "Status Applied": true, "Owner Applied Ailment": true, "Externally Sourced Status Applied": true, "Enemy Status Applied": true, "Status Removed": true, "Reaction Triggered": true}
-const EFFECT_CONDITION_VALUES := {"Always": true, "Event Source Is Not Owner": true, "Owner Is Unarmed": true, "Event Count At Least": true, "Self HP Below Percent": true, "Target Has Tag": true, "Target Missing Tag": true, "Target Status Stacks At Least": true, "Target Pending Status Damage At Least HP": true, "Owner Counter At Least": true, "Target Counter At Least": true, "Requested Status Matches": true, "Applied Status Matches": true}
-const EFFECT_TARGET_VALUES := {"Self": true, "Event Source": true, "Event Target": true, "Attack Target": true, "Attacker": true, "Killer": true, "All Units": true, "Allied Units": true, "Enemy Units": true, "Lowest HP Allied Unit": true, "Random Allied Unit": true, "Random Damaged Allied Unit": true, "Random Enemy Unit": true, "Most Ailmented Enemy Unit": true}
-const EFFECT_TYPE_VALUES := {"Gain Armor": true, "Bonus Damage": true, "Reduce Target Armor": true, "Heal Self": true, "Damage Killer": true, "Increase Max HP": true, "Apply Status": true, "Maintain Status Aura": true, "Replace Requested Status": true, "Remove Status": true, "Consume Status": true, "Detonate Status": true, "Gather Status": true, "Transfer Statuses": true, "Fuse Elemental Ailments": true, "Transfer Defeated Ailments": true, "Restore Max HP Lost To Status": true, "Deal Damage": true, "Heal": true, "Grant Armor": true, "Grant Battle Armor": true, "Grant Energy Shield": true, "Disable Armor": true, "Delay Action": true, "Apply Haste": true, "Increase Action Speed For Battle": true, "Fortify Damage": true, "Redirect Enemy Attacks": true, "Add Attack Damage": true, "Modify Stat": true, "Modify Counter": true, "Reset Counter": true, "Seal Next Attack": true, "Prevent Request": true, "Execute Target": true, "Begin Enemy Action Healing": true, "Prepare Base Attack": true}
-const EFFECT_AMOUNT_SOURCE_VALUES := {"Fixed": true, "Target Current HP": true, "Target Max HP": true, "Target Max HP Times Event Status Stacks": true, "Target Recent Damage": true, "Target Damage Taken Within Interval": true, "Total Allied Magic Damage Taken Within Interval": true, "Target Predicted Next Action Damage": true, "Target Ailment Stacks": true, "Target Unique Boons": true, "Target Status Stacks": true, "Event Target Status Stacks": true, "Defeated Target Status Stacks": true, "Applied Status Stacks": true, "Total Status Stacks On Selected Group": true, "Total Status Max HP Loss On Selected Group": true, "Target Pending Status Damage": true, "Target Action Speed": true, "Event Amount": true, "Overhealing": true, "Overhealing Diminishing": true, "Owner Counter": true, "Target Counter": true}
-const EFFECT_AMOUNT_ROUNDING_VALUES := {"Floor": true, "Ceil": true}
-const EFFECT_AMOUNT_TARGET_VALUES := {"Self": true, "All Units": true, "Allied Units": true, "Enemy Units": true}
-const EFFECT_MODIFIER_MODE_VALUES := {"Temporary Flat": true, "Dynamic Percent": true}
-const EFFECT_MODIFIER_DIRECTION_VALUES := {"Increase": true, "Decrease": true}
-const EFFECT_DAMAGE_TYPE_VALUES := {"Magic": true, "Physical": true}
-const EFFECT_STATUS_POLARITY_VALUES := {"Any": true, "Boon": true, "Ailment": true}
-const EFFECT_STATUS_REMOVAL_MODE_VALUES := {"Random Matching": true, "Specific Status": true}
-const EFFECT_MODIFIED_STAT_VALUES := {"Max HP": true, "Physical Damage": true, "Magic Damage": true, "Armor": true, "Action Speed": true}
-const SKILL_ACTION_VALUES := {"Attack": true, "Heal": true, "Guard": true, "Apply Status": true, "Effects Only": true}
-const SKILL_TARGET_VALUES := {"Self": true, "Lowest HP Ally": true, "Frontmost Enemy": true}
-const SKILL_ATTACK_DAMAGE_TYPE_VALUES := {"Physical": true, "Magic": true, "Split Evenly": true}
-const STATUS_POLARITY_VALUES := {"Boon": true, "Ailment": true}
-const STATUS_TYPE_VALUES := {"Confusion": true, "Reconstitution": true, "Regeneration": true, "Bleed": true, "Burning": true, "Numb": true, "Frost": true, "Shock": true, "Elemental Fusion": true, "Ward": true, "Rot": true, "Renewal": true}
-const STATUS_STACKING_RULE_VALUES := {"Ignore": true, "Refresh": true, "Intensify": true}
-const PASSIVE_TYPE_VALUES := {"None": true, "Attack Damage Bonus": true, "Heal Bonus": true, "Guard Armor Bonus": true, "Forecast": true, "Extend Allied Buff Duration": true}
-const REACTION_TRIGGER_VALUES := {"Damaged": true, "Physically Damaged": true, "Magically Damaged": true, "Ally Magically Damaged": true, "HP Below Threshold": true, "Lethal Physical Attack Requested": true, "Attack Targets Another Ally": true, "Status Application Requested": true, "Ally Ailment Applied": true, "Enemy Healing Requested": true, "Enemy Status Threshold Reached": true, "Enemy Died With Status": true, "Enemy Died With Ailments": true}
-const REACTION_CONDITION_VALUES := {"Always": true, "Self HP Below Percent": true, "Self Status Stacks At Least": true, "Requested Status Is Ailment": true, "Requested Status Matches": true}
-const REACTION_TYPE_VALUES := {"Gain Armor": true, "Heal Self": true, "Damage Attacker": true, "Effects Only": true}
-const ANCESTRY_FEATURE_TRIGGER_VALUES := {"Battle Start": true, "Attack": true, "Kill": true, "Damaged": true, "HP Below Threshold": true}
-const ANCESTRY_FEATURE_CONDITION_VALUES := {"Always": true, "Self HP Below Percent": true}
-const ANCESTRY_FEATURE_TYPE_VALUES := {"Gain Armor": true, "Bonus Damage": true, "Heal Self": true, "Damage Attacker": true, "Increase Own Action Speed": true, "Gain Physical Damage": true}
-const TACTIC_CONDITION_VALUES := {"Always": true, "Self HP Below Half": true, "Ally HP Below Half": true, "Enemy Alive": true, "Target Has Status": true, "Target Status Stacks At Least": true, "Target Pending Status Damage At Least HP": true, "Target Slower Than Self": true}
-const TACTIC_ACTION_VALUES := {"Attack": true, "Heal": true, "Guard": true, "Job Skill": true, "Secondary Skill": true, "Assigned Skill": true}
-const TACTIC_TARGET_VALUES := {"Self": true, "Lowest HP Ally": true, "Lowest HP Ally With Status": true, "Frontmost Enemy": true}
 const LEGACY_ACTION_INTERVAL_FIELDS := {
 	"action_interval": true,
 	"base_action_interval": true,
@@ -78,9 +49,9 @@ const LEGACY_ACTION_INTERVAL_FIELDS := {
 
 
 static func load_demo_unit_definitions(enabled_mod_pack_ids: Variant = null) -> Array[UnitDefinition]:
-	var base_data := _load_base_data_from_resources()
-	var merged_data := _apply_mod_packs(base_data, enabled_mod_pack_ids)
-	return _build_demo_unit_definitions(merged_data)
+	var result = load_content_result(enabled_mod_pack_ids)
+	assert(result.succeeded(), "Content load failed:\n%s" % "\n".join(result.error_messages()))
+	return _build_demo_unit_definitions(result.merged_data)
 
 
 static func load_unit_definitions_by_ids(unit_ids: Array[String], enabled_mod_pack_ids: Variant = null) -> Array[UnitDefinition]:
@@ -95,9 +66,21 @@ static func load_unit_definitions_by_ids(unit_ids: Array[String], enabled_mod_pa
 
 
 static func load_content_resources(enabled_mod_pack_ids: Variant = null) -> Dictionary:
+	var result = load_content_result(enabled_mod_pack_ids)
+	assert(result.succeeded(), "Content load failed:\n%s" % "\n".join(result.error_messages()))
+	return result.resources
+
+
+static func load_content_result(enabled_mod_pack_ids: Variant = null):
+	var result = ContentLoadResultScript.new()
 	var base_data := _load_base_data_from_resources()
 	var merged_data := _apply_mod_packs(base_data, enabled_mod_pack_ids)
-	return _build_content_resources(merged_data)
+	result.merged_data = merged_data
+	_collect_validation_issues(merged_data, result)
+	if result.succeeded():
+		_validate_merged_data(merged_data)
+		result.resources = _build_content_resources(merged_data)
+	return result
 
 
 static func load_item_definition_by_id(item_id: String, enabled_mod_pack_ids: Variant = null) -> ItemDefinition:
@@ -383,7 +366,6 @@ static func _apply_mod_packs(base_data: Dictionary, enabled_mod_pack_ids: Varian
 		if pack.has("demo_roster"):
 			merged["demo_roster"] = pack["demo_roster"].duplicate()
 
-	_validate_merged_data(merged)
 	return merged
 
 
@@ -404,12 +386,102 @@ static func _apply_collection_overrides(target: Dictionary, entries: Array) -> v
 		target[id] = merged_entry
 
 
+static func _collect_validation_issues(data: Dictionary, result) -> void:
+	for collection in ["ancestries", "statuses", "items", "jobs", "tactics", "loadouts", "units", "demo_roster"]:
+		if not data.has(collection):
+			result.add_issue(collection, "Missing required content collection.")
+	for status_id in data.get("statuses", {}).keys():
+		var status: Dictionary = data["statuses"][status_id]
+		_require_schema_value(result, "statuses/%s/polarity" % status_id, ContentSchemaScript.STATUS_POLARITY_VALUES, status.get("polarity", ""))
+		_require_schema_value(result, "statuses/%s/status_type" % status_id, ContentSchemaScript.STATUS_TYPE_VALUES, status.get("status_type", ""))
+		_require_schema_value(result, "statuses/%s/stacking_rule" % status_id, ContentSchemaScript.STATUS_STACKING_RULE_VALUES, status.get("stacking_rule", ""))
+		_require_min_int(result, "statuses/%s/max_stacks" % status_id, status.get("max_stacks", 1), 1)
+	for item_id in data.get("items", {}).keys():
+		var item: Dictionary = data["items"][item_id]
+		_require_schema_value(result, "items/%s/slot" % item_id, ContentSchemaScript.ITEM_SLOT_VALUES, item.get("slot", ""))
+		_collect_effect_issues(data, item.get("effects", []), "items/%s/effects" % item_id, result)
+	for job_id in data.get("jobs", {}).keys():
+		var job: Dictionary = data["jobs"][job_id]
+		_collect_skill_issues(data, job.get("skill", {}), "jobs/%s/skill" % job_id, result)
+		_collect_skill_issues(data, job.get("secondary_skill", {}), "jobs/%s/secondary_skill" % job_id, result)
+		_collect_effect_issues(data, job.get("passive", {}).get("effects", []), "jobs/%s/passive/effects" % job_id, result)
+		_collect_effect_issues(data, job.get("reaction", {}).get("effects", []), "jobs/%s/reaction/effects" % job_id, result)
+	for tactic_id in data.get("tactics", {}).keys():
+		var tactic: Dictionary = data["tactics"][tactic_id]
+		_require_schema_value(result, "tactics/%s/condition" % tactic_id, ContentSchemaScript.TACTIC_CONDITION_VALUES, tactic.get("condition", ""))
+		_require_schema_value(result, "tactics/%s/action" % tactic_id, ContentSchemaScript.TACTIC_ACTION_VALUES, tactic.get("action", ""))
+		_require_schema_value(result, "tactics/%s/target" % tactic_id, ContentSchemaScript.TACTIC_TARGET_VALUES, tactic.get("target", ""))
+		_require_status_reference(result, data, "tactics/%s/status_id" % tactic_id, tactic.get("status_id", ""))
+	for unit_id in data.get("units", {}).keys():
+		var unit: Dictionary = data["units"][unit_id]
+		_require_schema_value(result, "units/%s/team" % unit_id, ContentSchemaScript.TEAM_VALUES, unit.get("team", ""))
+		_require_reference(result, data.get("loadouts", {}), "units/%s/loadout_id" % unit_id, unit.get("loadout_id", ""))
+		_require_reference(result, data.get("ancestries", {}), "units/%s/ancestry_id" % unit_id, unit.get("ancestry_id", ""), false)
+
+
+static func _collect_skill_issues(data: Dictionary, raw_skill: Variant, path: String, result) -> void:
+	if typeof(raw_skill) != TYPE_DICTIONARY or raw_skill.is_empty():
+		return
+	var skill: Dictionary = raw_skill
+	_require_schema_value(result, "%s/action" % path, ContentSchemaScript.SKILL_ACTION_VALUES, skill.get("action", ""))
+	_require_schema_value(result, "%s/default_target" % path, ContentSchemaScript.SKILL_TARGET_VALUES, skill.get("default_target", ""))
+	_require_schema_value(result, "%s/attack_damage_type" % path, ContentSchemaScript.SKILL_ATTACK_DAMAGE_TYPE_VALUES, skill.get("attack_damage_type", "Physical"))
+	_require_status_reference(result, data, "%s/status_id" % path, skill.get("status_id", ""), skill.get("action", "") == "Apply Status")
+	_collect_effect_issues(data, skill.get("effects", []), "%s/effects" % path, result)
+
+
+static func _collect_effect_issues(data: Dictionary, raw_effects: Variant, path: String, result) -> void:
+	if typeof(raw_effects) != TYPE_ARRAY:
+		return
+	for index in range(raw_effects.size()):
+		if typeof(raw_effects[index]) != TYPE_DICTIONARY:
+			result.add_issue("%s/%d" % [path, index], "Effect must be an object.")
+			continue
+		var effect: Dictionary = raw_effects[index]
+		var effect_path := "%s/%d" % [path, index]
+		_require_schema_value(result, "%s/trigger" % effect_path, ContentSchemaScript.EFFECT_TRIGGER_VALUES, effect.get("trigger", ""))
+		_require_schema_value(result, "%s/condition" % effect_path, ContentSchemaScript.EFFECT_CONDITION_VALUES, effect.get("condition", ""))
+		_require_schema_value(result, "%s/target_selector" % effect_path, ContentSchemaScript.EFFECT_TARGET_VALUES, effect.get("target_selector", ""))
+		_require_schema_value(result, "%s/effect_type" % effect_path, ContentSchemaScript.EFFECT_TYPE_VALUES, effect.get("effect_type", ""))
+		_require_schema_value(result, "%s/amount_source" % effect_path, ContentSchemaScript.EFFECT_AMOUNT_SOURCE_VALUES, effect.get("amount_source", "Fixed"))
+		_require_status_reference(result, data, "%s/status_id" % effect_path, effect.get("status_id", ""), _effect_type_requires_status(effect))
+
+
+static func _effect_type_requires_status(effect: Dictionary) -> bool:
+	return String(effect.get("effect_type", "")) in ["Apply Status", "Maintain Status Aura", "Consume Status", "Detonate Status", "Gather Status", "Fuse Elemental Ailments", "Restore Max HP Lost To Status"]
+
+
+static func _require_schema_value(result, path: String, allowed: Dictionary, raw_value: Variant) -> void:
+	var value := String(raw_value)
+	if not allowed.has(value):
+		result.add_issue(path, "Unsupported value '%s'." % value)
+
+
+static func _require_min_int(result, path: String, raw_value: Variant, minimum: int) -> void:
+	if int(raw_value) < minimum:
+		result.add_issue(path, "Value must be at least %d." % minimum)
+
+
+static func _require_status_reference(result, data: Dictionary, path: String, raw_value: Variant, required := false) -> void:
+	_require_reference(result, data.get("statuses", {}), path, raw_value, required)
+
+
+static func _require_reference(result, collection: Dictionary, path: String, raw_value: Variant, required := true) -> void:
+	var id := String(raw_value)
+	if id.is_empty():
+		if required:
+			result.add_issue(path, "Required reference is empty.")
+		return
+	if not collection.has(id):
+		result.add_issue(path, "Unknown reference '%s'." % id)
+
+
 static func _validate_merged_data(data: Dictionary) -> void:
 	for status_id in data["statuses"].keys():
 		var status: Dictionary = data["statuses"][status_id]
-		assert(STATUS_POLARITY_VALUES.has(status.get("polarity", "")), "Invalid status polarity for id %s" % status_id)
-		assert(STATUS_TYPE_VALUES.has(status.get("status_type", "")), "Invalid status type for id %s" % status_id)
-		assert(STATUS_STACKING_RULE_VALUES.has(status.get("stacking_rule", "")), "Invalid status stacking rule for id %s" % status_id)
+		assert(ContentSchemaScript.STATUS_POLARITY_VALUES.has(status.get("polarity", "")), "Invalid status polarity for id %s" % status_id)
+		assert(ContentSchemaScript.STATUS_TYPE_VALUES.has(status.get("status_type", "")), "Invalid status type for id %s" % status_id)
+		assert(ContentSchemaScript.STATUS_STACKING_RULE_VALUES.has(status.get("stacking_rule", "")), "Invalid status stacking rule for id %s" % status_id)
 		assert(int(status.get("max_stacks", 1)) >= 1, "Status max_stacks must be at least 1 for id %s" % status_id)
 		assert(int(status.get("amount_percent", 20)) in range(1, 101), "Status amount_percent must be between 1 and 100 for id %s" % status_id)
 		assert(int(status.get("propagation_percent", 25)) in range(1, 101), "Status propagation_percent must be between 1 and 100 for id %s" % status_id)
@@ -418,19 +490,19 @@ static func _validate_merged_data(data: Dictionary) -> void:
 		var ancestry: Dictionary = data["ancestries"][ancestry_id]
 		var feature: Dictionary = ancestry.get("feature", {})
 		if not feature.is_empty():
-			assert(ANCESTRY_FEATURE_TRIGGER_VALUES.has(feature.get("trigger", "")), "Invalid ancestry feature trigger for ancestry id %s" % ancestry_id)
-			assert(ANCESTRY_FEATURE_CONDITION_VALUES.has(feature.get("condition", "")), "Invalid ancestry feature condition for ancestry id %s" % ancestry_id)
-			assert(ANCESTRY_FEATURE_TYPE_VALUES.has(feature.get("feature_type", "")), "Invalid ancestry feature type for ancestry id %s" % ancestry_id)
+			assert(ContentSchemaScript.ANCESTRY_FEATURE_TRIGGER_VALUES.has(feature.get("trigger", "")), "Invalid ancestry feature trigger for ancestry id %s" % ancestry_id)
+			assert(ContentSchemaScript.ANCESTRY_FEATURE_CONDITION_VALUES.has(feature.get("condition", "")), "Invalid ancestry feature condition for ancestry id %s" % ancestry_id)
+			assert(ContentSchemaScript.ANCESTRY_FEATURE_TYPE_VALUES.has(feature.get("feature_type", "")), "Invalid ancestry feature type for ancestry id %s" % ancestry_id)
 
 	for item_id in data["items"].keys():
 		var item: Dictionary = data["items"][item_id]
-		assert(ITEM_SLOT_VALUES.has(item.get("slot", "")), "Invalid item slot for id %s" % item_id)
+		assert(ContentSchemaScript.ITEM_SLOT_VALUES.has(item.get("slot", "")), "Invalid item slot for id %s" % item_id)
 		for effect in item.get("effects", []):
 			var effect_data: Dictionary = effect
-			assert(EFFECT_TRIGGER_VALUES.has(effect_data.get("trigger", "")), "Invalid authored effect trigger for item id %s" % item_id)
-			assert(EFFECT_CONDITION_VALUES.has(effect_data.get("condition", "")), "Invalid authored effect condition for item id %s" % item_id)
-			assert(EFFECT_TARGET_VALUES.has(effect_data.get("target_selector", "")), "Invalid authored effect target selector for item id %s" % item_id)
-			assert(EFFECT_TYPE_VALUES.has(effect_data.get("effect_type", "")), "Invalid authored effect type for item id %s" % item_id)
+			assert(ContentSchemaScript.EFFECT_TRIGGER_VALUES.has(effect_data.get("trigger", "")), "Invalid authored effect trigger for item id %s" % item_id)
+			assert(ContentSchemaScript.EFFECT_CONDITION_VALUES.has(effect_data.get("condition", "")), "Invalid authored effect condition for item id %s" % item_id)
+			assert(ContentSchemaScript.EFFECT_TARGET_VALUES.has(effect_data.get("target_selector", "")), "Invalid authored effect target selector for item id %s" % item_id)
+			assert(ContentSchemaScript.EFFECT_TYPE_VALUES.has(effect_data.get("effect_type", "")), "Invalid authored effect type for item id %s" % item_id)
 			assert(_effect_support_error(effect_data).is_empty(), "Unsupported effect in item %s: %s" % [item_id, _effect_support_error(effect_data)])
 			_validate_formula_fields(data, effect_data, "item %s" % item_id)
 			var effect_status_id := String(effect_data.get("status_id", ""))
@@ -438,15 +510,15 @@ static func _validate_merged_data(data: Dictionary) -> void:
 				assert(data["statuses"].has(effect_status_id), "Unknown status id '%s' in item %s" % [effect_status_id, item_id])
 				assert(int(effect_data.get("status_duration_turns", 3)) >= 1, "Status duration must be at least 1 turn in item %s" % item_id)
 			if effect_data.get("effect_type", "") == "Remove Status":
-				assert(EFFECT_STATUS_POLARITY_VALUES.has(effect_data.get("status_polarity", "Any")), "Invalid status polarity filter in item %s" % item_id)
-				assert(EFFECT_STATUS_REMOVAL_MODE_VALUES.has(effect_data.get("status_removal_mode", "Random Matching")), "Invalid status removal mode in item %s" % item_id)
+				assert(ContentSchemaScript.EFFECT_STATUS_POLARITY_VALUES.has(effect_data.get("status_polarity", "Any")), "Invalid status polarity filter in item %s" % item_id)
+				assert(ContentSchemaScript.EFFECT_STATUS_REMOVAL_MODE_VALUES.has(effect_data.get("status_removal_mode", "Random Matching")), "Invalid status removal mode in item %s" % item_id)
 				if effect_data.get("status_removal_mode", "Random Matching") == "Specific Status":
 					assert(data["statuses"].has(effect_status_id), "Unknown specific removal status id '%s' in item %s" % [effect_status_id, item_id])
 					var filter_polarity := String(effect_data.get("status_polarity", "Any"))
 					if filter_polarity != "Any":
 						assert(String(data["statuses"][effect_status_id].get("polarity", "")) == filter_polarity, "Specific removal polarity does not match status '%s' in item %s" % [effect_status_id, item_id])
 			if effect_data.get("effect_type", "") == "Modify Stat":
-				assert(EFFECT_MODIFIED_STAT_VALUES.has(effect_data.get("modified_stat", "")), "Invalid modified stat in item %s" % item_id)
+				assert(ContentSchemaScript.EFFECT_MODIFIED_STAT_VALUES.has(effect_data.get("modified_stat", "")), "Invalid modified stat in item %s" % item_id)
 				assert(int(effect_data.get("modifier_duration_turns", 1)) >= 1, "Modifier duration must be at least 1 turn in item %s" % item_id)
 
 	for job_id in data["jobs"].keys():
@@ -455,14 +527,14 @@ static func _validate_merged_data(data: Dictionary) -> void:
 		_validate_job_skill(data, job.get("secondary_skill", {}), job_id, "secondary skill")
 		var passive: Dictionary = job.get("passive", {})
 		if not passive.is_empty():
-			assert(PASSIVE_TYPE_VALUES.has(passive.get("passive_type", "")), "Invalid passive type for job id %s" % job_id)
+			assert(ContentSchemaScript.PASSIVE_TYPE_VALUES.has(passive.get("passive_type", "")), "Invalid passive type for job id %s" % job_id)
 			for effect in passive.get("effects", []):
 				_validate_shared_effect(data, effect, "passive in job %s" % job_id)
 		var reaction: Dictionary = job.get("reaction", {})
 		if not reaction.is_empty():
-			assert(REACTION_TRIGGER_VALUES.has(reaction.get("trigger", "")), "Invalid reaction trigger for job id %s" % job_id)
-			assert(REACTION_CONDITION_VALUES.has(reaction.get("condition", "")), "Invalid reaction condition for job id %s" % job_id)
-			assert(REACTION_TYPE_VALUES.has(reaction.get("reaction_type", "")), "Invalid reaction type for job id %s" % job_id)
+			assert(ContentSchemaScript.REACTION_TRIGGER_VALUES.has(reaction.get("trigger", "")), "Invalid reaction trigger for job id %s" % job_id)
+			assert(ContentSchemaScript.REACTION_CONDITION_VALUES.has(reaction.get("condition", "")), "Invalid reaction condition for job id %s" % job_id)
+			assert(ContentSchemaScript.REACTION_TYPE_VALUES.has(reaction.get("reaction_type", "")), "Invalid reaction type for job id %s" % job_id)
 			assert(not bool(reaction.get("prevents_triggering_request", false)) or reaction.get("trigger", "") in ["Status Application Requested", "Enemy Healing Requested", "Lethal Physical Attack Requested"], "Reaction request prevention requires a request trigger for job id %s" % job_id)
 			if reaction.get("condition", "") == "Self Status Stacks At Least":
 				assert(data["statuses"].has(String(reaction.get("status_id", ""))), "Unknown reaction condition status in job %s" % job_id)
@@ -479,16 +551,16 @@ static func _validate_merged_data(data: Dictionary) -> void:
 				_validate_shared_effect(data, effect, "reaction in job %s" % job_id)
 		var default_tactic: Dictionary = job.get("default_tactic", {})
 		if not default_tactic.is_empty():
-			assert(TACTIC_CONDITION_VALUES.has(default_tactic.get("condition", "")), "Invalid default tactic condition for job id %s" % job_id)
-			assert(TACTIC_ACTION_VALUES.has(default_tactic.get("action", "")), "Invalid default tactic action for job id %s" % job_id)
-			assert(TACTIC_TARGET_VALUES.has(default_tactic.get("target", "")), "Invalid default tactic target for job id %s" % job_id)
+			assert(ContentSchemaScript.TACTIC_CONDITION_VALUES.has(default_tactic.get("condition", "")), "Invalid default tactic condition for job id %s" % job_id)
+			assert(ContentSchemaScript.TACTIC_ACTION_VALUES.has(default_tactic.get("action", "")), "Invalid default tactic action for job id %s" % job_id)
+			assert(ContentSchemaScript.TACTIC_TARGET_VALUES.has(default_tactic.get("target", "")), "Invalid default tactic target for job id %s" % job_id)
 			_validate_tactic_status(data, default_tactic, "default tactic in job %s" % job_id)
 
 	for tactic_id in data["tactics"].keys():
 		var tactic: Dictionary = data["tactics"][tactic_id]
-		assert(TACTIC_CONDITION_VALUES.has(tactic.get("condition", "")), "Invalid tactic condition for id %s" % tactic_id)
-		assert(TACTIC_ACTION_VALUES.has(tactic.get("action", "")), "Invalid tactic action for id %s" % tactic_id)
-		assert(TACTIC_TARGET_VALUES.has(tactic.get("target", "")), "Invalid tactic target for id %s" % tactic_id)
+		assert(ContentSchemaScript.TACTIC_CONDITION_VALUES.has(tactic.get("condition", "")), "Invalid tactic condition for id %s" % tactic_id)
+		assert(ContentSchemaScript.TACTIC_ACTION_VALUES.has(tactic.get("action", "")), "Invalid tactic action for id %s" % tactic_id)
+		assert(ContentSchemaScript.TACTIC_TARGET_VALUES.has(tactic.get("target", "")), "Invalid tactic target for id %s" % tactic_id)
 		_validate_tactic_status(data, tactic, "tactic %s" % tactic_id)
 
 
@@ -510,7 +582,7 @@ static func _validate_merged_data(data: Dictionary) -> void:
 
 	for unit_id in data["units"].keys():
 		var unit: Dictionary = data["units"][unit_id]
-		assert(TEAM_VALUES.has(unit.get("team", "")), "Invalid team value for unit id %s" % unit_id)
+		assert(ContentSchemaScript.TEAM_VALUES.has(unit.get("team", "")), "Invalid team value for unit id %s" % unit_id)
 		var ancestry_id := String(unit.get("ancestry_id", ""))
 		if not ancestry_id.is_empty():
 			assert(data["ancestries"].has(ancestry_id), "Unknown ancestry id '%s' in unit %s" % [ancestry_id, unit_id])
@@ -531,9 +603,9 @@ static func _validate_job_skill(data: Dictionary, raw_skill: Variant, job_id: St
 	var skill: Dictionary = raw_skill
 	if skill.is_empty():
 		return
-	assert(SKILL_ACTION_VALUES.has(skill.get("action", "")), "Invalid %s action for job id %s" % [label, job_id])
-	assert(SKILL_TARGET_VALUES.has(skill.get("default_target", "")), "Invalid %s default target for job id %s" % [label, job_id])
-	assert(SKILL_ATTACK_DAMAGE_TYPE_VALUES.has(skill.get("attack_damage_type", "Physical")), "Invalid %s attack damage type for job id %s" % [label, job_id])
+	assert(ContentSchemaScript.SKILL_ACTION_VALUES.has(skill.get("action", "")), "Invalid %s action for job id %s" % [label, job_id])
+	assert(ContentSchemaScript.SKILL_TARGET_VALUES.has(skill.get("default_target", "")), "Invalid %s default target for job id %s" % [label, job_id])
+	assert(ContentSchemaScript.SKILL_ATTACK_DAMAGE_TYPE_VALUES.has(skill.get("attack_damage_type", "Physical")), "Invalid %s attack damage type for job id %s" % [label, job_id])
 	var skill_status_id := String(skill.get("status_id", ""))
 	if skill.get("action", "") == "Apply Status":
 		assert(data["statuses"].has(skill_status_id), "Unknown status id '%s' in %s for job %s" % [skill_status_id, label, job_id])
@@ -545,9 +617,9 @@ static func _validate_job_skill(data: Dictionary, raw_skill: Variant, job_id: St
 	for effect in skill.get("effects", []):
 		var effect_data: Dictionary = effect
 		assert(effect_data.get("trigger", "") in ["Skill Used", "Skill Completed"], "%s effects must use Skill Used or Skill Completed for job %s" % [label.capitalize(), job_id])
-		assert(EFFECT_CONDITION_VALUES.has(effect_data.get("condition", "")), "Invalid %s effect condition for job %s" % [label, job_id])
-		assert(EFFECT_TARGET_VALUES.has(effect_data.get("target_selector", "")), "Invalid %s effect target for job %s" % [label, job_id])
-		assert(EFFECT_TYPE_VALUES.has(effect_data.get("effect_type", "")), "Invalid %s effect type for job %s" % [label, job_id])
+		assert(ContentSchemaScript.EFFECT_CONDITION_VALUES.has(effect_data.get("condition", "")), "Invalid %s effect condition for job %s" % [label, job_id])
+		assert(ContentSchemaScript.EFFECT_TARGET_VALUES.has(effect_data.get("target_selector", "")), "Invalid %s effect target for job %s" % [label, job_id])
+		assert(ContentSchemaScript.EFFECT_TYPE_VALUES.has(effect_data.get("effect_type", "")), "Invalid %s effect type for job %s" % [label, job_id])
 		assert(_effect_support_error(effect_data).is_empty(), "Unsupported %s effect in job %s: %s" % [label, job_id, _effect_support_error(effect_data)])
 		_validate_formula_fields(data, effect_data, "%s in job %s" % [label, job_id])
 		var effect_status_id := String(effect_data.get("status_id", ""))
@@ -559,10 +631,10 @@ static func _validate_job_skill(data: Dictionary, raw_skill: Variant, job_id: St
 			if filter_polarity != "Any":
 				assert(String(data["statuses"][effect_status_id].get("polarity", "")) == filter_polarity, "Specific %s removal polarity does not match status '%s' in job %s" % [label, effect_status_id, job_id])
 		if effect_data.get("effect_type", "") == "Remove Status":
-			assert(EFFECT_STATUS_POLARITY_VALUES.has(effect_data.get("status_polarity", "Any")), "Invalid %s status polarity filter in job %s" % [label, job_id])
-			assert(EFFECT_STATUS_REMOVAL_MODE_VALUES.has(effect_data.get("status_removal_mode", "Random Matching")), "Invalid %s status removal mode in job %s" % [label, job_id])
+			assert(ContentSchemaScript.EFFECT_STATUS_POLARITY_VALUES.has(effect_data.get("status_polarity", "Any")), "Invalid %s status polarity filter in job %s" % [label, job_id])
+			assert(ContentSchemaScript.EFFECT_STATUS_REMOVAL_MODE_VALUES.has(effect_data.get("status_removal_mode", "Random Matching")), "Invalid %s status removal mode in job %s" % [label, job_id])
 		if effect_data.get("effect_type", "") == "Modify Stat":
-			assert(EFFECT_MODIFIED_STAT_VALUES.has(effect_data.get("modified_stat", "")), "Invalid %s modified stat in job %s" % [label, job_id])
+			assert(ContentSchemaScript.EFFECT_MODIFIED_STAT_VALUES.has(effect_data.get("modified_stat", "")), "Invalid %s modified stat in job %s" % [label, job_id])
 			assert(int(effect_data.get("modifier_duration_turns", 1)) >= 1, "%s modifier duration must be at least 1 turn in job %s" % [label.capitalize(), job_id])
 
 
@@ -635,22 +707,22 @@ static func _effect_support_error(effect: Dictionary) -> String:
 
 static func _validate_shared_effect(data: Dictionary, raw_effect: Variant, label: String) -> void:
 	var effect: Dictionary = raw_effect
-	assert(EFFECT_TRIGGER_VALUES.has(effect.get("trigger", "")), "Invalid effect trigger for %s" % label)
-	assert(EFFECT_CONDITION_VALUES.has(effect.get("condition", "")), "Invalid effect condition for %s" % label)
-	assert(EFFECT_TARGET_VALUES.has(effect.get("target_selector", "")), "Invalid effect target for %s" % label)
-	assert(EFFECT_TYPE_VALUES.has(effect.get("effect_type", "")), "Invalid effect type for %s" % label)
+	assert(ContentSchemaScript.EFFECT_TRIGGER_VALUES.has(effect.get("trigger", "")), "Invalid effect trigger for %s" % label)
+	assert(ContentSchemaScript.EFFECT_CONDITION_VALUES.has(effect.get("condition", "")), "Invalid effect condition for %s" % label)
+	assert(ContentSchemaScript.EFFECT_TARGET_VALUES.has(effect.get("target_selector", "")), "Invalid effect target for %s" % label)
+	assert(ContentSchemaScript.EFFECT_TYPE_VALUES.has(effect.get("effect_type", "")), "Invalid effect type for %s" % label)
 	assert(_effect_support_error(effect).is_empty(), "Unsupported effect for %s: %s" % [label, _effect_support_error(effect)])
 	_validate_formula_fields(data, effect, label)
 
 
 static func _validate_formula_fields(data: Dictionary, effect: Dictionary, label: String) -> void:
 	var amount_source := String(effect.get("amount_source", "Fixed"))
-	assert(EFFECT_AMOUNT_SOURCE_VALUES.has(amount_source), "Invalid amount source for %s" % label)
-	assert(EFFECT_AMOUNT_TARGET_VALUES.has(effect.get("amount_target_selector", "Self")), "Invalid amount target selector for %s" % label)
-	assert(EFFECT_MODIFIER_MODE_VALUES.has(effect.get("modifier_mode", "Temporary Flat")), "Invalid modifier mode for %s" % label)
-	assert(EFFECT_MODIFIER_DIRECTION_VALUES.has(effect.get("modifier_direction", "Increase")), "Invalid modifier direction for %s" % label)
-	assert(EFFECT_DAMAGE_TYPE_VALUES.has(effect.get("damage_type", "Magic")), "Invalid damage type for %s" % label)
-	assert(EFFECT_AMOUNT_ROUNDING_VALUES.has(effect.get("amount_rounding", "Floor")), "Invalid amount rounding for %s" % label)
+	assert(ContentSchemaScript.EFFECT_AMOUNT_SOURCE_VALUES.has(amount_source), "Invalid amount source for %s" % label)
+	assert(ContentSchemaScript.EFFECT_AMOUNT_TARGET_VALUES.has(effect.get("amount_target_selector", "Self")), "Invalid amount target selector for %s" % label)
+	assert(ContentSchemaScript.EFFECT_MODIFIER_MODE_VALUES.has(effect.get("modifier_mode", "Temporary Flat")), "Invalid modifier mode for %s" % label)
+	assert(ContentSchemaScript.EFFECT_MODIFIER_DIRECTION_VALUES.has(effect.get("modifier_direction", "Increase")), "Invalid modifier direction for %s" % label)
+	assert(ContentSchemaScript.EFFECT_DAMAGE_TYPE_VALUES.has(effect.get("damage_type", "Magic")), "Invalid damage type for %s" % label)
+	assert(ContentSchemaScript.EFFECT_AMOUNT_ROUNDING_VALUES.has(effect.get("amount_rounding", "Floor")), "Invalid amount rounding for %s" % label)
 	var status_id := String(effect.get("status_id", ""))
 	var amount_status_id := String(effect.get("amount_status_id", ""))
 	if amount_status_id.is_empty():
