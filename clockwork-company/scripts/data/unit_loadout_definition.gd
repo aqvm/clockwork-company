@@ -5,13 +5,15 @@ class_name UnitLoadoutDefinition
 
 ## Loadout name shown in planning panels and tooltips.
 @export var display_name := ""
+## Player-facing summary shown at the top of resource tooltips.
+@export_multiline var tooltip_text := ""
 ## Job currently active for this loadout. Supplies current-job skills, restrictions, growth, and default tactic.
 @export var current_job: JobDefinition = null
 ## Learned cross-job skill assigned separately from current-job `Job Skill` and `Secondary Skill`.
 @export var equipped_skill: SkillDefinition = null
-## Learned passive assigned from job progress. Null means no learned passive is equipped.
+## Learned passive assigned from job progress. Null means the current job's passive remains active.
 @export var equipped_passive: PassiveDefinition = null
-## Learned reaction assigned from job progress. Null means no learned reaction is equipped.
+## Learned reaction assigned from job progress. Null means the current job's reaction remains active.
 @export var equipped_reaction: ReactionDefinition = null
 ## Weapon item. Skipped at runtime if current job or ancestry forbids weapons.
 @export var weapon: ItemDefinition = null

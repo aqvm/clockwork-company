@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UnitLoadoutDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/unit_loadout_definition.gd" id="loadout_script"]
+[ext_resource type="Resource" path="res://resources/jobs/chronomancer.tres" id="job"]
+[ext_resource type="Resource" path="res://resources/tactics/template_chronomancer_tactic_1_rewind_the_wounded.tres" id="tactic_1"]
+[ext_resource type="Resource" path="res://resources/tactics/template_chronomancer_tactic_2_borrow_tomorrow.tres" id="tactic_2"]
+
+[resource]
+script = ExtResource("loadout_script")
+display_name = "Template Chronomancer"
+tooltip_text = "Clean-slate template loadout for testing the Chronomancer job with explicit primary and bridge tactics."
+current_job = ExtResource("job")
+tactics = [ExtResource("tactic_1"), ExtResource("tactic_2")]

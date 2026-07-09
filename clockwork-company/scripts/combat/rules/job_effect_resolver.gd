@@ -22,6 +22,7 @@ const TRIGGER_ENEMY_HEALING_REQUESTED := "Enemy Healing Requested"
 const TRIGGER_ATTACK_TARGETS_ANOTHER_ALLY := "Attack Targets Another Ally"
 const TRIGGER_LETHAL_PHYSICAL_ATTACK_REQUESTED := "Lethal Physical Attack Requested"
 const TRIGGER_ENEMY_DIED_WITH_STATUS := "Enemy Died With Status"
+const TRIGGER_ENEMY_DIED_WITH_AILMENTS := "Enemy Died With Ailments"
 
 static func attack_bonus(log, parent_entry_id: int, actor, context = null) -> int:
 	if not _passive_can_fire(actor, PASSIVE_ATTACK_DAMAGE_BONUS):
@@ -167,7 +168,17 @@ static func apply_enemy_death_status_reactions(log, parent_entry_id: int, defeat
 		if owner == null or not owner.is_alive() or owner.team == defeated_unit.team:
 			continue
 		var reaction: ReactionDefinition = owner.current_reaction
-		if reaction == null or reaction.trigger != TRIGGER_ENEMY_DIED_WITH_STATUS or reaction.status == null:
+		if reaction == null:
+			continue
+		if reaction.trigger == TRIGGER_ENEMY_DIED_WITH_AILMENTS:
+			var ailment_stacks := _snapshot_ailment_stacks(defeat_payload.get("statuses", []))
+			if ailment_stacks <= 0:
+				continue
+			var ailment_payload := defeat_payload.duplicate(true)
+			ailment_payload["ailment_stacks"] = ailment_stacks
+			_apply_reaction(log, parent_entry_id, owner, defeated_unit, reaction.trigger, ailment_payload, context)
+			continue
+		if reaction.trigger != TRIGGER_ENEMY_DIED_WITH_STATUS or reaction.status == null:
 			continue
 		var stacks := _snapshot_status_stacks(defeat_payload.get("statuses", []), reaction.status.status_type)
 		if stacks <= 0:
@@ -286,3 +297,11 @@ static func _snapshot_status_stacks(snapshots: Array, status_type: String) -> in
 		if String(snapshot.get("status_type", "")) == status_type:
 			return int(snapshot.get("stack_count", 0))
 	return 0
+
+
+static func _snapshot_ailment_stacks(snapshots: Array) -> int:
+	var total := 0
+	for snapshot: Dictionary in snapshots:
+		if String(snapshot.get("polarity", "")) == "Ailment":
+			total += int(snapshot.get("stack_count", 0))
+	return total

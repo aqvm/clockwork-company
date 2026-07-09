@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="TacticDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/tactic_definition.gd" id="tactic_script"]
+
+[resource]
+script = ExtResource("tactic_script")
+display_name = "Ready Under Pressure"
+tooltip_text = "When wounded, prepare the next base attack instead of choosing a target immediately."
+condition = "Self HP Below Half"
+action = "Secondary Skill"
+target = "Self"

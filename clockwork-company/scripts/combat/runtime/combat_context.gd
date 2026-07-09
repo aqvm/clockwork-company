@@ -3,7 +3,7 @@ class_name CombatContext
 
 const CombatEventsScript := preload("res://scripts/combat/logging/combat_events.gd")
 const StatusResolverScript := preload("res://scripts/combat/rules/status_resolver.gd")
-const MAX_EVENTS_PER_BATTLE := 2000
+const MIN_EVENTS_PER_BATTLE := 20000
 const MAX_CHAIN_DEPTH := 32
 
 var units: Array = []
@@ -17,6 +17,8 @@ var current_time := 0
 var active_actor = null
 var damage_history: Array[Dictionary] = []
 var predict_next_action_damage: Callable = Callable()
+var max_events_per_battle := MIN_EVENTS_PER_BATTLE
+var event_limit_exceeded := false
 
 var _responders: Array[Callable] = []
 var _queue: Array[Dictionary] = []
@@ -30,6 +32,7 @@ func _init(battle_units: Array = [], battle_log = null, battle_scenario_rules: A
 	log = battle_log
 	scenario_rules = battle_scenario_rules
 	speculative = is_speculative
+	max_events_per_battle = max(MIN_EVENTS_PER_BATTLE, units.size() * 4000)
 
 
 func add_responder(responder: Callable) -> void:
@@ -46,7 +49,9 @@ func request(
 	parent_log_id := -1,
 	tags: Array = []
 ) -> Dictionary:
-	assert(history.size() < MAX_EVENTS_PER_BATTLE, "Combat event count exceeded safety limit.")
+	if event_limit_exceeded or history.size() >= max_events_per_battle:
+		_mark_event_limit_exceeded(event_type)
+		return _limit_event(event_type, source, target, payload, parent_event_id, parent_log_id, tags)
 	var event := _build_event(event_type, source, target, payload, parent_event_id, parent_log_id, tags)
 	history.append(event)
 	_request_depth += 1
@@ -67,6 +72,9 @@ func publish(
 	parent_log_id := -1,
 	tags: Array = []
 ) -> int:
+	if event_limit_exceeded or history.size() + _queue.size() >= max_events_per_battle:
+		_mark_event_limit_exceeded(event_type)
+		return -1
 	var event := _build_event(event_type, source, target, payload, parent_event_id, parent_log_id, tags)
 	_queue.append(event)
 	if not _processing and _request_depth == 0:
@@ -151,7 +159,7 @@ func apply_direct_damage(source, target, amount: int, parent_event_id := -1, par
 	amount = max(0, int(damage_request["payload"].get("amount", amount)))
 	var previous_hp: int = target.hp
 	target.hp = max(0, target.hp - max(0, amount))
-	return record_damage(source, target, amount, previous_hp, 0, previous_hp - target.hp, int(damage_request["id"]), parent_log_id, tags)
+	return record_damage(source, target, amount, previous_hp, 0, previous_hp - target.hp, int(damage_request["id"]), parent_log_id, tags, 0, int(damage_request["payload"].get("shock_propagation_basis", 0)))
 
 
 func apply_physical_damage(source, target, amount: int, parent_event_id := -1, parent_log_id := -1, tags: Array = []) -> Dictionary:
@@ -178,7 +186,8 @@ func record_damage(
 	parent_event_id := -1,
 	parent_log_id := -1,
 	tags: Array = [],
-	mitigated_amount := 0
+	mitigated_amount := 0,
+	shock_propagation_basis := 0
 ) -> Dictionary:
 	var applied_amount: int = previous_hp - target.hp
 	var applied_magic_amount: int = min(max(0, magic_amount), applied_amount)
@@ -203,6 +212,7 @@ func record_damage(
 		"physical_amount": applied_physical_amount,
 		"magic_amount": applied_magic_amount,
 		"mitigated_amount": max(0, mitigated_amount),
+		"shock_propagation_basis": max(0, shock_propagation_basis),
 		"previous_hp": previous_hp,
 		"new_hp": target.hp,
 	}, parent_event_id, parent_log_id, tags)
@@ -249,12 +259,39 @@ func execute_unit(source, target, source_name: String, parent_event_id := -1, pa
 func _process_queue() -> void:
 	_processing = true
 	while not _queue.is_empty():
-		assert(history.size() < MAX_EVENTS_PER_BATTLE, "Combat event count exceeded safety limit.")
+		if event_limit_exceeded or history.size() >= max_events_per_battle:
+			_mark_event_limit_exceeded(String(_queue.front().get("type", "")))
+			_queue.clear()
+			break
 		var event: Dictionary = _queue.pop_front()
 		history.append(event)
 		for responder: Callable in _responders:
 			responder.call(self, event)
 	_processing = false
+
+
+func _mark_event_limit_exceeded(event_type: String) -> void:
+	if event_limit_exceeded:
+		return
+	event_limit_exceeded = true
+	push_warning("Combat event count exceeded safety limit at %s after %d events." % [event_type, history.size()])
+
+
+func _limit_event(event_type: String, source, target, payload: Dictionary, parent_event_id: int, parent_log_id: int, tags: Array) -> Dictionary:
+	return {
+		"id": -1,
+		"type": event_type,
+		"root_id": -1,
+		"parent_id": parent_event_id,
+		"parent_log_id": parent_log_id,
+		"depth": 0,
+		"source": source,
+		"source_unit_id": source.unit_id if source != null else "",
+		"target": target,
+		"target_unit_id": target.unit_id if target != null else "",
+		"payload": payload,
+		"tags": _string_tags(tags),
+	}
 
 
 func _event_by_id(event_id: int) -> Dictionary:

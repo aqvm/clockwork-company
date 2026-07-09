@@ -12,7 +12,7 @@ Roadside Ambush is the tier-1 starter contract that proves the scenario structur
 - **Recommended levels:** 1-2
 - **Encounters:** Street Corner, Rooftop Knives, Rooftop
 - **Rule:** none
-- **Rewards:** Honed Blade for Mira or Mercy Coin
+- **Rewards:** none
 - **Unlocks:** Burned Chapel and road-bandit notes
 
 Implementation: `clockwork-company/resources/scenarios/roadside_ambush.tres`

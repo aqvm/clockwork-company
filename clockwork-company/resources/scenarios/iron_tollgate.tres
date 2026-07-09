@@ -5,8 +5,6 @@
 [ext_resource type="Resource" path="res://resources/encounters/catalog_test_foundry_bells.tres" id="3_encounter_b"]
 [ext_resource type="Resource" path="res://resources/encounters/phase7_fight_05_clocktower.tres" id="4_encounter_c"]
 [ext_resource type="Resource" path="res://resources/scenario_rules/iron_tollgate_armored_enemies.tres" id="5_rule"]
-[ext_resource type="Resource" path="res://resources/rewards/guardplate_for_alden.tres" id="6_reward"]
-[ext_resource type="Resource" path="res://resources/rewards/catalog_reward_bellhammer.tres" id="7_reward"]
 
 [ext_resource type="Resource" path="res://resources/tags/armor.tres" id="tag_armor"]
 [ext_resource type="Resource" path="res://resources/tags/mercenary.tres" id="tag_mercenary"]
@@ -26,5 +24,5 @@ tier = 3
 recommended_level_min = 2
 recommended_level_max = 4
 tags = Array[Resource]([ExtResource("tag_tollgate"), ExtResource("tag_armor"), ExtResource("tag_mercenary")])
-rewards = [ExtResource("6_reward"), ExtResource("7_reward")]
+rewards = []
 content_unlocks = ["iron_tollgate_contracts"]

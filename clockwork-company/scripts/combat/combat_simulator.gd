@@ -5,6 +5,7 @@ const CombatLogScript := preload("res://scripts/combat/logging/combat_log.gd")
 const CombatConstantsScript := preload("res://scripts/combat/combat_constants.gd")
 const CombatTextFormatterScript := preload("res://scripts/combat/logging/combat_text_formatter.gd")
 const CombatEventsScript := preload("res://scripts/combat/logging/combat_events.gd")
+const CombatReportBuilderScript := preload("res://scripts/combat/combat_report_builder.gd")
 const TurnSchedulerScript := preload("res://scripts/combat/runtime/turn_scheduler.gd")
 const TacticResolverScript := preload("res://scripts/combat/rules/tactic_resolver.gd")
 const ForecastServiceScript := preload("res://scripts/combat/rules/forecast_service.gd")
@@ -50,22 +51,25 @@ func run_battle_report_from_units(units: Array, battle_title := "Run battle", sc
 	log.add("Loadout definitions: loaded through each UnitDefinition.")
 	log.add("Tactics: loaded from Resource files through each loadout.")
 	log.add("")
-	_append_jobs_summary(log, units)
+	CombatReportBuilderScript.append_jobs_summary(log, units)
 	log.add("")
-	_append_gear_summary(log, units)
+	CombatReportBuilderScript.append_gear_summary(log, units)
 	log.add("")
-	_append_tactics_summary(log, units)
+	CombatReportBuilderScript.append_tactics_summary(log, units)
 	log.add("")
 	var battle_start_event := CombatEventsScript.battle_start()
 	var battle_start_entry_id: int = log.add_event("Battle starts.", battle_start_event["event_type"], 0, CombatLogScript.NO_PARENT, battle_start_event["payload"], battle_start_event["tags"])
 	context.publish("battle_started", null, null, {}, -1, battle_start_entry_id, ["battle"])
-	replay_snapshots.append(_build_replay_snapshot(battle_start_entry_id, 0, units))
+	replay_snapshots.append(CombatReportBuilderScript.replay_snapshot(battle_start_entry_id, 0, units))
 	log.add("")
-	_append_roster(log, units)
+	CombatReportBuilderScript.append_roster(log, units)
 	log.add("")
 	log.add("Combat log:")
 
 	while TargetingRulesScript.team_has_living_unit(units, CombatConstantsScript.TEAM_ALLY) and TargetingRulesScript.team_has_living_unit(units, CombatConstantsScript.TEAM_ENEMY):
+		if context.event_limit_exceeded:
+			log.add("Battle stopped after %d structured events to avoid an infinite event loop." % context.max_events_per_battle)
+			break
 		if actions_taken >= CombatConstantsScript.MAX_ACTIONS:
 			log.add("Battle stopped after %d actions to avoid an infinite fight." % CombatConstantsScript.MAX_ACTIONS)
 			break
@@ -77,27 +81,35 @@ func run_battle_report_from_units(units: Array, battle_title := "Run battle", sc
 
 		_resolve_prepared_base_attacks(context, log, turn_entry_id, actor)
 		if not actor.is_alive():
-			replay_snapshots.append(_build_replay_snapshot(turn_entry_id, current_time, units))
+			replay_snapshots.append(CombatReportBuilderScript.replay_snapshot(turn_entry_id, current_time, units))
 			continue
 		actor.tick_ability_cooldowns()
 		context.publish("turn_started", actor, actor, {"time": current_time}, -1, turn_entry_id, ["turn"])
+		if context.event_limit_exceeded:
+			break
 		_clear_guard_if_needed(context, log, turn_entry_id, actor)
 		var active_status_instance_ids: Array[int] = actor.status_instance_ids()
 		StatusResolverScript.apply_turn_start_statuses(log, turn_entry_id, actor, context)
+		if context.event_limit_exceeded:
+			break
 		_take_tactical_action(context, log, turn_entry_id, actor, units)
+		if context.event_limit_exceeded:
+			break
 		StatusResolverScript.elapse_turn_statuses(log, turn_entry_id, actor, active_status_instance_ids, context)
 		context.publish("turn_completed", actor, actor, {"time": current_time}, -1, turn_entry_id, ["turn"])
+		if context.event_limit_exceeded:
+			break
 		actions_taken += 1
 		if actor.is_alive():
 			TurnSchedulerScript.schedule_next_turn(actor)
-		replay_snapshots.append(_build_replay_snapshot(turn_entry_id, current_time, units))
+		replay_snapshots.append(CombatReportBuilderScript.replay_snapshot(turn_entry_id, current_time, units))
 
 	log.add("")
 	var result_text := CombatTextFormatterScript.build_result_line(units, actions_taken)
 	var result_event := CombatEventsScript.result(result_text)
 	var result_entry_id: int = log.add_event(result_text, result_event["event_type"], CombatLogScript.NO_TIME, CombatLogScript.NO_PARENT, result_event["payload"], result_event["tags"])
-	replay_snapshots.append(_build_replay_snapshot(result_entry_id, CombatLogScript.NO_TIME, units))
-	var roster_units: Array[Dictionary] = _build_roster_units(units)
+	replay_snapshots.append(CombatReportBuilderScript.replay_snapshot(result_entry_id, CombatLogScript.NO_TIME, units))
+	var roster_units: Array[Dictionary] = CombatReportBuilderScript.roster_units(units)
 	var combat_events: Array[Dictionary] = context.event_snapshots()
 	return {
 		"log_version": LOG_VERSION,
@@ -110,45 +122,6 @@ func run_battle_report_from_units(units: Array, battle_title := "Run battle", sc
 		"winner": _winner_for_units(units),
 		"actions_taken": actions_taken,
 	}
-
-
-func _append_jobs_summary(log, units: Array) -> void:
-	var jobs_entry_id: int = log.add("Jobs:")
-	for unit in units:
-		log.add_child(jobs_entry_id, "%s: %s ancestry (%s), %s loadout, %s job. Job skill: %s. Secondary skill: %s. Assigned skill: %s. Passive: %s. Reaction: %s. Final stats before battle-start effects: HP %d, physical %d, magic %d, armor %d, action speed %d." % [unit.unit_name, unit.ancestry_name(), unit.ancestry_feature_name(), unit.loadout_name(), unit.current_job_name(), unit.skill_name(), unit.secondary_skill_name(), unit.assigned_skill_name(), unit.job_effect(), unit.reaction_name(), unit.max_hp, unit.physical_damage, unit.magic_damage, unit.total_armor(), unit.action_speed])
-
-
-func _append_gear_summary(log, units: Array) -> void:
-	var gear_entry_id: int = log.add("Equipped gear:")
-	for unit in units:
-		if unit.equipped_items.is_empty() and unit.skipped_items.is_empty():
-			log.add_child(gear_entry_id, "%s: none" % unit.unit_name)
-			continue
-		for item in unit.equipped_items:
-			log.add_child(gear_entry_id, "%s: %s allowed by %s." % [unit.unit_name, CombatTextFormatterScript.describe_item(item), unit.current_job_name()])
-		for item in unit.skipped_items:
-			log.add_child(gear_entry_id, "%s: %s skipped. %s cannot equip %s." % [unit.unit_name, CombatTextFormatterScript.describe_item(item), unit.current_job_name(), item.slot.to_lower()])
-
-
-func _append_tactics_summary(log, units: Array) -> void:
-	var tactics_entry_id: int = log.add("Loadout tactics:")
-	for unit in units:
-		var tactic_texts: Array[String] = []
-		for tactic: TacticDefinition in unit.tactics:
-			tactic_texts.append(CombatTextFormatterScript.describe_tactic(tactic))
-		if tactic_texts.is_empty():
-			log.add_child(tactics_entry_id, "%s: none" % unit.unit_name)
-		else:
-			log.add_child(tactics_entry_id, "%s: %s" % [unit.unit_name, CombatTextFormatterScript.join_text_parts(tactic_texts, "; ")])
-
-
-func _append_roster(log, units: Array) -> void:
-	var roster_entry_id: int = log.add("Roster:")
-	for team in [CombatConstantsScript.TEAM_ALLY, CombatConstantsScript.TEAM_ENEMY]:
-		var team_entry_id: int = log.add_child(roster_entry_id, "%s" % team)
-		for unit in units:
-			if unit.team == team:
-				log.add_child(team_entry_id, "%s | HP %d | physical %d | magic %d | armor %d | action speed %d | item %s | tactics %d" % [unit.unit_name, unit.max_hp, unit.physical_damage, unit.magic_damage, unit.total_armor(), unit.action_speed, CombatTextFormatterScript.item_name_or_none(unit), unit.tactics.size()])
 
 
 func _take_tactical_action(context, log, turn_entry_id: int, actor, units: Array) -> void:
@@ -363,7 +336,7 @@ func _resolve_attack(context, log, turn_entry_id: int, actor, target, skill_dama
 	_assert_damage_event_consistency(damage_taken, previous_hp, target.hp)
 	if target.is_alive():
 		ItemEffectResolverScript.apply_hit_item_effects(log, attack_entry_id, actor, target, context)
-	context.record_damage(actor, target, damage_taken, previous_hp, physical_damage_taken, magic_component, attack_hook_id, attack_entry_id, source_tags + ["attack"], mitigated_amount)
+	context.record_damage(actor, target, damage_taken, previous_hp, physical_damage_taken, magic_component, attack_hook_id, attack_entry_id, source_tags + ["attack"], mitigated_amount, int(damage_request["payload"].get("shock_propagation_basis", 0)))
 
 
 func _unit_by_id(units: Array, unit_id: String):
@@ -393,54 +366,6 @@ func _clear_guard_if_needed(context, log, turn_entry_id: int, actor) -> void:
 	log.add_event("%s's guard expires: armor %d -> %d." % [actor.unit_name, previous_armor, actor.armor], guard_expire_event["event_type"], CombatLogScript.NO_TIME, turn_entry_id, guard_expire_event["payload"], guard_expire_event["tags"])
 	context.publish("armor_lost", actor, actor, {"amount": actor.guard_armor, "armor_kind": "temporary", "reason": "expired"}, -1, turn_entry_id, ["armor"])
 	actor.guard_armor = 0
-
-
-func _build_roster_units(units: Array) -> Array[Dictionary]:
-	var roster_units: Array[Dictionary] = []
-	for unit in units:
-		roster_units.append({
-			"id": unit.unit_id,
-			"campaign_unit_id": unit.campaign_unit_id,
-			"name": unit.unit_name,
-			"team": unit.team,
-			"max_hp": unit.max_hp,
-			"physical_damage": unit.physical_damage,
-			"magic_damage": unit.magic_damage,
-			"armor": unit.total_armor(),
-			"energy_shield": unit.energy_shield,
-			"action_speed": unit.action_speed,
-			"statuses": unit.status_snapshots(),
-			"temporary_modifiers": unit.temporary_modifier_snapshots(),
-		})
-	return roster_units
-
-
-func _build_replay_snapshot(root_event_id: int, time: int, units: Array) -> Dictionary:
-	var unit_snapshots: Array[Dictionary] = []
-	for unit in units:
-		unit_snapshots.append({
-			"id": unit.unit_id,
-			"campaign_unit_id": unit.campaign_unit_id,
-			"name": unit.unit_name,
-			"team": unit.team,
-			"max_hp": unit.max_hp,
-			"hp": unit.hp,
-			"physical_damage": unit.physical_damage,
-			"magic_damage": unit.magic_damage,
-			"armor": unit.total_armor(),
-			"energy_shield": unit.energy_shield,
-			"action_speed": unit.action_speed,
-			"next_action_time": unit.next_action_time,
-			"is_alive": unit.is_alive(),
-			"is_defeated": not unit.is_alive(),
-			"statuses": unit.status_snapshots(),
-			"temporary_modifiers": unit.temporary_modifier_snapshots(),
-		})
-	return {
-		"root_event_id": root_event_id,
-		"time": time,
-		"units": unit_snapshots,
-	}
 
 
 func _winner_for_units(units: Array) -> String:

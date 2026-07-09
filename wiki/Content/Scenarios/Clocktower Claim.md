@@ -12,7 +12,7 @@ Clocktower Claim is the tier-4 final scenario in the current First Road sample c
 - **Recommended levels:** 3-5
 - **Encounters:** Vault Annex, Debt Office, Clocktower
 - **Rule:** none
-- **Rewards:** Bellhammer or Brass Lung
+- **Rewards:** none
 - **Outcome:** completes the current campaign
 
 Implementation: `clockwork-company/resources/scenarios/clocktower_claim.tres`

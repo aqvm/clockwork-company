@@ -1,0 +1,125 @@
+[gd_resource type="Resource" script_class="JobDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/job_definition.gd" id="job_script"]
+[ext_resource type="Script" path="res://scripts/data/skill_definition.gd" id="skill_script"]
+[ext_resource type="Script" path="res://scripts/data/passive_definition.gd" id="passive_script"]
+[ext_resource type="Script" path="res://scripts/data/reaction_definition.gd" id="reaction_script"]
+[ext_resource type="Script" path="res://scripts/data/tactic_definition.gd" id="tactic_script"]
+[ext_resource type="Script" path="res://scripts/data/effect_definition.gd" id="effect_script"]
+[ext_resource type="Resource" path="res://resources/statuses/burning.tres" id="status_burning"]
+[ext_resource type="Resource" path="res://resources/statuses/frost.tres" id="status_frost"]
+
+[sub_resource type="Resource" id="Enth_Apply_Burning"]
+script = ExtResource("effect_script")
+display_name = "Apply Burning"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Skill Used"
+target_selector = "Event Target"
+effect_type = "Apply Status"
+status = ExtResource("status_burning")
+
+[sub_resource type="Resource" id="Enth_Apply_Frost"]
+script = ExtResource("effect_script")
+display_name = "Apply Frost"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Skill Used"
+target_selector = "Event Target"
+effect_type = "Apply Status"
+status = ExtResource("status_frost")
+
+[sub_resource type="Resource" id="Enth_Gather_Burning"]
+script = ExtResource("effect_script")
+display_name = "Gather Burning"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Skill Used"
+target_selector = "Event Target"
+effect_type = "Gather Status"
+amount_target_selector = "Enemy Units"
+status = ExtResource("status_burning")
+
+[sub_resource type="Resource" id="Enth_Mirror_Burning"]
+script = ExtResource("effect_script")
+display_name = "Mirror Burning"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Externally Sourced Status Applied"
+condition = "Applied Status Matches"
+target_selector = "Event Source"
+effect_type = "Apply Status"
+amount_source = "Applied Status Stacks"
+status = ExtResource("status_burning")
+condition_status = ExtResource("status_burning")
+
+[sub_resource type="Resource" id="Enth_Mirror_Frost"]
+script = ExtResource("effect_script")
+display_name = "Mirror Frost"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Externally Sourced Status Applied"
+condition = "Applied Status Matches"
+target_selector = "Event Source"
+effect_type = "Apply Status"
+amount_source = "Applied Status Stacks"
+status = ExtResource("status_frost")
+condition_status = ExtResource("status_frost")
+
+[sub_resource type="Resource" id="Enth_Shatter_Hit"]
+script = ExtResource("effect_script")
+display_name = "Shatter Hit"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Reaction Triggered"
+target_selector = "Event Target"
+effect_type = "Deal Damage"
+amount = 8
+damage_type = "Physical"
+
+[sub_resource type="Resource" id="Skill_Thermal_Shock"]
+script = ExtResource("skill_script")
+display_name = "Thermal Shock"
+tooltip_text = "Apply Burning and Frost to the same enemy."
+action = "Effects Only"
+effects = [SubResource("Enth_Apply_Burning"), SubResource("Enth_Apply_Frost")]
+
+[sub_resource type="Resource" id="Skill_Chimney_Effect"]
+script = ExtResource("skill_script")
+display_name = "Chimney Effect"
+tooltip_text = "Gather all enemy Burning onto one target enemy."
+action = "Effects Only"
+effects = [SubResource("Enth_Gather_Burning")]
+
+[sub_resource type="Resource" id="Passive_Thermal_Mirror"]
+script = ExtResource("passive_script")
+display_name = "Thermal Mirror"
+tooltip_text = "Mirror externally sourced Burning or Frost back to the source."
+passive_type = "None"
+effects = [SubResource("Enth_Mirror_Burning"), SubResource("Enth_Mirror_Frost")]
+
+[sub_resource type="Resource" id="Reaction_Shatter_Point"]
+script = ExtResource("reaction_script")
+display_name = "Shatter Point"
+tooltip_text = "When an enemy reaches 10 Frost, hit it with physical damage."
+trigger = "Enemy Status Threshold Reached"
+condition = "Always"
+reaction_type = "Effects Only"
+status_stack_threshold = 10
+status = ExtResource("status_frost")
+effects = [SubResource("Enth_Shatter_Hit")]
+
+[sub_resource type="Resource" id="Tactic_Use_Thermal_Shock"]
+script = ExtResource("tactic_script")
+display_name = "Use Thermal Shock"
+tooltip_text = "Use Thermal Shock is this job template default tactic."
+condition = "Enemy Alive"
+action = "Job Skill"
+target = "Frontmost Enemy"
+
+[resource]
+script = ExtResource("job_script")
+display_name = "Enthalpyst"
+tooltip_text = "Enthalpyst is a clean-slate authored job Resource based on the current design notes. Growth and abilities are visible for tuning."
+max_hp_growth = 2
+magic_damage_growth = 1
+armor_growth = 1
+skill = SubResource("Skill_Thermal_Shock")
+secondary_skill = SubResource("Skill_Chimney_Effect")
+passive = SubResource("Passive_Thermal_Mirror")
+reaction = SubResource("Reaction_Shatter_Point")
+default_tactic = SubResource("Tactic_Use_Thermal_Shock")

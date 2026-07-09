@@ -1,16 +1,19 @@
-extends ScrollContainer
+extends PanelContainer
 class_name UnitDetailPanel
 
 const PlanningStatPreviewScript := preload("res://scripts/ui/planning_stat_preview.gd")
+const UIStyleHelperScript := preload("res://scripts/ui/ui_style_helper.gd")
 
 signal resource_tooltip_requested(source: Control, resource: Resource)
 signal glossary_tooltip_requested(source: Control, term: String)
 signal tooltip_cleared
 
+var scroll: ScrollContainer = null
 var content: VBoxContainer = null
 
 
 func _ready() -> void:
+	UIStyleHelperScript.apply_panel(self)
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_ensure_content()
@@ -26,7 +29,7 @@ func show_unit(unit: UnitDefinition, party_units: Array[UnitDefinition] = []) ->
 	var preview: Dictionary = _preview_for_unit(unit, party_units)
 	var computed_stats: Dictionary = preview.get("before_battle_start", {})
 	var battle_start_stats: Dictionary = preview.get("after_battle_start", {})
-	_add_resource_text(unit, unit.display_name)
+	_add_resource_text(unit, unit.display_name, true)
 	_add_plain_text("Base stats: HP %d, physical %d, magic %d, armor %d, speed %d" % [unit.max_hp, unit.physical_damage, unit.magic_damage, unit.armor, unit.action_speed])
 	_add_plain_text("Computed stats: %s" % PlanningStatPreviewScript.stats_line(computed_stats))
 	if PlanningStatPreviewScript.stats_changed(computed_stats, battle_start_stats):
@@ -50,7 +53,7 @@ func show_unit(unit: UnitDefinition, party_units: Array[UnitDefinition] = []) ->
 	var secondary_skill = loadout.current_job.secondary_skill if loadout.current_job != null and _job_feature_unlocked(unit, loadout.current_job, "skill") else null
 	var passive = loadout.equipped_passive
 	var reaction = loadout.equipped_reaction
-	_add_resource_text(loadout, "Loadout: %s" % loadout.display_name)
+	_add_resource_text(loadout, "Loadout: %s" % loadout.display_name, true)
 	_add_resource_text(loadout.current_job, "Current job: %s" % _resource_display_name(loadout.current_job))
 	_add_resource_text(skill, "Job skill: %s" % _resource_display_name(skill))
 	_add_resource_text(secondary_skill, "Secondary skill: %s" % _resource_display_name(secondary_skill))
@@ -58,13 +61,13 @@ func show_unit(unit: UnitDefinition, party_units: Array[UnitDefinition] = []) ->
 	_add_resource_text(passive, "Assigned passive: %s" % _resource_display_name(passive))
 	_add_resource_text(reaction, "Assigned reaction: %s" % _resource_display_name(reaction))
 	_add_plain_text("")
-	_add_plain_text("Equipment:")
+	_add_plain_text("Equipment:", true)
 	_add_item_row("Weapon", loadout.weapon)
 	_add_item_row("Armor", loadout.armor)
 	_add_item_row("Helmet", loadout.helmet)
 	_add_item_row("Trinket", loadout.trinket)
 	_add_plain_text("")
-	_add_plain_text("Tactics:")
+	_add_plain_text("Tactics:", true)
 	if loadout.tactics.is_empty():
 		_add_plain_text("- none")
 	else:
@@ -85,19 +88,21 @@ func _add_item_row(slot_name: String, item: ItemDefinition) -> void:
 			_add_resource_text(effect, "  - %s: %s %d" % [effect.trigger, effect.effect_type, effect.amount])
 
 
-func _add_plain_text(text: String) -> Label:
+func _add_plain_text(text: String, is_heading := false) -> Label:
 	var label := Label.new()
 	label.text = text
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	if is_heading:
+		UIStyleHelperScript.style_title(label)
 	content.add_child(label)
 	return label
 
 
-func _add_resource_text(resource: Resource, text: String) -> Label:
+func _add_resource_text(resource: Resource, text: String, is_heading := false) -> Label:
 	if resource == null:
-		return _add_plain_text(text)
-	var label := _add_plain_text(text)
+		return _add_plain_text(text, is_heading)
+	var label := _add_plain_text(text, is_heading)
 	label.mouse_filter = Control.MOUSE_FILTER_STOP
 	label.mouse_entered.connect(_on_resource_mouse_entered.bind(label, resource))
 	label.mouse_exited.connect(_on_resource_mouse_exited)
@@ -113,7 +118,7 @@ func _add_glossary_text(term: String) -> Label:
 
 
 func _add_stat_glossary_rows() -> void:
-	_add_plain_text("Stat terms:")
+	_add_plain_text("Stat terms:", true)
 	for term in ["HP", "Physical Damage", "Magic Damage", "Armor", "Action Speed", "Guard", "Cooldown"]:
 		_add_glossary_text(term)
 
@@ -139,9 +144,14 @@ func _clear_content() -> void:
 func _ensure_content() -> void:
 	if content != null:
 		return
+	scroll = ScrollContainer.new()
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	add_child(scroll)
 	content = VBoxContainer.new()
 	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	add_child(content)
+	content.add_theme_constant_override("separation", 3)
+	scroll.add_child(content)
 
 
 func _preview_for_unit(unit: UnitDefinition, party_units: Array[UnitDefinition]) -> Dictionary:
@@ -209,5 +219,5 @@ func _join_values(values: Array, separator: String) -> String:
 	for value in values:
 		if not text.is_empty():
 			text += separator
-		text += String(value)
+		text += str(value)
 	return text

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="TacticDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/tactic_definition.gd" id="tactic_script"]
+
+[resource]
+script = ExtResource("tactic_script")
+display_name = "Rally the Tempo"
+tooltip_text = "Use Rallying Verse to keep allied action speed high."
+condition = "Enemy Alive"
+action = "Job Skill"
+target = "Self"

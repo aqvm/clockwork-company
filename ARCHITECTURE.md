@@ -156,7 +156,7 @@ This is intentionally crude and replaceable. There is no magic resistance stat y
 The first playable test now opens as a scenario workbench with the older combat replay harness below it. The planning area is now split into small child UI scenes so the main scene can coordinate state without owning every rendering detail:
 
 - `clockwork-company/scenes/combat_test_scene.tscn` owns the visible test scene.
-- `clockwork-company/scripts/ui/combat_test_scene.gd` owns campaign/run coordination, selected scenario/unit state, selected-unit planning equipment changes, static combat setup display after a fight starts, and tooltip hosting.
+- `clockwork-company/scripts/ui/combat_test_scene.gd` owns campaign/run coordination, selected scenario/unit state, selected-unit planning equipment changes, and tooltip hosting.
 - `clockwork-company/scripts/ui/run_flow_controls_panel.gd` is attached to the top control row in `combat_test_scene.tscn`; it owns run button, mod button, palette/save/load buttons, a collapsed debug harness, reward buttons, continue button, and top-row equipment option button presentation, then emits request signals back to the main scene.
 - The former `Combat Conditions` pane is now used as a visible `Fight Preview` area for campaign/run status and static setup text.
 - `clockwork-company/scenes/planning_workbench_panel.tscn` and `scripts/ui/planning_workbench_panel.gd` own the stable planning-row layout and forward child-panel signals/tooltips to the main scene.
@@ -167,16 +167,21 @@ The first playable test now opens as a scenario workbench with the older combat 
 - `clockwork-company/scenes/unit_action_panel.tscn` and `scripts/ui/unit_action_panel.gd` own selected-unit action button rendering and emit start/equipment-change request signals.
 - `clockwork-company/scripts/ui/combat_replay_panel.gd` is attached to the existing replay column in `combat_test_scene.tscn`; it owns replay speed controls, replay text timing, replay log autoscroll, structured event grouping, event payload tooltips, unit replay dots, and runtime unit tooltip requests.
 - `clockwork-company/scripts/ui/combat_log_rich_text_formatter.gd` owns UI-layer BBCode escaping and color highlighting for readable combat/setup lines.
+- `clockwork-company/scripts/ui/combat_log_tooltip_lookup.gd` owns presentation lookup data for combat-log Resource tooltips.
+- `clockwork-company/scripts/ui/combat_preview_text_builder.gd` owns static preview, landing, and setup-line text composition for the workbench.
+- `clockwork-company/scripts/devtools/combat_lab_setup_store.gd` owns Combat Lab setup fixture file save/load/list/delete mechanics.
 - `clockwork-company/scripts/ui/planning_stat_preview.gd` builds read-only planning stat summaries from `UnitState` and battle-start resolver hooks without advancing combat turns.
 - `clockwork-company/scripts/ui/resource_tooltip_builder.gd` converts known game Resources into readable tooltip text and related-Resource link data for pinned tooltip traversal.
 - `clockwork-company/scripts/ui/tooltip_presenter.gd` owns the shared floating tooltip panel used by hoverable Resource rows/buttons. Hover shows tooltips, left click pins the visible tooltip, pinned Resource tooltips show related Resource buttons with Back navigation, and Escape or an outside click closes a pinned tooltip.
-- `clockwork-company/scripts/ui/combat_test_scene.gd` now also owns the local mod-pack toggle UI state (checkbox dropdown), including enabled-pack persistence and preview refresh behavior.
+- `clockwork-company/scripts/ui/combat_test_scene.gd` now also owns the local mod-pack toggle UI state (checkbox dropdown) and preview refresh behavior.
+- `clockwork-company/scripts/ui/mod_settings_store.gd` owns enabled mod-pack persistence for the workbench UI.
 - `clockwork-company/scripts/ui/unit_status_dot.gd` owns drawing one unit's circular replay marker, health arc, cooldown bar with shimmer, ready badge, and defeated overlay.
 - `clockwork-company/scripts/combat/combat_simulator.gd` owns the combat rules.
 - `clockwork-company/scripts/combat/combat_constants.gd` owns shared combat labels and numeric constants.
 - `clockwork-company/scripts/combat/logging/combat_log.gd` owns hierarchical log entry storage and line rendering.
 - `clockwork-company/scripts/combat/logging/combat_text_formatter.gd` owns combat summary text formatting helpers.
 - `clockwork-company/scripts/combat/runtime/unit_state.gd` owns per-unit runtime combat state initialization and helpers.
+- `clockwork-company/scripts/combat/runtime/unit_state_clone_helper.gd` owns runtime clone and Resource rebind mechanics for speculative combat isolation.
 - `clockwork-company/scripts/combat/runtime/turn_scheduler.gd` owns deterministic next-actor selection and action re-scheduling.
 - `clockwork-company/scripts/combat/rules/targeting_rules.gd` owns team and target selection helpers.
 - `clockwork-company/scripts/combat/rules/tactic_resolver.gd` owns tactic evaluation/selection decisions.
@@ -185,22 +190,27 @@ The first playable test now opens as a scenario workbench with the older combat 
 - `clockwork-company/scripts/combat/rules/job_effect_resolver.gd` owns current-job combat bonus hooks.
 - `clockwork-company/scripts/combat/rules/ancestry_feature_resolver.gd` owns always-on ancestry combat hooks.
 - `clockwork-company/scripts/combat/rules/item_effect_resolver.gd` owns triggered item effect resolution.
+- `clockwork-company/scripts/combat/rules/triggered_effect_targeting.gd` owns shared triggered-effect target selection, and `clockwork-company/scripts/combat/rules/triggered_effect_amounts.gd` owns shared triggered-effect amount formulas.
 - `clockwork-company/scripts/combat/scenarios/demo_battle_factory.gd` owns current fixed demo roster construction.
 - `clockwork-company/scripts/run/run_state.gd` owns short-run progression state: current fight index, active/reward/equipment/won/lost status, cloned party definitions, run inventory, fixed encounter order, and reward/equipment application.
 - `clockwork-company/scripts/scenario/scenario_runner.gd` owns the current scenario progress wrapper: active scenario id, encounter index, completion, and scenario summary lines.
 - `clockwork-company/scripts/campaign/campaign_manager.gd` owns campaign unlock progression: available scenarios, attempted scenarios, completed scenarios, unlocked content ids, and campaign completion.
 - `clockwork-company/scripts/campaign/campaign_roster_state.gd` owns durable campaign roster state: starting roster construction from campaign unit ids, stable campaign unit instance ids, campaign-party snapshots for scenario starts, victory commits from `RunState`, campaign inventory, and roster/inventory JSON save data.
-- `clockwork-company/scripts/modding/json_content_loader.gd` owns JSON pack loading/merging/validation and runtime Resource reconstruction for statuses, ancestries, items, jobs, tactics, loadouts, and units.
+- `clockwork-company/scripts/modding/json_content_loader.gd` owns JSON pack discovery/loading and runtime Resource reconstruction for statuses, ancestries, items, jobs, tactics, loadouts, and units.
+- `clockwork-company/scripts/modding/content_merger.gd` owns base-plus-mod content dictionary merging.
+- `clockwork-company/scripts/modding/content_resource_builder.gd` owns reconstruction of runtime Resource graphs from validated merged dictionaries.
+- `clockwork-company/scripts/modding/content_issue_collector.gd` owns structured validation issue collection, `clockwork-company/scripts/modding/content_validator.gd` owns fail-fast content validation, `clockwork-company/scripts/modding/content_effect_support.gd` owns raw JSON effect support-policy checks, `clockwork-company/scripts/data/content_schema.gd` owns shared JSON/content vocabulary, and `clockwork-company/scripts/modding/content_load_result.gd` owns structured load-result diagnostics.
 - Base `.tres` loadouts can author equipped learned passives/reactions/skills by referencing the same standalone feature Resource as the owning job; `JsonContentLoader` infers that job provenance before reconstructing content.
 - `clockwork-company/scripts/tools/content_validation_check.gd` owns repository content sanity checks for scenarios, scenario rules, scenario rewards, campaign identity/graph reachability/starting-roster references, JSON pack loading, and required JSON sidecar docs. The loader validation it invokes also rejects equipped learned features without matching unlocked job progress.
 - `CombatLog` and `CombatLogEntry` are dedicated helper classes in `scripts/combat/logging/combat_log.gd` that build readable text logs and structured event metadata.
 - `scripts/combat/logging/combat_event_schema.gd` defines known event types and required payload keys as the structured logging contract.
 - `scripts/combat/logging/combat_events.gd` provides typed event-construction helpers so simulator/rule code does not handcraft payload dictionaries ad hoc.
 - `combat_simulator.gd` now orchestrates a battle by delegating logging, targeting, tactic selection, effect resolution, scheduling, and demo roster setup to dedicated scripts.
-- `combat_simulator.gd` now also provides structured battle report APIs (`run_demo_battle_report` and `run_battle_report`) that return rendered lines, presentation-oriented structured events, authoritative causal `combat_events`, initial roster snapshots, replay unit-state snapshots, winner, and action count.
+- `combat_simulator.gd` now also provides structured battle report APIs (`run_demo_battle_report` and `run_battle_report`) that return rendered lines, presentation-oriented structured events, authoritative causal `combat_events`, initial roster snapshots, replay unit-state snapshots, winner, and action count. `combat_report_builder.gd` owns setup summaries and snapshot dictionary construction for those reports.
 - Base game content remains authored in `.tres` Resources; the loader derives JSON-like dictionaries from those Resources, then applies mod JSON overrides from `res://mods/*.json` before constructing runtime Resources.
 - Structured report payloads include a `log_version` field for format evolution safety. Action-speed snapshots use log version `2`; version `1` action-interval snapshots are intentionally incompatible.
 - `clockwork-company/scripts/data/unit_definition.gd` defines the editable unit data Resource type, including ancestry, base physical/magic damage, and per-job progress.
+- `clockwork-company/scripts/data/loadout_slot_helper.gd` owns shared equipment-slot lookup, assignment, display-name fallback, and job/ancestry equip legality checks used by campaign roster state and Combat Lab state.
 - `clockwork-company/scripts/data/ancestry_definition.gd` defines an editable ancestry Resource with future base-stat ranges, baseline growth, notes, and an always-on feature reference.
 - `clockwork-company/scripts/data/ancestry_feature_definition.gd` defines the limited ancestry feature payload, including trigger, condition, feature type, amount, cooldown, and notes.
 - `clockwork-company/scripts/data/item_definition.gd` defines the editable item data Resource type, including flat modifiers, tags, and authored effect references.
@@ -316,7 +326,7 @@ Combat log responsibility split:
 - `CombatLog` owns the entry list, assigns IDs, attaches children to parents, renders `Array[String]`, and can emit structured JSON-like event dictionaries.
 - `CombatLog.add_event(...)` validates event type and required payload keys against `combat_event_schema.gd` before accepting an event.
 - `CombatSimulator` decides what happened and whether a line is a parent event or a child explanation.
-- `combat_test_scene.gd` extracts setup/context lines for the static summary pane, while `CombatReplayPanel` owns timed combat-event presentation.
+- `CombatPreviewTextBuilder` extracts setup/context lines for the static summary pane, while `CombatReplayPanel` owns timed combat-event presentation.
 - Replay identity now prefers stable `unit_id` references from event payloads and only falls back to display names when needed.
 - The combat test UI splits simulator lines at `Combat log:`. Setup, roster, loadout, gear, and tactic information appears immediately in a static `RichTextLabel`; timestamped combat events are driven in the replay pane from structured event metadata.
 - Scenario selection shows authored scenario and party data without running combat. The static setup pane is populated after a fight report is generated for the active encounter.

@@ -1,0 +1,124 @@
+[gd_resource type="Resource" script_class="JobDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/job_definition.gd" id="job_script"]
+[ext_resource type="Script" path="res://scripts/data/skill_definition.gd" id="skill_script"]
+[ext_resource type="Script" path="res://scripts/data/passive_definition.gd" id="passive_script"]
+[ext_resource type="Script" path="res://scripts/data/reaction_definition.gd" id="reaction_script"]
+[ext_resource type="Script" path="res://scripts/data/tactic_definition.gd" id="tactic_script"]
+[ext_resource type="Script" path="res://scripts/data/effect_definition.gd" id="effect_script"]
+[ext_resource type="Resource" path="res://resources/statuses/bleed.tres" id="status_bleed"]
+[ext_resource type="Resource" path="res://resources/statuses/frost.tres" id="status_frost"]
+[ext_resource type="Resource" path="res://resources/statuses/numb.tres" id="status_numb"]
+
+[sub_resource type="Resource" id="Cryo_Apply_Frost"]
+script = ExtResource("effect_script")
+display_name = "Apply Frost"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Skill Used"
+target_selector = "Event Target"
+effect_type = "Apply Status"
+status = ExtResource("status_frost")
+
+[sub_resource type="Resource" id="Cryo_Apply_Numb"]
+script = ExtResource("effect_script")
+display_name = "Apply Numb"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Skill Used"
+target_selector = "Event Target"
+effect_type = "Apply Status"
+status = ExtResource("status_numb")
+
+[sub_resource type="Resource" id="Cryo_Frost_To_Bleed"]
+script = ExtResource("effect_script")
+display_name = "Frost to Bleed"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Skill Used"
+target_selector = "Event Target"
+effect_type = "Apply Status"
+amount_source = "Target Status Stacks"
+status = ExtResource("status_bleed")
+amount_status = ExtResource("status_frost")
+
+[sub_resource type="Resource" id="Cryo_Consume_Frost"]
+script = ExtResource("effect_script")
+display_name = "Consume Frost"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Skill Used"
+target_selector = "Event Target"
+effect_type = "Consume Status"
+amount_source = "Target Status Stacks"
+status = ExtResource("status_frost")
+amount_status = ExtResource("status_frost")
+
+[sub_resource type="Resource" id="Cryo_Frost_Slow"]
+script = ExtResource("effect_script")
+display_name = "Frost Team Slow"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Battle State Changed"
+target_selector = "Enemy Units"
+effect_type = "Modify Stat"
+modified_stat = "Action Speed"
+modifier_mode = "Dynamic Percent"
+modifier_direction = "Decrease"
+amount_source = "Total Status Stacks On Selected Group"
+amount_target_selector = "Enemy Units"
+amount_status = ExtResource("status_frost")
+
+[sub_resource type="Resource" id="Cryo_Retaliate_Frost"]
+script = ExtResource("effect_script")
+display_name = "Retaliatory Frost"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Reaction Triggered"
+target_selector = "Event Target"
+effect_type = "Apply Status"
+status = ExtResource("status_frost")
+
+[sub_resource type="Resource" id="Skill_Frostbind"]
+script = ExtResource("skill_script")
+display_name = "Frostbind"
+tooltip_text = "Apply Frost and Numb to the frontmost enemy."
+action = "Effects Only"
+effects = [SubResource("Cryo_Apply_Frost"), SubResource("Cryo_Apply_Numb")]
+
+[sub_resource type="Resource" id="Skill_Cold_Blood"]
+script = ExtResource("skill_script")
+display_name = "Cold Blood"
+tooltip_text = "Turn an enemy's Frost into Bleed, then consume that Frost."
+action = "Effects Only"
+effects = [SubResource("Cryo_Frost_To_Bleed"), SubResource("Cryo_Consume_Frost")]
+
+[sub_resource type="Resource" id="Passive_Whiteout_Pressure"]
+script = ExtResource("passive_script")
+display_name = "Whiteout Pressure"
+tooltip_text = "Enemies lose action speed as Frost accumulates."
+passive_type = "None"
+effects = [SubResource("Cryo_Frost_Slow")]
+
+[sub_resource type="Resource" id="Reaction_Cold_Retort"]
+script = ExtResource("reaction_script")
+display_name = "Cold Retort"
+tooltip_text = "Physical attackers receive Frost."
+trigger = "Physically Damaged"
+condition = "Always"
+reaction_type = "Effects Only"
+effects = [SubResource("Cryo_Retaliate_Frost")]
+
+[sub_resource type="Resource" id="Tactic_Use_Frostbind"]
+script = ExtResource("tactic_script")
+display_name = "Use Frostbind"
+tooltip_text = "Use Frostbind is this job template default tactic."
+condition = "Enemy Alive"
+action = "Job Skill"
+target = "Frontmost Enemy"
+
+[resource]
+script = ExtResource("job_script")
+display_name = "Cryomancer"
+tooltip_text = "Cryomancer is a clean-slate authored job Resource based on the current design notes. Growth and abilities are visible for tuning."
+max_hp_growth = 1
+magic_damage_growth = 2
+skill = SubResource("Skill_Frostbind")
+secondary_skill = SubResource("Skill_Cold_Blood")
+passive = SubResource("Passive_Whiteout_Pressure")
+reaction = SubResource("Reaction_Cold_Retort")
+default_tactic = SubResource("Tactic_Use_Frostbind")

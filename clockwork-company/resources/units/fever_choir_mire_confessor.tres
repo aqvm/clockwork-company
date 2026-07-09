@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="UnitDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/unit_definition.gd" id="unit_script"]
+[ext_resource type="Script" path="res://scripts/data/job_progress_definition.gd" id="progress_script"]
+[ext_resource type="Resource" path="res://resources/jobs/bog_priest.tres" id="job"]
+[ext_resource type="Resource" path="res://resources/loadouts/fever_choir_mire_confessor_loadout.tres" id="loadout"]
+
+[sub_resource type="Resource" id="Progress_Mire_Confessor_Sable"]
+script = ExtResource("progress_script")
+job = ExtResource("job")
+level = 3
+skill_unlocked = true
+passive_unlocked = true
+reaction_unlocked = true
+
+[resource]
+script = ExtResource("unit_script")
+display_name = "Mire Confessor Sable"
+tooltip_text = "Enemy Bog Priest for Fever Choir Rehearsal. She keeps the choir upright and turns bad healing math into Rot."
+team = "Enemies"
+max_hp = 36
+physical_damage = 2
+magic_damage = 6
+armor = 0
+action_speed = 8
+job_progress = [SubResource("Progress_Mire_Confessor_Sable")]
+loadout = ExtResource("loadout")

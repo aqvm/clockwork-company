@@ -8,6 +8,8 @@ const UnitLoadoutDefinitionScript := preload("res://scripts/data/unit_loadout_de
 const ItemDefinitionScript := preload("res://scripts/data/item_definition.gd")
 const JobProgressDefinitionScript := preload("res://scripts/data/job_progress_definition.gd")
 const TacticDefinitionScript := preload("res://scripts/data/tactic_definition.gd")
+const DefinitionCloneHelperScript := preload("res://scripts/data/definition_clone_helper.gd")
+const LoadoutSlotHelperScript := preload("res://scripts/data/loadout_slot_helper.gd")
 const META_CAMPAIGN_UNIT_ID := "campaign_unit_id"
 const META_CONTENT_ID := "content_id"
 const MAX_UNIT_LEVEL := 5
@@ -218,7 +220,7 @@ func planning_item_options(campaign_unit_id: String) -> Array[Dictionary]:
 	if unit.loadout == null:
 		unit.loadout = UnitLoadoutDefinitionScript.new()
 		unit.loadout.display_name = "%s Campaign Loadout" % unit.display_name
-	for slot in ["Weapon", "Armor", "Helmet", "Trinket"]:
+	for slot in LoadoutSlotHelperScript.EQUIPMENT_SLOTS:
 		var current_item := _loadout_item(unit.loadout, slot)
 		options.append({
 			"slot": slot,
@@ -250,7 +252,7 @@ func planning_item_options(campaign_unit_id: String) -> Array[Dictionary]:
 
 func equip_planning_item(campaign_unit_id: String, slot: String, inventory_index: int) -> bool:
 	var unit := _find_unit(campaign_unit_id)
-	if unit == null or not ["Weapon", "Armor", "Helmet", "Trinket"].has(slot):
+	if unit == null or not LoadoutSlotHelperScript.EQUIPMENT_SLOTS.has(slot):
 		return false
 	if unit.loadout == null:
 		unit.loadout = UnitLoadoutDefinitionScript.new()
@@ -492,59 +494,19 @@ func _item_name_or_empty(item: ItemDefinition) -> String:
 
 
 func _clone_unit_definition(source: UnitDefinition) -> UnitDefinition:
-	var copy: UnitDefinition = UnitDefinitionScript.new()
-	_copy_content_id(source, copy)
-	_copy_campaign_unit_id(source, copy)
-	copy.display_name = source.display_name
-	copy.tags = source.tags.duplicate()
-	copy.team = source.team
-	copy.ancestry = source.ancestry
-	copy.max_hp = source.max_hp
-	copy.physical_damage = source.physical_damage
-	copy.magic_damage = source.magic_damage
-	copy.armor = source.armor
-	copy.action_speed = source.action_speed
-	copy.job_progress = _clone_job_progress(source.job_progress)
-	copy.loadout = _clone_loadout_definition(source.loadout) if source.loadout != null else null
-	return copy
+	return DefinitionCloneHelperScript.clone_unit_definition(source)
 
 
 func _clone_loadout_definition(source: UnitLoadoutDefinition) -> UnitLoadoutDefinition:
-	var copy: UnitLoadoutDefinition = UnitLoadoutDefinitionScript.new()
-	_copy_content_id(source, copy)
-	copy.display_name = source.display_name
-	copy.current_job = source.current_job
-	copy.equipped_skill = source.equipped_skill
-	copy.equipped_passive = source.equipped_passive
-	copy.equipped_reaction = source.equipped_reaction
-	copy.weapon = _clone_item_definition(source.weapon) if source.weapon != null else null
-	copy.armor = _clone_item_definition(source.armor) if source.armor != null else null
-	copy.helmet = _clone_item_definition(source.helmet) if source.helmet != null else null
-	copy.trinket = _clone_item_definition(source.trinket) if source.trinket != null else null
-	copy.tactics = _clone_tactics(source.tactics)
-	return copy
+	return DefinitionCloneHelperScript.clone_loadout_definition(source)
 
 
 func _clone_tactics(source: Array[TacticDefinition]) -> Array[TacticDefinition]:
-	var results: Array[TacticDefinition] = []
-	for tactic in source:
-		if tactic != null:
-			results.append(_clone_tactic(tactic))
-	return results
+	return DefinitionCloneHelperScript.clone_tactics(source)
 
 
 func _clone_tactic(source: TacticDefinition) -> TacticDefinition:
-	var copy: TacticDefinition = TacticDefinitionScript.new()
-	_copy_content_id(source, copy)
-	copy.display_name = source.display_name
-	copy.tags = source.tags.duplicate()
-	copy.condition = source.condition
-	copy.action = source.action
-	copy.target = source.target
-	copy.status = source.status
-	copy.status_stack_threshold = source.status_stack_threshold
-	copy.foretell_enabled = source.foretell_enabled
-	return copy
+	return DefinitionCloneHelperScript.clone_tactic(source)
 
 
 func _tactics_to_save_data(tactics: Array[TacticDefinition]) -> Array[Dictionary]:
@@ -581,34 +543,11 @@ func _tactic_from_save_data(raw: Variant, enabled_mod_pack_ids: Array[String]) -
 
 
 func _clone_item_definition(source: ItemDefinition) -> ItemDefinition:
-	var copy: ItemDefinition = ItemDefinitionScript.new()
-	_copy_content_id(source, copy)
-	copy.display_name = source.display_name
-	copy.tags = source.tags.duplicate()
-	copy.slot = source.slot
-	copy.max_hp_modifier = source.max_hp_modifier
-	copy.physical_damage_modifier = source.physical_damage_modifier
-	copy.magic_damage_modifier = source.magic_damage_modifier
-	copy.armor_modifier = source.armor_modifier
-	copy.action_speed_modifier = source.action_speed_modifier
-	copy.effects = source.effects.duplicate()
-	return copy
+	return DefinitionCloneHelperScript.clone_item_definition(source)
 
 
 func _clone_job_progress(source: Array[JobProgressDefinition]) -> Array[JobProgressDefinition]:
-	var results: Array[JobProgressDefinition] = []
-	for progress in source:
-		if progress == null:
-			continue
-		var copy: JobProgressDefinition = JobProgressDefinitionScript.new()
-		copy.job = progress.job
-		copy.level = progress.level
-		copy.skill_unlocked = progress.skill_unlocked
-		copy.passive_unlocked = progress.passive_unlocked
-		copy.reaction_unlocked = progress.reaction_unlocked
-		copy.pending_unlock_choice = progress.pending_unlock_choice
-		results.append(copy)
-	return results
+	return DefinitionCloneHelperScript.clone_job_progress(source)
 
 
 func _apply_job_level_unlock(unit: UnitDefinition, progress: JobProgressDefinition) -> void:
@@ -725,7 +664,7 @@ func _canonical_job_for_unit(unit: UnitDefinition, job: JobDefinition) -> JobDef
 
 
 func _return_illegal_equipment_to_inventory(unit: UnitDefinition) -> void:
-	for slot in ["Weapon", "Armor", "Helmet", "Trinket"]:
+	for slot in LoadoutSlotHelperScript.EQUIPMENT_SLOTS:
 		var item := _loadout_item(unit.loadout, slot)
 		if item == null or _can_equip_item(unit, item):
 			continue
@@ -734,33 +673,15 @@ func _return_illegal_equipment_to_inventory(unit: UnitDefinition) -> void:
 
 
 func _can_equip_item(unit: UnitDefinition, item: ItemDefinition) -> bool:
-	if item == null:
-		return false
-	var property_name := "forbid_%s" % item.slot.to_lower()
-	return not ((unit.loadout != null and unit.loadout.current_job != null and bool(unit.loadout.current_job.get(property_name))) or (unit.ancestry != null and bool(unit.ancestry.get(property_name))))
+	return LoadoutSlotHelperScript.can_equip_item(unit, item)
 
 
 func _loadout_item(loadout: UnitLoadoutDefinition, slot: String) -> ItemDefinition:
-	if slot == "Weapon":
-		return loadout.weapon
-	if slot == "Armor":
-		return loadout.armor
-	if slot == "Helmet":
-		return loadout.helmet
-	if slot == "Trinket":
-		return loadout.trinket
-	return null
+	return LoadoutSlotHelperScript.loadout_item(loadout, slot)
 
 
 func _set_loadout_item(loadout: UnitLoadoutDefinition, slot: String, item: ItemDefinition) -> void:
-	if slot == "Weapon":
-		loadout.weapon = item
-	elif slot == "Armor":
-		loadout.armor = item
-	elif slot == "Helmet":
-		loadout.helmet = item
-	elif slot == "Trinket":
-		loadout.trinket = item
+	LoadoutSlotHelperScript.set_loadout_item(loadout, slot, item)
 
 
 func _campaign_unit_ids(units: Array[UnitDefinition]) -> Array[String]:

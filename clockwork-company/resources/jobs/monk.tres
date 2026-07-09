@@ -1,0 +1,102 @@
+[gd_resource type="Resource" script_class="JobDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/job_definition.gd" id="job_script"]
+[ext_resource type="Script" path="res://scripts/data/skill_definition.gd" id="skill_script"]
+[ext_resource type="Script" path="res://scripts/data/passive_definition.gd" id="passive_script"]
+[ext_resource type="Script" path="res://scripts/data/reaction_definition.gd" id="reaction_script"]
+[ext_resource type="Script" path="res://scripts/data/tactic_definition.gd" id="tactic_script"]
+[ext_resource type="Script" path="res://scripts/data/effect_definition.gd" id="effect_script"]
+[ext_resource type="Resource" path="res://resources/statuses/regeneration.tres" id="status_regeneration"]
+
+[sub_resource type="Resource" id="Monk_Regen_Ally"]
+script = ExtResource("effect_script")
+display_name = "Regenerate Ally"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Skill Completed"
+target_selector = "Lowest HP Allied Unit"
+effect_type = "Apply Status"
+status = ExtResource("status_regeneration")
+
+[sub_resource type="Resource" id="Monk_Transfer_Ailments"]
+script = ExtResource("effect_script")
+display_name = "Transfer Allied Ailments"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Skill Used"
+target_selector = "Self"
+effect_type = "Transfer Statuses"
+status_polarity = "Ailment"
+amount_target_selector = "Allied Units"
+
+[sub_resource type="Resource" id="Monk_Unarmed_Bonus"]
+script = ExtResource("effect_script")
+display_name = "Unarmed Bonus"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Attack"
+condition = "Owner Is Unarmed"
+target_selector = "Attack Target"
+effect_type = "Add Attack Damage"
+amount = 3
+
+[sub_resource type="Resource" id="Monk_Seal_Third"]
+script = ExtResource("effect_script")
+display_name = "Seal Third Consecutive Attack"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Consecutive Attack"
+condition = "Event Count At Least"
+target_selector = "Event Target"
+effect_type = "Seal Next Attack"
+counter_threshold = 3
+
+[sub_resource type="Resource" id="Skill_Open_Palm"]
+script = ExtResource("skill_script")
+display_name = "Open Palm"
+tooltip_text = "Attack, then apply Regeneration to the lowest-HP ally."
+action = "Attack"
+effects = [SubResource("Monk_Regen_Ally")]
+
+[sub_resource type="Resource" id="Skill_Shoulder_the_Burden"]
+script = ExtResource("skill_script")
+display_name = "Shoulder the Burden"
+tooltip_text = "Transfer allied ailments onto the Monk."
+action = "Effects Only"
+default_target = "Self"
+effects = [SubResource("Monk_Transfer_Ailments")]
+
+[sub_resource type="Resource" id="Passive_Empty_Hand_Discipline"]
+script = ExtResource("passive_script")
+display_name = "Empty-Hand Discipline"
+tooltip_text = "Unarmed attacks hit harder, and repeated attacks seal the target's next attack."
+passive_type = "None"
+effects = [SubResource("Monk_Unarmed_Bonus"), SubResource("Monk_Seal_Third")]
+
+[sub_resource type="Resource" id="Reaction_Untouched_Breath"]
+script = ExtResource("reaction_script")
+display_name = "Untouched Breath"
+tooltip_text = "Current-engine stand-in for untouched discipline: recover when damaged."
+trigger = "Damaged"
+condition = "Always"
+reaction_type = "Heal Self"
+amount = 4
+cooldown_turns = 3
+
+[sub_resource type="Resource" id="Tactic_Use_Open_Palm"]
+script = ExtResource("tactic_script")
+display_name = "Use Open Palm"
+tooltip_text = "Use Open Palm is this job template default tactic."
+condition = "Enemy Alive"
+action = "Job Skill"
+target = "Frontmost Enemy"
+
+[resource]
+script = ExtResource("job_script")
+display_name = "Monk"
+tooltip_text = "Monk is a clean-slate authored job Resource based on the current design notes. Growth and abilities are visible for tuning."
+max_hp_growth = 2
+physical_damage_growth = 1
+action_speed_growth = 2
+forbid_weapon = true
+skill = SubResource("Skill_Open_Palm")
+secondary_skill = SubResource("Skill_Shoulder_the_Burden")
+passive = SubResource("Passive_Empty_Hand_Discipline")
+reaction = SubResource("Reaction_Untouched_Breath")
+default_tactic = SubResource("Tactic_Use_Open_Palm")

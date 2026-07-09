@@ -2,8 +2,8 @@
 extends Resource
 class_name EffectDefinition
 
-const STATUS_EFFECT_TYPES := ["Apply Status", "Maintain Status Aura", "Consume Status", "Detonate Status", "Gather Status", "Restore Max HP Lost To Status"]
-const DURATION_STATUS_EFFECT_TYPES := ["Apply Status", "Replace Requested Status", "Gather Status", "Transfer Statuses"]
+const STATUS_EFFECT_TYPES := ["Apply Status", "Maintain Status Aura", "Consume Status", "Detonate Status", "Gather Status", "Fuse Elemental Ailments", "Restore Max HP Lost To Status"]
+const DURATION_STATUS_EFFECT_TYPES := ["Apply Status", "Replace Requested Status", "Gather Status", "Transfer Statuses", "Fuse Elemental Ailments"]
 const AMOUNT_EFFECT_TYPES := ["Apply Status", "Deal Damage", "Heal", "Grant Armor", "Grant Battle Armor", "Grant Energy Shield", "Delay Action", "Apply Haste", "Increase Action Speed For Battle", "Add Attack Damage", "Modify Stat", "Modify Counter", "Begin Enemy Action Healing"]
 const MODIFIER_DURATION_EFFECT_TYPES := ["Modify Stat", "Apply Haste", "Fortify Damage", "Redirect Enemy Attacks"]
 const STATUS_AMOUNT_SOURCES := ["Target Max HP Times Event Status Stacks", "Target Status Stacks", "Event Target Status Stacks", "Defeated Target Status Stacks", "Total Status Stacks On Selected Group", "Total Status Max HP Loss On Selected Group", "Target Pending Status Damage"]
@@ -18,10 +18,12 @@ const TARGET_TAG_CONDITIONS := ["Target Has Tag", "Target Missing Tag"]
 	set(value):
 		display_name = value
 		resource_name = value
+## Player-facing summary shown at the top of resource tooltips.
+@export_multiline var tooltip_text := ""
 ## Shared TagDefinition resources. Target tag conditions compare these IDs against runtime unit tags.
 @export var tags: Array[Resource] = []
 ## Combat event that can wake this effect. Changing it may reveal event-only fields such as requested/applied status matching.
-@export_enum("Battle Start", "Battle State Changed", "Turn Start", "Turn Complete", "Action Completed", "Skill Used", "Skill Completed", "Attack", "Consecutive Attack", "Enemy Attack Targeted", "Hit", "Kill", "Death", "Ailment Damaged", "Damaged", "Physically Damaged", "Magically Damaged", "HP Below Threshold", "Damage Requested", "Healing Requested", "Healing Received", "Ally Overhealed", "Reaction Requested", "Status Application Requested", "Status Removal Requested", "Status Applied", "Externally Sourced Status Applied", "Enemy Status Applied", "Status Removed", "Reaction Triggered") var trigger := "Battle Start":
+@export_enum("Battle Start", "Battle State Changed", "Turn Start", "Turn Complete", "Action Completed", "Skill Used", "Skill Completed", "Attack", "Consecutive Attack", "Enemy Attack Targeted", "Hit", "Kill", "Death", "Ailment Damaged", "Damaged", "Physically Damaged", "Magically Damaged", "HP Below Threshold", "Damage Requested", "Healing Requested", "Healing Received", "Ally Overhealed", "Reaction Requested", "Status Application Requested", "Status Removal Requested", "Status Applied", "Owner Applied Ailment", "Externally Sourced Status Applied", "Enemy Status Applied", "Status Removed", "Reaction Triggered") var trigger := "Battle Start":
 	set(value):
 		trigger = value
 		notify_property_list_changed()
@@ -31,9 +33,9 @@ const TARGET_TAG_CONDITIONS := ["Target Has Tag", "Target Missing Tag"]
 		condition = value
 		notify_property_list_changed()
 ## Unit or units affected by the effect. Event-relative targets are only valid for triggers that provide that event participant.
-@export_enum("Self", "Event Source", "Event Target", "Attack Target", "Attacker", "Killer", "All Units", "Allied Units", "Enemy Units", "Lowest HP Allied Unit", "Random Allied Unit", "Random Damaged Allied Unit", "Random Enemy Unit") var target_selector := "Self"
+@export_enum("Self", "Event Source", "Event Target", "Attack Target", "Attacker", "Killer", "All Units", "Allied Units", "Enemy Units", "Lowest HP Allied Unit", "Random Allied Unit", "Random Damaged Allied Unit", "Random Enemy Unit", "Most Ailmented Enemy Unit") var target_selector := "Self"
 ## Result produced when the effect resolves. This selection controls most of the conditional fields below.
-@export_enum("Gain Armor", "Bonus Damage", "Reduce Target Armor", "Heal Self", "Damage Killer", "Increase Max HP", "Apply Status", "Maintain Status Aura", "Replace Requested Status", "Remove Status", "Consume Status", "Detonate Status", "Gather Status", "Transfer Statuses", "Restore Max HP Lost To Status", "Deal Damage", "Heal", "Grant Armor", "Grant Battle Armor", "Grant Energy Shield", "Disable Armor", "Delay Action", "Apply Haste", "Increase Action Speed For Battle", "Fortify Damage", "Redirect Enemy Attacks", "Add Attack Damage", "Modify Stat", "Modify Counter", "Reset Counter", "Seal Next Attack", "Prevent Request", "Execute Target", "Begin Enemy Action Healing", "Prepare Base Attack") var effect_type := "Gain Armor":
+@export_enum("Gain Armor", "Bonus Damage", "Reduce Target Armor", "Heal Self", "Damage Killer", "Increase Max HP", "Apply Status", "Maintain Status Aura", "Replace Requested Status", "Remove Status", "Consume Status", "Detonate Status", "Gather Status", "Transfer Statuses", "Fuse Elemental Ailments", "Transfer Defeated Ailments", "Restore Max HP Lost To Status", "Deal Damage", "Heal", "Grant Armor", "Grant Battle Armor", "Grant Energy Shield", "Disable Armor", "Delay Action", "Apply Haste", "Increase Action Speed For Battle", "Fortify Damage", "Redirect Enemy Attacks", "Add Attack Damage", "Modify Stat", "Modify Counter", "Reset Counter", "Seal Next Attack", "Prevent Request", "Execute Target", "Begin Enemy Action Healing", "Prepare Base Attack") var effect_type := "Gain Armor":
 	set(value):
 		effect_type = value
 		notify_property_list_changed()
@@ -152,7 +154,9 @@ func _validate_property(property: Dictionary) -> void:
 		_hide(property)
 	elif property_name == "counter_threshold" and not COUNTER_CONDITIONS.has(condition):
 		_hide(property)
-	elif property_name in ["amount_multiplier", "amount_divisor"] and not _uses_amount_scaling():
+	elif property_name == "amount_multiplier" and not _uses_amount_scaling():
+		_hide(property)
+	elif property_name == "amount_divisor" and not (_uses_amount_scaling() or effect_type == "Fuse Elemental Ailments"):
 		_hide(property)
 	elif property_name == "interval_time" and not INTERVAL_AMOUNT_SOURCES.has(amount_source):
 		_hide(property)
@@ -199,6 +203,10 @@ func support_error() -> String:
 				return "Replace Requested Status replacements must be boons."
 	if effect_type in ["Consume Status", "Detonate Status", "Gather Status", "Restore Max HP Lost To Status"] and status == null:
 		return "%s requires a status." % effect_type
+	if effect_type == "Fuse Elemental Ailments" and (status == null or status.status_type != "Elemental Fusion"):
+		return "Fuse Elemental Ailments requires an Elemental Fusion output status."
+	if effect_type == "Transfer Defeated Ailments" and (trigger != "Reaction Triggered" or target_selector != "Most Ailmented Enemy Unit"):
+		return "Transfer Defeated Ailments requires Reaction Triggered + Most Ailmented Enemy Unit."
 	if effect_type == "Remove Status":
 		if status_removal_mode == "Specific Status" and status == null:
 			return "Specific Status removal requires a status."
@@ -224,7 +232,7 @@ func support_error() -> String:
 		return "Requested Status Matches requires a status request trigger."
 	if condition == "Applied Status Matches" and condition_status == null:
 		return "Applied Status Matches requires a condition status."
-	if condition == "Applied Status Matches" and not trigger in ["Status Applied", "Externally Sourced Status Applied", "Enemy Status Applied"]:
+	if condition == "Applied Status Matches" and not trigger in ["Status Applied", "Owner Applied Ailment", "Externally Sourced Status Applied", "Enemy Status Applied"]:
 		return "Applied Status Matches requires a status-applied trigger."
 	if amount_source in ["Target Status Stacks", "Event Target Status Stacks", "Defeated Target Status Stacks", "Total Status Stacks On Selected Group", "Total Status Max HP Loss On Selected Group", "Target Pending Status Damage"] and amount_status == null and status == null:
 		return "%s requires a status." % amount_source
@@ -253,7 +261,7 @@ func support_error() -> String:
 	return "%s + %s + %s is not a supported effect combination." % [trigger, effect_type, target_selector]
 
 
-const SHARED_EFFECT_TYPES := ["Apply Status", "Maintain Status Aura", "Replace Requested Status", "Remove Status", "Consume Status", "Detonate Status", "Gather Status", "Transfer Statuses", "Restore Max HP Lost To Status", "Deal Damage", "Heal", "Grant Armor", "Grant Battle Armor", "Grant Energy Shield", "Disable Armor", "Delay Action", "Apply Haste", "Increase Action Speed For Battle", "Fortify Damage", "Redirect Enemy Attacks", "Add Attack Damage", "Modify Stat", "Modify Counter", "Reset Counter", "Seal Next Attack", "Prevent Request", "Execute Target", "Begin Enemy Action Healing", "Prepare Base Attack"]
+const SHARED_EFFECT_TYPES := ["Apply Status", "Maintain Status Aura", "Replace Requested Status", "Remove Status", "Consume Status", "Detonate Status", "Gather Status", "Transfer Statuses", "Fuse Elemental Ailments", "Transfer Defeated Ailments", "Restore Max HP Lost To Status", "Deal Damage", "Heal", "Grant Armor", "Grant Battle Armor", "Grant Energy Shield", "Disable Armor", "Delay Action", "Apply Haste", "Increase Action Speed For Battle", "Fortify Damage", "Redirect Enemy Attacks", "Add Attack Damage", "Modify Stat", "Modify Counter", "Reset Counter", "Seal Next Attack", "Prevent Request", "Execute Target", "Begin Enemy Action Healing", "Prepare Base Attack"]
 const REQUEST_TRIGGERS := ["Damage Requested", "Healing Requested", "Reaction Requested", "Status Application Requested", "Status Removal Requested"]
 
 

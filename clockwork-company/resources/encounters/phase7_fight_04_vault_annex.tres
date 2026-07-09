@@ -1,12 +1,11 @@
-[gd_resource type="Resource" script_class="EncounterDefinition" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="EncounterDefinition" format=3]
 
 [ext_resource type="Script" path="res://scripts/data/encounter_definition.gd" id="1_encounter"]
-[ext_resource type="Resource" path="res://resources/units/vault_bulwark.tres" id="2_bulwark"]
-[ext_resource type="Resource" path="res://resources/units/clockwork_runner.tres" id="3_runner"]
-[ext_resource type="Resource" path="res://resources/units/glass_adept.tres" id="4_adept"]
+[ext_resource type="Resource" path="res://resources/units/sparring_adept.tres" id="2_enemy"]
+[ext_resource type="Resource" path="res://resources/units/sparring_support.tres" id="3_enemy"]
 
 [resource]
 script = ExtResource("1_encounter")
 display_name = "Vault Annex Patrol"
-scout_text = "A tank, a fast support-scout, and a focused damage apprentice."
-enemy_units = [ExtResource("2_bulwark"), ExtResource("3_runner"), ExtResource("4_adept")]
+scout_text = "A clean-slate sparring pair: one elemental attacker and one support tempo unit."
+enemy_units = [ExtResource("2_enemy"), ExtResource("3_enemy")]

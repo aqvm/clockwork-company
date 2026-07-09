@@ -1,11 +1,19 @@
-extends VBoxContainer
+extends PanelContainer
 class_name PartyPanel
 
 const PlanningStatPreviewScript := preload("res://scripts/ui/planning_stat_preview.gd")
+const UIStyleHelperScript := preload("res://scripts/ui/ui_style_helper.gd")
 
 signal unit_selected(unit_name: String)
 signal resource_tooltip_requested(source: Control, resource: Resource)
 signal tooltip_cleared
+
+var content: VBoxContainer = null
+
+
+func _ready() -> void:
+	UIStyleHelperScript.apply_panel(self)
+	_ensure_content()
 
 
 func show_party(units: Array[UnitDefinition], selected_unit_name: String) -> void:
@@ -14,7 +22,8 @@ func show_party(units: Array[UnitDefinition], selected_unit_name: String) -> voi
 
 	var title := Label.new()
 	title.text = "Party"
-	add_child(title)
+	UIStyleHelperScript.style_heading(title)
+	content.add_child(title)
 
 	for unit: UnitDefinition in units:
 		var preview: Dictionary = previews.get(unit.display_name, {})
@@ -25,7 +34,7 @@ func show_party(units: Array[UnitDefinition], selected_unit_name: String) -> voi
 		button.button_pressed = unit.display_name == selected_unit_name
 		button.pressed.connect(_on_unit_button_pressed.bind(unit.display_name))
 		_bind_resource_tooltip(button, unit)
-		add_child(button)
+		content.add_child(button)
 
 
 func _on_unit_button_pressed(unit_name: String) -> void:
@@ -46,5 +55,15 @@ func _on_resource_mouse_exited() -> void:
 
 
 func _clear_children() -> void:
-	for child in get_children():
+	_ensure_content()
+	for child in content.get_children():
 		child.queue_free()
+
+
+func _ensure_content() -> void:
+	if content != null:
+		return
+	content = VBoxContainer.new()
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content.add_theme_constant_override("separation", 6)
+	add_child(content)

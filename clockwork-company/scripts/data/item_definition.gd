@@ -5,6 +5,8 @@ class_name ItemDefinition
 
 ## Item name shown in planning, equipment lists, combat setup logs, and tooltips.
 @export var display_name := ""
+## Player-facing summary shown at the top of resource tooltips.
+@export_multiline var tooltip_text := ""
 ## Shared TagDefinition resources for filtering, content organization, and future conditions.
 @export var tags: Array[Resource] = []
 ## Equipment slot this item occupies. Content validation rejects items equipped in the wrong slot.

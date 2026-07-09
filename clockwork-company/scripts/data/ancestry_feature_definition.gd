@@ -8,6 +8,8 @@ class_name AncestryFeatureDefinition
 	set(value):
 		display_name = value
 		resource_name = value
+## Player-facing summary shown at the top of resource tooltips.
+@export_multiline var tooltip_text := ""
 ## Shared TagDefinition resources. A `magic` tag makes `Attack` + `Bonus Damage` add magic damage instead of physical damage.
 @export var tags: Array[Resource] = []
 ## Combat event that can trigger this ancestry feature.

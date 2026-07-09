@@ -7,6 +7,8 @@ class_name SkillDefinition
 	set(value):
 		display_name = value
 		resource_name = value
+## Player-facing summary shown at the top of resource tooltips.
+@export_multiline var tooltip_text := ""
 ## Shared TagDefinition resources for filtering, future conditions, and damage tagging. A `magic` tag can affect some attack-damage handling.
 @export var tags: Array[Resource] = []
 ## Main action performed when this skill resolves. This controls which action-specific fields are visible.

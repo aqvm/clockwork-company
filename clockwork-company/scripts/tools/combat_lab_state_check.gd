@@ -2,6 +2,7 @@ extends SceneTree
 
 const CombatLabStateScript := preload("res://scripts/devtools/combat_lab_state.gd")
 const DefinitionCloneHelperScript := preload("res://scripts/data/definition_clone_helper.gd")
+const UnitStateScript := preload("res://scripts/combat/runtime/unit_state.gd")
 
 
 func _init() -> void:
@@ -20,12 +21,12 @@ func _init() -> void:
 	assert(state.allied_units[0] != allied_catalog, "Added allied unit should be a clone, not the canonical catalog Resource.")
 	assert(state.enemy_units[0] != enemy_catalog, "Added enemy unit should be a clone, not the canonical catalog Resource.")
 	assert(DefinitionCloneHelperScript.content_id(state.allied_units[0]) == DefinitionCloneHelperScript.content_id(allied_catalog), "Clone should preserve catalog content id metadata.")
-	assert(not state.catalog_ancestries.is_empty(), "Combat Lab should load authored ancestries.")
 	assert(not state.catalog_jobs.is_empty(), "Combat Lab should load authored jobs.")
 	assert(not state.catalog_skills.is_empty(), "Combat Lab should expose authored job skills.")
 	assert(not state.catalog_passives.is_empty(), "Combat Lab should expose authored job passives.")
 	assert(not state.catalog_reactions.is_empty(), "Combat Lab should expose authored job reactions.")
 	assert(not state.catalog_tactics.is_empty(), "Combat Lab should load authored tactic templates.")
+	_assert_template_pyromancer_job_kit_is_active(state)
 
 	assert(state.duplicate_unit(CombatLabStateScript.TEAM_ALLIES, 0), "Duplicate should succeed for an existing allied unit.")
 	assert(state.allied_units.size() == 2, "Duplicate should add one allied unit.")
@@ -51,16 +52,23 @@ func _init() -> void:
 
 	state.add_catalog_unit_to_team(enemy_catalog, CombatLabStateScript.TEAM_ENEMIES)
 	var equipment_item_index: int = _first_equippable_item_index(state, CombatLabStateScript.TEAM_ALLIES, 0)
-	assert(equipment_item_index >= 0, "Combat Lab state check needs one equippable catalog item.")
-	var catalog_item: ItemDefinition = state.catalog_items[equipment_item_index]
-	var original_item_name := catalog_item.display_name
-	assert(state.equip_catalog_item(CombatLabStateScript.TEAM_ALLIES, 0, catalog_item.slot, equipment_item_index), "Equipment edit should equip a catalog item clone.")
-	var equipped_item := _equipped_item_for_slot(state.allied_units[0], catalog_item.slot)
-	assert(equipped_item != null and equipped_item != catalog_item, "Equipped lab item should be a clone, not the canonical catalog item.")
-	equipped_item.display_name = "%s Lab Copy" % original_item_name
-	assert(catalog_item.display_name == original_item_name, "Mutating equipped lab item clone must not mutate the catalog item.")
-	assert(state.set_ancestry(CombatLabStateScript.TEAM_ALLIES, 0, 0), "Combat Lab should assign an authored ancestry.")
-	assert(state.allied_units[0].ancestry == state.catalog_ancestries[0], "Ancestry assignment should update the intended lab clone.")
+	var catalog_item: ItemDefinition = null
+	var equipped_item: ItemDefinition = null
+	var original_item_name := ""
+	if equipment_item_index >= 0:
+		catalog_item = state.catalog_items[equipment_item_index]
+		original_item_name = catalog_item.display_name
+		assert(state.equip_catalog_item(CombatLabStateScript.TEAM_ALLIES, 0, catalog_item.slot, equipment_item_index), "Equipment edit should equip a catalog item clone.")
+		equipped_item = _equipped_item_for_slot(state.allied_units[0], catalog_item.slot)
+		assert(equipped_item != null and equipped_item != catalog_item, "Equipped lab item should be a clone, not the canonical catalog item.")
+		equipped_item.display_name = "%s Lab Copy" % original_item_name
+		assert(catalog_item.display_name == original_item_name, "Mutating equipped lab item clone must not mutate the catalog item.")
+	if state.catalog_ancestries.is_empty():
+		assert(state.set_ancestry(CombatLabStateScript.TEAM_ALLIES, 0, -1), "Combat Lab should allow clearing ancestry when no authored ancestries exist.")
+		assert(state.allied_units[0].ancestry == null, "Ancestry assignment should stay empty when no authored ancestry catalog exists.")
+	else:
+		assert(state.set_ancestry(CombatLabStateScript.TEAM_ALLIES, 0, 0), "Combat Lab should assign an authored ancestry.")
+		assert(state.allied_units[0].ancestry == state.catalog_ancestries[0], "Ancestry assignment should update the intended lab clone.")
 	assert(state.set_current_job(CombatLabStateScript.TEAM_ALLIES, 0, 0), "Combat Lab should assign an authored current job.")
 	assert(state.allied_units[0].loadout.current_job == state.catalog_jobs[0], "Job assignment should update the intended lab clone.")
 	assert(state.set_equipped_feature(CombatLabStateScript.TEAM_ALLIES, 0, "skill", 0), "Combat Lab should assign an authored skill.")
@@ -81,12 +89,15 @@ func _init() -> void:
 	_assert_setup_save_load_round_trip(state, catalog_item, original_item_name)
 	var first_report: Dictionary = state.run_battle_report()
 	_assert_report_surfaces(first_report)
-	assert(_report_contains_text(first_report, equipped_item.display_name), "Equipment edits should affect the battle report.")
+	if equipped_item != null:
+		assert(_report_contains_text(first_report, equipped_item.display_name), "Equipment edits should affect the battle report.")
 	state.remove_unit(CombatLabStateScript.TEAM_ALLIES, 1)
 	var second_report: Dictionary = state.run_battle_report()
 	_assert_report_surfaces(second_report)
 	assert(first_report != second_report, "Changing the matchup and rerunning should produce a newly resolved report.")
-	assert(_report_contains_text(second_report, equipped_item.display_name), "Equipment edits should survive a rerun after changing the matchup.")
+	if equipped_item != null:
+		assert(_report_contains_text(second_report, equipped_item.display_name), "Equipment edits should survive a rerun after changing the matchup.")
+	_assert_large_lab_matchup_runs()
 
 	state.allied_units[0].max_hp = original_allied_hp + 99
 	assert(allied_catalog.max_hp == original_allied_hp, "Mutating a lab clone must not mutate the original catalog unit.")
@@ -104,6 +115,40 @@ func _assert_report_surfaces(report: Dictionary) -> void:
 	assert(report.has("replay_snapshots") and not report["replay_snapshots"].is_empty(), "Report should include replay snapshots.")
 	assert(report.has("contribution_summary") and not report["contribution_summary"].is_empty(), "Report should include battle contribution rows.")
 	assert(report.has("winner"), "Report should include a winner.")
+
+
+func _assert_template_pyromancer_job_kit_is_active(state) -> void:
+	for unit in state.catalog_units:
+		if DefinitionCloneHelperScript.content_id(unit) != "template_pyromancer":
+			continue
+		var runtime_unit = UnitStateScript.new(unit, 0)
+		assert(runtime_unit.current_skill != null and runtime_unit.current_skill.display_name == "Apply Burn", "Template Pyromancer should use the Pyromancer primary action.")
+		assert(runtime_unit.current_secondary_skill != null and runtime_unit.current_secondary_skill.display_name == "Hot on Their Heels", "Template Pyromancer should use the Pyromancer bridge action.")
+		assert(runtime_unit.current_passive != null and runtime_unit.current_passive.display_name == "Fiery Soul", "Template Pyromancer should activate the Pyromancer passive.")
+		assert(runtime_unit.current_reaction != null and runtime_unit.current_reaction.display_name == "Ember Reversal", "Template Pyromancer should activate the Pyromancer reaction.")
+		return
+	assert(false, "Combat Lab catalog should include template_pyromancer.")
+
+
+func _assert_large_lab_matchup_runs() -> void:
+	var large_state = CombatLabStateScript.new()
+	large_state.load_catalog([])
+	large_state.clear_all()
+	_add_units_for_team(large_state, CombatLabStateScript.TEAM_ALLIES, 3)
+	_add_units_for_team(large_state, CombatLabStateScript.TEAM_ENEMIES, 4)
+	assert(large_state.allied_units.size() == 3 and large_state.enemy_units.size() == 4, "Large lab matchup fixture should build the intended party sizes.")
+	var report: Dictionary = large_state.run_battle_report()
+	_assert_report_surfaces(report)
+	assert(not String("\n".join(report.get("lines", []))).contains("Combat event count exceeded"), "Large lab matchup should not hit the structured event safety limit.")
+
+
+func _add_units_for_team(state, team: String, count: int) -> void:
+	for unit in state.catalog_units:
+		if unit.team != team:
+			continue
+		state.add_catalog_unit_to_team(unit, team)
+		if state.team_units(team).size() >= count:
+			return
 
 
 func _first_catalog_unit_for_team(state, team: String) -> UnitDefinition:
@@ -160,7 +205,8 @@ func _assert_setup_save_load_round_trip(state, catalog_item: ItemDefinition, ori
 	assert(String(setup.get("setup_id", "")).is_empty() == false, "Serialized setup should include a setup id.")
 	assert(not _contains_resource(setup), "Serialized setup dictionary should contain content ids, not Resource objects.")
 	assert(_first_unit_entry(setup, "allied_units").get("base_unit_id", "") is String, "Serialized setup should include unit content ids.")
-	assert(_first_unit_entry(setup, "allied_units").get("equipment", {}).get(catalog_item.slot, null) is String, "Serialized equipment should use item content ids.")
+	if catalog_item != null:
+		assert(_first_unit_entry(setup, "allied_units").get("equipment", {}).get(catalog_item.slot, null) is String, "Serialized equipment should use item content ids.")
 
 	var loaded = CombatLabStateScript.new()
 	loaded.load_catalog([])
@@ -168,10 +214,11 @@ func _assert_setup_save_load_round_trip(state, catalog_item: ItemDefinition, ori
 	_assert_same_setup(state, loaded)
 	assert(loaded.run_battle_report().has("winner"), "A loaded setup should run through the real CombatSimulator.")
 
-	var loaded_item := _equipped_item_for_slot(loaded.allied_units[0], catalog_item.slot)
-	assert(loaded_item != null and loaded_item != catalog_item, "Loaded equipment should be cloned away from catalog content.")
-	loaded_item.display_name = "%s Loaded Copy" % original_item_name
-	assert(catalog_item.display_name == original_item_name, "Mutating loaded equipment must not mutate catalog content.")
+	if catalog_item != null:
+		var loaded_item := _equipped_item_for_slot(loaded.allied_units[0], catalog_item.slot)
+		assert(loaded_item != null and loaded_item != catalog_item, "Loaded equipment should be cloned away from catalog content.")
+		loaded_item.display_name = "%s Loaded Copy" % original_item_name
+		assert(catalog_item.display_name == original_item_name, "Mutating loaded equipment must not mutate catalog content.")
 
 	var loaded_tactic: TacticDefinition = loaded.allied_units[0].loadout.tactics[0]
 	var catalog_tactic: TacticDefinition = loaded.catalog_tactics[0]

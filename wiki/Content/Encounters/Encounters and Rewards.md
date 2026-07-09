@@ -13,16 +13,16 @@ tags:
 
 # Encounters and Rewards
 
-Encounters are fixed authored enemy parties built from normal units, jobs, gear, loadouts, ancestries, and tactics. Rewards are curated offers that point to normal item Resources.
+Encounters are fixed authored enemy parties built from normal units, jobs, loadouts, and tactics. Rewards are curated offers that point to normal item Resources when item content exists.
 
 Enemy parties should demonstrate coherent buildcraft and teach readable matchup lessons. They do not use a separate monster-only ruleset.
 
-Scenario rewards should mostly be gear choices because equipment is the primary between-scenario buildcraft lever.
+Scenario rewards should mostly be gear choices once item content returns because equipment is the primary between-scenario buildcraft lever.
 
 ## Current Catalog
 
 - Encounters: `clockwork-company/resources/encounters/`
-- Rewards: `clockwork-company/resources/rewards/`
+- Rewards: `clockwork-company/resources/rewards/` is currently empty after character gear cleanup.
 - Scenarios that compose them: [[Scenarios]]
 
 ## Implementation

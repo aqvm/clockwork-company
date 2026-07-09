@@ -6,3 +6,4 @@
 script = ExtResource("1_tag_definition")
 tag_id = "enemy_alive"
 display_name = "Enemy Alive"
+description = "Enemy Alive is a content tag used to group related mechanics, filters, and future authoring rules. It does not do anything by itself unless a rule explicitly checks for it."

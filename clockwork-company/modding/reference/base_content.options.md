@@ -38,7 +38,7 @@ Required:
 Optional fields:
 - `display_name` (`String`)
 - `polarity` (`String enum`): `Boon`, `Ailment`
-- `status_type` (`String enum`): `Confusion`, `Reconstitution`, `Regeneration`, `Bleed`, `Burning`, `Numb`, `Frost`, `Ward`, `Rot`, `Renewal`
+- `status_type` (`String enum`): `Confusion`, `Reconstitution`, `Regeneration`, `Bleed`, `Burning`, `Numb`, `Frost`, `Shock`, `Elemental Fusion`, `Ward`, `Rot`, `Renewal`
 - `stacking_rule` (`String enum`): `Ignore`, `Refresh`, `Intensify`
 - `default_duration_turns` (`int`, default `3`): affected owner turns used by status applications unless the skill/effect sets `override_status_duration`.
 - `default_is_permanent` (`bool`, default `false`): when true, status applications are permanent unless the skill/effect sets `override_status_duration`.
@@ -46,7 +46,8 @@ Optional fields:
 - `max_stacks` (`int`, minimum `1`)
 - `tags` (`Array[String]`): canonical tag IDs. Resource-authored content uses shared `TagDefinition` resources for the same IDs.
 - `amount` (`int`, minimum `0`): flat amount used by statuses such as Bleed.
-- `amount_percent` (`int`, 1-100): percentage used by statuses such as Reconstitution and Frost.
+- `amount_percent` (`int`, 1-100): percentage used by statuses such as Reconstitution, Frost, and Elemental Fusion's physical amplification.
+- `propagation_percent` (`int`, 1-100): percentage of incoming pre-shield magic damage propagated by Shock and Elemental Fusion.
 - `elapses_naturally` (`bool`, default `true`): when false, owner turns do not reduce finite duration; explicit removal is required.
 - `description` (`String`)
 
@@ -62,6 +63,8 @@ Current status behavior:
 - `Bleed` intensifies to five stacks and deals its authored `amount` per stack after the afflicted unit completes an action. It does not expire naturally.
 - `Numb` prevents the afflicted unit's reactions from triggering.
 - `Frost` is uncapped. The next physical damage request against the afflicted unit gains the authored `amount_percent` of its post-armor physical damage per stack, rounded up, then Frost is removed. Nonphysical damage does not consume it.
+- `Shock` is uncapped and does not elapse naturally. When incoming magic damage can propagate at least 1 damage, Shock consumes one stack and arcs its authored `propagation_percent`, rounded down, to at most three other living allies. It uses incoming pre-Energy-Shield magic damage capped by the target's pre-hit HP plus Energy Shield, so overkill does not inflate arcs. Recipients prioritize highest combined Shock and Elemental Fusion stacks, then lowest Energy Shield, then stable roster order. Arc damage is magic damage, preserves the original source, and can recursively discharge conductive ailments.
+- `Elemental Fusion` is an uncapped composite ailment. It deals authored `amount` action damage per stack and consumes one stack like Burning; amplifies physical damage by `amount_percent` per stack and is removed like Frost; and propagates `propagation_percent` of incoming magic damage while consuming one stack like Shock.
 - `Burning` is uncapped. It deals its authored `amount` per stack after the afflicted unit completes an action, then loses one stack. Healing or protecting a Burning unit immediately Scorches the supporter, delaying their next action by 2 per current Burn stack. Scorched is a named timeline consequence/event, not a status.
 - `Ward` consumes one stack to prevent an incoming ailment.
 - `Rot` reduces maximum HP by its authored `amount` per stack whenever actual healing lands.
@@ -74,6 +77,7 @@ Required:
 
 Optional fields:
 - `display_name` (`String`)
+- `tooltip_text` (`String`): optional player-facing prose shown at the top of resource tooltips.
 - `tags` (`Array[String]`): canonical tag IDs. Resource-authored content uses shared `TagDefinition` resources for the same IDs.
 - `min_max_hp` / `max_max_hp` (`int`): future deterministic generation range for starting max HP.
 - `min_physical_damage` / `max_physical_damage` (`int`): future generation range for starting physical damage.
@@ -101,6 +105,7 @@ Current behavior:
 
 Optional fields:
 - `display_name` (`String`)
+- `tooltip_text` (`String`): optional player-facing prose shown at the top of resource tooltips.
 - `tags` (`Array[String]`): canonical tag IDs. Resource-authored content uses shared `TagDefinition` resources for the same IDs.
 - `trigger` (`String enum`): `Battle Start`, `Attack`, `Kill`, `Damaged`, `HP Below Threshold`
 - `condition` (`String enum`): `Always`, `Self HP Below Percent`
@@ -126,6 +131,7 @@ Required:
 
 Optional fields:
 - `display_name` (`String`)
+- `tooltip_text` (`String`): optional player-facing prose shown at the top of resource tooltips.
 - `tags` (`Array[String]`): canonical tag IDs for future conditions, filtering, and content organization. Resource-authored content uses shared `TagDefinition` resources for the same IDs.
 - `slot` (`String enum`): `Weapon`, `Armor`, `Helmet`, `Trinket`
 - `max_hp_modifier` (`int`)
@@ -141,12 +147,13 @@ Item effects must be authored in `effects[]`. The old top-level `trigger`, `effe
 
 Optional fields:
 - `display_name` (`String`)
+- `tooltip_text` (`String`): optional player-facing prose shown at the top of resource tooltips.
 - `tags` (`Array[String]`): canonical tag IDs used by tag conditions and future content tools. Resource-authored content uses shared `TagDefinition` resources for the same IDs.
-- `trigger` (`String enum`): `Battle Start`, `Battle State Changed`, `Turn Start`, `Turn Complete`, `Action Completed`, `Skill Used`, `Skill Completed`, `Attack`, `Consecutive Attack`, `Enemy Attack Targeted`, `Hit`, `Kill`, `Death`, `Ailment Damaged`, `Damaged`, `Physically Damaged`, `Magically Damaged`, `HP Below Threshold`, `Damage Requested`, `Healing Requested`, `Healing Received`, `Ally Overhealed`, `Reaction Requested`, `Status Application Requested`, `Status Removal Requested`, `Status Applied`, `Externally Sourced Status Applied`, `Enemy Status Applied`, `Status Removed`, `Reaction Triggered`
+- `trigger` (`String enum`): `Battle Start`, `Battle State Changed`, `Turn Start`, `Turn Complete`, `Action Completed`, `Skill Used`, `Skill Completed`, `Attack`, `Consecutive Attack`, `Enemy Attack Targeted`, `Hit`, `Kill`, `Death`, `Ailment Damaged`, `Damaged`, `Physically Damaged`, `Magically Damaged`, `HP Below Threshold`, `Damage Requested`, `Healing Requested`, `Healing Received`, `Ally Overhealed`, `Reaction Requested`, `Status Application Requested`, `Status Removal Requested`, `Status Applied`, `Owner Applied Ailment`, `Externally Sourced Status Applied`, `Enemy Status Applied`, `Status Removed`, `Reaction Triggered`
 - `condition` (`String enum`): `Always`, `Event Source Is Not Owner`, `Owner Is Unarmed`, `Event Count At Least`, `Self HP Below Percent`, `Target Has Tag`, `Target Missing Tag`, `Target Status Stacks At Least`, `Target Pending Status Damage At Least HP`, `Owner Counter At Least`, `Target Counter At Least`, `Requested Status Matches`, `Applied Status Matches`
-- `target_selector` (`String enum`): `Self`, `Event Source`, `Event Target`, `Attack Target`, `Attacker`, `Killer`, `All Units`, `Allied Units`, `Enemy Units`, `Lowest HP Allied Unit`, `Random Allied Unit`, `Random Damaged Allied Unit`, `Random Enemy Unit`
-- `effect_type` (`String enum`): `Gain Armor`, `Bonus Damage`, `Reduce Target Armor`, `Heal Self`, `Damage Killer`, `Increase Max HP`, `Apply Status`, `Maintain Status Aura`, `Replace Requested Status`, `Remove Status`, `Consume Status`, `Detonate Status`, `Gather Status`, `Transfer Statuses`, `Restore Max HP Lost To Status`, `Deal Damage`, `Heal`, `Grant Armor`, `Grant Battle Armor`, `Grant Energy Shield`, `Disable Armor`, `Delay Action`, `Apply Haste`, `Increase Action Speed For Battle`, `Fortify Damage`, `Redirect Enemy Attacks`, `Add Attack Damage`, `Modify Stat`, `Modify Counter`, `Reset Counter`, `Seal Next Attack`, `Prevent Request`, `Execute Target`, `Begin Enemy Action Healing`, `Prepare Base Attack`
-- `status_id` (`String`): required for `Apply Status` and `Specific Status` removal; references a `statuses[].id`.
+- `target_selector` (`String enum`): `Self`, `Event Source`, `Event Target`, `Attack Target`, `Attacker`, `Killer`, `All Units`, `Allied Units`, `Enemy Units`, `Lowest HP Allied Unit`, `Random Allied Unit`, `Random Damaged Allied Unit`, `Random Enemy Unit`, `Most Ailmented Enemy Unit`
+- `effect_type` (`String enum`): `Gain Armor`, `Bonus Damage`, `Reduce Target Armor`, `Heal Self`, `Damage Killer`, `Increase Max HP`, `Apply Status`, `Maintain Status Aura`, `Replace Requested Status`, `Remove Status`, `Consume Status`, `Detonate Status`, `Gather Status`, `Transfer Statuses`, `Fuse Elemental Ailments`, `Transfer Defeated Ailments`, `Restore Max HP Lost To Status`, `Deal Damage`, `Heal`, `Grant Armor`, `Grant Battle Armor`, `Grant Energy Shield`, `Disable Armor`, `Delay Action`, `Apply Haste`, `Increase Action Speed For Battle`, `Fortify Damage`, `Redirect Enemy Attacks`, `Add Attack Damage`, `Modify Stat`, `Modify Counter`, `Reset Counter`, `Seal Next Attack`, `Prevent Request`, `Execute Target`, `Begin Enemy Action Healing`, `Prepare Base Attack`
+- `status_id` (`String`): references a `statuses[].id`; required by status-specific effects and conditions, including `Apply Status`, `Specific Status` removal, and `Fuse Elemental Ailments`.
 - `condition_status_id` (`String`): status matched by `Applied Status Matches`, independently of any status applied by the effect.
 - `amount_status_id` (`String`): optional status read by status-based amount formulas. Falls back to `status_id`.
 - `replacement_status_ids` (`Array[String]`): explicit deterministic-random boon pool used by `Replace Requested Status`.
@@ -166,7 +173,7 @@ Optional fields:
 - `amount_target_selector` (`String enum`): `Self`, `All Units`, `Allied Units`, `Enemy Units`; selects the units aggregated by `Total Status Stacks On Selected Group`.
 - `counter_name` (`String`): required by counter sources, `Modify Counter`, `Reset Counter`, and `Overhealing Diminishing`.
 - `counter_threshold` (`int`, default `1`): used by counter-threshold conditions and `Event Count At Least`.
-- `amount_multiplier` / `amount_divisor` (`int`, minimum `1`): scale the selected amount source after it is read.
+- `amount_multiplier` / `amount_divisor` (`int`, minimum `1`): scale the selected amount source after it is read. `Fuse Elemental Ailments` also uses `amount_divisor` as its stack-conversion divisor and rounds up.
 - `interval_time` (`int`, minimum `1`, default `10`): inclusive discrete timeline interval used by interval-based damage amount sources.
 - `amount` (`int`)
 - `damage_type` (`String enum`): `Magic`, `Physical`. Physical authored damage passes through armor and physical-damage hooks such as Frost.
@@ -190,6 +197,8 @@ Currently implemented item effect combinations:
 - `Replace Requested Status` prevents a matching status-application request and grants one deterministic-random boon from its explicit replacement pool.
 - `Gather Status` removes the referenced status from the selected amount group and reapplies the total gathered stacks to each effect target.
 - `Transfer Statuses` moves every status matching `status_polarity` from `amount_target_selector` to each effect target, preserving stacks and duration. The destination is excluded from the source group.
+- `Fuse Elemental Ailments` removes all Burning, Shock, and Frost from each effect target, totals the removed stacks, divides by authored `amount_divisor`, rounds up, and applies that many stacks of the referenced `Elemental Fusion` status.
+- `Transfer Defeated Ailments` requires `Reaction Triggered` + `Most Ailmented Enemy Unit`. It reapplies every ailment carried by the defeated event target to the selected living enemy, preserving stacks, remaining duration, permanence, and source name. Moved stacks are marked as transfers rather than new applications.
 - `Restore Max HP Lost To Status` removes the referenced status and restores maximum HP recorded as lost to that status. Restored maximum HP remains empty.
 - `Grant Armor` adds temporary guard armor that expires through the normal guard-armor lifecycle.
 - `Grant Battle Armor` adds battle-local armor that lasts for the encounter and participates in ordinary armor reduction.
@@ -213,6 +222,8 @@ Currently implemented item effect combinations:
 - `Total Status Max HP Loss On Selected Group` totals maximum HP loss recorded by the referenced status across the selected amount group.
 - `Damaged`, `Physically Damaged`, and `Magically Damaged` inspect actual dealt damage. A mixed-damage event can satisfy all three.
 - `Enemy Status Applied` observes statuses gained by opposing units. `Applied Status Stacks` is the number of stacks actually added, excluding refreshes and stacks blocked by caps.
+- `Owner Applied Ailment` observes positive ailment stacks newly applied by the effect owner. It excludes moved/transferred stacks, allowing `Applied Status Stacks` to reward new applications without repeatedly rewarding the same stacks.
+- `Most Ailmented Enemy Unit` selects the living enemy with the most total ailment stacks, then lowest current HP, then stable roster order.
 - `Ailment Damaged` observes positive HP damage tagged as caused by an ailment. Absorbed or prevented damage does not qualify. Rot qualifies only when its maximum-HP reduction also lowers current HP.
 - `Target Recent Damage` reads actual HP damage from the target's current unfinished action window plus its immediately preceding completed-action window.
 - `Target Damage Taken Within Interval` reads actual HP loss suffered by the target since `current_time - interval_time`, inclusive.
@@ -234,6 +245,7 @@ Required:
 
 Optional fields:
 - `display_name` (`String`)
+- `tooltip_text` (`String`): optional player-facing prose shown at the top of resource tooltips.
 - `tags` (`Array[String]`): canonical tag IDs. Resource-authored content uses shared `TagDefinition` resources for the same IDs.
 - `max_hp_growth` (`int`): permanent HP gained per level in this job.
 - `physical_damage_growth` (`int`): permanent physical damage gained per level in this job.
@@ -249,7 +261,8 @@ Optional fields:
 - `passive` (`Dictionary`): current job passive payload. See `jobs[].passive` below.
 - `reaction` (`Dictionary`): current job reaction payload. See `jobs[].reaction` below.
 - `default_tactic` (`Dictionary`): tactic automatically appended while this is the unit's current job. See `jobs[].default_tactic` below.
-- Job unlock timing is fixed: level 1 chooses skill or reaction, level 2 unlocks the passive, and level 3 unlocks the remaining skill or reaction. A job's secondary skill unlocks with its normal skill and is not a separate learned assignment.
+- Runtime current-job kit: a unit's current job supplies its primary skill, secondary skill, passive, reaction, and default tactic. Loadout `equipped_*_job_id` fields are learned cross-job overrides, not required for the current job's own passive/reaction to work.
+- Job unlock timing is fixed for learned cross-job assignment: level 1 chooses skill or reaction, level 2 unlocks the passive, and level 3 unlocks the remaining skill or reaction. A job's secondary skill unlocks with its normal skill and is not a separate learned assignment.
 
 Equipment note:
 - Equipment is allowed by default. Use `forbid_weapon`, `forbid_armor`, `forbid_helmet`, and `forbid_trinket` only when a job concept explicitly forbids a category.
@@ -259,6 +272,7 @@ Equipment note:
 
 Optional fields:
 - `display_name` (`String`)
+- `tooltip_text` (`String`): optional player-facing prose shown at the top of resource tooltips.
 - `tags` (`Array[String]`): canonical tag IDs. Resource-authored content uses shared `TagDefinition` resources for the same IDs.
 - `action` (`String enum`): `Attack`, `Heal`, `Guard`, `Apply Status`, `Effects Only`
 - `default_target` (`String enum`): `Self`, `Lowest HP Ally`, `Frontmost Enemy`
@@ -283,6 +297,7 @@ Currently implemented skill actions:
 
 Optional fields:
 - `display_name` (`String`)
+- `tooltip_text` (`String`): optional player-facing prose shown at the top of resource tooltips.
 - `tags` (`Array[String]`): canonical tag IDs. Resource-authored content uses shared `TagDefinition` resources for the same IDs.
 - `passive_type` (`String enum`): `None`, `Attack Damage Bonus`, `Heal Bonus`, `Guard Armor Bonus`, `Forecast`, `Extend Allied Buff Duration`
 - `Extend Allied Buff Duration` uses `amount` as a percentage. The strongest living allied copy applies once to finite naturally-elapsing Boons, positive temporary stat modifiers, and temporary Haste from any source. It does not alter transferred existing durations or battle-long action-speed increases.
@@ -296,8 +311,9 @@ Optional fields:
 
 Optional fields:
 - `display_name` (`String`)
+- `tooltip_text` (`String`): optional player-facing prose shown at the top of resource tooltips.
 - `tags` (`Array[String]`): canonical tag IDs. Resource-authored content uses shared `TagDefinition` resources for the same IDs.
-- `trigger` (`String enum`): `Damaged`, `Physically Damaged`, `Magically Damaged`, `Ally Magically Damaged`, `HP Below Threshold`, `Lethal Physical Attack Requested`, `Attack Targets Another Ally`, `Status Application Requested`, `Ally Ailment Applied`, `Enemy Healing Requested`, `Enemy Status Threshold Reached`, `Enemy Died With Status`
+- `trigger` (`String enum`): `Damaged`, `Physically Damaged`, `Magically Damaged`, `Ally Magically Damaged`, `HP Below Threshold`, `Lethal Physical Attack Requested`, `Attack Targets Another Ally`, `Status Application Requested`, `Ally Ailment Applied`, `Enemy Healing Requested`, `Enemy Status Threshold Reached`, `Enemy Died With Status`, `Enemy Died With Ailments`
 - `condition` (`String enum`): `Always`, `Self HP Below Percent`, `Self Status Stacks At Least`, `Requested Status Is Ailment`, `Requested Status Matches`
 - `reaction_type` (`String enum`): `Gain Armor`, `Heal Self`, `Damage Attacker`, `Effects Only`
 - `amount` (`int`)
@@ -316,6 +332,7 @@ Currently implemented reaction timing:
 - `Ally Ailment Applied` fires after an ailment successfully applies to any living ally, including the reaction owner. Prevented applications do not fire it.
 - `Ally Magically Damaged` fires after any living ally, including the reaction owner, suffers positive magic HP damage.
 - `Enemy Died With Status` checks the defeated enemy's preserved status snapshot and requires the reaction's referenced status.
+- `Enemy Died With Ailments` checks that the defeated enemy carried at least one ailment stack. Its reaction payload preserves the full defeat snapshot for `Transfer Defeated Ailments`.
 - `Enemy Healing Requested` checks before an opposing unit receives healing. Request-preventing reactions can replace that heal through their `Reaction Triggered` effects.
 - `Lethal Physical Attack Requested` checks the final pending attack damage after armor and request modifiers. Its `Reaction Triggered` effects inherit the pending damage amount, and request prevention cancels that damage.
 - `Attack Targets Another Ally` checks before an enemy attack target becomes authoritative and redirects that attack to the reacting unit. It does not fire when the reacting unit was already targeted.
@@ -331,6 +348,7 @@ Currently implemented reaction timing:
 
 Optional fields:
 - `display_name` (`String`)
+- `tooltip_text` (`String`): optional player-facing prose shown at the top of resource tooltips.
 - `tags` (`Array[String]`): canonical tag IDs. Resource-authored content uses shared `TagDefinition` resources for the same IDs.
 - `condition` (`String enum`): `Always`, `Self HP Below Half`, `Ally HP Below Half`, `Enemy Alive`, `Target Has Status`, `Target Status Stacks At Least`, `Target Pending Status Damage At Least HP`, `Target Slower Than Self`
 - `action` (`String enum`): `Attack`, `Heal`, `Guard`, `Job Skill`, `Secondary Skill`, `Assigned Skill`
@@ -345,6 +363,7 @@ Required:
 
 Optional fields:
 - `display_name` (`String`)
+- `tooltip_text` (`String`): optional player-facing prose shown at the top of resource tooltips.
 - `tags` (`Array[String]`): canonical tag IDs. Resource-authored content uses shared `TagDefinition` resources for the same IDs.
 - `condition` (`String enum`): `Always`, `Self HP Below Half`, `Ally HP Below Half`, `Enemy Alive`, `Target Has Status`, `Target Status Stacks At Least`, `Target Pending Status Damage At Least HP`, `Target Slower Than Self`
 - `action` (`String enum`): `Attack`, `Heal`, `Guard`, `Job Skill`, `Secondary Skill`, `Assigned Skill`
@@ -361,10 +380,11 @@ Required:
 
 Optional fields:
 - `display_name` (`String`)
+- `tooltip_text` (`String`): optional player-facing prose shown at the top of resource tooltips.
 - `current_job_id` (`String` or empty string)
 - `equipped_skill_job_id` (`String` or empty string): source job for the assigned cross-job skill.
-- `equipped_passive_job_id` (`String` or empty string): source job for the assigned learned passive.
-- `equipped_reaction_job_id` (`String` or empty string): source job for the assigned learned reaction.
+- `equipped_passive_job_id` (`String` or empty string): source job for the assigned learned passive. Empty means the current job's passive remains active.
+- `equipped_reaction_job_id` (`String` or empty string): source job for the assigned learned reaction. Empty means the current job's reaction remains active.
 - `weapon_id` (`String` or empty string)
 - `armor_id` (`String` or empty string)
 - `helmet_id` (`String` or empty string)
@@ -391,6 +411,7 @@ Required:
 
 Optional fields:
 - `display_name` (`String`)
+- `tooltip_text` (`String`): optional player-facing prose shown at the top of resource tooltips.
 - `tags` (`Array[String]`): canonical tag IDs. Resource-authored content uses shared `TagDefinition` resources for the same IDs.
 - `team` (`String enum`): `Allies`, `Enemies`
 - `ancestry_id` (`String` or empty string)

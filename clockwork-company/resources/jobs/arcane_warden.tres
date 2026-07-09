@@ -1,0 +1,101 @@
+[gd_resource type="Resource" script_class="JobDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/job_definition.gd" id="job_script"]
+[ext_resource type="Script" path="res://scripts/data/skill_definition.gd" id="skill_script"]
+[ext_resource type="Script" path="res://scripts/data/passive_definition.gd" id="passive_script"]
+[ext_resource type="Script" path="res://scripts/data/reaction_definition.gd" id="reaction_script"]
+[ext_resource type="Script" path="res://scripts/data/tactic_definition.gd" id="tactic_script"]
+[ext_resource type="Script" path="res://scripts/data/effect_definition.gd" id="effect_script"]
+
+[sub_resource type="Resource" id="Warden_Link_Damage"]
+script = ExtResource("effect_script")
+display_name = "Link Damage"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Skill Used"
+target_selector = "Event Target"
+effect_type = "Deal Damage"
+amount = 6
+damage_type = "Magic"
+
+[sub_resource type="Resource" id="Warden_Ally_Shield"]
+script = ExtResource("effect_script")
+display_name = "Ally Shield"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Skill Used"
+target_selector = "Event Target"
+effect_type = "Grant Energy Shield"
+amount = 6
+
+[sub_resource type="Resource" id="Warden_Damage_To_Shield"]
+script = ExtResource("effect_script")
+display_name = "Damage to Shield"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Damaged"
+target_selector = "Self"
+effect_type = "Grant Energy Shield"
+amount_source = "Event Amount"
+
+[sub_resource type="Resource" id="Warden_Detonation"]
+script = ExtResource("effect_script")
+display_name = "Detonation Stand-In"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Reaction Triggered"
+target_selector = "Enemy Units"
+effect_type = "Deal Damage"
+amount = 12
+damage_type = "Physical"
+once_per_battle = true
+
+[sub_resource type="Resource" id="Skill_Hostile_Link"]
+script = ExtResource("skill_script")
+display_name = "Hostile Link"
+tooltip_text = "Current-engine stand-in for enemy linking: deal magic damage."
+action = "Effects Only"
+effects = [SubResource("Warden_Link_Damage")]
+
+[sub_resource type="Resource" id="Skill_Protective_Link"]
+script = ExtResource("skill_script")
+display_name = "Protective Link"
+tooltip_text = "Current-engine stand-in for ally linking: grant Energy Shield."
+action = "Effects Only"
+default_target = "Lowest HP Ally"
+effects = [SubResource("Warden_Ally_Shield")]
+
+[sub_resource type="Resource" id="Passive_Pain_Transmutation"]
+script = ExtResource("passive_script")
+display_name = "Pain Transmutation"
+tooltip_text = "Convert damage taken into Energy Shield. Healing penalty is not yet represented."
+passive_type = "None"
+effects = [SubResource("Warden_Damage_To_Shield")]
+
+[sub_resource type="Resource" id="Reaction_Shield_Detonation"]
+script = ExtResource("reaction_script")
+display_name = "Shield Detonation"
+tooltip_text = "Once per battle, when badly hurt, damage all enemies."
+trigger = "HP Below Threshold"
+condition = "Always"
+reaction_type = "Effects Only"
+threshold_percent = 50
+cooldown_turns = 99
+effects = [SubResource("Warden_Detonation")]
+
+[sub_resource type="Resource" id="Tactic_Use_Hostile_Link"]
+script = ExtResource("tactic_script")
+display_name = "Use Hostile Link"
+tooltip_text = "Use Hostile Link is this job template default tactic."
+condition = "Enemy Alive"
+action = "Job Skill"
+target = "Frontmost Enemy"
+
+[resource]
+script = ExtResource("job_script")
+display_name = "Arcane Warden"
+tooltip_text = "Arcane Warden is a clean-slate authored job Resource based on the current design notes. Growth and abilities are visible for tuning."
+max_hp_growth = 2
+magic_damage_growth = 2
+action_speed_growth = 2
+skill = SubResource("Skill_Hostile_Link")
+secondary_skill = SubResource("Skill_Protective_Link")
+passive = SubResource("Passive_Pain_Transmutation")
+reaction = SubResource("Reaction_Shield_Detonation")
+default_tactic = SubResource("Tactic_Use_Hostile_Link")

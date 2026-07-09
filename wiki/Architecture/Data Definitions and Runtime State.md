@@ -22,7 +22,7 @@ Definition scripts: `clockwork-company/scripts/data/`
 
 ## Runtime State
 
-`UnitState` copies definition data at battle start and owns current HP, next action time, armor, temporary modifiers, cooldowns, statuses, counters, and other battle-local state.
+`UnitState` copies definition data at battle start and owns current HP, next action time, armor, temporary modifiers, cooldowns, statuses, counters, and other battle-local state. Runtime clone mechanics live in `UnitStateCloneHelper` so speculative combat and [[Foretell]] can copy state without mixing clone plumbing into every combat rule.
 
 Battle-only state resets between encounters. Durable campaign state stores unit definitions/progress, loadouts, equipment, inventory, and campaign progression instead.
 
@@ -42,6 +42,7 @@ Combat Lab setups are lightweight developer fixtures, not canonical authored con
 - `clockwork-company/scripts/data/`
 - `clockwork-company/scripts/data/definition_clone_helper.gd`
 - `clockwork-company/scripts/combat/runtime/unit_state.gd`
+- `clockwork-company/scripts/combat/runtime/unit_state_clone_helper.gd`
 - `clockwork-company/scripts/campaign/campaign_roster_state.gd`
 - `clockwork-company/scripts/devtools/combat_lab_state.gd`
 - `clockwork-company/devtools/combat_lab_setups/`

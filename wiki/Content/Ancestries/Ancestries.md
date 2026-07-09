@@ -15,13 +15,7 @@ Each ancestry can define future stat-generation ranges, baseline growth applied 
 
 ## Current Catalog
 
-- **Brassbound:** clockwork body with `Spring Return`.
-- **Emberkin:** magic/fire identity with `Ember Vein`.
-- **Hollow:** fragile echo/survival identity with `Second Echo`.
-- **Minotaur:** large physical identity with `Goring Charge`.
-- **Redcap:** swift bloodied identity with `Blood Rush`.
-- **Stonekin:** durable guard identity with `Stone Memory`.
-- **Typhon-born:** many-headed helmet/prophecy identity with `Many-Crowned`; future two-helmet capacity is not implemented.
+No authored ancestry Resources are present after the character-content cleanup. Template characters currently use explicit base stats with no ancestry so job mechanics can be inspected without inherited body features.
 
 ## Implementation
 

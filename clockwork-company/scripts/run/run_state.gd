@@ -8,6 +8,7 @@ const UnitLoadoutDefinitionScript := preload("res://scripts/data/unit_loadout_de
 const TacticDefinitionScript := preload("res://scripts/data/tactic_definition.gd")
 const ItemDefinitionScript := preload("res://scripts/data/item_definition.gd")
 const JobProgressDefinitionScript := preload("res://scripts/data/job_progress_definition.gd")
+const DefinitionCloneHelperScript := preload("res://scripts/data/definition_clone_helper.gd")
 const ScenarioRunnerScript := preload("res://scripts/scenario/scenario_runner.gd")
 const STATUS_ACTIVE := "active"
 const STATUS_REWARD := "reward"
@@ -22,11 +23,7 @@ const ENCOUNTER_PATHS := [
 	"res://resources/encounters/phase7_fight_04_vault_annex.tres",
 	"res://resources/encounters/phase7_fight_05_clocktower.tres",
 ]
-const REWARD_PATHS := [
-	"res://resources/rewards/guardplate_for_alden.tres",
-	"res://resources/rewards/honed_blade_for_mira.tres",
-	"res://resources/rewards/focus_lens_for_sol.tres",
-]
+const REWARD_PATHS := []
 const META_CAMPAIGN_UNIT_ID := "campaign_unit_id"
 const META_CONTENT_ID := "content_id"
 
@@ -152,6 +149,14 @@ func complete_fight(report: Dictionary) -> void:
 			last_result_summary = "Scenario complete: %s. %s" % [active_scenario.display_name, active_scenario.story_outro]
 		else:
 			last_result_summary = "Run won after fight %d. The party cleared the five-fight slice." % current_fight_number()
+		return
+
+	if reward_options().is_empty():
+		fight_index += 1
+		if scenario_runner != null:
+			scenario_runner.progress.current_encounter_index = fight_index
+		status = STATUS_ACTIVE
+		last_result_summary = "Encounter %d cleared. No rewards are currently authored; ready for encounter %d: %s." % [fight_index, current_fight_number(), current_encounter_name()]
 		return
 
 	status = STATUS_REWARD
@@ -303,7 +308,8 @@ func _load_reward_definitions() -> Array:
 		var reward = load(path)
 		if reward != null:
 			rewards.append(reward)
-	assert(rewards.size() == REWARD_PATHS.size(), "Phase 7 run reward list is missing one or more rewards.")
+		else:
+			push_warning("Optional legacy reward missing: %s" % path)
 	return rewards
 
 
@@ -426,81 +432,19 @@ func _ensure_loadout_clone(unit: UnitDefinition) -> UnitLoadoutDefinition:
 
 
 func _clone_unit_definition(source: UnitDefinition) -> UnitDefinition:
-	var copy: UnitDefinition = UnitDefinitionScript.new()
-	_copy_content_id(source, copy)
-	_copy_campaign_unit_id(source, copy)
-	copy.display_name = source.display_name
-	copy.tags = source.tags.duplicate()
-	copy.team = source.team
-	copy.ancestry = source.ancestry
-	copy.max_hp = source.max_hp
-	copy.physical_damage = source.physical_damage
-	copy.magic_damage = source.magic_damage
-	copy.armor = source.armor
-	copy.action_speed = source.action_speed
-	copy.job_progress = _clone_job_progress(source.job_progress)
-	copy.loadout = _clone_loadout_definition(source.loadout) if source.loadout != null else null
-	return copy
+	return DefinitionCloneHelperScript.clone_unit_definition(source)
 
 
 func _clone_loadout_definition(source: UnitLoadoutDefinition) -> UnitLoadoutDefinition:
-	var copy: UnitLoadoutDefinition = UnitLoadoutDefinitionScript.new()
-	_copy_content_id(source, copy)
-	copy.display_name = source.display_name
-	copy.current_job = source.current_job
-	copy.equipped_skill = source.equipped_skill
-	copy.equipped_passive = source.equipped_passive
-	copy.equipped_reaction = source.equipped_reaction
-	copy.weapon = _clone_item_definition(source.weapon) if source.weapon != null else null
-	copy.armor = _clone_item_definition(source.armor) if source.armor != null else null
-	copy.helmet = _clone_item_definition(source.helmet) if source.helmet != null else null
-	copy.trinket = _clone_item_definition(source.trinket) if source.trinket != null else null
-	var tactics: Array[TacticDefinition] = []
-	for source_tactic in source.tactics:
-		if source_tactic == null:
-			continue
-		var tactic: TacticDefinition = TacticDefinitionScript.new()
-		_copy_content_id(source_tactic, tactic)
-		tactic.display_name = source_tactic.display_name
-		tactic.tags = source_tactic.tags.duplicate()
-		tactic.condition = source_tactic.condition
-		tactic.action = source_tactic.action
-		tactic.target = source_tactic.target
-		tactic.foretell_enabled = source_tactic.foretell_enabled
-		tactics.append(tactic)
-	copy.tactics = tactics
-	return copy
+	return DefinitionCloneHelperScript.clone_loadout_definition(source)
 
 
 func _clone_item_definition(source: ItemDefinition) -> ItemDefinition:
-	var copy: ItemDefinition = ItemDefinitionScript.new()
-	_copy_content_id(source, copy)
-	copy.display_name = source.display_name
-	copy.tags = source.tags.duplicate()
-	copy.slot = source.slot
-	copy.max_hp_modifier = source.max_hp_modifier
-	copy.physical_damage_modifier = source.physical_damage_modifier
-	copy.magic_damage_modifier = source.magic_damage_modifier
-	copy.armor_modifier = source.armor_modifier
-	copy.action_speed_modifier = source.action_speed_modifier
-	copy.effects = source.effects.duplicate()
-	return copy
+	return DefinitionCloneHelperScript.clone_item_definition(source)
 
 
 func _clone_job_progress(source: Array[JobProgressDefinition]) -> Array[JobProgressDefinition]:
-	var results: Array[JobProgressDefinition] = []
-	for progress: JobProgressDefinition in source:
-		if progress == null:
-			continue
-		var copy: JobProgressDefinition = JobProgressDefinitionScript.new()
-		copy.job = progress.job
-		copy.level = progress.level
-		copy.skill_unlocked = progress.skill_unlocked
-		copy.passive_unlocked = progress.passive_unlocked
-		copy.reaction_unlocked = progress.reaction_unlocked
-		copy.pending_unlock_choice = progress.pending_unlock_choice
-		results.append(copy)
-	return results
+	return DefinitionCloneHelperScript.clone_job_progress(source)
 
 
 func _content_id(resource: Resource) -> String:

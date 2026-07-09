@@ -5,6 +5,8 @@ class_name UnitDefinition
 
 ## Unit name shown in rosters, combat logs, planning panels, and tooltips.
 @export var display_name := ""
+## Player-facing summary shown at the top of resource tooltips.
+@export_multiline var tooltip_text := ""
 ## Shared TagDefinition resources for filtering, target tag conditions, and content organization.
 @export var tags: Array[Resource] = []
 ## Side this unit fights on when loaded directly into an encounter or lab setup.

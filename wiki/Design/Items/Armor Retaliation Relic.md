@@ -18,8 +18,8 @@ This is item-shaped because tank jobs still provide the armor plan. The item con
 
 ## Promising Job Synergies
 
-- [[Guard]], [[Bellguard]], or [[Turnkey]] can turn guard and armor loops into a damage engine.
-- [[Foundry Monk]] can make self-guarding durability feel like a furnace that punishes contact.
+- [[Aegiswright]], [[Paladin]], or [[Bruiser]] can turn armor and protection loops into a damage engine.
+- [[The Spike]] can make defensive durability feel like a furnace that punishes contact.
 - [[Paladin]] can bridge defensive barrier play into offensive pressure.
 
 ## Open Questions

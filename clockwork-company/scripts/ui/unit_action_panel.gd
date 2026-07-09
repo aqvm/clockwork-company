@@ -1,5 +1,7 @@
-extends VBoxContainer
+extends PanelContainer
 class_name UnitActionPanel
+
+const UIStyleHelperScript := preload("res://scripts/ui/ui_style_helper.gd")
 
 signal start_scenario_requested
 signal practice_scenario_requested
@@ -14,6 +16,13 @@ signal planning_tactic_move_requested(index: int, direction: int)
 signal planning_tactic_changed(index: int, field: String, value: Variant)
 signal resource_tooltip_requested(source: Control, resource: Resource)
 signal tooltip_cleared
+
+var content: VBoxContainer = null
+
+
+func _ready() -> void:
+	UIStyleHelperScript.apply_panel(self)
+	_ensure_content()
 
 
 func show_actions(
@@ -42,7 +51,8 @@ func show_actions(
 
 	var unit_label := Label.new()
 	unit_label.text = "Unit Actions"
-	add_child(unit_label)
+	UIStyleHelperScript.style_heading(unit_label)
+	_add_control(unit_label)
 	_show_unlock_options(unlock_options)
 
 	if not is_equipment_state:
@@ -57,12 +67,13 @@ func _show_unlock_options(unlock_options: Array) -> void:
 		return
 	var label := Label.new()
 	label.text = "Pending Job Unlock"
-	add_child(label)
+	UIStyleHelperScript.style_heading(label)
+	_add_control(label)
 	for option in unlock_options:
 		var button := Button.new()
 		button.text = String(option.get("label", "Choose Unlock"))
 		button.pressed.connect(func(): unlock_choice_requested.emit(String(option.get("choice", ""))))
-		add_child(button)
+		_add_control(button)
 
 
 func _add_start_button(
@@ -76,7 +87,7 @@ func _add_start_button(
 	button.text = _start_button_text(selected_scenario, selected_scenario_status)
 	button.disabled = selected_scenario == null or has_active_campaign_scenario or is_replay_active or not can_start_scenario
 	button.pressed.connect(_on_start_button_pressed)
-	add_child(button)
+	_add_control(button)
 
 
 func _add_practice_button(
@@ -91,7 +102,7 @@ func _add_practice_button(
 	button.text = "Practice %s" % selected_scenario.display_name
 	button.disabled = has_active_campaign_scenario or is_replay_active or not can_practice_scenario
 	button.pressed.connect(_on_practice_button_pressed)
-	add_child(button)
+	_add_control(button)
 
 
 func _start_button_text(selected_scenario: Resource, selected_scenario_status: String) -> String:
@@ -111,7 +122,7 @@ func _show_planning_or_locked_actions(has_active_campaign_scenario: bool, planni
 		var hint := Label.new()
 		hint.text = "Planning changes unlock after the scenario."
 		hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		add_child(hint)
+		_add_control(hint)
 		return
 
 	_show_job_selector(job_options)
@@ -124,7 +135,8 @@ func _show_planning_or_locked_actions(has_active_campaign_scenario: bool, planni
 func _show_tactic_editor(options: Array) -> void:
 	var label := Label.new()
 	label.text = "Ordered Tactics"
-	add_child(label)
+	UIStyleHelperScript.style_heading(label)
+	_add_control(label)
 	var add_options: Array = []
 	var equipped_count := 0
 	for option in options:
@@ -139,7 +151,7 @@ func _show_tactic_editor(options: Array) -> void:
 	var create_button := Button.new()
 	create_button.text = "New Tactic"
 	create_button.pressed.connect(func(): planning_tactic_add_requested.emit(null))
-	add_child(create_button)
+	_add_control(create_button)
 	if add_options.is_empty():
 		return
 	var selector := OptionButton.new()
@@ -149,13 +161,18 @@ func _show_tactic_editor(options: Array) -> void:
 		selector.add_item(String(option["label"]))
 	selector.select(0)
 	selector.item_selected.connect(_on_tactic_add_selected.bind(add_options))
-	add_child(selector)
+	_add_control(selector)
 
 
 func _add_tactic_row(index: int, option: Dictionary, tactic_count: int) -> void:
+	var panel := PanelContainer.new()
+	UIStyleHelperScript.apply_panel(panel, "row")
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_add_control(panel)
+
 	var row := VBoxContainer.new()
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	add_child(row)
+	panel.add_child(row)
 	var tactic: TacticDefinition = option["tactic"]
 	var header := HBoxContainer.new()
 	row.add_child(header)
@@ -258,7 +275,7 @@ func _show_job_selector(job_options: Array) -> void:
 			selected_index = index + 1
 	selector.select(selected_index)
 	selector.item_selected.connect(_on_job_selected.bind(job_options))
-	add_child(selector)
+	_add_control(selector)
 
 
 func _show_feature_selector(feature_type: String, options: Array) -> void:
@@ -275,13 +292,14 @@ func _show_feature_selector(feature_type: String, options: Array) -> void:
 			selected_index = index + 1
 	selector.select(selected_index)
 	selector.item_selected.connect(_on_feature_selected.bind(feature_type, options))
-	add_child(selector)
+	_add_control(selector)
 
 
 func _show_planning_equipment_browser(planning_item_options: Array) -> void:
 	var browser_label := Label.new()
 	browser_label.text = "Planning Equipment"
-	add_child(browser_label)
+	UIStyleHelperScript.style_heading(browser_label)
+	_add_control(browser_label)
 
 	var shown_any := false
 	for slot in ["Weapon", "Armor", "Helmet", "Trinket"]:
@@ -295,7 +313,7 @@ func _show_planning_equipment_browser(planning_item_options: Array) -> void:
 		var no_options := Label.new()
 		no_options.text = "No valid planning equipment for this unit."
 		no_options.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		add_child(no_options)
+		_add_control(no_options)
 
 
 func _options_for_slot(options: Array, slot: String) -> Array:
@@ -309,7 +327,7 @@ func _options_for_slot(options: Array, slot: String) -> Array:
 func _add_planning_slot_selector(slot: String, slot_options: Array) -> void:
 	var row := HBoxContainer.new()
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	add_child(row)
+	_add_control(row)
 
 	var slot_label := Label.new()
 	slot_label.text = "%s:" % slot
@@ -343,13 +361,13 @@ func _show_equipment_options(selected_unit_name: String, equip_options: Array) -
 		var button := Button.new()
 		button.text = String(option["label"])
 		button.pressed.connect(_on_equip_button_pressed.bind(index))
-		add_child(button)
+		_add_control(button)
 
 	if not added_option:
 		var no_options := Label.new()
 		no_options.text = "No valid equipment changes for this unit."
 		no_options.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		add_child(no_options)
+		_add_control(no_options)
 
 
 func _on_start_button_pressed() -> void:
@@ -389,8 +407,23 @@ func _on_tactic_add_selected(selected_index: int, options: Array) -> void:
 
 
 func _clear_children() -> void:
-	for child in get_children():
+	_ensure_content()
+	for child in content.get_children():
 		child.queue_free()
+
+
+func _add_control(control: Control) -> void:
+	_ensure_content()
+	content.add_child(control)
+
+
+func _ensure_content() -> void:
+	if content != null:
+		return
+	content = VBoxContainer.new()
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content.add_theme_constant_override("separation", 6)
+	add_child(content)
 
 
 func _bind_resource_tooltip(control: Control, resource: Resource) -> void:

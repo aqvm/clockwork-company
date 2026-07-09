@@ -18,8 +18,8 @@ This is item-shaped when its counter rules create buildcraft. The wearer still n
 
 ## Promising Job Synergies
 
-- [[Scout]], [[Cutpurse]], or [[Roofer]] can use high speed and physical attack loops to produce periodic magic area damage.
-- [[Spellsword]] can turn a hybrid attack loop into a more explicit physical-to-magic bridge.
+- [[Monk]], [[Executioner]], or [[Sanguinist]] can use repeated attack pressure to produce periodic magic area damage.
+- [[Paladin]] can turn a hybrid attack loop into a more explicit physical-to-magic bridge.
 - [[Bruiser]] becomes exciting if double strikes count as multiple attack resolutions.
 
 ## Open Questions

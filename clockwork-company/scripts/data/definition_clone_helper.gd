@@ -17,6 +17,7 @@ static func clone_unit_definition(source: UnitDefinition) -> UnitDefinition:
 	_copy_content_id(source, copy)
 	_copy_campaign_unit_id(source, copy)
 	copy.display_name = source.display_name
+	copy.tooltip_text = source.tooltip_text
 	copy.tags = source.tags.duplicate()
 	copy.team = source.team
 	copy.ancestry = source.ancestry
@@ -36,6 +37,7 @@ static func clone_loadout_definition(source: UnitLoadoutDefinition) -> UnitLoado
 	var copy: UnitLoadoutDefinition = UnitLoadoutDefinitionScript.new()
 	_copy_content_id(source, copy)
 	copy.display_name = source.display_name
+	copy.tooltip_text = source.tooltip_text
 	copy.current_job = source.current_job
 	copy.equipped_skill = source.equipped_skill
 	copy.equipped_passive = source.equipped_passive
@@ -62,6 +64,7 @@ static func clone_tactic(source: TacticDefinition) -> TacticDefinition:
 	var copy: TacticDefinition = TacticDefinitionScript.new()
 	_copy_content_id(source, copy)
 	copy.display_name = source.display_name
+	copy.tooltip_text = source.tooltip_text
 	copy.tags = source.tags.duplicate()
 	copy.condition = source.condition
 	copy.action = source.action
@@ -78,6 +81,7 @@ static func clone_item_definition(source: ItemDefinition) -> ItemDefinition:
 	var copy: ItemDefinition = ItemDefinitionScript.new()
 	_copy_content_id(source, copy)
 	copy.display_name = source.display_name
+	copy.tooltip_text = source.tooltip_text
 	copy.tags = source.tags.duplicate()
 	copy.slot = source.slot
 	copy.max_hp_modifier = source.max_hp_modifier

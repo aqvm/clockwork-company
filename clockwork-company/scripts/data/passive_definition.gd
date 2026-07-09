@@ -9,6 +9,8 @@ const AMOUNT_PASSIVE_TYPES := ["Attack Damage Bonus", "Heal Bonus", "Guard Armor
 	set(value):
 		display_name = value
 		resource_name = value
+## Player-facing summary shown at the top of resource tooltips.
+@export_multiline var tooltip_text := ""
 ## Shared TagDefinition resources for filtering and future conditions.
 @export var tags: Array[Resource] = []
 ## Built-in passive behavior. Use `None` when this passive is entirely authored through `effects`.

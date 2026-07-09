@@ -26,6 +26,8 @@ static func text_for_resource(resource) -> String:
 		text = _reaction_text(resource)
 	elif resource is TacticDefinition:
 		text = _tactic_text(resource)
+	elif resource is AncestryFeatureDefinition:
+		text = _ancestry_feature_text(resource)
 	elif resource is EffectDefinition:
 		text = _effect_text(resource)
 	elif "polarity" in resource and "status_type" in resource:
@@ -189,6 +191,7 @@ static func text_for_structured_events(events: Array[Dictionary]) -> String:
 static func _unit_text(unit: UnitDefinition) -> String:
 	var lines: Array[String] = []
 	lines.append(_title(unit))
+	_append_prose(lines, unit)
 	lines.append("Team: %s" % unit.team)
 	lines.append("Stats: HP %d, physical %d, magic %d, armor %d, speed %d" % [unit.max_hp, unit.physical_damage, unit.magic_damage, unit.armor, unit.action_speed])
 	lines.append("Tags: %s" % _join(unit.tags))
@@ -206,6 +209,7 @@ static func _unit_text(unit: UnitDefinition) -> String:
 static func _loadout_text(loadout: UnitLoadoutDefinition) -> String:
 	var lines: Array[String] = []
 	lines.append(_title(loadout))
+	_append_prose(lines, loadout)
 	lines.append("Current job: %s" % _name_or_none(loadout.current_job))
 	lines.append("Assigned skill: %s" % _name_or_none(loadout.equipped_skill))
 	lines.append("Assigned passive: %s" % _name_or_none(loadout.equipped_passive))
@@ -225,6 +229,7 @@ static func _loadout_text(loadout: UnitLoadoutDefinition) -> String:
 static func _item_text(item: ItemDefinition) -> String:
 	var lines: Array[String] = []
 	lines.append(_title(item))
+	_append_prose(lines, item)
 	lines.append("Slot: %s" % item.slot)
 	lines.append("Tags: %s" % _join(item.tags))
 	lines.append("Stats: %s" % _item_stats(item))
@@ -241,6 +246,7 @@ static func _item_text(item: ItemDefinition) -> String:
 static func _job_text(job: JobDefinition) -> String:
 	var lines: Array[String] = []
 	lines.append(_title(job))
+	_append_prose(lines, job)
 	lines.append("Tags: %s" % _join(job.tags))
 	lines.append("Growth: HP %+d, physical %+d, magic %+d, armor %+d, speed %+d" % [job.max_hp_growth, job.physical_damage_growth, job.magic_damage_growth, job.armor_growth, job.action_speed_growth])
 	var forbids: Array[String] = []
@@ -263,6 +269,8 @@ static func _job_text(job: JobDefinition) -> String:
 
 
 static func _ancestry_text(ancestry: AncestryDefinition) -> String:
+	var lines: Array[String] = [_title(ancestry)]
+	_append_prose(lines, ancestry)
 	var forbids: Array[String] = []
 	if ancestry.forbid_weapon:
 		forbids.append("weapon")
@@ -272,37 +280,85 @@ static func _ancestry_text(ancestry: AncestryDefinition) -> String:
 		forbids.append("helmet")
 	if ancestry.forbid_trinket:
 		forbids.append("trinket")
-	return "%s\nTags: %s\nGrowth: HP %+d, physical %+d, magic %+d, armor %+d, speed %+d\nForbids: %s\nFeature: %s" % [
-		_title(ancestry),
-		_join(ancestry.tags),
-		ancestry.max_hp_growth,
-		ancestry.physical_damage_growth,
-		ancestry.magic_damage_growth,
-		ancestry.armor_growth,
-		ancestry.action_speed_growth,
-		_join(forbids),
-		_name_or_none(ancestry.feature),
-	]
+	lines.append("Tags: %s" % _join(ancestry.tags))
+	lines.append("Growth: HP %+d, physical %+d, magic %+d, armor %+d, speed %+d" % [ancestry.max_hp_growth, ancestry.physical_damage_growth, ancestry.magic_damage_growth, ancestry.armor_growth, ancestry.action_speed_growth])
+	lines.append("Forbids: %s" % _join(forbids))
+	lines.append("Feature: %s" % _name_or_none(ancestry.feature))
+	return _join(lines, "\n")
 
 
 static func _skill_text(skill: SkillDefinition) -> String:
-	return "%s\nTags: %s\nAction: %s\nAttack damage: %s x%d\nTarget: %s\nStatus: %s\nStatus duration: %s\nAmount modifier: %+d\nCooldown turns: %d\nEffects: %s" % [_title(skill), _join(skill.tags), skill.action, skill.attack_damage_type, skill.attack_count, skill.default_target, _name_or_none(skill.status), _skill_status_duration_text(skill), skill.amount_modifier, skill.cooldown_turns, _join(_effect_summaries(skill.effects))]
+	var lines: Array[String] = [_title(skill)]
+	_append_prose(lines, skill)
+	lines.append("Tags: %s" % _join(skill.tags))
+	lines.append("Action: %s" % skill.action)
+	lines.append("Attack damage: %s x%d" % [skill.attack_damage_type, skill.attack_count])
+	lines.append("Target: %s" % skill.default_target)
+	lines.append("Status: %s" % _name_or_none(skill.status))
+	lines.append("Status duration: %s" % _skill_status_duration_text(skill))
+	lines.append("Amount modifier: %+d" % skill.amount_modifier)
+	lines.append("Cooldown turns: %d" % skill.cooldown_turns)
+	lines.append("Effects: %s" % _join(_effect_summaries(skill.effects)))
+	return _join(lines, "\n")
 
 
 static func _passive_text(passive: PassiveDefinition) -> String:
-	return "%s\nTags: %s\nType: %s\nAmount: %+d\nCooldown turns: %d\nEffects: %s" % [_title(passive), _join(passive.tags), passive.passive_type, passive.amount, passive.cooldown_turns, _join(_effect_summaries(passive.effects))]
+	var lines: Array[String] = [_title(passive)]
+	_append_prose(lines, passive)
+	lines.append("Tags: %s" % _join(passive.tags))
+	lines.append("Type: %s" % passive.passive_type)
+	lines.append("Amount: %+d" % passive.amount)
+	lines.append("Cooldown turns: %d" % passive.cooldown_turns)
+	lines.append("Effects: %s" % _join(_effect_summaries(passive.effects)))
+	return _join(lines, "\n")
 
 
 static func _reaction_text(reaction: ReactionDefinition) -> String:
-	return "%s\nTags: %s\nTrigger: %s\nCondition: %s\nCondition status: %s at %d stacks\nPrevents triggering request: %s\nReplacement statuses: %s\nType: %s\nAmount: %+d\nThreshold: %d%%\nCooldown turns: %d\nEffects: %s" % [_title(reaction), _join(reaction.tags), reaction.trigger, reaction.condition, _name_or_none(reaction.status), reaction.status_stack_threshold, "yes" if reaction.prevents_triggering_request else "no", _join(_resource_names(reaction.replacement_statuses)), reaction.reaction_type, reaction.amount, reaction.threshold_percent, reaction.cooldown_turns, _join(_effect_summaries(reaction.effects))]
+	var lines: Array[String] = [_title(reaction)]
+	_append_prose(lines, reaction)
+	lines.append("Tags: %s" % _join(reaction.tags))
+	lines.append("Trigger: %s" % reaction.trigger)
+	lines.append("Condition: %s" % reaction.condition)
+	lines.append("Condition status: %s at %d stacks" % [_name_or_none(reaction.status), reaction.status_stack_threshold])
+	lines.append("Prevents triggering request: %s" % ("yes" if reaction.prevents_triggering_request else "no"))
+	lines.append("Replacement statuses: %s" % _join(_resource_names(reaction.replacement_statuses)))
+	lines.append("Type: %s" % reaction.reaction_type)
+	lines.append("Amount: %+d" % reaction.amount)
+	lines.append("Threshold: %d%%" % reaction.threshold_percent)
+	lines.append("Cooldown turns: %d" % reaction.cooldown_turns)
+	lines.append("Effects: %s" % _join(_effect_summaries(reaction.effects)))
+	return _join(lines, "\n")
 
 
 static func _tactic_text(tactic: TacticDefinition) -> String:
-	return "%s\nTags: %s\nForetell: %s\nRule: %s -> %s -> %s\nCondition status: %s at %d stacks" % [_title(tactic), _join(tactic.tags), "enabled" if tactic.foretell_enabled else "disabled", tactic.condition, tactic.action, tactic.target, _name_or_none(tactic.status), tactic.status_stack_threshold]
+	var lines: Array[String] = [_title(tactic)]
+	_append_prose(lines, tactic)
+	lines.append("Tags: %s" % _join(tactic.tags))
+	lines.append("Foretell: %s" % ("enabled" if tactic.foretell_enabled else "disabled"))
+	lines.append("Rule: %s -> %s -> %s" % [tactic.condition, tactic.action, tactic.target])
+	lines.append("Condition status: %s at %d stacks" % [_name_or_none(tactic.status), tactic.status_stack_threshold])
+	return _join(lines, "\n")
+
+
+static func _ancestry_feature_text(feature: AncestryFeatureDefinition) -> String:
+	var lines: Array[String] = [_title(feature)]
+	_append_prose(lines, feature)
+	lines.append("Trigger: %s" % feature.trigger)
+	lines.append("Condition: %s" % feature.condition)
+	lines.append("Type: %s" % feature.feature_type)
+	lines.append("Amount: %+d" % feature.amount)
+	lines.append("Cooldown turns: %d" % feature.cooldown_turns)
+	var error := feature.support_error()
+	lines.append("Resolver: %s" % ("supported" if error.is_empty() else error))
+	return _join(lines, "\n")
 
 
 static func _effect_text(effect: EffectDefinition) -> String:
-	return "%s\n%s\nResolver: %s" % [_title(effect), _effect_summary(effect), _effect_support_note(effect)]
+	var lines: Array[String] = [_title(effect)]
+	_append_prose(lines, effect)
+	lines.append(_effect_summary(effect))
+	lines.append("Resolver: %s" % _effect_support_note(effect))
+	return _join(lines, "\n")
 
 
 static func _status_text(status: Resource) -> String:
@@ -316,8 +372,10 @@ static func _status_text(status: Resource) -> String:
 	]
 	if status.amount != 0:
 		lines.append("Amount: %d" % status.amount)
-	if status.status_type in ["Reconstitution", "Frost"]:
+	if status.status_type in ["Reconstitution", "Frost", "Elemental Fusion"]:
 		lines.append("Amount percent: %d%%" % status.amount_percent)
+	if status.status_type in ["Shock", "Elemental Fusion"]:
+		lines.append("Propagation percent: %d%%" % status.propagation_percent)
 	if not status.elapses_naturally:
 		lines.append("Duration: requires explicit removal")
 	lines.append(status.description)
@@ -401,6 +459,7 @@ static func _campaign_node_text(node: CampaignScenarioNodeDefinition) -> String:
 static func _generic_resource_text(resource) -> String:
 	var lines: Array[String] = []
 	lines.append(_title(resource))
+	_append_prose(lines, resource)
 	if "description" in resource and not String(resource.description).is_empty():
 		lines.append(String(resource.description))
 	if "story_intro" in resource and not String(resource.story_intro).is_empty():
@@ -410,6 +469,15 @@ static func _generic_resource_text(resource) -> String:
 	if not resource.resource_path.is_empty():
 		lines.append(resource.resource_path)
 	return _join(lines, "\n")
+
+
+static func _append_prose(lines: Array[String], resource) -> void:
+	if resource == null:
+		return
+	if "tooltip_text" in resource and not String(resource.tooltip_text).strip_edges().is_empty():
+		lines.append(String(resource.tooltip_text).strip_edges())
+	elif "notes" in resource and not String(resource.notes).strip_edges().is_empty():
+		lines.append(String(resource.notes).strip_edges())
 
 
 static func _effect_summary(effect: EffectDefinition) -> String:
@@ -553,7 +621,7 @@ static func _value_text(value) -> String:
 		var tag_id := String(value.get("tag_id"))
 		if not display_name.is_empty() or not tag_id.is_empty():
 			return display_name if not display_name.is_empty() else tag_id
-	return String(value)
+	return str(value)
 
 
 static func _with_source_note(text: String, note: String) -> String:

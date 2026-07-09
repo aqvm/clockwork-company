@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UnitLoadoutDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/unit_loadout_definition.gd" id="loadout_script"]
+[ext_resource type="Resource" path="res://resources/jobs/executioner.tres" id="job"]
+[ext_resource type="Resource" path="res://resources/tactics/template_executioner_tactic_1_ready_under_pressure.tres" id="tactic_1"]
+[ext_resource type="Resource" path="res://resources/tactics/template_executioner_tactic_2_cut_down_the_front.tres" id="tactic_2"]
+
+[resource]
+script = ExtResource("loadout_script")
+display_name = "Template Executioner"
+tooltip_text = "Clean-slate template loadout for testing the Executioner job with explicit primary and bridge tactics."
+current_job = ExtResource("job")
+tactics = [ExtResource("tactic_1"), ExtResource("tactic_2")]

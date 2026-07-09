@@ -22,8 +22,8 @@ The First Road is the current sample campaign: a linear chain of four contracts 
 
 ## Starting State
 
-- **Roster:** Alden Guard, Mira Scout, Sol Apprentice
-- **Starting unlocks:** basic jobs and basic gear
+- **Roster:** Template Pyromancer, Template Bruiser, Template Bard
+- **Starting unlocks:** clean-slate jobs
 
 Campaign progress stores attempts, completions, scenario/content unlocks, completion state, and durable roster state. Active scenario runs are not saved.
 

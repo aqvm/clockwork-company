@@ -3,6 +3,7 @@ class_name CombatReplayPanel
 
 signal replay_finished
 signal runtime_tooltip_requested(source: Control, snapshot: Dictionary)
+signal text_tooltip_requested(source: Control, text: String)
 signal structured_event_tooltip_requested(source: Control, events: Array[Dictionary])
 signal tooltip_cleared
 
@@ -15,8 +16,8 @@ const MIN_SECONDS_BETWEEN_REPLAY_ACTIONS := 0.1
 const REPLAY_SPEEDS: Array[float] = [0.5, 1.0, 2.0, 4.0]
 
 @onready var combat_log: RichTextLabel = %CombatLog
-@onready var allies_row: HBoxContainer = %AlliesRow
-@onready var enemies_row: HBoxContainer = %EnemiesRow
+@onready var allies_row: Container = %AlliesRow
+@onready var enemies_row: Container = %EnemiesRow
 
 var timer: Timer = null
 var log_highlight_palette = null
@@ -28,6 +29,7 @@ var structured_events: Array[Dictionary] = []
 var current_grouped_events: Array[Dictionary] = []
 var roster_units: Array[Dictionary] = []
 var replay_snapshots: Array[Dictionary] = []
+var log_tooltip_lookup := {}
 var snapshots_by_root_id := {}
 var units_by_name := {}
 var units_by_id := {}
@@ -50,11 +52,17 @@ func setup(replay_timer: Timer, highlight_palette) -> void:
 	timer.timeout.connect(_on_replay_timer_timeout)
 	timer.one_shot = true
 	combat_log.get_v_scroll_bar().value_changed.connect(_on_combat_log_scroll_value_changed)
+	combat_log.meta_hover_started.connect(_on_combat_log_meta_hover_started)
+	combat_log.meta_hover_ended.connect(_on_combat_log_meta_hover_ended)
 	_setup_speed_controls()
 
 
 func set_highlight_palette(highlight_palette) -> void:
 	log_highlight_palette = highlight_palette
+
+
+func set_log_tooltip_lookup(tooltip_lookup: Dictionary) -> void:
+	log_tooltip_lookup = tooltip_lookup.duplicate(true)
 
 
 func tick(delta: float) -> void:
@@ -278,7 +286,7 @@ func _on_combat_log_scroll_value_changed(_value: float) -> void:
 
 
 func _append_log_line(line: String) -> void:
-	CombatLogRichTextFormatterScript.append_line(combat_log, line, log_highlight_palette)
+	CombatLogRichTextFormatterScript.append_line(combat_log, line, log_highlight_palette, log_tooltip_lookup)
 	_scroll_combat_log_to_bottom()
 
 
@@ -493,4 +501,15 @@ func _on_runtime_tooltip_entered(source: Control) -> void:
 
 
 func _on_tooltip_exited() -> void:
+	tooltip_cleared.emit()
+
+
+func _on_combat_log_meta_hover_started(meta: Variant) -> void:
+	var text := CombatLogRichTextFormatterScript.tooltip_for_meta(meta, log_tooltip_lookup)
+	if text.is_empty():
+		return
+	text_tooltip_requested.emit(combat_log, text)
+
+
+func _on_combat_log_meta_hover_ended(_meta: Variant) -> void:
 	tooltip_cleared.emit()

@@ -5,37 +5,28 @@ For the complete schema/keywords/enums, see `base_content.options.md` in the sam
 
 ## Purpose
 
-Demonstrates three common mod actions:
-- adding a new item (`tower_shield`)
-- patching an existing loadout by id (`guard_buckler`)
-- patching an existing unit stat by id (`mira_scout`)
+Demonstrates one small mod action against the clean-slate catalog:
+- patching an existing unit by id (`template_pyromancer`)
 
 ## Keys used in this example
 
 - Top-level:
   - `pack_id`
   - `pack_version`
-  - `items`
-  - `loadouts`
   - `units`
-
-- `items[]`:
-  - `id`
-  - `display_name`
-  - `slot`
-  - `max_hp_modifier`
-  - `physical_damage_modifier`
-  - `magic_damage_modifier`
-  - `armor_modifier`
-  - `action_speed_modifier`
-
-- `loadouts[]`:
-  - `id`
-  - `armor_id`
+  - `demo_roster`
 
 - `units[]`:
   - `id`
+  - `display_name`
+  - `team`
+  - `max_hp`
+  - `physical_damage`
+  - `magic_damage`
+  - `armor`
   - `action_speed`
+  - `loadout_id`
+  - `tooltip_text`
 
 ## Usage
 

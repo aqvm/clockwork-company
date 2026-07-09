@@ -21,6 +21,8 @@ Use the narrowest focused check during implementation. Run the established compl
 - Tactic authoring: `clockwork-company/scripts/tools/tactic_authoring_check.gd`
 - Foretell: `clockwork-company/scripts/tools/forecast_mechanics_check.gd`
 - Event pipeline: `clockwork-company/scripts/tools/combat_event_pipeline_check.gd`
+- Demo battle snapshot: `clockwork-company/scripts/tools/battle_snapshot_check.gd`
+- Combat preview text: `clockwork-company/scripts/tools/combat_preview_text_builder_check.gd`
 - Content validation: `clockwork-company/scripts/tools/content_validation_check.gd`
 
 `check_all.ps1` runs Godot checks sequentially, reports each duration, and

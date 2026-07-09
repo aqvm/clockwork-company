@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="TacticDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/tactic_definition.gd" id="tactic_script"]
+
+[resource]
+script = ExtResource("tactic_script")
+display_name = "Raise the Spiritual Barrier"
+tooltip_text = "When an ally is hurt, use the bridge action to turn boons into battle armor."
+condition = "Ally HP Below Half"
+action = "Secondary Skill"
+target = "Lowest HP Ally"

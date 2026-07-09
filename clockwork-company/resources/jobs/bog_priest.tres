@@ -1,0 +1,131 @@
+[gd_resource type="Resource" script_class="JobDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/job_definition.gd" id="job_script"]
+[ext_resource type="Script" path="res://scripts/data/skill_definition.gd" id="skill_script"]
+[ext_resource type="Script" path="res://scripts/data/passive_definition.gd" id="passive_script"]
+[ext_resource type="Script" path="res://scripts/data/reaction_definition.gd" id="reaction_script"]
+[ext_resource type="Script" path="res://scripts/data/tactic_definition.gd" id="tactic_script"]
+[ext_resource type="Script" path="res://scripts/data/effect_definition.gd" id="effect_script"]
+[ext_resource type="Resource" path="res://resources/statuses/rot.tres" id="status_rot"]
+
+[sub_resource type="Resource" id="Bog_Percent_Heal"]
+script = ExtResource("effect_script")
+display_name = "Percent Heal"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Skill Used"
+target_selector = "Event Target"
+effect_type = "Heal"
+amount_source = "Target Max HP"
+amount_rounding = "Ceil"
+amount_multiplier = 35
+amount_divisor = 100
+
+[sub_resource type="Resource" id="Bog_Rot_Party_Heal"]
+script = ExtResource("effect_script")
+display_name = "Rot-Fed Party Heal"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Skill Used"
+target_selector = "Allied Units"
+effect_type = "Heal"
+amount_source = "Total Status Max HP Loss On Selected Group"
+amount_target_selector = "Enemy Units"
+amount_status = ExtResource("status_rot")
+
+[sub_resource type="Resource" id="Bog_Restore_Enemy_Rot"]
+script = ExtResource("effect_script")
+display_name = "Restore Enemy Rot"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Skill Used"
+target_selector = "Enemy Units"
+effect_type = "Restore Max HP Lost To Status"
+status = ExtResource("status_rot")
+
+[sub_resource type="Resource" id="Bog_Redistribute_Overheal"]
+script = ExtResource("effect_script")
+display_name = "Redistribute Overhealing"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Ally Overhealed"
+target_selector = "Random Damaged Allied Unit"
+effect_type = "Heal"
+amount_source = "Overhealing"
+
+[sub_resource type="Resource" id="Bog_Rot_Overhealed"]
+script = ExtResource("effect_script")
+display_name = "Rot Overhealed Ally"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Ally Overhealed"
+target_selector = "Event Target"
+effect_type = "Apply Status"
+status = ExtResource("status_rot")
+
+[sub_resource type="Resource" id="Bog_Enemy_Rot"]
+script = ExtResource("effect_script")
+display_name = "Rot Enemy Healing Target"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Reaction Triggered"
+target_selector = "Event Target"
+effect_type = "Apply Status"
+status = ExtResource("status_rot")
+
+[sub_resource type="Resource" id="Bog_Enemy_Token_Heal"]
+script = ExtResource("effect_script")
+display_name = "Token Enemy Heal"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Reaction Triggered"
+target_selector = "Event Target"
+effect_type = "Heal"
+amount = 1
+
+[sub_resource type="Resource" id="Skill_Bog_Mend"]
+script = ExtResource("skill_script")
+display_name = "Bog Mend"
+tooltip_text = "Heal the lowest-HP ally for 35% of maximum HP."
+action = "Effects Only"
+default_target = "Lowest HP Ally"
+effects = [SubResource("Bog_Percent_Heal")]
+
+[sub_resource type="Resource" id="Skill_Drain_the_Mire"]
+script = ExtResource("skill_script")
+display_name = "Drain the Mire"
+tooltip_text = "Heal allies by enemy Rot max-HP loss, then restore that loss."
+action = "Effects Only"
+default_target = "Lowest HP Ally"
+effects = [SubResource("Bog_Rot_Party_Heal"), SubResource("Bog_Restore_Enemy_Rot")]
+
+[sub_resource type="Resource" id="Passive_Waste_Not"]
+script = ExtResource("passive_script")
+display_name = "Waste Not"
+tooltip_text = "Overhealing spills to a damaged ally, then Rots the original target."
+passive_type = "None"
+effects = [SubResource("Bog_Redistribute_Overheal"), SubResource("Bog_Rot_Overhealed")]
+
+[sub_resource type="Resource" id="Reaction_Sour_Cure"]
+script = ExtResource("reaction_script")
+display_name = "Sour Cure"
+tooltip_text = "Enemy healing is prevented, twisted into Rot, and replaced by a one-point heal."
+trigger = "Enemy Healing Requested"
+condition = "Always"
+reaction_type = "Effects Only"
+prevents_triggering_request = true
+cooldown_turns = 3
+effects = [SubResource("Bog_Enemy_Rot"), SubResource("Bog_Enemy_Token_Heal")]
+
+[sub_resource type="Resource" id="Tactic_Use_Bog_Mend"]
+script = ExtResource("tactic_script")
+display_name = "Use Bog Mend"
+tooltip_text = "Use Bog Mend is this job template default tactic."
+condition = "Enemy Alive"
+action = "Job Skill"
+target = "Lowest HP Ally"
+
+[resource]
+script = ExtResource("job_script")
+display_name = "Bog Priest"
+tooltip_text = "Bog Priest is a clean-slate authored job Resource based on the current design notes. Growth and abilities are visible for tuning."
+max_hp_growth = 2
+magic_damage_growth = 1
+skill = SubResource("Skill_Bog_Mend")
+secondary_skill = SubResource("Skill_Drain_the_Mire")
+passive = SubResource("Passive_Waste_Not")
+reaction = SubResource("Reaction_Sour_Cure")
+default_tactic = SubResource("Tactic_Use_Bog_Mend")

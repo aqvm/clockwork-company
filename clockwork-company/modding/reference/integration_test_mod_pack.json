@@ -1,368 +1,95 @@
 {
-  "pack_id": "integration_test_mod_pack",
-  "display_name": "Integration Test Mod Pack",
-  "pack_version": 1,
-  "statuses": [
-    {
-      "id": "reconstitution_it",
-      "display_name": "Reconstitution IT",
-      "polarity": "Boon",
-      "status_type": "Reconstitution",
-      "stacking_rule": "Intensify",
-      "max_stacks": 3,
-      "tags": ["boon", "healing", "integration_test"],
-      "amount_percent": 50,
-      "description": "At turn start, restore half the damage received since the previous turn."
-    }
-  ],
-  "items": [
-    {
-      "id": "tower_shield_it",
-      "display_name": "Tower Shield IT",
-      "slot": "Armor",
-      "max_hp_modifier": 10,
-      "armor_modifier": 4,
-      "action_speed_modifier": -3,
-      "effects": [
-        {
-          "display_name": "Tower Shield IT Brace",
-          "tags": ["armor", "battle_start"],
-          "trigger": "Battle Start",
-          "condition": "Always",
-          "target_selector": "Self",
-          "effect_type": "Gain Armor",
-          "amount": 2,
-          "threshold_percent": 50,
-          "once_per_battle": false
-        },
-        {
-          "display_name": "Tower Shield IT Reconstitution",
-          "tags": ["boon", "status", "integration_test"],
-          "trigger": "Battle Start",
-          "condition": "Always",
-          "target_selector": "Self",
-          "effect_type": "Apply Status",
-          "status_id": "reconstitution_it",
-          "status_duration_turns": 3,
-          "status_is_permanent": false,
-          "amount": 0,
-          "threshold_percent": 50,
-          "once_per_battle": false
-        }
-      ],
-      "physical_damage_modifier": 0,
-      "magic_damage_modifier": 0
-    },
-    {
-      "id": "resolver_vocabulary_it",
-      "display_name": "Resolver Vocabulary IT",
-      "slot": "Trinket",
-      "effects": [
-        {
-          "display_name": "Resolver IT Tempo",
-          "trigger": "Turn Start",
-          "condition": "Always",
-          "target_selector": "Self",
-          "effect_type": "Modify Stat",
-          "modified_stat": "Action Speed",
-          "modifier_duration_turns": 2,
-          "amount": 1
-        },
-        {
-          "display_name": "Resolver IT Dispel",
-          "trigger": "Damaged",
-          "condition": "Always",
-          "target_selector": "Self",
-          "effect_type": "Remove Status",
-          "status_id": "reconstitution_it",
-          "status_polarity": "Boon",
-          "status_removal_mode": "Specific Status",
-          "amount": 0
-        }
-      ]
-    },
-    {
-      "id": "formula_counter_probe_it",
-      "display_name": "Formula Counter Probe IT",
-      "slot": "Trinket",
-      "effects": [
-        {
-          "display_name": "Count Turns IT",
-          "trigger": "Turn Start",
-          "condition": "Always",
-          "target_selector": "Self",
-          "effect_type": "Modify Counter",
-          "counter_name": "probe_turns",
-          "repeat_within_event_chain": true,
-          "amount": 1
-        },
-        {
-          "display_name": "Apply Counter Burning IT",
-          "trigger": "Turn Start",
-          "condition": "Owner Counter At Least",
-          "target_selector": "Self",
-          "effect_type": "Apply Status",
-          "status_id": "burning",
-          "status_stacks": 3,
-          "counter_name": "probe_turns",
-          "counter_threshold": 2,
-          "amount_source": "Target Counter",
-          "amount_multiplier": 2,
-          "amount_divisor": 1,
-          "interval_time": 12
-        }
-      ]
-    },
-    {
-      "id": "glass_focus",
-      "display_name": "Glass Focus (IT Override)",
-      "slot": "Trinket",
-      "max_hp_modifier": -6,
-      "armor_modifier": 0,
-      "action_speed_modifier": -1,
-      "effects": [
-        {
-          "display_name": "Glass Focus IT Burst",
-          "tags": ["damage", "focus", "magic"],
-          "trigger": "Attack",
-          "condition": "Always",
-          "target_selector": "Attack Target",
-          "effect_type": "Bonus Damage",
-          "amount": 4,
-          "threshold_percent": 50,
-          "once_per_battle": false
-        }
-      ],
-      "physical_damage_modifier": 0,
-      "magic_damage_modifier": 0
-    }
-  ],
-  "jobs": [
-    {
-      "id": "warden_it",
-      "display_name": "Warden IT",
-      "forbid_weapon": false,
-      "forbid_armor": false,
-      "forbid_helmet": false,
-      "forbid_trinket": false,
-      "skill": {
-        "display_name": "Warden IT Reconstitution",
-        "tags": ["boon", "status", "integration_test"],
-        "action": "Apply Status",
-        "default_target": "Self",
-        "status_id": "reconstitution_it",
-        "status_duration_turns": 5,
-        "status_is_permanent": false,
-        "amount_modifier": 0
-      },
-      "passive": {
-        "display_name": "Warden IT Habit",
-        "tags": [],
-        "passive_type": "Forecast",
-        "amount": 0,
-        "cooldown_turns": 0
-      }
-    },
-    {
-      "id": "apprentice",
-      "display_name": "Apprentice (IT Override)",
-      "forbid_weapon": false,
-      "forbid_armor": false,
-      "forbid_helmet": false,
-      "forbid_trinket": false,
-      "passive": {
-        "display_name": "Apprentice (IT Override) Habit",
-        "tags": [],
-        "passive_type": "None",
-        "amount": 0,
-        "cooldown_turns": 0
-      }
-    },
-    {
-      "id": "cleanser_it",
-      "display_name": "Cleanser IT",
-      "skill": {
-        "display_name": "Cleanser IT Purge",
-        "tags": ["cleanse", "integration_test"],
-        "action": "Effects Only",
-        "attack_count": 2,
-        "default_target": "Self",
-        "effects": [
-          {
-            "display_name": "Cleanser IT Remove Ailment",
-            "trigger": "Skill Used",
-            "condition": "Always",
-            "target_selector": "Self",
-            "effect_type": "Remove Status",
-            "status_polarity": "Ailment",
-            "status_removal_mode": "Random Matching"
-          }
-        ]
-      },
-      "secondary_skill": {
-        "display_name": "Cleanser IT Bridge",
-        "tags": ["bridge", "integration_test"],
-        "action": "Effects Only",
-        "default_target": "Lowest HP Ally",
-        "effects": [
-          {
-            "display_name": "Cleanser IT Bridge Haste",
-            "trigger": "Skill Used",
-            "condition": "Always",
-            "target_selector": "Event Target",
-            "effect_type": "Modify Stat",
-            "modified_stat": "Action Speed",
-            "modifier_direction": "Increase",
-            "modifier_duration_turns": 2,
-            "amount_source": "Target Ailment Stacks"
-          }
-        ]
-      },
-      "passive": {
-        "display_name": "Bloodless IT",
-        "passive_type": "None",
-        "effects": [
-          {
-            "display_name": "Prevent Bleed IT",
-            "trigger": "Status Application Requested",
-            "condition": "Requested Status Matches",
-            "target_selector": "Self",
-            "effect_type": "Prevent Request",
-            "status_id": "bleed"
-          },
-          {
-            "display_name": "Prevent Damage IT",
-            "trigger": "Damage Requested",
-            "condition": "Always",
-            "target_selector": "Self",
-            "effect_type": "Prevent Request"
-          }
-        ]
-      },
-      "reaction": {
-        "display_name": "Cauterize IT",
-        "trigger": "Damaged",
-        "condition": "Self Status Stacks At Least",
-        "reaction_type": "Effects Only",
-        "status_id": "burning",
-        "status_stack_threshold": 3,
-        "effects": [
-          {
-            "display_name": "Heal Burning IT",
-            "trigger": "Reaction Triggered",
-            "condition": "Always",
-            "target_selector": "Self",
-            "effect_type": "Heal",
-            "status_id": "burning",
-            "amount_source": "Target Pending Status Damage"
-          },
-          {
-            "display_name": "Consume Burning IT",
-            "trigger": "Reaction Triggered",
-            "condition": "Always",
-            "target_selector": "Self",
-            "effect_type": "Consume Status",
-            "status_id": "burning",
-            "amount_source": "Target Status Stacks"
-          }
-        ]
-      },
-      "default_tactic": {
-        "display_name": "Finish Burning IT",
-        "condition": "Target Pending Status Damage At Least HP",
-        "action": "Job Skill",
-        "target": "Frontmost Enemy",
-        "status_id": "burning"
-      }
-    }
-  ],
-  "tactics": [
-    {
-      "id": "foretell_heal_it",
-      "display_name": "Foretell Heal IT",
-      "tags": ["forecast", "heal"],
-      "condition": "Ally HP Below Half",
-      "action": "Heal",
-      "target": "Lowest HP Ally",
-      "foretell_enabled": true
-    },
-    {
-      "id": "guard_then_attack_it",
-      "condition": "Enemy Alive",
-      "action": "Guard",
-      "target": "Self"
-    },
-    {
-      "id": "attack_frontmost",
-      "condition": "Always",
-      "action": "Attack",
-      "target": "Frontmost Enemy"
-    },
-    {
-      "id": "attack_slow_target_it",
-      "condition": "Target Slower Than Self",
-      "action": "Attack",
-      "target": "Frontmost Enemy"
-    }
-  ],
-  "loadouts": [
-    {
-      "id": "warden_anchor_it",
-      "display_name": "Warden Anchor IT",
-      "current_job_id": "warden_it",
-      "weapon_id": "shortblade",
-      "armor_id": "tower_shield_it",
-      "trinket_id": "glass_focus",
-      "tactic_ids": [
-        "guard_then_attack_it",
-        "attack_frontmost"
-      ]
-    },
-    {
-      "id": "scout_support_boots",
-      "display_name": "Scout Support Boots (IT Override)",
-      "current_job_id": "scout",
-      "weapon_id": "",
-      "armor_id": "",
-      "trinket_id": "light_step_boots",
-      "tactic_ids": [
-        "heal_lowest_ally_below_half",
-        "attack_frontmost"
-      ]
-    }
-  ],
-  "units": [
-    {
-      "id": "borin_anchor_it",
-      "display_name": "Borin Anchor IT",
-      "team": "Allies",
-      "max_hp": 46,
-      "armor": 3,
-      "action_speed": 7,
-      "loadout_id": "warden_anchor_it",
-      "physical_damage": 5,
-      "magic_damage": 0,
-      "ancestry_id": "brassbound"
-    },
-    {
-      "id": "mira_scout",
-      "display_name": "Mira Scout (IT Override)",
-      "team": "Allies",
-      "max_hp": 24,
-      "armor": 1,
-      "action_speed": 1,
-      "loadout_id": "scout_support_boots",
-      "physical_damage": 4,
-      "magic_damage": 0,
-      "ancestry_id": "brassbound"
-    }
-  ],
-  "demo_roster": [
-    "borin_anchor_it",
-    "mira_scout",
-    "sol_apprentice",
-    "iron_brute",
-    "ash_cutpurse",
-    "glass_wisp"
-  ]
+	"pack_id": "integration_test_mod_pack",
+	"display_name": "Integration Test Mod Pack",
+	"pack_version": 2,
+	"statuses": [
+		{
+			"id": "reconstitution_it",
+			"display_name": "Reconstitution IT",
+			"polarity": "Boon",
+			"status_type": "Reconstitution",
+			"stacking_rule": "Intensify",
+			"max_stacks": 3,
+			"amount_percent": 50,
+			"description": "Reference-pack status used to keep JSON status loading exercised after the character resource cleanup."
+		}
+	],
+	"jobs": [
+		{
+			"id": "cleanser_it",
+			"display_name": "Cleanser IT",
+			"max_hp_growth": 1,
+			"magic_damage_growth": 1,
+			"skill": {
+				"display_name": "Cleanser IT Reconstitution",
+				"action": "Apply Status",
+				"default_target": "Lowest HP Ally",
+				"status_id": "reconstitution_it",
+				"tooltip_text": "Small JSON-pack skill used to validate job loading against the clean-slate catalog."
+			},
+			"passive": {
+				"display_name": "Cleanser IT Forecast",
+				"passive_type": "Forecast",
+				"effects": [
+					{
+						"display_name": "Cleanser IT Opening Reconstitution",
+						"trigger": "Battle Start",
+						"condition": "Always",
+						"effect_type": "Apply Status",
+						"target_selector": "Self",
+						"status_id": "reconstitution_it"
+					}
+				],
+				"tooltip_text": "Small JSON-pack passive used to validate passive loading."
+			},
+			"default_tactic": {
+				"display_name": "Use Cleanser IT Reconstitution",
+				"condition": "Ally HP Below Half",
+				"action": "Job Skill",
+				"target": "Lowest HP Ally"
+			},
+			"tooltip_text": "Self-contained JSON job that does not depend on removed placeholder resources."
+		}
+	],
+	"loadouts": [
+		{
+			"id": "cleanser_it_loadout",
+			"display_name": "Cleanser IT Loadout",
+			"current_job_id": "cleanser_it",
+			"tooltip_text": "Self-contained JSON loadout for the integration test unit."
+		}
+	],
+	"tactics": [
+		{
+			"id": "foretell_heal_it",
+			"display_name": "Foretell Heal IT",
+			"condition": "Ally HP Below Half",
+			"action": "Heal",
+			"target": "Lowest HP Ally",
+			"foretell_enabled": true,
+			"tooltip_text": "Small JSON-pack tactic used to validate Foretell authoring."
+		}
+	],
+	"units": [
+		{
+			"id": "cleanser_it_unit",
+			"display_name": "Cleanser IT Unit",
+			"team": "Allies",
+			"max_hp": 28,
+			"physical_damage": 3,
+			"magic_damage": 5,
+			"armor": 0,
+			"action_speed": 10,
+			"loadout_id": "cleanser_it_loadout",
+			"tooltip_text": "Self-contained JSON unit used by integration validation."
+		}
+	],
+	"demo_roster": [
+		"cleanser_it_unit",
+		"template_bruiser",
+		"template_bard",
+		"sparring_vanguard",
+		"sparring_adept",
+		"sparring_support"
+	]
 }

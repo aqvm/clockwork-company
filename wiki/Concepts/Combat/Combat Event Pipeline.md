@@ -27,6 +27,8 @@ Combat causality uses simulator-owned requests and facts. Requests may be modifi
 
 Each shared effect normally fires at most once per causal root, preventing recursive status/effect loops. Explicit effects can opt into repeat behavior where supported.
 
+`TriggeredEffectResolver` keeps trigger and condition checks at the responder boundary, then dispatches resolved effects by mechanic family: status movement, stat modifiers, counters/requests, damage/healing/armor, and timeline/state changes. Target selection lives in `TriggeredEffectTargeting`, and amount/formula evaluation lives in `TriggeredEffectAmounts`. New shared effect types should be added to `ContentSchema`, `TriggeredEffectResolver.SHARED_EFFECT_TYPES`, and the focused dispatch checks together.
+
 ## Requests and Facts
 
 Important requests include damage, healing, reaction, status application/removal, and attack targeting. Important facts include damage dealt, healing received, status applied/removed, action completed, and unit defeated.
@@ -38,5 +40,8 @@ See [[COMBAT_EVENTS]] for the detailed event contract.
 - `clockwork-company/scripts/combat/runtime/combat_context.gd`
 - `clockwork-company/scripts/combat/rules/combat_hook_resolver.gd`
 - `clockwork-company/scripts/combat/rules/triggered_effect_resolver.gd`
+- `clockwork-company/scripts/combat/rules/triggered_effect_targeting.gd`
+- `clockwork-company/scripts/combat/rules/triggered_effect_amounts.gd`
 - `clockwork-company/scripts/combat/logging/combat_event_schema.gd`
 - `clockwork-company/scripts/tools/combat_event_pipeline_check.gd`
+- `clockwork-company/scripts/tools/triggered_effect_dispatch_check.gd`

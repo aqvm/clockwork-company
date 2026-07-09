@@ -1,0 +1,91 @@
+[gd_resource type="Resource" script_class="JobDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/job_definition.gd" id="job_script"]
+[ext_resource type="Script" path="res://scripts/data/skill_definition.gd" id="skill_script"]
+[ext_resource type="Script" path="res://scripts/data/passive_definition.gd" id="passive_script"]
+[ext_resource type="Script" path="res://scripts/data/reaction_definition.gd" id="reaction_script"]
+[ext_resource type="Script" path="res://scripts/data/tactic_definition.gd" id="tactic_script"]
+[ext_resource type="Script" path="res://scripts/data/effect_definition.gd" id="effect_script"]
+[ext_resource type="Resource" path="res://resources/statuses/regeneration.tres" id="status_regeneration"]
+[ext_resource type="Resource" path="res://resources/statuses/ward.tres" id="status_ward"]
+
+[sub_resource type="Resource" id="Bard_Haste_Allies"]
+script = ExtResource("effect_script")
+display_name = "Haste Allies"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Skill Used"
+target_selector = "Allied Units"
+effect_type = "Apply Haste"
+modifier_duration_turns = 2
+amount = 2
+
+[sub_resource type="Resource" id="Bard_Regen_Allies"]
+script = ExtResource("effect_script")
+display_name = "Regenerate Allies"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Skill Used"
+target_selector = "Allied Units"
+effect_type = "Apply Status"
+status = ExtResource("status_regeneration")
+
+[sub_resource type="Resource" id="Bard_Ward_Allies"]
+script = ExtResource("effect_script")
+display_name = "Ward Allies"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Reaction Triggered"
+target_selector = "Allied Units"
+effect_type = "Apply Status"
+status = ExtResource("status_ward")
+
+[sub_resource type="Resource" id="Skill_Rallying_Verse"]
+script = ExtResource("skill_script")
+display_name = "Rallying Verse"
+tooltip_text = "Apply Haste to all allied units."
+action = "Effects Only"
+default_target = "Self"
+effects = [SubResource("Bard_Haste_Allies")]
+
+[sub_resource type="Resource" id="Skill_Restorative_Chorus"]
+script = ExtResource("skill_script")
+display_name = "Restorative Chorus"
+tooltip_text = "Apply Regeneration to all allied units."
+action = "Effects Only"
+default_target = "Self"
+effects = [SubResource("Bard_Regen_Allies")]
+
+[sub_resource type="Resource" id="Passive_Sustained_Chorus"]
+script = ExtResource("passive_script")
+display_name = "Sustained Chorus"
+tooltip_text = "Extend finite allied buffs by 50%."
+passive_type = "Extend Allied Buff Duration"
+amount = 50
+
+[sub_resource type="Resource" id="Reaction_Protective_Refrain"]
+script = ExtResource("reaction_script")
+display_name = "Protective Refrain"
+tooltip_text = "When an ally receives an ailment, apply Ward to the party."
+trigger = "Ally Ailment Applied"
+condition = "Always"
+reaction_type = "Effects Only"
+cooldown_turns = 3
+effects = [SubResource("Bard_Ward_Allies")]
+
+[sub_resource type="Resource" id="Tactic_Use_Rallying_Verse"]
+script = ExtResource("tactic_script")
+display_name = "Use Rallying Verse"
+tooltip_text = "Use Rallying Verse is this job template default tactic."
+condition = "Enemy Alive"
+action = "Job Skill"
+target = "Self"
+
+[resource]
+script = ExtResource("job_script")
+display_name = "Bard"
+tooltip_text = "Bard is a clean-slate authored job Resource based on the current design notes. Growth and abilities are visible for tuning."
+max_hp_growth = 2
+action_speed_growth = 2
+skill = SubResource("Skill_Rallying_Verse")
+secondary_skill = SubResource("Skill_Restorative_Chorus")
+passive = SubResource("Passive_Sustained_Chorus")
+reaction = SubResource("Reaction_Protective_Refrain")
+default_tactic = SubResource("Tactic_Use_Rallying_Verse")

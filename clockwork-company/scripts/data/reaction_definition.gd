@@ -9,10 +9,12 @@ const REQUEST_TRIGGERS := ["Status Application Requested", "Enemy Healing Reques
 	set(value):
 		display_name = value
 		resource_name = value
+## Player-facing summary shown at the top of resource tooltips.
+@export_multiline var tooltip_text := ""
 ## Shared TagDefinition resources for filtering and future conditions.
 @export var tags: Array[Resource] = []
 ## Combat event that can trigger the reaction. This controls request-prevention and status-threshold fields.
-@export_enum("Damaged", "Physically Damaged", "Magically Damaged", "Ally Magically Damaged", "HP Below Threshold", "Lethal Physical Attack Requested", "Attack Targets Another Ally", "Status Application Requested", "Ally Ailment Applied", "Enemy Healing Requested", "Enemy Status Threshold Reached", "Enemy Died With Status") var trigger := "Damaged":
+@export_enum("Damaged", "Physically Damaged", "Magically Damaged", "Ally Magically Damaged", "HP Below Threshold", "Lethal Physical Attack Requested", "Attack Targets Another Ally", "Status Application Requested", "Ally Ailment Applied", "Enemy Healing Requested", "Enemy Status Threshold Reached", "Enemy Died With Status", "Enemy Died With Ailments") var trigger := "Damaged":
 	set(value):
 		trigger = value
 		notify_property_list_changed()

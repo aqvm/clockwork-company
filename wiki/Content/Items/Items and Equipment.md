@@ -24,7 +24,7 @@ Gear is the primary between-scenario buildcraft lever. It should create tradeoff
 - Equipment is allowed unless the current job or immutable ancestry explicitly forbids its slot.
 - Campaign-owned gear is freely swappable between scenarios and locked during an active scenario.
 
-The current catalog contains many straightforward assets. Individual wiki pages should be created only for items with substantial unique mechanic/design lookup value.
+The authored item Resource catalog is currently empty after the character-content cleanup. Individual wiki pages should be created only when a new item has substantial unique mechanic/design lookup value.
 
 ## Designed Direction
 

@@ -1,0 +1,111 @@
+[gd_resource type="Resource" script_class="JobDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/job_definition.gd" id="job_script"]
+[ext_resource type="Script" path="res://scripts/data/skill_definition.gd" id="skill_script"]
+[ext_resource type="Script" path="res://scripts/data/passive_definition.gd" id="passive_script"]
+[ext_resource type="Script" path="res://scripts/data/reaction_definition.gd" id="reaction_script"]
+[ext_resource type="Script" path="res://scripts/data/tactic_definition.gd" id="tactic_script"]
+[ext_resource type="Script" path="res://scripts/data/effect_definition.gd" id="effect_script"]
+[ext_resource type="Resource" path="res://resources/statuses/bleed.tres" id="status_bleed"]
+
+[sub_resource type="Resource" id="Sang_Bleed_Target"]
+script = ExtResource("effect_script")
+display_name = "Bleed Target"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Skill Used"
+target_selector = "Event Target"
+effect_type = "Apply Status"
+status = ExtResource("status_bleed")
+
+[sub_resource type="Resource" id="Sang_Bleed_Self"]
+script = ExtResource("effect_script")
+display_name = "Bleed Self"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Skill Used"
+target_selector = "Self"
+effect_type = "Apply Status"
+status = ExtResource("status_bleed")
+
+[sub_resource type="Resource" id="Sang_Recent_Damage_Shield"]
+script = ExtResource("effect_script")
+display_name = "Recent-Damage Shield"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Skill Used"
+target_selector = "Event Target"
+effect_type = "Grant Energy Shield"
+amount_source = "Target Recent Damage"
+
+[sub_resource type="Resource" id="Sang_Ailment_Haste"]
+script = ExtResource("effect_script")
+display_name = "Ailment Damage Haste"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Ailment Damaged"
+target_selector = "Self"
+effect_type = "Increase Action Speed For Battle"
+amount = 1
+
+[sub_resource type="Resource" id="Sang_Bleed_Death_Heal"]
+script = ExtResource("effect_script")
+display_name = "Bleed Death Heal"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Reaction Triggered"
+target_selector = "Self"
+effect_type = "Heal"
+amount_source = "Target Max HP Times Event Status Stacks"
+amount_rounding = "Ceil"
+amount_multiplier = 2
+amount_divisor = 100
+amount_status = ExtResource("status_bleed")
+
+[sub_resource type="Resource" id="Skill_Blood_Price"]
+script = ExtResource("skill_script")
+display_name = "Blood Price"
+tooltip_text = "Apply Bleed to an enemy and to self."
+action = "Effects Only"
+effects = [SubResource("Sang_Bleed_Target"), SubResource("Sang_Bleed_Self")]
+
+[sub_resource type="Resource" id="Skill_Clotting_Veil"]
+script = ExtResource("skill_script")
+display_name = "Clotting Veil"
+tooltip_text = "Grant Energy Shield to an ally based on recent damage."
+action = "Effects Only"
+default_target = "Lowest HP Ally"
+effects = [SubResource("Sang_Recent_Damage_Shield")]
+
+[sub_resource type="Resource" id="Passive_Pain_Quickens"]
+script = ExtResource("passive_script")
+display_name = "Pain Quickens"
+tooltip_text = "Ailment HP loss increases action speed for the battle."
+passive_type = "None"
+effects = [SubResource("Sang_Ailment_Haste")]
+
+[sub_resource type="Resource" id="Reaction_Blood_Claim"]
+script = ExtResource("reaction_script")
+display_name = "Blood Claim"
+tooltip_text = "When a bleeding enemy dies, heal based on its max HP and Bleed stacks."
+trigger = "Enemy Died With Status"
+condition = "Always"
+reaction_type = "Effects Only"
+status = ExtResource("status_bleed")
+effects = [SubResource("Sang_Bleed_Death_Heal")]
+
+[sub_resource type="Resource" id="Tactic_Use_Blood_Price"]
+script = ExtResource("tactic_script")
+display_name = "Use Blood Price"
+tooltip_text = "Use Blood Price is this job template default tactic."
+condition = "Enemy Alive"
+action = "Job Skill"
+target = "Frontmost Enemy"
+
+[resource]
+script = ExtResource("job_script")
+display_name = "Sanguinist"
+tooltip_text = "Sanguinist is a clean-slate authored job Resource based on the current design notes. Growth and abilities are visible for tuning."
+max_hp_growth = 3
+magic_damage_growth = 1
+action_speed_growth = 1
+skill = SubResource("Skill_Blood_Price")
+secondary_skill = SubResource("Skill_Clotting_Veil")
+passive = SubResource("Passive_Pain_Quickens")
+reaction = SubResource("Reaction_Blood_Claim")
+default_tactic = SubResource("Tactic_Use_Blood_Price")

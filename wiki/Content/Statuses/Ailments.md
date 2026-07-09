@@ -16,15 +16,17 @@ Ailments are negative [[Statuses]]. They are intended to create distinct tactica
 - [[Bleed]] punishes acting frequently.
 - [[Burning]] punishes acting and receiving support.
 - [[Confusion]] disrupts tactic priority.
+- [[Elemental Fusion]] combines the trigger and consumption rules of three elemental ailments.
 - [[Frost]] sets up physical burst.
 - [[Numb]] suppresses reactions.
 - [[Rot]] punishes healing.
+- [[Shock]] turns incoming magic damage into deterministic recursive arcs.
 
 ## Counters and Synergies
 
 - [[Ward]] prevents an incoming ailment by consuming one stack.
 - [[Renewal]] heals whenever an ailment is removed.
-- [[Bleed]], [[Burning]], and qualifying [[Rot]] damage can trigger effects that listen for `Ailment Damaged`.
+- [[Bleed]], [[Burning]], [[Elemental Fusion]], [[Shock]], and qualifying [[Rot]] damage can trigger effects that listen for `Ailment Damaged`.
 - Generic resistance is intentionally not part of the current model; authored prevention, replacement, and removal are preferred.
 
 See [[Statuses]] for shared duration and stacking rules.

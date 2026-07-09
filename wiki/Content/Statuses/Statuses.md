@@ -18,9 +18,11 @@ Statuses are battle-local effects. Positive statuses are [[Boons]] and negative 
 - [[Bleed]]: action-frequency damage that persists until removed.
 - [[Burning]]: action-frequency damage that decays, but punishes support.
 - [[Confusion]]: skips the first otherwise-valid tactic each turn.
+- [[Elemental Fusion]]: combines Burning, Frost, and Shock behavior in one stack pool.
 - [[Frost]]: amplifies and is consumed by the next physical hit.
 - [[Numb]]: prevents reactions.
 - [[Rot]]: turns received healing into battle-long maximum-HP loss.
+- [[Shock]]: propagates incoming magic damage through allied units.
 
 ## Boons
 
@@ -38,7 +40,7 @@ Statuses are battle-local effects. Positive statuses are [[Boons]] and negative 
 
 ## Undeveloped Directions
 
-[[Potential Future Statuses]] collates discussed but unimplemented ideas, including Shock, Doom, armor corrosion, silence-like skill disruption, and panic-based targeting changes. These are design candidates, not committed mechanics.
+[[Potential Future Statuses]] collates discussed but unimplemented ideas, including Doom, armor corrosion, silence-like skill disruption, and panic-based targeting changes. These are design candidates, not committed mechanics.
 
 ## Sources
 

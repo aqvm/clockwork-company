@@ -1,0 +1,119 @@
+[gd_resource type="Resource" script_class="JobDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/job_definition.gd" id="job_script"]
+[ext_resource type="Script" path="res://scripts/data/skill_definition.gd" id="skill_script"]
+[ext_resource type="Script" path="res://scripts/data/passive_definition.gd" id="passive_script"]
+[ext_resource type="Script" path="res://scripts/data/reaction_definition.gd" id="reaction_script"]
+[ext_resource type="Script" path="res://scripts/data/tactic_definition.gd" id="tactic_script"]
+[ext_resource type="Script" path="res://scripts/data/effect_definition.gd" id="effect_script"]
+[ext_resource type="Resource" path="res://resources/statuses/burning.tres" id="status_burning"]
+[ext_resource type="Resource" path="res://resources/statuses/elemental_fusion.tres" id="status_elemental_fusion"]
+[ext_resource type="Resource" path="res://resources/statuses/frost.tres" id="status_frost"]
+[ext_resource type="Resource" path="res://resources/statuses/shock.tres" id="status_shock"]
+
+[sub_resource type="Resource" id="Elem_Burning"]
+script = ExtResource("effect_script")
+display_name = "Apply Burning"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Skill Used"
+target_selector = "Event Target"
+effect_type = "Apply Status"
+status = ExtResource("status_burning")
+
+[sub_resource type="Resource" id="Elem_Shock"]
+script = ExtResource("effect_script")
+display_name = "Apply Shock"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Skill Used"
+target_selector = "Event Target"
+effect_type = "Apply Status"
+status = ExtResource("status_shock")
+
+[sub_resource type="Resource" id="Elem_Frost"]
+script = ExtResource("effect_script")
+display_name = "Apply Frost"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Skill Used"
+target_selector = "Event Target"
+effect_type = "Apply Status"
+status = ExtResource("status_frost")
+
+[sub_resource type="Resource" id="Elem_Fuse"]
+script = ExtResource("effect_script")
+display_name = "Fuse Elemental Ailments"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Skill Used"
+target_selector = "Event Target"
+effect_type = "Fuse Elemental Ailments"
+amount_divisor = 3
+status = ExtResource("status_elemental_fusion")
+
+[sub_resource type="Resource" id="Elem_Ailment_Shield"]
+script = ExtResource("effect_script")
+display_name = "Ailment Shield"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Owner Applied Ailment"
+target_selector = "Self"
+effect_type = "Grant Energy Shield"
+amount_source = "Applied Status Stacks"
+amount_multiplier = 5
+repeat_within_event_chain = true
+
+[sub_resource type="Resource" id="Elem_Transfer_Ailments"]
+script = ExtResource("effect_script")
+display_name = "Transfer Defeated Ailments"
+tooltip_text = "Authored effect for this job feature."
+trigger = "Reaction Triggered"
+target_selector = "Most Ailmented Enemy Unit"
+effect_type = "Transfer Defeated Ailments"
+
+[sub_resource type="Resource" id="Skill_Prismatic_Spark"]
+script = ExtResource("skill_script")
+display_name = "Prismatic Spark"
+tooltip_text = "Apply Burning, Shock, and Frost to one enemy."
+action = "Effects Only"
+effects = [SubResource("Elem_Burning"), SubResource("Elem_Shock"), SubResource("Elem_Frost")]
+
+[sub_resource type="Resource" id="Skill_Elemental_Fusion"]
+script = ExtResource("skill_script")
+display_name = "Elemental Fusion"
+tooltip_text = "Fuse Burning, Shock, and Frost into Elemental Fusion stacks."
+action = "Effects Only"
+effects = [SubResource("Elem_Fuse")]
+
+[sub_resource type="Resource" id="Passive_Elemental_Wardcraft"]
+script = ExtResource("passive_script")
+display_name = "Elemental Wardcraft"
+tooltip_text = "Applying ailments grants Energy Shield based on stacks added."
+passive_type = "None"
+effects = [SubResource("Elem_Ailment_Shield")]
+
+[sub_resource type="Resource" id="Reaction_Carry_the_Spark"]
+script = ExtResource("reaction_script")
+display_name = "Carry the Spark"
+tooltip_text = "When an ailment-bearing enemy dies, transfer defeated ailments."
+trigger = "Enemy Died With Ailments"
+condition = "Always"
+reaction_type = "Effects Only"
+cooldown_turns = 3
+effects = [SubResource("Elem_Transfer_Ailments")]
+
+[sub_resource type="Resource" id="Tactic_Use_Prismatic_Spark"]
+script = ExtResource("tactic_script")
+display_name = "Use Prismatic Spark"
+tooltip_text = "Use Prismatic Spark is this job template default tactic."
+condition = "Enemy Alive"
+action = "Job Skill"
+target = "Frontmost Enemy"
+
+[resource]
+script = ExtResource("job_script")
+display_name = "Elementalist"
+tooltip_text = "Elementalist is a clean-slate authored job Resource based on the current design notes. Growth and abilities are visible for tuning."
+max_hp_growth = 2
+magic_damage_growth = 3
+skill = SubResource("Skill_Prismatic_Spark")
+secondary_skill = SubResource("Skill_Elemental_Fusion")
+passive = SubResource("Passive_Elemental_Wardcraft")
+reaction = SubResource("Reaction_Carry_the_Spark")
+default_tactic = SubResource("Tactic_Use_Prismatic_Spark")

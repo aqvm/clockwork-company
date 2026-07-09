@@ -9,15 +9,13 @@ tags:
 # Content Map
 
 - [[Statuses]]: implemented boons/ailments and future status concepts
-- [[Jobs]]: runnable prototype jobs and designed-but-unimplemented job identities
+- [[Jobs]]: implemented draft jobs and clean-slate template characters
 - [[Scenarios]]: current handcrafted scenario catalog
-- [[Ancestries]]: immutable body/identity catalog
-- [[Items and Equipment]]: gear model and content catalog
-- [[Units and Builds]]: named units, reusable loadouts, and tactic composition
-- [[Encounters and Rewards]]: fixed enemy parties and curated item offers
+- [[Ancestries]]: body/identity model; no authored ancestry Resources are present after the clean-slate reset
+- [[Items and Equipment]]: gear model; no authored item Resources are present after the clean-slate reset
+- [[Units and Builds]]: clean-slate job templates and minimal sparring enemies
+- [[Encounters and Rewards]]: fixed enemy parties; item rewards are empty after character gear cleanup
 
-Additional authored families live in:
-
-- `clockwork-company/resources/tactics/`
+Standalone tactic Resources are currently empty; job default tactics live inside each job Resource.
 
 Individual pages should be added when a content asset develops enough unique mechanics, design rationale, or relationships to justify independent lookup.
