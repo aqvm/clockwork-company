@@ -9,6 +9,7 @@ const ItemDefinitionScript := preload("res://scripts/data/item_definition.gd")
 const JobProgressDefinitionScript := preload("res://scripts/data/job_progress_definition.gd")
 const TacticDefinitionScript := preload("res://scripts/data/tactic_definition.gd")
 const DefinitionCloneHelperScript := preload("res://scripts/data/definition_clone_helper.gd")
+const LoadoutSlotHelperScript := preload("res://scripts/data/loadout_slot_helper.gd")
 const META_CAMPAIGN_UNIT_ID := "campaign_unit_id"
 const META_CONTENT_ID := "content_id"
 const MAX_UNIT_LEVEL := 5
@@ -219,7 +220,7 @@ func planning_item_options(campaign_unit_id: String) -> Array[Dictionary]:
 	if unit.loadout == null:
 		unit.loadout = UnitLoadoutDefinitionScript.new()
 		unit.loadout.display_name = "%s Campaign Loadout" % unit.display_name
-	for slot in ["Weapon", "Armor", "Helmet", "Trinket"]:
+	for slot in LoadoutSlotHelperScript.EQUIPMENT_SLOTS:
 		var current_item := _loadout_item(unit.loadout, slot)
 		options.append({
 			"slot": slot,
@@ -251,7 +252,7 @@ func planning_item_options(campaign_unit_id: String) -> Array[Dictionary]:
 
 func equip_planning_item(campaign_unit_id: String, slot: String, inventory_index: int) -> bool:
 	var unit := _find_unit(campaign_unit_id)
-	if unit == null or not ["Weapon", "Armor", "Helmet", "Trinket"].has(slot):
+	if unit == null or not LoadoutSlotHelperScript.EQUIPMENT_SLOTS.has(slot):
 		return false
 	if unit.loadout == null:
 		unit.loadout = UnitLoadoutDefinitionScript.new()
@@ -663,7 +664,7 @@ func _canonical_job_for_unit(unit: UnitDefinition, job: JobDefinition) -> JobDef
 
 
 func _return_illegal_equipment_to_inventory(unit: UnitDefinition) -> void:
-	for slot in ["Weapon", "Armor", "Helmet", "Trinket"]:
+	for slot in LoadoutSlotHelperScript.EQUIPMENT_SLOTS:
 		var item := _loadout_item(unit.loadout, slot)
 		if item == null or _can_equip_item(unit, item):
 			continue
@@ -672,33 +673,15 @@ func _return_illegal_equipment_to_inventory(unit: UnitDefinition) -> void:
 
 
 func _can_equip_item(unit: UnitDefinition, item: ItemDefinition) -> bool:
-	if item == null:
-		return false
-	var property_name := "forbid_%s" % item.slot.to_lower()
-	return not ((unit.loadout != null and unit.loadout.current_job != null and bool(unit.loadout.current_job.get(property_name))) or (unit.ancestry != null and bool(unit.ancestry.get(property_name))))
+	return LoadoutSlotHelperScript.can_equip_item(unit, item)
 
 
 func _loadout_item(loadout: UnitLoadoutDefinition, slot: String) -> ItemDefinition:
-	if slot == "Weapon":
-		return loadout.weapon
-	if slot == "Armor":
-		return loadout.armor
-	if slot == "Helmet":
-		return loadout.helmet
-	if slot == "Trinket":
-		return loadout.trinket
-	return null
+	return LoadoutSlotHelperScript.loadout_item(loadout, slot)
 
 
 func _set_loadout_item(loadout: UnitLoadoutDefinition, slot: String, item: ItemDefinition) -> void:
-	if slot == "Weapon":
-		loadout.weapon = item
-	elif slot == "Armor":
-		loadout.armor = item
-	elif slot == "Helmet":
-		loadout.helmet = item
-	elif slot == "Trinket":
-		loadout.trinket = item
+	LoadoutSlotHelperScript.set_loadout_item(loadout, slot, item)
 
 
 func _campaign_unit_ids(units: Array[UnitDefinition]) -> Array[String]:

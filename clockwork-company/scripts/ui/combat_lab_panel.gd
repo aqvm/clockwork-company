@@ -858,27 +858,6 @@ func _attach_text_tooltip(control: Control, text: String) -> void:
 	control.mouse_exited.connect(func(): tooltip_cleared.emit())
 
 
-func _resource_tooltip_text(resource: Resource) -> String:
-	var parts: Array[String] = [_resource_display_name(resource)]
-	var authored_value = resource.get("tooltip_text")
-	var authored_text := String(authored_value) if authored_value != null else ""
-	if not authored_text.is_empty():
-		parts.append(authored_text)
-	if resource is TacticDefinition:
-		var tactic := resource as TacticDefinition
-		parts.append("When %s: %s -> %s" % [tactic.condition, tactic.action, tactic.target])
-	elif resource is SkillDefinition:
-		var skill := resource as SkillDefinition
-		parts.append("%s targeting %s" % [skill.action, skill.default_target])
-	elif resource is PassiveDefinition:
-		var passive := resource as PassiveDefinition
-		parts.append("%s %d" % [passive.passive_type, passive.amount])
-	elif resource is ReactionDefinition:
-		var reaction := resource as ReactionDefinition
-		parts.append("%s when %s" % [reaction.reaction_type, reaction.trigger])
-	return "\n".join(parts)
-
-
 func _resource_display_name(resource: Resource) -> String:
 	if resource == null:
 		return "None"

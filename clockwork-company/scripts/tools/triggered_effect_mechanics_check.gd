@@ -3,12 +3,11 @@ extends SceneTree
 const CombatContextScript := preload("res://scripts/combat/runtime/combat_context.gd")
 const CombatLogScript := preload("res://scripts/combat/logging/combat_log.gd")
 const CombatSimulatorScript := preload("res://scripts/combat/combat_simulator.gd")
-const CombatHookResolverScript := preload("res://scripts/combat/rules/combat_hook_resolver.gd")
 const TacticResolverScript := preload("res://scripts/combat/rules/tactic_resolver.gd")
 const TriggeredEffectResolverScript := preload("res://scripts/combat/rules/triggered_effect_resolver.gd")
 const StatusResolverScript := preload("res://scripts/combat/rules/status_resolver.gd")
-const UnitStateScript := preload("res://scripts/combat/runtime/unit_state.gd")
 const JsonContentLoaderScript := preload("res://scripts/modding/json_content_loader.gd")
+const TriggeredEffectCheckFixturesScript := preload("res://scripts/tools/triggered_effect_check_fixtures.gd")
 const BleedStatus := preload("res://resources/statuses/bleed.tres")
 const FrostStatus := preload("res://resources/statuses/frost.tres")
 const ShockStatus := preload("res://resources/statuses/shock.tres")
@@ -27,19 +26,19 @@ var check_completed := false
 
 func _init() -> void:
 	process_frame.connect(_quit_if_incomplete, CONNECT_ONE_SHOT)
-	var invalid_requested_condition := _effect("Battle Start", "Apply Status", "Self", 0, BleedStatus)
+	var invalid_requested_condition := TriggeredEffectCheckFixturesScript.effect("Battle Start", "Apply Status", "Self", 0, BleedStatus)
 	invalid_requested_condition.condition = "Requested Status Matches"
 	assert(not invalid_requested_condition.support_error().is_empty(), "Resource validation should reject request-only conditions on ordinary triggers.")
-	var invalid_counter_formula := _effect("Battle Start", "Apply Status", "Self", 0, BleedStatus)
+	var invalid_counter_formula := TriggeredEffectCheckFixturesScript.effect("Battle Start", "Apply Status", "Self", 0, BleedStatus)
 	invalid_counter_formula.amount_source = "Target Counter"
 	assert(not invalid_counter_formula.support_error().is_empty(), "Resource validation should reject counter formulas without a counter name.")
 
-	var ally = _unit("Ally", "Allies")
-	var enemy = _unit("Enemy", "Enemies")
+	var ally = TriggeredEffectCheckFixturesScript.unit("Ally", "Allies")
+	var enemy = TriggeredEffectCheckFixturesScript.unit("Enemy", "Enemies")
 	var rule := ScenarioRuleDefinition.new()
 	rule.display_name = "Authored Weather"
-	rule.effects.append(_effect("Battle Start", "Apply Status", "All Units", 0, BleedStatus))
-	var modifier := _effect("Battle Start", "Modify Stat", "Allied Units", 3)
+	rule.effects.append(TriggeredEffectCheckFixturesScript.effect("Battle Start", "Apply Status", "All Units", 0, BleedStatus))
+	var modifier := TriggeredEffectCheckFixturesScript.effect("Battle Start", "Modify Stat", "Allied Units", 3)
 	modifier.modified_stat = "Physical Damage"
 	modifier.modifier_duration_turns = 1
 	rule.effects.append(modifier)
@@ -56,13 +55,13 @@ func _init() -> void:
 
 	var item := ItemDefinition.new()
 	item.display_name = "Resolver Test Item"
-	var apply_frost := _effect("Hit", "Apply Status", "Event Target", 0, FrostStatus)
+	var apply_frost := TriggeredEffectCheckFixturesScript.effect("Hit", "Apply Status", "Event Target", 0, FrostStatus)
 	item.effects.append(apply_frost)
-	var random_cleanse := _effect("Damaged", "Remove Status", "Self")
+	var random_cleanse := TriggeredEffectCheckFixturesScript.effect("Damaged", "Remove Status", "Self")
 	random_cleanse.status_polarity = "Ailment"
 	random_cleanse.status_removal_mode = "Random Matching"
 	item.effects.append(random_cleanse)
-	var specific_cleanse := _effect("Reaction Triggered", "Remove Status", "Self")
+	var specific_cleanse := TriggeredEffectCheckFixturesScript.effect("Reaction Triggered", "Remove Status", "Self")
 	specific_cleanse.status_removal_mode = "Specific Status"
 	specific_cleanse.status = NumbStatus
 	item.effects.append(specific_cleanse)
@@ -85,7 +84,7 @@ func _init() -> void:
 	var skill := SkillDefinition.new()
 	skill.display_name = "Cleanse Lesson"
 	skill.action = "Effects Only"
-	var skill_cleanse := _effect("Skill Used", "Remove Status", "Self")
+	var skill_cleanse := TriggeredEffectCheckFixturesScript.effect("Skill Used", "Remove Status", "Self")
 	skill_cleanse.status_polarity = "Ailment"
 	skill.effects.append(skill_cleanse)
 	ally.current_skill = skill
@@ -95,7 +94,7 @@ func _init() -> void:
 	var secondary_skill := SkillDefinition.new()
 	secondary_skill.display_name = "Bridge Cleanse"
 	secondary_skill.action = "Effects Only"
-	var bridge_cleanse := _effect("Skill Used", "Remove Status", "Event Target")
+	var bridge_cleanse := TriggeredEffectCheckFixturesScript.effect("Skill Used", "Remove Status", "Event Target")
 	bridge_cleanse.status_polarity = "Ailment"
 	secondary_skill.effects.append(bridge_cleanse)
 	ally.current_secondary_skill = secondary_skill
@@ -112,108 +111,108 @@ func _init() -> void:
 	assert(not ally.has_status("Bleed"), "Secondary job skills should resolve the shared effect vocabulary.")
 	var loop_rule := ScenarioRuleDefinition.new()
 	loop_rule.display_name = "Root Loop Guard"
-	loop_rule.effects.append(_effect("Status Applied", "Apply Status", "Event Target", 0, FrostStatus))
-	var loop_target = _unit("Loop Target", "Allies")
+	loop_rule.effects.append(TriggeredEffectCheckFixturesScript.effect("Status Applied", "Apply Status", "Event Target", 0, FrostStatus))
+	var loop_target = TriggeredEffectCheckFixturesScript.unit("Loop Target", "Allies")
 	var loop_context = CombatContextScript.new([loop_target], log, [loop_rule])
 	loop_context.add_responder(TriggeredEffectResolverScript.respond)
 	StatusResolverScript.apply_status(log, root_log_id, loop_target, BleedStatus, "Loop test", 3, false, loop_context)
 	assert(loop_target.has_status("Bleed") and loop_target.has_status("Frost"), "A status-applied hook should resolve its intended consequence.")
 	assert(loop_context.events_of_type("triggered_effect_resolved").size() == 1, "A shared effect should fire at most once in one causal root.")
 
-	var immune = _unit("Bleed Immune", "Allies")
+	var immune = TriggeredEffectCheckFixturesScript.unit("Bleed Immune", "Allies")
 	var immunity := PassiveDefinition.new()
 	immunity.display_name = "Bloodless"
-	var prevent_bleed := _effect("Status Application Requested", "Prevent Request", "Self")
+	var prevent_bleed := TriggeredEffectCheckFixturesScript.effect("Status Application Requested", "Prevent Request", "Self")
 	prevent_bleed.condition = "Requested Status Matches"
 	prevent_bleed.status = BleedStatus
 	immunity.effects.append(prevent_bleed)
 	immune.current_passive = immunity
-	var immunity_context = _context([immune], log)
+	var immunity_context = TriggeredEffectCheckFixturesScript.context([immune], log)
 	assert(not StatusResolverScript.apply_status(log, root_log_id, immune, BleedStatus, "test", 3, false, immunity_context), "A passive should be able to prevent a requested status application.")
 	immune.add_status(BurningStatus, "test", 3, false)
-	var preserve_burning := _effect("Status Removal Requested", "Prevent Request", "Self")
+	var preserve_burning := TriggeredEffectCheckFixturesScript.effect("Status Removal Requested", "Prevent Request", "Self")
 	preserve_burning.condition = "Requested Status Matches"
 	preserve_burning.status = BurningStatus
 	immunity.effects.append(preserve_burning)
 	assert(not StatusResolverScript.remove_status(log, root_log_id, immune, BurningStatus.display_name, "test dispel", immunity_context), "A passive should be able to prevent removal of one requested status type.")
 	assert(immune.has_status("Burning"), "Specific status-removal immunity should preserve the matched status.")
-	var invulnerable = _unit("Invulnerable", "Allies")
+	var invulnerable = TriggeredEffectCheckFixturesScript.unit("Invulnerable", "Allies")
 	var invulnerability := PassiveDefinition.new()
 	invulnerability.display_name = "Untouchable"
-	invulnerability.effects.append(_effect("Damage Requested", "Prevent Request", "Self"))
-	invulnerability.effects.append(_effect("Healing Requested", "Prevent Request", "Self"))
+	invulnerability.effects.append(TriggeredEffectCheckFixturesScript.effect("Damage Requested", "Prevent Request", "Self"))
+	invulnerability.effects.append(TriggeredEffectCheckFixturesScript.effect("Healing Requested", "Prevent Request", "Self"))
 	invulnerable.current_passive = invulnerability
-	var invulnerability_context = _context([invulnerable, enemy], log)
+	var invulnerability_context = TriggeredEffectCheckFixturesScript.context([invulnerable, enemy], log)
 	invulnerability_context.apply_direct_damage(enemy, invulnerable, 5, -1, root_log_id)
 	assert(invulnerable.hp == invulnerable.max_hp, "Request interception should support damage requests as well as status immunity.")
 	invulnerable.hp = 10
 	invulnerability_context.apply_healing(invulnerable, invulnerable, 5, -1, root_log_id)
 	assert(invulnerable.hp == 10, "Request interception should support healing requests.")
-	var reaction_blocked = _unit("Reaction Blocked", "Allies")
+	var reaction_blocked = TriggeredEffectCheckFixturesScript.unit("Reaction Blocked", "Allies")
 	var block_reactions := PassiveDefinition.new()
 	block_reactions.display_name = "Unresponsive"
-	block_reactions.effects.append(_effect("Reaction Requested", "Prevent Request", "Self"))
+	block_reactions.effects.append(TriggeredEffectCheckFixturesScript.effect("Reaction Requested", "Prevent Request", "Self"))
 	reaction_blocked.current_passive = block_reactions
 	var blocked_reaction := ReactionDefinition.new()
 	blocked_reaction.display_name = "Blocked Guard"
 	blocked_reaction.reaction_type = "Gain Armor"
 	blocked_reaction.amount = 3
 	reaction_blocked.current_reaction = blocked_reaction
-	var reaction_block_context = _context([reaction_blocked, enemy], log)
+	var reaction_block_context = TriggeredEffectCheckFixturesScript.context([reaction_blocked, enemy], log)
 	reaction_block_context.apply_direct_damage(enemy, reaction_blocked, 1, -1, root_log_id)
 	assert(reaction_blocked.guard_armor == 0, "Request interception should support reaction requests.")
 
-	var zero_formula = _unit("Zero Formula", "Allies")
+	var zero_formula = TriggeredEffectCheckFixturesScript.unit("Zero Formula", "Allies")
 	var zero_item := ItemDefinition.new()
 	zero_item.display_name = "Empty Cinder"
-	var zero_burn := _effect("Battle Start", "Apply Status", "Self", 0, BurningStatus)
+	var zero_burn := TriggeredEffectCheckFixturesScript.effect("Battle Start", "Apply Status", "Self", 0, BurningStatus)
 	zero_burn.amount_source = "Target Counter"
 	zero_burn.counter_name = "missing_counter"
 	zero_item.effects.append(zero_burn)
 	zero_formula.equipped_items.append(zero_item)
-	var zero_context = _context([zero_formula], log)
+	var zero_context = TriggeredEffectCheckFixturesScript.context([zero_formula], log)
 	zero_context.publish("battle_started", null, null, {}, -1, root_log_id)
 	assert(not zero_formula.has_status("Burning"), "A derived zero-stack application should be a true no-op.")
 
-	var escalating = _unit("Escalating", "Allies")
+	var escalating = TriggeredEffectCheckFixturesScript.unit("Escalating", "Allies")
 	var escalation_item := ItemDefinition.new()
 	escalation_item.display_name = "Cinder Plate"
-	var count_hits := _effect("Damaged", "Modify Counter", "Self", 1)
+	var count_hits := TriggeredEffectCheckFixturesScript.effect("Damaged", "Modify Counter", "Self", 1)
 	count_hits.counter_name = "cinder_hits"
 	escalation_item.effects.append(count_hits)
-	var escalating_burn := _effect("Damaged", "Apply Status", "Self", 0, BurningStatus)
+	var escalating_burn := TriggeredEffectCheckFixturesScript.effect("Damaged", "Apply Status", "Self", 0, BurningStatus)
 	escalating_burn.amount_source = "Target Counter"
 	escalating_burn.counter_name = "cinder_hits"
 	escalation_item.effects.append(escalating_burn)
-	var stacking_armor := _effect("Damaged", "Modify Stat", "Self", 1)
+	var stacking_armor := TriggeredEffectCheckFixturesScript.effect("Damaged", "Modify Stat", "Self", 1)
 	stacking_armor.modified_stat = "Armor"
 	stacking_armor.modifier_duration_turns = 99
 	escalation_item.effects.append(stacking_armor)
 	escalating.equipped_items.append(escalation_item)
-	var escalation_context = _context([escalating], log)
+	var escalation_context = TriggeredEffectCheckFixturesScript.context([escalating], log)
 	escalation_context.publish("damage_dealt", enemy, escalating, {"amount": 1}, -1, root_log_id)
 	escalation_context.publish("damage_dealt", enemy, escalating, {"amount": 1}, -1, root_log_id)
 	assert(escalating.status_stack_count("Burning") == 3 and escalating.armor == 2, "Counters should author escalating status stacks alongside stacking temporary stats.")
-	var threshold_unit = _unit("Threshold Unit", "Allies")
+	var threshold_unit = TriggeredEffectCheckFixturesScript.unit("Threshold Unit", "Allies")
 	threshold_unit.hp = 10
 	var threshold_item := ItemDefinition.new()
 	threshold_item.display_name = "Second Wind Counter"
-	var count_damage := _effect("Damaged", "Modify Counter", "Self", 1)
+	var count_damage := TriggeredEffectCheckFixturesScript.effect("Damaged", "Modify Counter", "Self", 1)
 	count_damage.counter_name = "hits_taken"
 	threshold_item.effects.append(count_damage)
-	var threshold_heal := _effect("Damaged", "Heal", "Self", 2)
+	var threshold_heal := TriggeredEffectCheckFixturesScript.effect("Damaged", "Heal", "Self", 2)
 	threshold_heal.condition = "Owner Counter At Least"
 	threshold_heal.counter_name = "hits_taken"
 	threshold_heal.counter_threshold = 2
 	threshold_item.effects.append(threshold_heal)
 	threshold_unit.equipped_items.append(threshold_item)
-	var threshold_context = _context([threshold_unit, enemy], log)
+	var threshold_context = TriggeredEffectCheckFixturesScript.context([threshold_unit, enemy], log)
 	threshold_context.apply_direct_damage(enemy, threshold_unit, 1, -1, root_log_id)
 	assert(threshold_unit.hp == 9, "Counter-threshold effects should remain gated below their threshold.")
 	threshold_context.apply_direct_damage(enemy, threshold_unit, 1, -1, root_log_id)
 	assert(threshold_unit.hp == 10, "Counter-threshold conditions should unlock effects at the authored threshold.")
 
-	var reactor = _unit("Reactor", "Allies")
+	var reactor = TriggeredEffectCheckFixturesScript.unit("Reactor", "Allies")
 	reactor.hp = 10
 	for _stack in range(4):
 		reactor.add_status(BurningStatus, "test", 3, false)
@@ -223,34 +222,34 @@ func _init() -> void:
 	conversion.condition = "Self Status Stacks At Least"
 	conversion.status = BurningStatus
 	conversion.status_stack_threshold = 4
-	var convert_heal := _effect("Reaction Triggered", "Heal", "Self")
+	var convert_heal := TriggeredEffectCheckFixturesScript.effect("Reaction Triggered", "Heal", "Self")
 	convert_heal.amount_source = "Target Pending Status Damage"
 	convert_heal.status = BurningStatus
 	conversion.effects.append(convert_heal)
-	var consume_burn := _effect("Reaction Triggered", "Consume Status", "Self")
+	var consume_burn := TriggeredEffectCheckFixturesScript.effect("Reaction Triggered", "Consume Status", "Self")
 	consume_burn.amount_source = "Target Status Stacks"
 	consume_burn.status = BurningStatus
 	conversion.effects.append(consume_burn)
 	reactor.current_reaction = conversion
-	var reaction_context = _context([reactor, enemy], log)
+	var reaction_context = TriggeredEffectCheckFixturesScript.context([reactor, enemy], log)
 	reaction_context.apply_direct_damage(enemy, reactor, 1, -1, root_log_id)
 	assert(reactor.hp == 13 and not reactor.has_status("Burning"), "A reaction should convert qualifying burning into proportional healing and consume it.")
 	assert(reaction_context.events_of_type("status_removed").size() == 1, "Consuming a final status stack should emit the general status-removed hook.")
 
-	var uncapped_burn = _unit("Uncapped Burn", "Enemies")
-	var uncapped_context = _context([uncapped_burn], log)
+	var uncapped_burn = TriggeredEffectCheckFixturesScript.unit("Uncapped Burn", "Enemies")
+	var uncapped_context = TriggeredEffectCheckFixturesScript.context([uncapped_burn], log)
 	assert(StatusResolverScript.apply_status(log, root_log_id, uncapped_burn, BurningStatus, "bulk test", 3, false, uncapped_context, null, -1, 120), "Bulk status application should support large uncapped applications.")
 	assert(uncapped_burn.status_stack_count("Burning") == 120, "Burning should not have a runtime stack cap.")
 
-	var pyromancer = _unit("Pyromancer", "Allies")
+	var pyromancer = TriggeredEffectCheckFixturesScript.unit("Pyromancer", "Allies")
 	var pyromancer_passive := PassiveDefinition.new()
 	pyromancer_passive.display_name = "Living Flame"
-	var burn_immunity := _effect("Status Application Requested", "Prevent Request", "Self")
+	var burn_immunity := TriggeredEffectCheckFixturesScript.effect("Status Application Requested", "Prevent Request", "Self")
 	burn_immunity.condition = "Requested Status Matches"
 	burn_immunity.status = BurningStatus
 	pyromancer_passive.effects.append(burn_immunity)
-	pyromancer_passive.effects.append(_effect("Battle Start", "Apply Status", "All Units", 0, BurningStatus))
-	pyromancer_passive.effects.append(_effect("Action Completed", "Apply Status", "All Units", 0, BurningStatus))
+	pyromancer_passive.effects.append(TriggeredEffectCheckFixturesScript.effect("Battle Start", "Apply Status", "All Units", 0, BurningStatus))
+	pyromancer_passive.effects.append(TriggeredEffectCheckFixturesScript.effect("Action Completed", "Apply Status", "All Units", 0, BurningStatus))
 	pyromancer.current_passive = pyromancer_passive
 	var pyromancer_reaction := ReactionDefinition.new()
 	pyromancer_reaction.display_name = "Feed the Flame"
@@ -259,12 +258,12 @@ func _init() -> void:
 	pyromancer_reaction.reaction_type = "Effects Only"
 	pyromancer_reaction.prevents_triggering_request = true
 	pyromancer_reaction.cooldown_turns = 5
-	var double_burn := _effect("Reaction Triggered", "Apply Status", "Event Target", 0, BurningStatus)
+	var double_burn := TriggeredEffectCheckFixturesScript.effect("Reaction Triggered", "Apply Status", "Event Target", 0, BurningStatus)
 	double_burn.amount_source = "Target Status Stacks"
 	pyromancer_reaction.effects.append(double_burn)
 	pyromancer.current_reaction = pyromancer_reaction
-	var unburned_applier = _unit("Unburned Applier", "Enemies")
-	var pyromancer_context = _context([pyromancer, unburned_applier], log)
+	var unburned_applier = TriggeredEffectCheckFixturesScript.unit("Unburned Applier", "Enemies")
+	var pyromancer_context = TriggeredEffectCheckFixturesScript.context([pyromancer, unburned_applier], log)
 	assert(not StatusResolverScript.apply_status(log, root_log_id, pyromancer, RotStatus, "test", 3, false, pyromancer_context, unburned_applier), "An incoming-ailment reaction should replace and prevent the requested ailment.")
 	assert(not unburned_applier.has_status("Burning"), "Doubling zero Burn should remain a legible no-op while still preventing the ailment.")
 	for _turn in range(5):
@@ -275,13 +274,13 @@ func _init() -> void:
 	assert(unburned_applier.status_stack_count("Burning") == 4, "A reaction effect should be able to double the attempted applier's existing Burn.")
 	assert(StatusResolverScript.apply_status(log, root_log_id, pyromancer, BleedStatus, "test", 3, false, pyromancer_context, unburned_applier), "The reaction cooldown should allow a later ailment through.")
 	assert(not StatusResolverScript.apply_status(log, root_log_id, pyromancer, BurningStatus, "test", 3, false, pyromancer_context, unburned_applier), "Burn immunity should remain authorable independently of the reaction.")
-	var passive_target = _unit("Passive Target", "Enemies")
-	var passive_context = _context([pyromancer, passive_target], log)
+	var passive_target = TriggeredEffectCheckFixturesScript.unit("Passive Target", "Enemies")
+	var passive_context = TriggeredEffectCheckFixturesScript.context([pyromancer, passive_target], log)
 	passive_context.publish("battle_started", null, null, {}, -1, root_log_id)
 	assert(not pyromancer.has_status("Burning") and passive_target.status_stack_count("Burning") == 1, "A passive should author Burn immunity plus battle-start Burn for all units.")
 	passive_context.publish("action_completed", pyromancer, passive_target, {}, -1, root_log_id)
 	assert(not pyromancer.has_status("Burning") and passive_target.status_stack_count("Burning") == 2, "Action Completed should be available as an authored shared-effect trigger.")
-	var observer = _unit("Ailment Observer", "Allies")
+	var observer = TriggeredEffectCheckFixturesScript.unit("Ailment Observer", "Allies")
 	var observing_reaction := ReactionDefinition.new()
 	observing_reaction.display_name = "Learn From Pain"
 	observing_reaction.trigger = "Status Application Requested"
@@ -289,29 +288,29 @@ func _init() -> void:
 	observing_reaction.reaction_type = "Gain Armor"
 	observing_reaction.amount = 1
 	observer.current_reaction = observing_reaction
-	var observing_context = _context([observer, unburned_applier], log)
+	var observing_context = TriggeredEffectCheckFixturesScript.context([observer, unburned_applier], log)
 	assert(StatusResolverScript.apply_status(log, root_log_id, observer, RotStatus, "test", 3, false, observing_context, unburned_applier), "A status-application reaction should observe without preventing by default.")
 	assert(observer.has_status("Rot") and observer.guard_armor == 1, "An observational reaction should respond while allowing the incoming ailment.")
 
-	var cryomancer = _unit("Cryomancer", "Allies")
+	var cryomancer = TriggeredEffectCheckFixturesScript.unit("Cryomancer", "Allies")
 	var frostbite := SkillDefinition.new()
 	frostbite.display_name = "Frostbite"
 	frostbite.action = "Effects Only"
-	frostbite.effects.append(_effect("Skill Used", "Apply Status", "Event Target", 0, FrostStatus))
-	frostbite.effects.append(_effect("Skill Used", "Apply Status", "Event Target", 0, NumbStatus))
+	frostbite.effects.append(TriggeredEffectCheckFixturesScript.effect("Skill Used", "Apply Status", "Event Target", 0, FrostStatus))
+	frostbite.effects.append(TriggeredEffectCheckFixturesScript.effect("Skill Used", "Apply Status", "Event Target", 0, NumbStatus))
 	cryomancer.current_skill = frostbite
 	var cold_snap := ReactionDefinition.new()
 	cold_snap.display_name = "Cold Snap"
 	cold_snap.trigger = "Physically Damaged"
 	cold_snap.reaction_type = "Effects Only"
 	cold_snap.cooldown_turns = 2
-	var retaliatory_frost := _effect("Reaction Triggered", "Apply Status", "Event Target", 0, FrostStatus)
+	var retaliatory_frost := TriggeredEffectCheckFixturesScript.effect("Reaction Triggered", "Apply Status", "Event Target", 0, FrostStatus)
 	retaliatory_frost.status_stacks = 2
 	cold_snap.effects.append(retaliatory_frost)
 	cryomancer.current_reaction = cold_snap
 	var gathering_cold := PassiveDefinition.new()
 	gathering_cold.display_name = "Gathering Cold"
-	var frost_slow := _effect("Battle State Changed", "Modify Stat", "Enemy Units", 0, FrostStatus)
+	var frost_slow := TriggeredEffectCheckFixturesScript.effect("Battle State Changed", "Modify Stat", "Enemy Units", 0, FrostStatus)
 	frost_slow.modified_stat = "Action Speed"
 	frost_slow.modifier_mode = "Dynamic Percent"
 	frost_slow.modifier_direction = "Decrease"
@@ -320,10 +319,10 @@ func _init() -> void:
 	frost_slow.amount_multiplier = 10
 	gathering_cold.effects.append(frost_slow)
 	cryomancer.current_passive = gathering_cold
-	var cold_enemy = _unit("Cold Enemy", "Enemies")
-	var colder_enemy = _unit("Colder Enemy", "Enemies")
+	var cold_enemy = TriggeredEffectCheckFixturesScript.unit("Cold Enemy", "Enemies")
+	var colder_enemy = TriggeredEffectCheckFixturesScript.unit("Colder Enemy", "Enemies")
 	colder_enemy.action_speed = 20
-	var cryomancer_context = _context([cryomancer, cold_enemy, colder_enemy], log)
+	var cryomancer_context = TriggeredEffectCheckFixturesScript.context([cryomancer, cold_enemy, colder_enemy], log)
 	cryomancer_context.publish("skill_used", cryomancer, cold_enemy, {"skill": frostbite.display_name}, -1, root_log_id)
 	assert(cold_enemy.has_status("Frost") and cold_enemy.has_status("Numb"), "An effect-only skill should author Frost and Numb together.")
 	assert(cold_enemy.action_speed == 9 and colder_enemy.action_speed == 18, "A dynamic percentage modifier should slow all enemies from aggregate enemy Frost.")
@@ -333,22 +332,22 @@ func _init() -> void:
 	cryomancer_context.publish("damage_dealt", cold_enemy, cryomancer, {"amount": 1, "physical_amount": 0, "magic_amount": 1}, -1, root_log_id)
 	assert(cold_enemy.status_stack_count("Frost") == 1, "A Physically Damaged reaction should ignore magical damage.")
 
-	var enthalpyst = _unit("Enthalpyst", "Allies")
+	var enthalpyst = TriggeredEffectCheckFixturesScript.unit("Enthalpyst", "Allies")
 	var thermal_shock := SkillDefinition.new()
 	thermal_shock.display_name = "Thermal Shock"
 	thermal_shock.action = "Effects Only"
-	thermal_shock.effects.append(_effect("Skill Used", "Apply Status", "Event Target", 0, FrostStatus))
-	thermal_shock.effects.append(_effect("Skill Used", "Apply Status", "Event Target", 0, BurningStatus))
+	thermal_shock.effects.append(TriggeredEffectCheckFixturesScript.effect("Skill Used", "Apply Status", "Event Target", 0, FrostStatus))
+	thermal_shock.effects.append(TriggeredEffectCheckFixturesScript.effect("Skill Used", "Apply Status", "Event Target", 0, BurningStatus))
 	enthalpyst.current_skill = thermal_shock
 	var thermal_exchange := PassiveDefinition.new()
 	thermal_exchange.display_name = "Thermal Exchange"
-	var burn_to_frost := _effect("Enemy Status Applied", "Apply Status", "Event Target", 0, FrostStatus)
+	var burn_to_frost := TriggeredEffectCheckFixturesScript.effect("Enemy Status Applied", "Apply Status", "Event Target", 0, FrostStatus)
 	burn_to_frost.condition = "Applied Status Matches"
 	burn_to_frost.condition_status = BurningStatus
 	burn_to_frost.amount_source = "Applied Status Stacks"
 	burn_to_frost.ignore_events_from_same_effect_source = true
 	thermal_exchange.effects.append(burn_to_frost)
-	var frost_to_burn := _effect("Enemy Status Applied", "Apply Status", "Event Target", 0, BurningStatus)
+	var frost_to_burn := TriggeredEffectCheckFixturesScript.effect("Enemy Status Applied", "Apply Status", "Event Target", 0, BurningStatus)
 	frost_to_burn.condition = "Applied Status Matches"
 	frost_to_burn.condition_status = FrostStatus
 	frost_to_burn.amount_source = "Applied Status Stacks"
@@ -362,17 +361,17 @@ func _init() -> void:
 	critical_enthalpy.status = FrostStatus
 	critical_enthalpy.status_stack_threshold = 10
 	critical_enthalpy.cooldown_turns = 5
-	var absorb_frost := _effect("Reaction Triggered", "Apply Status", "Self", 0, BurningStatus)
+	var absorb_frost := TriggeredEffectCheckFixturesScript.effect("Reaction Triggered", "Apply Status", "Self", 0, BurningStatus)
 	absorb_frost.amount_source = "Event Target Status Stacks"
 	absorb_frost.amount_status = FrostStatus
 	critical_enthalpy.effects.append(absorb_frost)
-	var thermal_strike := _effect("Reaction Triggered", "Deal Damage", "Event Target", 4)
+	var thermal_strike := TriggeredEffectCheckFixturesScript.effect("Reaction Triggered", "Deal Damage", "Event Target", 4)
 	thermal_strike.damage_type = "Physical"
 	critical_enthalpy.effects.append(thermal_strike)
 	enthalpyst.current_reaction = critical_enthalpy
-	var thermal_target = _unit("Thermal Target", "Enemies")
+	var thermal_target = TriggeredEffectCheckFixturesScript.unit("Thermal Target", "Enemies")
 	thermal_target.armor = 2
-	var enthalpyst_context = _context([enthalpyst, thermal_target], log)
+	var enthalpyst_context = TriggeredEffectCheckFixturesScript.context([enthalpyst, thermal_target], log)
 	StatusResolverScript.apply_status(log, root_log_id, thermal_target, FrostStatus, "external frost", 3, false, enthalpyst_context, null, -1, 3)
 	assert(thermal_target.status_stack_count("Frost") == 3 and thermal_target.status_stack_count("Burning") == 3, "Thermal Exchange should mirror newly gained Frost into equal Burn without triggering itself.")
 	StatusResolverScript.apply_status(log, root_log_id, thermal_target, FrostStatus, "setup", 3, false, null, null, -1, 5)
@@ -382,34 +381,34 @@ func _init() -> void:
 	assert(thermal_target.status_stack_count("Burning") == 5, "Thermal Shock and Thermal Exchange should add matching Burn and Frost without recursive exchange.")
 	assert(thermal_target.hp == 14, "Authored physical damage should pass through armor, then Frost amplification, before consuming Frost.")
 
-	var mirror_owner = _unit("Mirror Owner", "Allies")
-	var mirror_source = _unit("Mirror Source", "Enemies")
+	var mirror_owner = TriggeredEffectCheckFixturesScript.unit("Mirror Owner", "Allies")
+	var mirror_source = TriggeredEffectCheckFixturesScript.unit("Mirror Source", "Enemies")
 	var mirror_passive := PassiveDefinition.new()
 	mirror_passive.display_name = "External Mirror"
-	var mirror_burning := _effect("Externally Sourced Status Applied", "Apply Status", "Event Source", 0, BurningStatus)
+	var mirror_burning := TriggeredEffectCheckFixturesScript.effect("Externally Sourced Status Applied", "Apply Status", "Event Source", 0, BurningStatus)
 	mirror_burning.condition = "Applied Status Matches"
 	mirror_burning.condition_status = BurningStatus
 	mirror_burning.amount_source = "Applied Status Stacks"
 	mirror_passive.effects.append(mirror_burning)
 	mirror_owner.current_passive = mirror_passive
-	var mirror_context = _context([mirror_owner, mirror_source], log)
+	var mirror_context = TriggeredEffectCheckFixturesScript.context([mirror_owner, mirror_source], log)
 	StatusResolverScript.apply_status(log, root_log_id, mirror_owner, BurningStatus, "external", 3, false, mirror_context, mirror_source, -1, 2)
 	assert(mirror_source.status_stack_count("Burning") == 2, "Externally sourced status triggers should combine with status matching and mirror added stacks.")
 	StatusResolverScript.apply_status(log, root_log_id, mirror_owner, BurningStatus, "self", 3, false, mirror_context, mirror_owner)
 	assert(mirror_source.status_stack_count("Burning") == 2, "Externally sourced status triggers should ignore statuses applied by the owner.")
 
-	var paladin = _unit("Paladin", "Allies")
+	var paladin = TriggeredEffectCheckFixturesScript.unit("Paladin", "Allies")
 	paladin.physical_damage = 9
 	var smite := SkillDefinition.new()
 	smite.display_name = "Smite"
 	smite.action = "Attack"
 	smite.attack_damage_type = "Split Evenly"
 	paladin.current_skill = smite
-	var smite_target = _unit("Smite Target", "Enemies")
+	var smite_target = TriggeredEffectCheckFixturesScript.unit("Smite Target", "Enemies")
 	smite_target.armor = 2
 	var paladin_log = CombatLogScript.new()
 	var paladin_root: int = paladin_log.add("Paladin authorability")
-	var smite_context = _context([paladin, smite_target], paladin_log)
+	var smite_context = TriggeredEffectCheckFixturesScript.context([paladin, smite_target], paladin_log)
 	CombatSimulatorScript.new()._resolve_skill(smite_context, paladin_log, paladin_root, paladin, smite_target, smite, "job skill")
 	assert(smite_target.hp == 13, "A split attack should divide physical base damage evenly, apply armor only to its physical component, and remain one attack.")
 	var purification := ReactionDefinition.new()
@@ -424,14 +423,14 @@ func _init() -> void:
 	paladin.current_reaction = purification
 	assert(not StatusResolverScript.apply_status(paladin_log, paladin_root, paladin, BurningStatus, "test", 3, false, smite_context, smite_target), "A replacement reaction should prevent its selected incoming ailment.")
 	assert(not paladin.has_status("Burning") and (paladin.has_status("Ward") or paladin.has_status("Renewal")), "A replacement reaction should atomically grant one deterministic random boon.")
-	var ally_aura = _unit("Aura Ally", "Allies")
-	var independently_mended = _unit("Independently Mended", "Allies")
+	var ally_aura = TriggeredEffectCheckFixturesScript.unit("Aura Ally", "Allies")
+	var independently_mended = TriggeredEffectCheckFixturesScript.unit("Independently Mended", "Allies")
 	var aura := PassiveDefinition.new()
 	aura.display_name = "Aura of Mending"
-	var maintain_reconstitution := _effect("Battle State Changed", "Maintain Status Aura", "Allied Units", 0, ReconstitutionStatus)
+	var maintain_reconstitution := TriggeredEffectCheckFixturesScript.effect("Battle State Changed", "Maintain Status Aura", "Allied Units", 0, ReconstitutionStatus)
 	aura.effects.append(maintain_reconstitution)
 	paladin.current_passive = aura
-	var aura_context = _context([paladin, ally_aura, independently_mended, smite_target], paladin_log)
+	var aura_context = TriggeredEffectCheckFixturesScript.context([paladin, ally_aura, independently_mended, smite_target], paladin_log)
 	aura_context.publish("battle_started", null, null, {}, -1, paladin_root)
 	assert(paladin.has_status("Reconstitution") and ally_aura.has_status("Reconstitution") and not smite_target.has_status("Reconstitution"), "A maintained aura should grant its status to all living allies.")
 	StatusResolverScript.remove_status(paladin_log, paladin_root, ally_aura, ReconstitutionStatus.display_name, "test dispel", aura_context, smite_target)
@@ -441,15 +440,15 @@ func _init() -> void:
 	assert(not ally_aura.has_status("Reconstitution"), "A maintained aura should remove its contribution when its source dies.")
 	assert(independently_mended.has_status("Reconstitution"), "Removing an aura contribution should preserve an independently gained copy of the same status.")
 
-	var detonator = _unit("Detonator", "Allies")
-	var burn_target = _unit("Burn Target", "Enemies")
+	var detonator = TriggeredEffectCheckFixturesScript.unit("Detonator", "Allies")
+	var burn_target = TriggeredEffectCheckFixturesScript.unit("Burn Target", "Enemies")
 	burn_target.hp = 3
 	for _stack in range(3):
 		burn_target.add_status(BurningStatus, "test", 3, false)
 	var detonate_skill := SkillDefinition.new()
 	detonate_skill.display_name = "Flashpoint"
 	detonate_skill.action = "Effects Only"
-	detonate_skill.effects.append(_effect("Skill Used", "Detonate Status", "Event Target", 0, BurningStatus))
+	detonate_skill.effects.append(TriggeredEffectCheckFixturesScript.effect("Skill Used", "Detonate Status", "Event Target", 0, BurningStatus))
 	detonator.current_skill = detonate_skill
 	var detonate_tactic := TacticDefinition.new()
 	detonate_tactic.condition = "Target Pending Status Damage At Least HP"
@@ -457,47 +456,47 @@ func _init() -> void:
 	detonate_tactic.target = "Frontmost Enemy"
 	detonate_tactic.status = BurningStatus
 	assert(TacticResolverScript.condition_matches(detonate_tactic.condition, detonator, [detonator, burn_target], burn_target, detonate_tactic), "Tactics should compare pending status damage with target HP.")
-	var detonation_context = _context([detonator, burn_target], log)
+	var detonation_context = TriggeredEffectCheckFixturesScript.context([detonator, burn_target], log)
 	detonation_context.publish("skill_used", detonator, burn_target, {"skill": detonate_skill.display_name}, -1, root_log_id)
 	assert(burn_target.hp == 0 and not burn_target.has_status("Burning"), "Detonation should deal all pending status damage and consume the status.")
 
-	var overhealer = _unit("Overhealer", "Allies")
+	var overhealer = TriggeredEffectCheckFixturesScript.unit("Overhealer", "Allies")
 	var growth := PassiveDefinition.new()
 	growth.display_name = "Overflowing Vitality"
-	var grow_max_hp := _effect("Healing Received", "Modify Stat", "Self")
+	var grow_max_hp := TriggeredEffectCheckFixturesScript.effect("Healing Received", "Modify Stat", "Self")
 	grow_max_hp.modified_stat = "Max HP"
 	grow_max_hp.modifier_duration_turns = 99
 	grow_max_hp.amount_source = "Overhealing Diminishing"
 	grow_max_hp.counter_name = "overflow_growth"
 	growth.effects.append(grow_max_hp)
-	var count_growth := _effect("Healing Received", "Modify Counter", "Self", 1)
+	var count_growth := TriggeredEffectCheckFixturesScript.effect("Healing Received", "Modify Counter", "Self", 1)
 	count_growth.counter_name = "overflow_growth"
 	growth.effects.append(count_growth)
 	overhealer.current_passive = growth
-	var growth_context = _context([overhealer], log)
+	var growth_context = TriggeredEffectCheckFixturesScript.context([overhealer], log)
 	growth_context.apply_healing(overhealer, overhealer, 6, -1, root_log_id)
 	overhealer.hp = overhealer.max_hp
 	growth_context.apply_healing(overhealer, overhealer, 6, -1, root_log_id)
 	assert(overhealer.max_hp == 29, "Overhealing should be able to grant diminishing temporary max HP through a named counter.")
 
-	var bog_priest = _unit("Bog Priest", "Allies")
-	var bog_ally = _unit("Bog Ally", "Allies")
+	var bog_priest = TriggeredEffectCheckFixturesScript.unit("Bog Priest", "Allies")
+	var bog_ally = TriggeredEffectCheckFixturesScript.unit("Bog Ally", "Allies")
 	bog_ally.max_hp = 40
 	bog_ally.hp = 10
 	var bog_skill := SkillDefinition.new()
 	bog_skill.display_name = "Mire Mending"
 	bog_skill.action = "Effects Only"
-	var proportional_heal := _effect("Skill Used", "Heal", "Event Target")
+	var proportional_heal := TriggeredEffectCheckFixturesScript.effect("Skill Used", "Heal", "Event Target")
 	proportional_heal.amount_source = "Target Max HP"
 	proportional_heal.amount_divisor = 4
 	bog_skill.effects.append(proportional_heal)
 	bog_priest.current_skill = bog_skill
-	var bog_skill_context = _context([bog_priest, bog_ally], log)
+	var bog_skill_context = TriggeredEffectCheckFixturesScript.context([bog_priest, bog_ally], log)
 	bog_skill_context.publish("skill_used", bog_priest, bog_ally, {"skill": bog_skill.display_name}, -1, root_log_id)
 	assert(bog_ally.hp == 20, "Target Max HP should support proportional authored healing.")
 
-	var enemy_healer = _unit("Enemy Healer", "Enemies")
-	var rotted_enemy = _unit("Rotted Enemy", "Enemies")
+	var enemy_healer = TriggeredEffectCheckFixturesScript.unit("Enemy Healer", "Enemies")
+	var rotted_enemy = TriggeredEffectCheckFixturesScript.unit("Rotted Enemy", "Enemies")
 	rotted_enemy.hp = 10
 	var corrupt_healing := ReactionDefinition.new()
 	corrupt_healing.display_name = "Bog Intercession"
@@ -505,10 +504,10 @@ func _init() -> void:
 	corrupt_healing.reaction_type = "Effects Only"
 	corrupt_healing.prevents_triggering_request = true
 	corrupt_healing.cooldown_turns = 3
-	corrupt_healing.effects.append(_effect("Reaction Triggered", "Apply Status", "Event Target", 0, RotStatus))
-	corrupt_healing.effects.append(_effect("Reaction Triggered", "Heal", "Event Target", 1))
+	corrupt_healing.effects.append(TriggeredEffectCheckFixturesScript.effect("Reaction Triggered", "Apply Status", "Event Target", 0, RotStatus))
+	corrupt_healing.effects.append(TriggeredEffectCheckFixturesScript.effect("Reaction Triggered", "Heal", "Event Target", 1))
 	bog_priest.current_reaction = corrupt_healing
-	var corrupt_context = _context([bog_priest, enemy_healer, rotted_enemy], log)
+	var corrupt_context = TriggeredEffectCheckFixturesScript.context([bog_priest, enemy_healer, rotted_enemy], log)
 	corrupt_context.apply_healing(enemy_healer, rotted_enemy, 8, -1, root_log_id)
 	assert(rotted_enemy.hp == 11 and rotted_enemy.has_status("Rot"), "Enemy healing reactions should replace the original heal with authored effects.")
 	corrupt_context.apply_healing(enemy_healer, rotted_enemy, 8, -1, root_log_id)
@@ -519,88 +518,88 @@ func _init() -> void:
 	bog_ally.hp = bog_ally.max_hp - 1
 	var overflow := PassiveDefinition.new()
 	overflow.display_name = "Overflowing Mire"
-	var redistribute := _effect("Ally Overhealed", "Heal", "Random Damaged Allied Unit")
+	var redistribute := TriggeredEffectCheckFixturesScript.effect("Ally Overhealed", "Heal", "Random Damaged Allied Unit")
 	redistribute.amount_source = "Overhealing"
 	overflow.effects.append(redistribute)
-	overflow.effects.append(_effect("Ally Overhealed", "Apply Status", "Event Target", 0, RotStatus))
+	overflow.effects.append(TriggeredEffectCheckFixturesScript.effect("Ally Overhealed", "Apply Status", "Event Target", 0, RotStatus))
 	bog_priest.current_passive = overflow
-	var overflow_context = _context([bog_priest, bog_ally], log)
+	var overflow_context = TriggeredEffectCheckFixturesScript.context([bog_priest, bog_ally], log)
 	overflow_context.apply_healing(bog_priest, bog_ally, 6, -1, root_log_id)
 	assert(bog_priest.hp == bog_priest.max_hp and bog_ally.has_status("Rot"), "Ally overhealing should redistribute to a damaged allied unit, including the owner, and apply Rot to the original target.")
 	assert(overflow_context.events_of_type("healing_received").size() == 2, "Redistributed overhealing should not recursively trigger itself.")
 
-	var bridge_actor = _unit("Bridge Actor", "Allies")
-	var bridge_ally = _unit("Bridge Ally", "Allies")
+	var bridge_actor = TriggeredEffectCheckFixturesScript.unit("Bridge Actor", "Allies")
+	var bridge_ally = TriggeredEffectCheckFixturesScript.unit("Bridge Ally", "Allies")
 	bridge_ally.action_speed = 10
 	StatusResolverScript.apply_status(log, root_log_id, bridge_ally, RotStatus, "test", 3, false)
 	StatusResolverScript.apply_status(log, root_log_id, bridge_ally, BurningStatus, "test", 3, false, null, null, -1, 3)
 	var haste_skill := SkillDefinition.new()
 	haste_skill.display_name = "Hot on Their Heels"
 	haste_skill.action = "Effects Only"
-	var ailment_haste := _effect("Skill Used", "Modify Stat", "Event Target")
+	var ailment_haste := TriggeredEffectCheckFixturesScript.effect("Skill Used", "Modify Stat", "Event Target")
 	ailment_haste.modified_stat = "Action Speed"
 	ailment_haste.modifier_direction = "Increase"
 	ailment_haste.modifier_duration_turns = 2
 	ailment_haste.amount_source = "Target Ailment Stacks"
 	haste_skill.effects.append(ailment_haste)
 	bridge_actor.current_skill = haste_skill
-	var haste_context = _context([bridge_actor, bridge_ally], log)
+	var haste_context = TriggeredEffectCheckFixturesScript.context([bridge_actor, bridge_ally], log)
 	haste_context.publish("skill_used", bridge_actor, bridge_ally, {"skill": haste_skill.display_name}, -1, root_log_id)
 	assert(bridge_ally.action_speed == 14, "Ailment-stack formulas should count one Rot and three Burning stacks, and temporary modifiers should support authored speed increases.")
 
-	var barrier_target = _unit("Barrier Target", "Allies")
+	var barrier_target = TriggeredEffectCheckFixturesScript.unit("Barrier Target", "Allies")
 	barrier_target.add_status(ReconstitutionStatus, "test", 3, false)
 	barrier_target.add_status(RenewalStatus, "test", 3, false)
 	barrier_target.add_status(RenewalStatus, "test", 3, false)
 	var barrier_skill := SkillDefinition.new()
 	barrier_skill.display_name = "Spiritual Barrier"
 	barrier_skill.action = "Effects Only"
-	var boon_armor := _effect("Skill Used", "Grant Armor", "Event Target")
+	var boon_armor := TriggeredEffectCheckFixturesScript.effect("Skill Used", "Grant Armor", "Event Target")
 	boon_armor.amount_source = "Target Unique Boons"
 	boon_armor.once_per_battle = true
 	barrier_skill.effects.append(boon_armor)
 	bridge_actor.current_skill = barrier_skill
-	var barrier_context = _context([bridge_actor, barrier_target], log)
+	var barrier_context = TriggeredEffectCheckFixturesScript.context([bridge_actor, barrier_target], log)
 	barrier_context.publish("skill_used", bridge_actor, barrier_target, {"skill": barrier_skill.display_name}, -1, root_log_id)
 	barrier_context.publish("skill_used", bridge_actor, barrier_target, {"skill": barrier_skill.display_name}, -1, root_log_id)
 	assert(barrier_target.guard_armor == 2, "Unique-boon formulas should ignore repeated stacks and once-per-battle armor effects should not fire twice.")
 
-	var chimney_target = _unit("Chimney Target", "Enemies")
-	var chimney_other = _unit("Chimney Other", "Enemies")
+	var chimney_target = TriggeredEffectCheckFixturesScript.unit("Chimney Target", "Enemies")
+	var chimney_other = TriggeredEffectCheckFixturesScript.unit("Chimney Other", "Enemies")
 	chimney_target.add_status(BurningStatus, "test", 3, false)
 	chimney_other.add_status(BurningStatus, "test", 3, false)
 	chimney_other.add_status(BurningStatus, "test", 3, false)
 	var chimney_skill := SkillDefinition.new()
 	chimney_skill.display_name = "Chimney Effect"
 	chimney_skill.action = "Effects Only"
-	var gather_burning := _effect("Skill Used", "Gather Status", "Event Target", 0, BurningStatus)
+	var gather_burning := TriggeredEffectCheckFixturesScript.effect("Skill Used", "Gather Status", "Event Target", 0, BurningStatus)
 	gather_burning.amount_target_selector = "Enemy Units"
 	chimney_skill.effects.append(gather_burning)
 	bridge_actor.current_skill = chimney_skill
-	var chimney_context = _context([bridge_actor, chimney_target, chimney_other], log)
+	var chimney_context = TriggeredEffectCheckFixturesScript.context([bridge_actor, chimney_target, chimney_other], log)
 	chimney_context.publish("skill_used", bridge_actor, chimney_target, {"skill": chimney_skill.display_name}, -1, root_log_id)
 	assert(chimney_target.status_stack_count("Burning") == 3 and not chimney_other.has_status("Burning"), "Gather Status should preserve total stacks while concentrating a status onto the selected target.")
 
-	var harvest_ally = _unit("Harvest Ally", "Allies")
+	var harvest_ally = TriggeredEffectCheckFixturesScript.unit("Harvest Ally", "Allies")
 	harvest_ally.hp = 10
-	var rotted_one = _unit("Rotted One", "Enemies")
-	var rotted_two = _unit("Rotted Two", "Enemies")
+	var rotted_one = TriggeredEffectCheckFixturesScript.unit("Rotted One", "Enemies")
+	var rotted_two = TriggeredEffectCheckFixturesScript.unit("Rotted Two", "Enemies")
 	rotted_one.hp = 10
 	rotted_two.hp = 10
 	rotted_one.add_status(RotStatus, "test", 3, false)
 	rotted_two.add_status(RotStatus, "test", 3, false)
 	rotted_two.add_status(RotStatus, "test", 3, false)
-	var harvest_context = _context([bridge_actor, harvest_ally, rotted_one, rotted_two], log)
+	var harvest_context = TriggeredEffectCheckFixturesScript.context([bridge_actor, harvest_ally, rotted_one, rotted_two], log)
 	harvest_context.apply_healing(rotted_one, rotted_one, 1, -1, root_log_id)
 	harvest_context.apply_healing(rotted_two, rotted_two, 1, -1, root_log_id)
 	var harvest_skill := SkillDefinition.new()
 	harvest_skill.display_name = "Bog Harvest"
 	harvest_skill.action = "Effects Only"
-	var harvest_heal := _effect("Skill Used", "Heal", "Allied Units", 0, RotStatus)
+	var harvest_heal := TriggeredEffectCheckFixturesScript.effect("Skill Used", "Heal", "Allied Units", 0, RotStatus)
 	harvest_heal.amount_source = "Total Status Max HP Loss On Selected Group"
 	harvest_heal.amount_target_selector = "Enemy Units"
 	harvest_skill.effects.append(harvest_heal)
-	var restore_rot := _effect("Skill Used", "Restore Max HP Lost To Status", "Enemy Units", 0, RotStatus)
+	var restore_rot := TriggeredEffectCheckFixturesScript.effect("Skill Used", "Restore Max HP Lost To Status", "Enemy Units", 0, RotStatus)
 	harvest_skill.effects.append(restore_rot)
 	bridge_actor.current_skill = harvest_skill
 	var rotted_one_reduced_max: int = rotted_one.max_hp
@@ -610,33 +609,33 @@ func _init() -> void:
 	assert(rotted_one.max_hp == rotted_one_reduced_max + 1 and rotted_two.max_hp == rotted_two_reduced_max + 2, "Removing Rot through restoration should return all maximum HP recorded by Rot.")
 	assert(rotted_one.hp == 11 and rotted_two.hp == 11 and not rotted_one.has_status("Rot") and not rotted_two.has_status("Rot"), "Restored maximum HP should remain empty and Rot should be removed.")
 
-	var barrier_owner = _unit("Barrier Owner", "Allies")
-	var barrier_ally = _unit("Barrier Ally", "Allies")
+	var barrier_owner = TriggeredEffectCheckFixturesScript.unit("Barrier Owner", "Allies")
+	var barrier_ally = TriggeredEffectCheckFixturesScript.unit("Barrier Ally", "Allies")
 	var battle_barrier := PassiveDefinition.new()
 	battle_barrier.display_name = "Battle Barrier"
-	battle_barrier.effects.append(_effect("Battle Start", "Grant Battle Armor", "Allied Units", 4))
+	battle_barrier.effects.append(TriggeredEffectCheckFixturesScript.effect("Battle Start", "Grant Battle Armor", "Allied Units", 4))
 	barrier_owner.current_passive = battle_barrier
-	var battle_barrier_context = _context([barrier_owner, barrier_ally], log)
+	var battle_barrier_context = TriggeredEffectCheckFixturesScript.context([barrier_owner, barrier_ally], log)
 	battle_barrier_context.publish("battle_started", null, null, {}, -1, root_log_id)
 	assert(barrier_owner.battle_armor == 4 and barrier_ally.battle_armor == 4 and barrier_ally.total_armor() == 4, "Battle armor should be a battle-local armor contribution granted to selected targets.")
 	battle_barrier_context.publish("turn_started", barrier_ally, barrier_ally, {}, -1, root_log_id)
 	assert(barrier_ally.battle_armor == 4, "Battle armor should not expire at the target's next turn.")
 
-	var bruiser = _unit("Bruiser", "Allies")
+	var bruiser = TriggeredEffectCheckFixturesScript.unit("Bruiser", "Allies")
 	bruiser.action_speed = 10
 	bruiser.base_action_speed = 10
 	bruiser.next_action_time = 20
-	var rapid_attacker = _unit("Rapid Attacker", "Enemies")
+	var rapid_attacker = TriggeredEffectCheckFixturesScript.unit("Rapid Attacker", "Enemies")
 	rapid_attacker.next_action_time = 5
 	var momentum := PassiveDefinition.new()
 	momentum.display_name = "Punishing Momentum"
-	var physical_haste := _effect("Physically Damaged", "Apply Haste", "Self", 2)
+	var physical_haste := TriggeredEffectCheckFixturesScript.effect("Physically Damaged", "Apply Haste", "Self", 2)
 	physical_haste.modifier_duration_turns = 3
 	physical_haste.max_action_speed_percent = 200
 	physical_haste.repeat_within_event_chain = true
 	momentum.effects.append(physical_haste)
 	bruiser.current_passive = momentum
-	var momentum_context = _context([bruiser, rapid_attacker], log)
+	var momentum_context = TriggeredEffectCheckFixturesScript.context([bruiser, rapid_attacker], log)
 	var rapid_root: int = momentum_context.publish("attack_performed", rapid_attacker, bruiser, {}, -1, root_log_id)
 	for _hit in range(4):
 		momentum_context.publish("damage_dealt", rapid_attacker, bruiser, {"amount": 1, "physical_amount": 1, "magic_amount": 0}, rapid_root, root_log_id)
@@ -645,23 +644,23 @@ func _init() -> void:
 		momentum_context.publish("turn_completed", bruiser, bruiser, {}, -1, root_log_id)
 	assert(bruiser.action_speed == 10, "Capped action haste should expire after the authored number of completed actions.")
 
-	var protected_ally = _unit("Protected Ally", "Allies")
-	var interceptor = _unit("Interceptor", "Allies")
-	var enemy_attacker = _unit("Enemy Attacker", "Enemies")
+	var protected_ally = TriggeredEffectCheckFixturesScript.unit("Protected Ally", "Allies")
+	var interceptor = TriggeredEffectCheckFixturesScript.unit("Interceptor", "Allies")
+	var enemy_attacker = TriggeredEffectCheckFixturesScript.unit("Enemy Attacker", "Enemies")
 	var intercept := ReactionDefinition.new()
 	intercept.display_name = "Take the Hit"
 	intercept.trigger = "Attack Targets Another Ally"
 	intercept.reaction_type = "Effects Only"
 	intercept.cooldown_turns = 4
 	interceptor.current_reaction = intercept
-	var intercept_context = _context([protected_ally, interceptor, enemy_attacker], log)
+	var intercept_context = TriggeredEffectCheckFixturesScript.context([protected_ally, interceptor, enemy_attacker], log)
 	var target_request: Dictionary = intercept_context.request("attack_target_requested", enemy_attacker, protected_ally, {"target_unit_id": protected_ally.unit_id}, -1, root_log_id, ["attack", "target", "request"])
 	assert(target_request["payload"].get("target_unit_id", "") == interceptor.unit_id, "Attack-target reactions should redirect attacks aimed at another allied unit before resolution.")
 	var self_target_request: Dictionary = intercept_context.request("attack_target_requested", enemy_attacker, interceptor, {"target_unit_id": interceptor.unit_id}, -1, root_log_id, ["attack", "target", "request"])
 	assert(self_target_request["payload"].get("target_unit_id", "") == interceptor.unit_id, "Attack-target reactions should not consume themselves when the interceptor was already targeted.")
 
-	var double_striker = _unit("Double Striker", "Allies")
-	var stun_target = _unit("Stun Target", "Enemies")
+	var double_striker = TriggeredEffectCheckFixturesScript.unit("Double Striker", "Allies")
+	var stun_target = TriggeredEffectCheckFixturesScript.unit("Stun Target", "Enemies")
 	stun_target.hp = 30
 	stun_target.max_hp = 30
 	stun_target.next_action_time = 20
@@ -669,38 +668,38 @@ func _init() -> void:
 	double_strike.display_name = "Stunning Combination"
 	double_strike.action = "Attack"
 	double_strike.attack_count = 2
-	double_strike.effects.append(_effect("Skill Completed", "Delay Action", "Event Target", 3))
+	double_strike.effects.append(TriggeredEffectCheckFixturesScript.effect("Skill Completed", "Delay Action", "Event Target", 3))
 	double_striker.current_skill = double_strike
 	var double_log = CombatLogScript.new()
-	var double_context = _context([double_striker, stun_target], double_log)
+	var double_context = TriggeredEffectCheckFixturesScript.context([double_striker, stun_target], double_log)
 	CombatSimulatorScript.new()._resolve_skill(double_context, double_log, double_log.add("Double strike"), double_striker, stun_target, double_strike, "job skill")
 	assert(double_context.events_of_type("attack_performed").size() == 2 and stun_target.hp == 20, "Authored attack_count should perform two complete attacks against a surviving target.")
 	assert(double_striker.attack_streak_count == 2, "Each complete attack in a multi-hit skill should advance the same-target attack streak.")
 	assert(stun_target.next_action_time == 23, "Skill Completed effects should delay the target only after the repeated attacks resolve.")
 
-	var high_hp_target = _unit("High HP Target", "Enemies")
+	var high_hp_target = TriggeredEffectCheckFixturesScript.unit("High HP Target", "Enemies")
 	high_hp_target.hp = 17
 	var bridge_damage := SkillDefinition.new()
 	bridge_damage.display_name = "Crushing Opener"
 	bridge_damage.action = "Effects Only"
-	var remaining_hp_damage := _effect("Skill Used", "Deal Damage", "Event Target")
+	var remaining_hp_damage := TriggeredEffectCheckFixturesScript.effect("Skill Used", "Deal Damage", "Event Target")
 	remaining_hp_damage.damage_type = "Physical"
 	remaining_hp_damage.amount_source = "Target Current HP"
 	remaining_hp_damage.amount_divisor = 4
 	bridge_damage.effects.append(remaining_hp_damage)
 	double_striker.current_skill = bridge_damage
-	var bridge_damage_context = _context([double_striker, high_hp_target], log)
+	var bridge_damage_context = TriggeredEffectCheckFixturesScript.context([double_striker, high_hp_target], log)
 	bridge_damage_context.publish("skill_used", double_striker, high_hp_target, {"skill": bridge_damage.display_name}, -1, root_log_id)
 	assert(high_hp_target.hp == 13, "Target Current HP should support proportional remaining-HP damage.")
 
-	var speed_caster = _unit("Speed Caster", "Allies")
+	var speed_caster = TriggeredEffectCheckFixturesScript.unit("Speed Caster", "Allies")
 	speed_caster.action_speed = 10
-	var slow_target = _unit("Slow Target", "Enemies")
+	var slow_target = TriggeredEffectCheckFixturesScript.unit("Slow Target", "Enemies")
 	slow_target.action_speed = 5
 	var speed_skill := SkillDefinition.new()
 	speed_skill.display_name = "Exploit Delay"
 	speed_skill.action = "Effects Only"
-	var speed_damage := _effect("Skill Used", "Deal Damage", "Event Target")
+	var speed_damage := TriggeredEffectCheckFixturesScript.effect("Skill Used", "Deal Damage", "Event Target")
 	speed_damage.amount_source = "Target Action Speed"
 	speed_damage.amount_divisor = 1
 	speed_skill.effects.append(speed_damage)
@@ -708,15 +707,15 @@ func _init() -> void:
 	var speed_tactic := TacticDefinition.new()
 	speed_tactic.condition = "Target Slower Than Self"
 	assert(TacticResolverScript.condition_matches(speed_tactic.condition, speed_caster, [speed_caster, slow_target], slow_target, speed_tactic), "Tactics should identify targets slower than the acting unit.")
-	var speed_context = _context([speed_caster, slow_target], log)
+	var speed_context = TriggeredEffectCheckFixturesScript.context([speed_caster, slow_target], log)
 	speed_context.publish("skill_used", speed_caster, slow_target, {"skill": speed_skill.display_name}, -1, root_log_id)
 	assert(slow_target.hp == 15, "Effects should scale damage from the target's authored action speed.")
 
-	var monk = _unit("Monk", "Allies")
-	var fist_target = _unit("Fist Target", "Enemies")
+	var monk = TriggeredEffectCheckFixturesScript.unit("Monk", "Allies")
+	var fist_target = TriggeredEffectCheckFixturesScript.unit("Fist Target", "Enemies")
 	var fists := PassiveDefinition.new()
 	fists.display_name = "Practiced Fists"
-	var fist_damage := _effect("Attack", "Add Attack Damage", "Self", 3)
+	var fist_damage := TriggeredEffectCheckFixturesScript.effect("Attack", "Add Attack Damage", "Self", 3)
 	fist_damage.condition = "Owner Is Unarmed"
 	fists.effects.append(fist_damage)
 	monk.current_passive = fists
@@ -724,18 +723,18 @@ func _init() -> void:
 	fist_skill.display_name = "Open Palm"
 	fist_skill.action = "Attack"
 	monk.current_skill = fist_skill
-	var fist_context = _context([monk, fist_target], log)
+	var fist_context = TriggeredEffectCheckFixturesScript.context([monk, fist_target], log)
 	CombatSimulatorScript.new()._resolve_skill(fist_context, log, root_log_id, monk, fist_target, fist_skill, "job skill")
 	assert(fist_target.hp == 12, "Unarmed attack damage should join the complete attack before armor mitigation.")
 
-	var wounded_ally = _unit("Wounded Ally", "Allies")
+	var wounded_ally = TriggeredEffectCheckFixturesScript.unit("Wounded Ally", "Allies")
 	wounded_ally.hp = 10
-	var healthy_ally = _unit("Healthy Ally", "Allies")
+	var healthy_ally = TriggeredEffectCheckFixturesScript.unit("Healthy Ally", "Allies")
 	var balm := PassiveDefinition.new()
 	balm.display_name = "Open Palm Balm"
-	balm.effects.append(_effect("Attack", "Apply Status", "Lowest HP Allied Unit", 0, RegenerationStatus))
+	balm.effects.append(TriggeredEffectCheckFixturesScript.effect("Attack", "Apply Status", "Lowest HP Allied Unit", 0, RegenerationStatus))
 	monk.current_passive = balm
-	var balm_context = _context([monk, wounded_ally, healthy_ally, fist_target], log)
+	var balm_context = TriggeredEffectCheckFixturesScript.context([monk, wounded_ally, healthy_ally, fist_target], log)
 	balm_context.publish("attack_performed", monk, fist_target, {}, -1, root_log_id, ["attack"])
 	assert(wounded_ally.has_status("Regeneration"), "Lowest HP Allied Unit should include the owner team and deterministically select the lowest current HP.")
 	StatusResolverScript.apply_turn_start_statuses(log, root_log_id, wounded_ally, balm_context)
@@ -745,39 +744,39 @@ func _init() -> void:
 	healthy_ally.add_status(BurningStatus, "test", 3, false)
 	var burden := PassiveDefinition.new()
 	burden.display_name = "Bear the Burden"
-	var transfer := _effect("Skill Used", "Transfer Statuses", "Self")
+	var transfer := TriggeredEffectCheckFixturesScript.effect("Skill Used", "Transfer Statuses", "Self")
 	transfer.status_polarity = "Ailment"
 	transfer.amount_target_selector = "Allied Units"
 	burden.effects.append(transfer)
 	monk.current_passive = burden
-	var transfer_context = _context([monk, wounded_ally, healthy_ally], log)
+	var transfer_context = TriggeredEffectCheckFixturesScript.context([monk, wounded_ally, healthy_ally], log)
 	transfer_context.publish("skill_used", monk, monk, {"skill": "Bear the Burden"}, -1, root_log_id)
 	assert(monk.has_status("Bleed") and monk.has_status("Burning") and not wounded_ally.has_status("Bleed") and not healthy_ally.has_status("Burning"), "Transfer Statuses should preserve and move matching allied statuses to the selected recipient.")
 
 	var meditation := ReactionDefinition.new()
 	meditation.display_name = "Stillness"
-	var count_actions := _effect("Action Completed", "Modify Counter", "Self", 1)
+	var count_actions := TriggeredEffectCheckFixturesScript.effect("Action Completed", "Modify Counter", "Self", 1)
 	count_actions.counter_name = "untouched_actions"
 	meditation.effects.append(count_actions)
-	var meditation_heal := _effect("Action Completed", "Heal", "Self")
+	var meditation_heal := TriggeredEffectCheckFixturesScript.effect("Action Completed", "Heal", "Self")
 	meditation_heal.condition = "Owner Counter At Least"
 	meditation_heal.counter_name = "untouched_actions"
 	meditation_heal.counter_threshold = 3
 	meditation_heal.amount_source = "Target Max HP"
 	meditation_heal.amount_divisor = 5
 	meditation.effects.append(meditation_heal)
-	var clear_meditation := _effect("Action Completed", "Reset Counter", "Self")
+	var clear_meditation := TriggeredEffectCheckFixturesScript.effect("Action Completed", "Reset Counter", "Self")
 	clear_meditation.condition = "Owner Counter At Least"
 	clear_meditation.counter_name = "untouched_actions"
 	clear_meditation.counter_threshold = 3
 	meditation.effects.append(clear_meditation)
-	var break_meditation := _effect("Enemy Attack Targeted", "Reset Counter", "Self")
+	var break_meditation := TriggeredEffectCheckFixturesScript.effect("Enemy Attack Targeted", "Reset Counter", "Self")
 	break_meditation.counter_name = "untouched_actions"
 	meditation.effects.append(break_meditation)
-	var meditating_monk = _unit("Meditating Monk", "Allies")
+	var meditating_monk = TriggeredEffectCheckFixturesScript.unit("Meditating Monk", "Allies")
 	meditating_monk.current_reaction = meditation
 	meditating_monk.hp = 10
-	var meditation_context = _context([meditating_monk, fist_target], log)
+	var meditation_context = TriggeredEffectCheckFixturesScript.context([meditating_monk, fist_target], log)
 	meditation_context.publish("action_completed", meditating_monk, meditating_monk, {}, -1, root_log_id)
 	meditation_context.publish("action_completed", meditating_monk, meditating_monk, {}, -1, root_log_id)
 	meditation_context.publish("attack_targeted", fist_target, meditating_monk, {}, -1, root_log_id)
@@ -788,27 +787,27 @@ func _init() -> void:
 
 	var seal := PassiveDefinition.new()
 	seal.display_name = "Threefold Seal"
-	var seal_attack := _effect("Consecutive Attack", "Seal Next Attack", "Event Target")
+	var seal_attack := TriggeredEffectCheckFixturesScript.effect("Consecutive Attack", "Seal Next Attack", "Event Target")
 	seal_attack.condition = "Event Count At Least"
 	seal_attack.counter_threshold = 3
 	seal.effects.append(seal_attack)
 	monk.current_passive = seal
-	var seal_context = _context([monk, fist_target], log)
+	var seal_context = TriggeredEffectCheckFixturesScript.context([monk, fist_target], log)
 	for _attack in range(3):
 		seal_context.publish("attack_performed", monk, fist_target, {}, -1, root_log_id, ["attack"])
 	var sealed_request: Dictionary = seal_context.request("attack_target_requested", fist_target, monk, {"target_unit_id": monk.unit_id}, -1, root_log_id, ["attack", "target", "request"])
 	assert(bool(sealed_request["payload"].get("prevented", false)) and fist_target.attack_seals.is_empty(), "Three consecutive complete attacks should seal and consume the target's next complete attack.")
 
-	var spike = _unit("Spike", "Allies")
+	var spike = TriggeredEffectCheckFixturesScript.unit("Spike", "Allies")
 	spike.armor = 8
 	var spike_passive := PassiveDefinition.new()
 	spike_passive.display_name = "Barbed Hide"
-	spike_passive.effects.append(_effect("Battle Start", "Disable Armor", "Self"))
-	var retaliate := _effect("Physically Damaged", "Deal Damage", "Event Source", 2)
+	spike_passive.effects.append(TriggeredEffectCheckFixturesScript.effect("Battle Start", "Disable Armor", "Self"))
+	var retaliate := TriggeredEffectCheckFixturesScript.effect("Physically Damaged", "Deal Damage", "Event Source", 2)
 	spike_passive.effects.append(retaliate)
 	spike.current_passive = spike_passive
-	var spike_attacker = _unit("Spike Attacker", "Enemies")
-	var spike_context = _context([spike, spike_attacker], log)
+	var spike_attacker = TriggeredEffectCheckFixturesScript.unit("Spike Attacker", "Enemies")
+	var spike_context = TriggeredEffectCheckFixturesScript.context([spike, spike_attacker], log)
 	spike_context.publish("battle_started", null, null, {}, -1, root_log_id)
 	assert(spike.total_armor() == 0, "Disable Armor should preserve stored armor while preventing every armor contribution from mitigating damage.")
 	spike_context.apply_physical_damage(spike_attacker, spike, 5, -1, root_log_id, ["attack"])
@@ -820,7 +819,7 @@ func _init() -> void:
 	reprisal.reaction_type = "Effects Only"
 	reprisal.prevents_triggering_request = true
 	reprisal.cooldown_turns = 4
-	var reflect_lethal := _effect("Reaction Triggered", "Deal Damage", "Event Target")
+	var reflect_lethal := TriggeredEffectCheckFixturesScript.effect("Reaction Triggered", "Deal Damage", "Event Target")
 	reflect_lethal.amount_source = "Event Amount"
 	reprisal.effects.append(reflect_lethal)
 	spike.current_reaction = reprisal
@@ -829,20 +828,20 @@ func _init() -> void:
 	lethal_skill.display_name = "Lethal Swing"
 	lethal_skill.action = "Attack"
 	spike_attacker.physical_damage = 7
-	var lethal_context = _context([spike, spike_attacker], log)
+	var lethal_context = TriggeredEffectCheckFixturesScript.context([spike, spike_attacker], log)
 	CombatSimulatorScript.new()._resolve_skill(lethal_context, log, root_log_id, spike_attacker, spike, lethal_skill, "job skill")
 	assert(spike.hp == 4 and spike_attacker.hp == 11, "A lethal physical attack reaction should prevent the complete pending damage and reflect its final amount.")
 	assert(not spike.ability_is_ready("reaction|Lethal Physical Attack Requested|Fatal Reprisal"), "Lethal physical attack reactions should use ordinary reaction cooldowns.")
 
-	var fortified_spike = _unit("Fortified Spike", "Allies")
+	var fortified_spike = TriggeredEffectCheckFixturesScript.unit("Fortified Spike", "Allies")
 	var fortify_skill := SkillDefinition.new()
 	fortify_skill.display_name = "Fortifying Strike"
 	fortify_skill.action = "Attack"
-	fortify_skill.effects.append(_effect("Skill Completed", "Fortify Damage", "Self"))
+	fortify_skill.effects.append(TriggeredEffectCheckFixturesScript.effect("Skill Completed", "Fortify Damage", "Self"))
 	fortify_skill.effects[0].modifier_duration_turns = 2
 	fortified_spike.current_skill = fortify_skill
-	var fortify_target = _unit("Fortify Target", "Enemies")
-	var fortify_context = _context([fortified_spike, fortify_target], log)
+	var fortify_target = TriggeredEffectCheckFixturesScript.unit("Fortify Target", "Enemies")
+	var fortify_context = TriggeredEffectCheckFixturesScript.context([fortified_spike, fortify_target], log)
 	CombatSimulatorScript.new()._resolve_skill(fortify_context, log, root_log_id, fortified_spike, fortify_target, fortify_skill, "job skill")
 	fortify_context.publish("action_completed", fortified_spike, fortify_target, {}, -1, root_log_id)
 	fortify_context.apply_direct_damage(fortify_target, fortified_spike, 9, -1, root_log_id, ["attack"])
@@ -852,15 +851,15 @@ func _init() -> void:
 	fortify_context.publish("action_completed", fortified_spike, fortify_target, {}, -1, root_log_id)
 	assert(fortified_spike.hp == 11 and fortified_spike.deferred_damage == 0, "Fortified should deliver the complete remaining pool on its final action.")
 
-	var protected_by_spike = _unit("Protected By Spike", "Allies")
+	var protected_by_spike = TriggeredEffectCheckFixturesScript.unit("Protected By Spike", "Allies")
 	var redirect_skill := SkillDefinition.new()
 	redirect_skill.display_name = "All Barbs Forward"
 	redirect_skill.action = "Effects Only"
 	redirect_skill.cooldown_turns = 4
-	redirect_skill.effects.append(_effect("Skill Used", "Redirect Enemy Attacks", "Self"))
+	redirect_skill.effects.append(TriggeredEffectCheckFixturesScript.effect("Skill Used", "Redirect Enemy Attacks", "Self"))
 	redirect_skill.effects[0].modifier_duration_turns = 2
 	spike.current_skill = redirect_skill
-	var redirect_context = _context([protected_by_spike, spike, spike_attacker], log)
+	var redirect_context = TriggeredEffectCheckFixturesScript.context([protected_by_spike, spike, spike_attacker], log)
 	CombatSimulatorScript.new()._resolve_skill(redirect_context, log, root_log_id, spike, spike, redirect_skill, "job skill")
 	redirect_context.publish("action_completed", spike, spike, {}, -1, root_log_id)
 	var forced_request: Dictionary = redirect_context.request("attack_target_requested", spike_attacker, protected_by_spike, {"target_unit_id": protected_by_spike.unit_id}, -1, root_log_id, ["attack", "target", "request"])
@@ -874,42 +873,42 @@ func _init() -> void:
 		spike.tick_ability_cooldowns()
 	assert(spike.skill_is_ready(redirect_skill), "Authored skill cooldowns should elapse on the owner's turns.")
 
-	var executioner = _unit("Executioner", "Allies")
+	var executioner = TriggeredEffectCheckFixturesScript.unit("Executioner", "Allies")
 	var execute_passive := PassiveDefinition.new()
 	execute_passive.display_name = "Headsman"
-	var execute_wounded := _effect("Hit", "Execute Target", "Attack Target")
+	var execute_wounded := TriggeredEffectCheckFixturesScript.effect("Hit", "Execute Target", "Attack Target")
 	execute_wounded.threshold_percent = 10
 	execute_passive.effects.append(execute_wounded)
 	executioner.current_passive = execute_passive
-	var execution_target = _unit("Execution Target", "Enemies")
+	var execution_target = TriggeredEffectCheckFixturesScript.unit("Execution Target", "Enemies")
 	execution_target.hp = 6
-	var execution_context = _context([executioner, execution_target], log)
+	var execution_context = TriggeredEffectCheckFixturesScript.context([executioner, execution_target], log)
 	CombatSimulatorScript.new()._resolve_attack(execution_context, log, root_log_id, executioner, execution_target)
 	assert(not execution_target.is_alive() and execution_context.events_of_type("unit_executed").size() == 1, "Execute Target should defeat an enemy left at or below its authored threshold by the owner's physical base attack.")
 
-	var magic_execution_target = _unit("Magic Execution Target", "Enemies")
+	var magic_execution_target = TriggeredEffectCheckFixturesScript.unit("Magic Execution Target", "Enemies")
 	magic_execution_target.hp = 6
 	var magic_execution_skill := SkillDefinition.new()
 	magic_execution_skill.display_name = "False Execution"
 	magic_execution_skill.action = "Attack"
 	magic_execution_skill.attack_damage_type = "Magic"
-	var magic_execution_context = _context([executioner, magic_execution_target], log)
+	var magic_execution_context = TriggeredEffectCheckFixturesScript.context([executioner, magic_execution_target], log)
 	CombatSimulatorScript.new()._resolve_skill(magic_execution_context, log, root_log_id, executioner, magic_execution_target, magic_execution_skill, "assigned skill")
 	assert(magic_execution_target.is_alive() and magic_execution_context.events_of_type("unit_executed").is_empty(), "Execute Target should ignore hits without positive physical damage.")
 
-	var stayed_executioner = _unit("Stayed Executioner", "Allies")
+	var stayed_executioner = TriggeredEffectCheckFixturesScript.unit("Stayed Executioner", "Allies")
 	var stay := ReactionDefinition.new()
 	stay.display_name = "Stay of Execution"
 	stay.trigger = "HP Below Threshold"
 	stay.reaction_type = "Effects Only"
 	stay.threshold_percent = 30
-	var begin_stay := _effect("Reaction Triggered", "Begin Enemy Action Healing", "Self")
+	var begin_stay := TriggeredEffectCheckFixturesScript.effect("Reaction Triggered", "Begin Enemy Action Healing", "Self")
 	begin_stay.amount_source = "Target Max HP"
 	begin_stay.amount_divisor = 4
 	stay.effects.append(begin_stay)
 	stayed_executioner.current_reaction = stay
-	var stay_enemy = _unit("Stay Enemy", "Enemies")
-	var stay_context = _context([stayed_executioner, stay_enemy], log)
+	var stay_enemy = TriggeredEffectCheckFixturesScript.unit("Stay Enemy", "Enemies")
+	var stay_context = TriggeredEffectCheckFixturesScript.context([stayed_executioner, stay_enemy], log)
 	stay_context.apply_direct_damage(stay_enemy, stayed_executioner, 14, -1, root_log_id, ["attack"])
 	assert(stayed_executioner.enemy_action_healing_amount == 5, "Crossing the authored HP threshold should open an enemy-turn healing window using the authored amount formula.")
 	stay_context.publish("turn_completed", stay_enemy, stay_enemy, {}, -1, root_log_id, ["turn"])
@@ -921,16 +920,16 @@ func _init() -> void:
 	stay_context.apply_direct_damage(stay_enemy, stayed_executioner, 1, -1, root_log_id, ["attack"])
 	assert(stayed_executioner.enemy_action_healing_amount == 0, "HP Below Threshold reactions should require crossing from above the threshold.")
 
-	var ready_executioner = _unit("Ready Executioner", "Allies")
+	var ready_executioner = TriggeredEffectCheckFixturesScript.unit("Ready Executioner", "Allies")
 	var ready_swing := SkillDefinition.new()
 	ready_swing.display_name = "Ready the Swing"
 	ready_swing.action = "Effects Only"
 	ready_swing.default_target = "Self"
-	ready_swing.effects.append(_effect("Skill Used", "Prepare Base Attack", "Self"))
+	ready_swing.effects.append(TriggeredEffectCheckFixturesScript.effect("Skill Used", "Prepare Base Attack", "Self"))
 	ready_executioner.current_skill = ready_swing
-	var ready_target = _unit("Ready Target", "Enemies")
+	var ready_target = TriggeredEffectCheckFixturesScript.unit("Ready Target", "Enemies")
 	ready_target.hp = 5
-	var ready_context = _context([ready_executioner, ready_target], log)
+	var ready_context = TriggeredEffectCheckFixturesScript.context([ready_executioner, ready_target], log)
 	var executioner_simulator = CombatSimulatorScript.new()
 	executioner_simulator._resolve_skill(ready_context, log, root_log_id, ready_executioner, ready_executioner, ready_swing, "job skill")
 	assert(not ready_executioner.prepared_base_attack_source.is_empty(), "Prepare Base Attack should store one authored prepared strike.")
@@ -938,7 +937,7 @@ func _init() -> void:
 	assert(not ready_target.is_alive() and ready_executioner.prepared_base_attack_source.is_empty(), "A prepared base attack should resolve before the enemy turn and be consumed after one strike.")
 	assert(ready_context.events_of_type("attack_performed").size() == 1, "A prepared strike should use one complete normal base-attack resolution.")
 
-	var battle_ready_executioner = _unit("Battle Ready Executioner", "Allies")
+	var battle_ready_executioner = TriggeredEffectCheckFixturesScript.unit("Battle Ready Executioner", "Allies")
 	battle_ready_executioner.current_skill = ready_swing
 	battle_ready_executioner.next_action_time = 1
 	var ready_tactic := TacticDefinition.new()
@@ -946,7 +945,7 @@ func _init() -> void:
 	ready_tactic.action = "Job Skill"
 	ready_tactic.target = "Self"
 	battle_ready_executioner.tactics.append(ready_tactic)
-	var canceled_actor = _unit("Canceled Actor", "Enemies")
+	var canceled_actor = TriggeredEffectCheckFixturesScript.unit("Canceled Actor", "Enemies")
 	canceled_actor.hp = 5
 	canceled_actor.next_action_time = 2
 	var prepared_report: Dictionary = executioner_simulator.run_battle_report_from_units([battle_ready_executioner, canceled_actor], "Prepared attack cancellation", [AshChokedRule])
@@ -957,24 +956,24 @@ func _init() -> void:
 			scenario_status_events += 1
 	assert(scenario_status_events == 2, "An authored scenario hook should apply through the complete CombatSimulator battle path.")
 
-	var sanguinist = _unit("Sanguinist", "Allies")
+	var sanguinist = TriggeredEffectCheckFixturesScript.unit("Sanguinist", "Allies")
 	sanguinist.base_action_speed = 10
 	sanguinist.action_speed = 10
 	sanguinist.action_speed_cap_active = true
 	sanguinist.next_action_time = 20
 	var blood_rush := PassiveDefinition.new()
 	blood_rush.display_name = "Blood Rush"
-	blood_rush.effects.append(_effect("Ailment Damaged", "Increase Action Speed For Battle", "Self", 2))
+	blood_rush.effects.append(TriggeredEffectCheckFixturesScript.effect("Ailment Damaged", "Increase Action Speed For Battle", "Self", 2))
 	sanguinist.current_passive = blood_rush
-	var blood_source = _unit("Blood Source", "Enemies")
-	var blood_context = _context([sanguinist, blood_source], log)
+	var blood_source = TriggeredEffectCheckFixturesScript.unit("Blood Source", "Enemies")
+	var blood_context = TriggeredEffectCheckFixturesScript.context([sanguinist, blood_source], log)
 	for _tick in range(6):
 		blood_context.apply_direct_damage(null, sanguinist, 1, -1, root_log_id, ["status", "bleed"])
 	assert(sanguinist.action_speed == 20 and sanguinist.next_action_time == 10, "Battle-long ailment haste should stop at the global double-encounter-start speed cap.")
 	blood_context.apply_direct_damage(blood_source, sanguinist, 1, -1, root_log_id, ["attack"])
 	assert(sanguinist.action_speed == 20, "Ordinary damage should not trigger Ailment Damaged effects.")
 
-	var bleeding_enemy = _unit("Bleeding Enemy", "Enemies")
+	var bleeding_enemy = TriggeredEffectCheckFixturesScript.unit("Bleeding Enemy", "Enemies")
 	bleeding_enemy.hp = 1
 	for _stack in range(3):
 		bleeding_enemy.add_status(BleedStatus, "test", 3, false)
@@ -983,7 +982,7 @@ func _init() -> void:
 	blood_feast.trigger = "Enemy Died With Status"
 	blood_feast.reaction_type = "Effects Only"
 	blood_feast.status = BleedStatus
-	var feast_heal := _effect("Reaction Triggered", "Heal", "Self")
+	var feast_heal := TriggeredEffectCheckFixturesScript.effect("Reaction Triggered", "Heal", "Self")
 	feast_heal.amount_source = "Target Max HP Times Event Status Stacks"
 	feast_heal.amount_multiplier = 2
 	feast_heal.amount_divisor = 100
@@ -991,12 +990,12 @@ func _init() -> void:
 	blood_feast.effects.append(feast_heal)
 	sanguinist.current_reaction = blood_feast
 	sanguinist.hp = 10
-	var feast_context = _context([sanguinist, bleeding_enemy], log)
+	var feast_context = TriggeredEffectCheckFixturesScript.context([sanguinist, bleeding_enemy], log)
 	feast_context.apply_direct_damage(sanguinist, bleeding_enemy, 1, -1, root_log_id, ["attack"])
 	assert(sanguinist.hp == 12, "Enemy-death reactions should preserve defeated Bleed stacks and support rounded-up max-HP-per-stack healing.")
 
-	var shield_target = _unit("Shield Target", "Allies")
-	var shield_context = _context([sanguinist, shield_target, blood_source], log)
+	var shield_target = TriggeredEffectCheckFixturesScript.unit("Shield Target", "Allies")
+	var shield_context = TriggeredEffectCheckFixturesScript.context([sanguinist, shield_target, blood_source], log)
 	shield_context.apply_direct_damage(blood_source, shield_target, 6, -1, root_log_id, ["attack"])
 	shield_context.publish("action_completed", shield_target, blood_source, {}, -1, root_log_id)
 	shield_context.apply_physical_damage(blood_source, shield_target, 4, -1, root_log_id, ["attack"])
@@ -1005,7 +1004,7 @@ func _init() -> void:
 	var blood_shield := SkillDefinition.new()
 	blood_shield.display_name = "Blood Shield"
 	blood_shield.action = "Effects Only"
-	var grant_shield := _effect("Skill Used", "Grant Energy Shield", "Event Target")
+	var grant_shield := TriggeredEffectCheckFixturesScript.effect("Skill Used", "Grant Energy Shield", "Event Target")
 	grant_shield.amount_source = "Target Recent Damage"
 	blood_shield.effects.append(grant_shield)
 	sanguinist.current_skill = blood_shield
@@ -1022,27 +1021,27 @@ func _init() -> void:
 	shield_target.remove_status(BleedStatus.display_name)
 	assert(TacticResolverScript.find_tactic_target(bleeding_target_tactic.target, sanguinist, [sanguinist, shield_target], bleeding_target_tactic) == null, "A status-required allied target should make the bridge unavailable when no ally has that status.")
 
-	var rot_victim = _unit("Rot Victim", "Allies")
+	var rot_victim = TriggeredEffectCheckFixturesScript.unit("Rot Victim", "Allies")
 	rot_victim.add_status(RotStatus, "test", 3, false)
 	var rot_haste := PassiveDefinition.new()
 	rot_haste.display_name = "Rot Rush"
-	rot_haste.effects.append(_effect("Ailment Damaged", "Increase Action Speed For Battle", "Self", 1))
+	rot_haste.effects.append(TriggeredEffectCheckFixturesScript.effect("Ailment Damaged", "Increase Action Speed For Battle", "Self", 1))
 	rot_victim.current_passive = rot_haste
 	rot_victim.base_action_speed = 10
 	rot_victim.action_speed = 10
 	rot_victim.action_speed_cap_active = true
 	rot_victim.hp = 10
-	var rot_context = _context([rot_victim], log)
+	var rot_context = TriggeredEffectCheckFixturesScript.context([rot_victim], log)
 	rot_context.apply_healing(rot_victim, rot_victim, 1, -1, root_log_id, ["healing"])
 	assert(rot_victim.action_speed == 10, "Rot max-HP loss should not count as ailment damage when current HP does not fall.")
 	rot_victim.hp = rot_victim.max_hp - 1
 	rot_context.apply_healing(rot_victim, rot_victim, 1, -1, root_log_id, ["healing"])
 	assert(rot_victim.action_speed == 11, "Rot should count as ailment damage when max-HP loss also lowers current HP.")
 
-	var bard = _unit("Bard", "Allies")
-	var stronger_bard = _unit("Stronger Bard", "Allies")
-	var supported_ally = _unit("Supported Ally", "Allies")
-	var outside_enemy = _unit("Outside Enemy", "Enemies")
+	var bard = TriggeredEffectCheckFixturesScript.unit("Bard", "Allies")
+	var stronger_bard = TriggeredEffectCheckFixturesScript.unit("Stronger Bard", "Allies")
+	var supported_ally = TriggeredEffectCheckFixturesScript.unit("Supported Ally", "Allies")
+	var outside_enemy = TriggeredEffectCheckFixturesScript.unit("Outside Enemy", "Enemies")
 	var lingering_song := PassiveDefinition.new()
 	lingering_song.display_name = "Lingering Song"
 	lingering_song.passive_type = "Extend Allied Buff Duration"
@@ -1058,9 +1057,9 @@ func _init() -> void:
 	bard_reaction.trigger = "Ally Ailment Applied"
 	bard_reaction.reaction_type = "Effects Only"
 	bard_reaction.cooldown_turns = 3
-	bard_reaction.effects.append(_effect("Reaction Triggered", "Apply Status", "Allied Units", 0, WardStatus))
+	bard_reaction.effects.append(TriggeredEffectCheckFixturesScript.effect("Reaction Triggered", "Apply Status", "Allied Units", 0, WardStatus))
 	bard.current_reaction = bard_reaction
-	var bard_context = _context([bard, stronger_bard, supported_ally, outside_enemy], log)
+	var bard_context = TriggeredEffectCheckFixturesScript.context([bard, stronger_bard, supported_ally, outside_enemy], log)
 	assert(StatusResolverScript.apply_status(log, root_log_id, supported_ally, RegenerationStatus, "External Support", 3, false, bard_context, stronger_bard))
 	assert(int(supported_ally.status_instance("Regeneration").get("remaining_turns", 0)) == 5, "The strongest living allied duration passive should globally extend a cross-source finite Boon once, rounded up.")
 	assert(StatusResolverScript.apply_status(log, root_log_id, outside_enemy, RegenerationStatus, "Enemy Support", 3, false, bard_context, outside_enemy))
@@ -1069,11 +1068,11 @@ func _init() -> void:
 	assert(int(supported_ally.status_instance("Ward").get("remaining_turns", 0)) == 3, "Non-elapsing Boons such as Ward should not be duration-extended.")
 	var bard_item := ItemDefinition.new()
 	bard_item.display_name = "External Tempo"
-	var allied_power := _effect("Battle Start", "Modify Stat", "Allied Units", 2)
+	var allied_power := TriggeredEffectCheckFixturesScript.effect("Battle Start", "Modify Stat", "Allied Units", 2)
 	allied_power.modified_stat = "Physical Damage"
 	allied_power.modifier_duration_turns = 2
 	bard_item.effects.append(allied_power)
-	var allied_haste := _effect("Battle Start", "Apply Haste", "Allied Units", 2)
+	var allied_haste := TriggeredEffectCheckFixturesScript.effect("Battle Start", "Apply Haste", "Allied Units", 2)
 	allied_haste.modifier_duration_turns = 2
 	bard_item.effects.append(allied_haste)
 	stronger_bard.equipped_items.append(bard_item)
@@ -1087,10 +1086,10 @@ func _init() -> void:
 	assert(not StatusResolverScript.apply_status(log, root_log_id, supported_ally, RotStatus, "Blocked Ailment", 3, false, bard_context, outside_enemy), "Ward should prevent the next ailment before it can retrigger the Bard reaction.")
 	assert(bard_context.events_of_type("reaction_triggered").size() == 1, "Prevented ailment applications should not trigger Ally Ailment Applied.")
 
-	var chronomancer = _unit("Chronomancer", "Allies")
-	var rewind_target = _unit("Rewind Target", "Allies")
-	var time_enemy = _unit("Time Enemy", "Enemies")
-	var rewind_context = _context([chronomancer, rewind_target, time_enemy], log)
+	var chronomancer = TriggeredEffectCheckFixturesScript.unit("Chronomancer", "Allies")
+	var rewind_target = TriggeredEffectCheckFixturesScript.unit("Rewind Target", "Allies")
+	var time_enemy = TriggeredEffectCheckFixturesScript.unit("Time Enemy", "Enemies")
+	var rewind_context = TriggeredEffectCheckFixturesScript.context([chronomancer, rewind_target, time_enemy], log)
 	rewind_context.publish("turn_started", time_enemy, time_enemy, {"time": 5}, -1, root_log_id)
 	rewind_context.apply_direct_damage(time_enemy, rewind_target, 4, -1, root_log_id, ["attack"])
 	rewind_context.publish("turn_started", time_enemy, time_enemy, {"time": 12}, -1, root_log_id)
@@ -1100,7 +1099,7 @@ func _init() -> void:
 	var rewind := SkillDefinition.new()
 	rewind.display_name = "Rewind"
 	rewind.action = "Effects Only"
-	var rewind_heal := _effect("Skill Used", "Heal", "Event Target")
+	var rewind_heal := TriggeredEffectCheckFixturesScript.effect("Skill Used", "Heal", "Event Target")
 	rewind_heal.amount_source = "Target Damage Taken Within Interval"
 	rewind_heal.interval_time = 10
 	rewind.effects.append(rewind_heal)
@@ -1108,33 +1107,33 @@ func _init() -> void:
 	CombatSimulatorScript.new()._resolve_skill(rewind_context, log, root_log_id, chronomancer, rewind_target, rewind, "job skill")
 	assert(rewind_target.hp == 16, "Rewind should heal actual HP damage within the inclusive timeline interval and exclude older damage.")
 
-	var shield_chronomancer = _unit("Shield Chronomancer", "Allies")
-	var shielded_ally = _unit("Shielded Ally", "Allies")
-	var magic_enemy = _unit("Magic Enemy", "Enemies")
+	var shield_chronomancer = TriggeredEffectCheckFixturesScript.unit("Shield Chronomancer", "Allies")
+	var shielded_ally = TriggeredEffectCheckFixturesScript.unit("Shielded Ally", "Allies")
+	var magic_enemy = TriggeredEffectCheckFixturesScript.unit("Magic Enemy", "Enemies")
 	var temporal_shield := ReactionDefinition.new()
 	temporal_shield.display_name = "Temporal Shield"
 	temporal_shield.trigger = "Ally Magically Damaged"
 	temporal_shield.reaction_type = "Effects Only"
 	temporal_shield.cooldown_turns = 3
-	var team_shield := _effect("Reaction Triggered", "Grant Energy Shield", "Allied Units")
+	var team_shield := TriggeredEffectCheckFixturesScript.effect("Reaction Triggered", "Grant Energy Shield", "Allied Units")
 	team_shield.amount_source = "Total Allied Magic Damage Taken Within Interval"
 	team_shield.amount_divisor = 2
 	team_shield.interval_time = 10
 	temporal_shield.effects.append(team_shield)
 	shield_chronomancer.current_reaction = temporal_shield
-	var temporal_context = _context([shield_chronomancer, shielded_ally, magic_enemy], log)
+	var temporal_context = TriggeredEffectCheckFixturesScript.context([shield_chronomancer, shielded_ally, magic_enemy], log)
 	temporal_context.publish("turn_started", magic_enemy, magic_enemy, {"time": 10}, -1, root_log_id)
 	temporal_context.apply_direct_damage(magic_enemy, shielded_ally, 6, -1, root_log_id, ["attack"])
 	assert(shield_chronomancer.energy_shield == 3 and shielded_ally.energy_shield == 3, "An allied magic-damage reaction should grant each ally half the team's actual recent magic HP damage.")
 	temporal_context.apply_direct_damage(magic_enemy, shield_chronomancer, 5, -1, root_log_id, ["attack"])
 	assert(shield_chronomancer.energy_shield == 0 and shielded_ally.energy_shield == 3, "Reaction cooldown should prevent immediate retriggering, and Energy Shield absorption should not enter magic HP-damage history.")
 
-	var future_target = _unit("Future Target", "Allies")
+	var future_target = TriggeredEffectCheckFixturesScript.unit("Future Target", "Allies")
 	future_target.armor = 2
-	var future_enemy = _unit("Future Enemy", "Enemies")
+	var future_enemy = TriggeredEffectCheckFixturesScript.unit("Future Enemy", "Enemies")
 	future_enemy.physical_damage = 7
 	future_enemy.next_action_time = 12
-	var intervening_ally = _unit("Intervening Ally", "Allies")
+	var intervening_ally = TriggeredEffectCheckFixturesScript.unit("Intervening Ally", "Allies")
 	intervening_ally.physical_damage = 1
 	intervening_ally.next_action_time = 5
 	var projection_simulator := CombatSimulatorScript.new()
@@ -1143,106 +1142,21 @@ func _init() -> void:
 	var future_echo := SkillDefinition.new()
 	future_echo.display_name = "Future Echo"
 	future_echo.action = "Effects Only"
-	var echo_damage := _effect("Skill Used", "Deal Damage", "Event Target")
+	var echo_damage := TriggeredEffectCheckFixturesScript.effect("Skill Used", "Deal Damage", "Event Target")
 	echo_damage.amount_source = "Target Predicted Next Action Damage"
 	future_echo.effects.append(echo_damage)
 	chronomancer.current_skill = future_echo
-	var echo_context = _context([chronomancer, future_enemy], log)
+	var echo_context = TriggeredEffectCheckFixturesScript.context([chronomancer, future_enemy], log)
 	echo_context.publish("turn_started", chronomancer, chronomancer, {"time": chronomancer.next_action_time}, -1, root_log_id)
 	echo_context.predict_next_action_damage = func(target, current_actor): return projection_simulator.predicted_next_action_damage(target, [chronomancer, future_enemy], current_actor)
 	CombatSimulatorScript.new()._resolve_skill(echo_context, log, root_log_id, chronomancer, future_enemy, future_echo, "job skill")
 	assert(future_enemy.hp == 13, "An authored bridge effect should deal the target's isolated predicted next-action damage.")
 
-	_assert_elementalist_authoring(log, root_log_id)
+	TriggeredEffectCheckFixturesScript.assert_elementalist_authoring(log, root_log_id)
 
 	check_completed = true
 	print("Triggered effect validation passed: scenario hooks, formulas, counters, interception, stack consumption/detonation, expanded tactics, and JSON authoring worked.")
 	quit(0)
-
-
-func _assert_elementalist_authoring(log, root_log_id: int) -> void:
-	var elementalist = _unit("Elementalist", "Allies")
-	var target = _unit("Fusion Target", "Enemies")
-	var target_ally = _unit("Fusion Ally", "Enemies")
-	var context = _context([elementalist, target, target_ally], log)
-	var passive := PassiveDefinition.new()
-	passive.display_name = "Elemental Buffer"
-	var shield_effect := _effect("Owner Applied Ailment", "Grant Energy Shield", "Self")
-	shield_effect.amount_source = "Applied Status Stacks"
-	shield_effect.amount_multiplier = 5
-	shield_effect.repeat_within_event_chain = true
-	passive.effects.append(shield_effect)
-	elementalist.current_passive = passive
-	var primary_target = _unit("Primary Target", "Enemies")
-	context.units.append(primary_target)
-	var primary := SkillDefinition.new()
-	primary.display_name = "Elemental Triad"
-	primary.action = "Effects Only"
-	primary.effects.append(_effect("Skill Used", "Apply Status", "Event Target", 0, BurningStatus))
-	primary.effects.append(_effect("Skill Used", "Apply Status", "Event Target", 0, ShockStatus))
-	primary.effects.append(_effect("Skill Used", "Apply Status", "Event Target", 0, FrostStatus))
-	elementalist.current_skill = primary
-	CombatSimulatorScript.new()._resolve_skill(context, log, root_log_id, elementalist, primary_target, primary, "job skill")
-	assert(elementalist.energy_shield == 15, "A repeat-enabled owner-applied-ailment effect should reward all three applications in one skill chain.")
-	elementalist.energy_shield = 0
-	assert(StatusResolverScript.apply_status(log, root_log_id, target, BurningStatus, "Elementalist", 3, false, context, elementalist, -1, 2))
-	assert(elementalist.energy_shield == 10, "Owner Applied Ailment should grant ES from stacks actually added by the owner.")
-	assert(StatusResolverScript.apply_status(log, root_log_id, target, ShockStatus, "Transferred", 3, false, context, elementalist, -1, 1, false, true))
-	assert(elementalist.energy_shield == 10, "Transferred ailment stacks should not retrigger owner-applied-ailment effects.")
-	assert(StatusResolverScript.apply_status(log, root_log_id, target, ShockStatus, "Elementalist", 3, false, context, elementalist))
-	assert(StatusResolverScript.apply_status(log, root_log_id, target, FrostStatus, "Elementalist", 3, false, context, elementalist, -1, 2))
-	var bridge := SkillDefinition.new()
-	bridge.display_name = "Elemental Convergence"
-	bridge.action = "Effects Only"
-	var fuse := _effect("Skill Used", "Fuse Elemental Ailments", "Event Target", 0, ElementalFusionStatus)
-	fuse.amount_divisor = 3
-	bridge.effects.append(fuse)
-	elementalist.current_secondary_skill = bridge
-	var shield_before_fusion: int = elementalist.energy_shield
-	CombatSimulatorScript.new()._resolve_skill(context, log, root_log_id, elementalist, target, bridge, "secondary skill")
-	assert(not target.has_status("Burning") and not target.has_status("Shock") and not target.has_status("Frost"), "Elemental fusion should remove all three source ailments.")
-	assert(target.status_stack_count("Elemental Fusion") == 2, "Six elemental stacks should become two fusion stacks at a 3:1 authored divisor.")
-	assert(elementalist.energy_shield == shield_before_fusion + 10, "New fusion stacks should count as owner-applied ailment stacks.")
-	var target_hp_before_tick: int = target.hp
-	context.publish("action_completed", target, target, {"action": "Test"}, -1, root_log_id, ["action"])
-	assert(target.hp == target_hp_before_tick - 2 and target.status_stack_count("Elemental Fusion") == 1, "Elemental Fusion should apply Burning-style action damage and consume one stack.")
-	var ally_hp_before_arc: int = target_ally.hp
-	context.apply_direct_damage(elementalist, target, 8, -1, root_log_id, ["magic"])
-	assert(target_ally.hp == ally_hp_before_arc - 2 and not target.has_status("Elemental Fusion"), "Elemental Fusion should apply Shock-style propagation and consume one stack.")
-	assert(StatusResolverScript.apply_status(log, root_log_id, target, ElementalFusionStatus, "Elementalist", 3, false, context, elementalist, -1, 2))
-	var physical_request: Dictionary = context.request("damage_requested", elementalist, target, {
-		"amount": 3,
-		"physical_amount": 3,
-		"magic_amount": 0,
-		"prevented": false,
-	}, -1, root_log_id, ["physical"])
-	assert(int(physical_request["payload"].get("amount", 0)) == 5, "Two Elemental Fusion stacks should add 40 percent Frost-style physical damage, rounded up.")
-	var previous_hp: int = target.hp
-	target.hp = max(0, target.hp - int(physical_request["payload"].get("amount", 0)))
-	context.record_damage(elementalist, target, int(physical_request["payload"].get("amount", 0)), previous_hp, int(physical_request["payload"].get("physical_amount", 0)), 0, int(physical_request["id"]), root_log_id, ["physical"])
-	assert(not target.has_status("Elemental Fusion"), "Physical HP damage should shatter Elemental Fusion like Frost.")
-
-	var doomed = _unit("Doomed", "Enemies")
-	var ailmented = _unit("Ailmented", "Enemies")
-	ailmented.hp = 10
-	var clean = _unit("Clean", "Enemies")
-	clean.hp = 5
-	var reaction_context = _context([elementalist, doomed, ailmented, clean], log)
-	assert(StatusResolverScript.apply_status(log, root_log_id, doomed, BurningStatus, "Elementalist", 4, false, reaction_context, elementalist, -1, 2))
-	assert(StatusResolverScript.apply_status(log, root_log_id, doomed, ShockStatus, "Elementalist", 2, false, reaction_context, elementalist))
-	assert(StatusResolverScript.apply_status(log, root_log_id, ailmented, FrostStatus, "Setup", 3, false, reaction_context, elementalist))
-	var carryover := ReactionDefinition.new()
-	carryover.display_name = "Elemental Inheritance"
-	carryover.trigger = "Enemy Died With Ailments"
-	carryover.reaction_type = "Effects Only"
-	carryover.cooldown_turns = 3
-	carryover.effects.append(_effect("Reaction Triggered", "Transfer Defeated Ailments", "Most Ailmented Enemy Unit"))
-	elementalist.current_reaction = carryover
-	var shield_before_transfer: int = elementalist.energy_shield
-	reaction_context.apply_physical_damage(elementalist, doomed, doomed.hp, -1, root_log_id, ["test"])
-	assert(ailmented.status_stack_count("Burning") == 2 and ailmented.status_stack_count("Shock") == 1, "Defeated ailments should transfer to the living enemy with the most ailments.")
-	assert(not clean.has_status("Burning") and not clean.has_status("Shock"), "Defeated-ailment transfer should use deterministic concentration targeting.")
-	assert(elementalist.energy_shield == shield_before_transfer, "Transferred defeated ailments should not generate owner-applied-ailment ES.")
 
 
 func _quit_if_incomplete() -> void:
@@ -1250,31 +1164,3 @@ func _quit_if_incomplete() -> void:
 		return
 	push_error("Triggered effect validation aborted before completion. Review the preceding assertion or script error.")
 	quit(1)
-
-
-func _effect(trigger: String, effect_type: String, target_selector: String, amount := 0, status: StatusDefinition = null) -> EffectDefinition:
-	var effect := EffectDefinition.new()
-	effect.display_name = "%s %s" % [trigger, effect_type]
-	effect.trigger = trigger
-	effect.effect_type = effect_type
-	effect.target_selector = target_selector
-	effect.amount = amount
-	effect.status = status
-	return effect
-
-
-func _unit(display_name: String, team: String):
-	var unit = UnitStateScript.new()
-	unit.unit_name = display_name
-	unit.unit_id = display_name.to_lower()
-	unit.team = team
-	unit.max_hp = 20
-	unit.hp = 20
-	unit.physical_damage = 5
-	return unit
-
-
-func _context(units: Array, log):
-	var context = CombatContextScript.new(units, log)
-	context.add_responder(CombatHookResolverScript.respond)
-	return context

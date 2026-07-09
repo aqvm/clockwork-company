@@ -3,16 +3,17 @@ class_name CombatLabState
 
 const CombatConstantsScript := preload("res://scripts/combat/combat_constants.gd")
 const CombatSimulatorScript := preload("res://scripts/combat/combat_simulator.gd")
+const CombatLabSetupStoreScript := preload("res://scripts/devtools/combat_lab_setup_store.gd")
 const DefinitionCloneHelperScript := preload("res://scripts/data/definition_clone_helper.gd")
 const JsonContentLoaderScript := preload("res://scripts/modding/json_content_loader.gd")
+const LoadoutSlotHelperScript := preload("res://scripts/data/loadout_slot_helper.gd")
 
 const TEAM_ALLIES := "Allies"
 const TEAM_ENEMIES := "Enemies"
 const SETUP_SCHEMA_VERSION := 1
 const DEFAULT_SETUP_DIR := "res://devtools/combat_lab_setups"
-const SETUP_FILE_EXTENSION := ".json"
 const SETUP_STATS := ["max_hp", "physical_damage", "magic_damage", "armor", "action_speed"]
-const EQUIPMENT_SLOTS := ["Weapon", "Armor", "Helmet", "Trinket"]
+const EQUIPMENT_SLOTS := LoadoutSlotHelperScript.EQUIPMENT_SLOTS
 
 var catalog_units: Array[UnitDefinition] = []
 var catalog_items: Array[ItemDefinition] = []
@@ -486,17 +487,10 @@ func save_setup_to_path(path: String, display_name: String = "", notes: String =
 		last_message = "Combat Lab setup save failed: %s already exists." % path
 		return false
 	var setup := setup_to_dictionary(display_name, notes, path.get_file().get_basename())
-	var dir_path := path.get_base_dir()
-	var dir_err := _ensure_directory(dir_path)
-	if dir_err != OK:
-		last_message = "Combat Lab setup save failed: could not create %s (error %d)." % [dir_path, dir_err]
+	var result := CombatLabSetupStoreScript.save_dictionary(path, setup, overwrite)
+	if not bool(result.get("ok", false)):
+		last_message = "Combat Lab setup save failed: %s." % String(result.get("message", "unknown error"))
 		return false
-	var file := FileAccess.open(path, FileAccess.WRITE)
-	if file == null:
-		last_message = "Combat Lab setup save failed: could not write %s." % path
-		return false
-	file.store_string(JSON.stringify(setup, "\t"))
-	file.close()
 	setup_id = String(setup.get("setup_id", ""))
 	setup_display_name = String(setup.get("display_name", ""))
 	setup_notes = String(setup.get("notes", ""))
@@ -513,77 +507,32 @@ func save_setup_named(display_name: String, notes: String = "", overwrite := fal
 
 
 func load_setup_from_path(path: String) -> bool:
-	if not FileAccess.file_exists(path):
-		last_message = "Combat Lab setup load failed: %s was not found." % path
+	var result := CombatLabSetupStoreScript.load_dictionary(path)
+	if not bool(result.get("ok", false)):
+		last_message = "Combat Lab setup load failed: %s." % String(result.get("message", "unknown error"))
 		return false
-	var text := FileAccess.get_file_as_string(path)
-	var json := JSON.new()
-	var err := json.parse(text)
-	if err != OK or not (json.data is Dictionary):
-		last_message = "Combat Lab setup load failed: invalid JSON in %s." % path
-		return false
-	return apply_setup_dictionary(json.data)
+	return apply_setup_dictionary(result.get("setup", {}))
 
 
 func list_saved_setups(setup_dir := DEFAULT_SETUP_DIR) -> Array[Dictionary]:
-	var results: Array[Dictionary] = []
-	var dir := DirAccess.open(setup_dir)
-	if dir == null:
-		return results
-	dir.list_dir_begin()
-	var file_name := dir.get_next()
-	while not file_name.is_empty():
-		if not dir.current_is_dir() and file_name.ends_with(SETUP_FILE_EXTENSION):
-			var path := "%s/%s" % [setup_dir.trim_suffix("/"), file_name]
-			var entry := {
-				"setup_id": file_name.get_basename(),
-				"display_name": file_name.get_basename(),
-				"notes": "",
-				"path": path,
-			}
-			var text := FileAccess.get_file_as_string(path)
-			var json := JSON.new()
-			if json.parse(text) == OK and json.data is Dictionary:
-				entry["setup_id"] = String(json.data.get("setup_id", entry["setup_id"]))
-				entry["display_name"] = String(json.data.get("display_name", entry["display_name"]))
-				entry["notes"] = String(json.data.get("notes", ""))
-			results.append(entry)
-		file_name = dir.get_next()
-	dir.list_dir_end()
-	results.sort_custom(func(a, b): return String(a.get("display_name", "")) < String(b.get("display_name", "")))
-	return results
+	return CombatLabSetupStoreScript.list_saved_setups(setup_dir)
 
 
 func delete_setup_at_path(path: String) -> bool:
-	if not FileAccess.file_exists(path):
-		last_message = "Combat Lab setup delete skipped: %s was not found." % path
-		return false
-	var err := DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
-	if err != OK:
-		last_message = "Combat Lab setup delete failed for %s (error %d)." % [path, err]
+	var result := CombatLabSetupStoreScript.delete_setup_at_path(path)
+	if not bool(result.get("ok", false)):
+		last_message = "Combat Lab setup delete skipped: %s." % String(result.get("message", "unknown error"))
 		return false
 	last_message = "Deleted Combat Lab setup: %s." % path
 	return true
 
 
 func setup_path_for_id(id: String, setup_dir := DEFAULT_SETUP_DIR) -> String:
-	return "%s/%s%s" % [setup_dir.trim_suffix("/"), sanitize_setup_id(id), SETUP_FILE_EXTENSION]
+	return CombatLabSetupStoreScript.setup_path_for_id(id, setup_dir)
 
 
 func sanitize_setup_id(value: String) -> String:
-	var sanitized := value.strip_edges().to_lower()
-	var out := ""
-	var previous_was_separator := false
-	for index in sanitized.length():
-		var character := sanitized.substr(index, 1)
-		var is_alnum := (character >= "a" and character <= "z") or (character >= "0" and character <= "9")
-		if is_alnum:
-			out += character
-			previous_was_separator = false
-		elif not previous_was_separator:
-			out += "_"
-			previous_was_separator = true
-	return out.strip_edges().trim_prefix("_").trim_suffix("_")
+	return CombatLabSetupStoreScript.sanitize_setup_id(value)
 
 
 func team_units(team: String) -> Array[UnitDefinition]:
@@ -824,7 +773,7 @@ func _job_for_feature(feature_type: String, feature: Resource) -> JobDefinition:
 func _remove_illegal_equipment(unit: UnitDefinition) -> void:
 	if unit == null or unit.loadout == null:
 		return
-	for slot in ["Weapon", "Armor", "Helmet", "Trinket"]:
+	for slot in LoadoutSlotHelperScript.EQUIPMENT_SLOTS:
 		var item := _loadout_item(unit.loadout, slot)
 		if item != null and not _can_equip_item(unit, item):
 			_set_loadout_item(unit.loadout, slot, null)
@@ -888,49 +837,20 @@ func _content_ids(resources: Array) -> Array[String]:
 	return ids
 
 
-func _ensure_directory(path: String) -> int:
-	if path.strip_edges().is_empty():
-		return ERR_INVALID_PARAMETER
-	var absolute_path := ProjectSettings.globalize_path(path)
-	return DirAccess.make_dir_recursive_absolute(absolute_path)
-
-
 func _can_equip_item(unit: UnitDefinition, item: ItemDefinition) -> bool:
-	if unit == null or item == null:
-		return false
-	var property_name := "forbid_%s" % item.slot.to_lower()
-	return not ((unit.loadout != null and unit.loadout.current_job != null and bool(unit.loadout.current_job.get(property_name))) or (unit.ancestry != null and bool(unit.ancestry.get(property_name))))
+	return LoadoutSlotHelperScript.can_equip_item(unit, item)
 
 
 func _loadout_item(loadout: UnitLoadoutDefinition, slot: String) -> ItemDefinition:
-	if loadout == null:
-		return null
-	if slot == "Weapon":
-		return loadout.weapon
-	if slot == "Armor":
-		return loadout.armor
-	if slot == "Helmet":
-		return loadout.helmet
-	if slot == "Trinket":
-		return loadout.trinket
-	return null
+	return LoadoutSlotHelperScript.loadout_item(loadout, slot)
 
 
 func _set_loadout_item(loadout: UnitLoadoutDefinition, slot: String, item: ItemDefinition) -> void:
-	if slot == "Weapon":
-		loadout.weapon = item
-	elif slot == "Armor":
-		loadout.armor = item
-	elif slot == "Helmet":
-		loadout.helmet = item
-	elif slot == "Trinket":
-		loadout.trinket = item
+	LoadoutSlotHelperScript.set_loadout_item(loadout, slot, item)
 
 
 func _item_name_or_none(item: ItemDefinition) -> String:
-	if item == null:
-		return "none"
-	return item.display_name
+	return LoadoutSlotHelperScript.item_name_or_none(item)
 
 
 func _content_id(resource: Resource) -> String:

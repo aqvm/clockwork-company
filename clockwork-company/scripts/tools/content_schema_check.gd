@@ -2,6 +2,7 @@ extends SceneTree
 
 const CheckHarnessScript := preload("res://scripts/tools/check_harness.gd")
 const ContentSchemaScript := preload("res://scripts/data/content_schema.gd")
+const ContentMergerScript := preload("res://scripts/modding/content_merger.gd")
 const JsonContentLoaderScript := preload("res://scripts/modding/json_content_loader.gd")
 const TriggeredEffectResolverScript := preload("res://scripts/combat/rules/triggered_effect_resolver.gd")
 
@@ -13,6 +14,7 @@ func _init() -> void:
 	var checks = CheckHarnessScript.new()
 	checks.run_case("content load result succeeds for authored content", _check_content_load_result_succeeds)
 	checks.run_case("triggered resolver effect types are schema-owned", _check_triggered_effect_types_are_schema_owned)
+	checks.run_case("content merger applies shallow id overrides without mutating base", _check_content_merger_overrides)
 	print("Content schema checks passed: %d cases." % checks.case_count)
 	check_completed = true
 	quit(0)
@@ -28,6 +30,28 @@ func _check_triggered_effect_types_are_schema_owned() -> bool:
 		if not ContentSchemaScript.EFFECT_TYPE_VALUES.has(effect_type):
 			return false
 	return true
+
+
+func _check_content_merger_overrides() -> bool:
+	var base := {
+		"ancestries": {},
+		"statuses": {},
+		"items": {"old_sword": {"id": "old_sword", "display_name": "Old Sword", "slot": "Weapon"}},
+		"jobs": {},
+		"tactics": {},
+		"loadouts": {},
+		"units": {},
+		"demo_roster": ["old_unit"],
+	}
+	var pack := {
+		"items": [{"id": "old_sword", "display_name": "New Sword"}],
+		"demo_roster": ["new_unit"],
+	}
+	var merged: Dictionary = ContentMergerScript.merge(base, [pack])
+	return String(merged["items"]["old_sword"]["display_name"]) == "New Sword" \
+		and String(merged["items"]["old_sword"]["slot"]) == "Weapon" \
+		and String(base["items"]["old_sword"]["display_name"]) == "Old Sword" \
+		and merged["demo_roster"] == ["new_unit"]
 
 
 func _quit_if_incomplete() -> void:

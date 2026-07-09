@@ -11,11 +11,11 @@ const RunStateScript := preload("res://scripts/run/run_state.gd")
 const CampaignManagerScript := preload("res://scripts/campaign/campaign_manager.gd")
 const UnitLoadoutDefinitionScript := preload("res://scripts/data/unit_loadout_definition.gd")
 const TooltipPresenterScript := preload("res://scripts/ui/tooltip_presenter.gd")
-const ResourceTooltipBuilderScript := preload("res://scripts/ui/resource_tooltip_builder.gd")
 const UIStyleHelperScript := preload("res://scripts/ui/ui_style_helper.gd")
+const CombatLogTooltipLookupScript := preload("res://scripts/ui/combat_log_tooltip_lookup.gd")
+const CombatPreviewTextBuilderScript := preload("res://scripts/ui/combat_preview_text_builder.gd")
 const ModSettingsStoreScript := preload("res://scripts/ui/mod_settings_store.gd")
 const PlanningWorkbenchPanelScene := preload("res://scenes/planning_workbench_panel.tscn")
-const COMBAT_LOG_HEADER := "Combat log:"
 const RUN_BUTTON_REPLAYING_TEXT := "Replaying..."
 const CAMPAIGN_SAVE_PATH := "user://first_road_campaign_save.json"
 const MIN_CONDITIONS_HEIGHT := 120
@@ -133,19 +133,16 @@ func _load_combat_preview() -> void:
 	var simulator: CombatSimulator = CombatSimulatorScript.new()
 	var scenario_rules: Array = run_state.active_scenario.scenario_rules if run_state.active_scenario != null else []
 	var report: Dictionary = simulator.run_battle_report(run_state.build_current_fight_definitions(), run_state.current_fight_title(), scenario_rules)
-	var log_lines: Array[String] = report.get("lines", [])
-	var static_lines: Array[String] = []
-
 	cached_battle_report = report.duplicate(true)
 	cached_static_lines.clear()
 	cached_structured_events = report.get("events", []).duplicate(true)
 	cached_roster_units = report.get("roster_units", []).duplicate(true)
 	cached_replay_snapshots = report.get("replay_snapshots", []).duplicate(true)
-	cached_log_tooltip_lookup = _build_log_tooltip_lookup(run_state.build_current_fight_definitions(), cached_roster_units)
+	cached_log_tooltip_lookup = CombatLogTooltipLookupScript.build(run_state.build_current_fight_definitions(), cached_roster_units, _enabled_mod_pack_ids_array())
 	replay_panel.call("set_log_tooltip_lookup", cached_log_tooltip_lookup)
 	_show_battle_contributions(report)
-	_collect_static_log_lines(log_lines, static_lines)
-	cached_static_lines = _build_run_static_lines(static_lines)
+	var static_lines: Array[String] = CombatPreviewTextBuilderScript.battle_static_lines(report.get("lines", []))
+	cached_static_lines = CombatPreviewTextBuilderScript.run_static_lines(campaign_manager, run_state, static_lines)
 	_append_lines(combat_summary, cached_static_lines)
 	replay_panel.call("load_preview", cached_roster_units, cached_structured_events, cached_replay_snapshots)
 	_update_run_controls()
@@ -165,7 +162,7 @@ func _show_run_state_without_combat_preview() -> void:
 	_clear_replay_log()
 	if run_state == null:
 		return
-	var lines: Array[String] = _build_run_static_lines([])
+	var lines: Array[String] = CombatPreviewTextBuilderScript.run_static_lines(campaign_manager, run_state, [])
 	_append_lines(combat_summary, lines)
 	_update_run_controls()
 	_refresh_planning_panel()
@@ -446,12 +443,11 @@ func _load_combat_lab_report(report: Dictionary) -> void:
 	cached_structured_events = report.get("events", []).duplicate(true)
 	cached_roster_units = report.get("roster_units", []).duplicate(true)
 	cached_replay_snapshots = report.get("replay_snapshots", []).duplicate(true)
-	cached_log_tooltip_lookup = _build_log_tooltip_lookup(combat_lab_state.build_battle_definitions(), cached_roster_units)
+	cached_log_tooltip_lookup = CombatLogTooltipLookupScript.build(combat_lab_state.build_battle_definitions(), cached_roster_units, _enabled_mod_pack_ids_array())
 	replay_panel.call("set_log_tooltip_lookup", cached_log_tooltip_lookup)
 	_show_battle_contributions(report)
-	var static_lines: Array[String] = []
-	_collect_static_log_lines(report.get("lines", []), static_lines)
-	cached_static_lines = _build_combat_lab_static_lines(static_lines)
+	var static_lines: Array[String] = CombatPreviewTextBuilderScript.battle_static_lines(report.get("lines", []))
+	cached_static_lines = CombatPreviewTextBuilderScript.combat_lab_static_lines(combat_lab_state, static_lines)
 	_append_lines(combat_summary, cached_static_lines)
 	replay_panel.call("load_preview", cached_roster_units, cached_structured_events, cached_replay_snapshots)
 	combat_lab_panel.call("refresh")
@@ -464,7 +460,7 @@ func _show_combat_lab_landing() -> void:
 	cached_log_tooltip_lookup.clear()
 	replay_panel.call("set_log_tooltip_lookup", cached_log_tooltip_lookup)
 	_clear_battle_contributions()
-	cached_static_lines = _build_combat_lab_static_lines([])
+	cached_static_lines = CombatPreviewTextBuilderScript.combat_lab_static_lines(combat_lab_state, [])
 	_append_lines(combat_summary, cached_static_lines)
 	conditions_label.text = "Combat Lab Preview"
 	combat_lab_panel.call("refresh")
@@ -479,44 +475,6 @@ func _show_combat_lab_message(message: String) -> void:
 		return
 	CombatLogRichTextFormatterScript.append_line(combat_summary, message, log_highlight_palette, cached_log_tooltip_lookup)
 	call_deferred("_resize_conditions_pane")
-
-
-func _build_combat_lab_static_lines(fight_static_lines: Array[String]) -> Array[String]:
-	var lines: Array[String] = []
-	lines.append("Combat Lab: assemble arbitrary cloned catalog units, then resolve them through the real simulator.")
-	if combat_lab_state != null:
-		lines.append("Allies: %s" % _combat_lab_party_summary(combat_lab_state.allied_units))
-		lines.append("Enemies: %s" % _combat_lab_party_summary(combat_lab_state.enemy_units))
-		if not combat_lab_state.last_message.is_empty():
-			lines.append(combat_lab_state.last_message)
-	lines.append("")
-	for line in fight_static_lines:
-		lines.append(line)
-	return lines
-
-
-func _combat_lab_party_summary(units: Array[UnitDefinition]) -> String:
-	if units.is_empty():
-		return "empty"
-	var names: Array[String] = []
-	for index in units.size():
-		names.append("%d. %s" % [index + 1, units[index].display_name])
-	return ", ".join(names)
-
-
-func _build_run_static_lines(fight_static_lines: Array[String]) -> Array[String]:
-	var lines: Array[String] = []
-	if campaign_manager != null:
-		for campaign_line in campaign_manager.status_lines():
-			lines.append(campaign_line)
-		lines.append("")
-	if run_state != null:
-		for run_line in run_state.status_lines():
-			lines.append(run_line)
-	lines.append("")
-	for line in fight_static_lines:
-		lines.append(line)
-	return lines
 
 
 func _update_run_controls() -> void:
@@ -975,17 +933,7 @@ func _resources_include_id(resources: Array, candidate: Resource) -> bool:
 
 func _show_campaign_landing() -> void:
 	_clear_logs()
-	var lines: Array[String] = []
-	if campaign_manager != null:
-		lines = campaign_manager.status_lines()
-		lines.append("")
-		lines.append("Available scenarios:")
-		var scenarios: Array = campaign_manager.available_scenarios()
-		if scenarios.is_empty():
-			lines.append("- none")
-		else:
-			for scenario in scenarios:
-				lines.append("- %s: %s" % [scenario.display_name, scenario.story_intro])
+	var lines: Array[String] = CombatPreviewTextBuilderScript.campaign_landing_lines(campaign_manager)
 	_append_lines(combat_summary, lines)
 	if selected_scenario == null and campaign_manager != null:
 		var scenarios: Array = campaign_manager.all_scenarios()
@@ -1084,103 +1032,9 @@ func _enabled_mod_pack_ids_array() -> Array[String]:
 	return ids
 
 
-func _collect_static_log_lines(log_lines: Array[String], static_lines: Array[String]) -> void:
-	var found_combat_log := false
-	var skipping_battle_start_event := false
-	for line in log_lines:
-		if line == COMBAT_LOG_HEADER:
-			found_combat_log = true
-			continue
-		if line.begins_with("t=000 | Battle starts."):
-			skipping_battle_start_event = true
-			continue
-		if skipping_battle_start_event and line == "Roster:":
-			skipping_battle_start_event = false
-		elif skipping_battle_start_event:
-			continue
-
-		if not found_combat_log:
-			static_lines.append(line)
-
-
 func _append_lines(target_log: RichTextLabel, lines: Array[String]) -> void:
 	for line in lines:
 		CombatLogRichTextFormatterScript.append_line(target_log, line, log_highlight_palette, cached_log_tooltip_lookup)
-
-
-func _build_log_tooltip_lookup(definitions: Array[UnitDefinition], roster_units: Array[Dictionary]) -> Dictionary:
-	var lookup := {}
-	for roster_unit in roster_units:
-		var name := String(roster_unit.get("name", ""))
-		if not name.is_empty():
-			lookup[name] = "Unit: %s\nTeam: %s\nSource: battle roster" % [name, String(roster_unit.get("team", ""))]
-	var content := JsonContentLoaderScript.load_content_resources(_enabled_mod_pack_ids_array())
-	for status in content.get("statuses", {}).values():
-		_register_tooltip_resource(lookup, status)
-	for item in content.get("items", {}).values():
-		_register_tooltip_resource(lookup, item)
-	for tactic in content.get("tactics", {}).values():
-		_register_tooltip_resource(lookup, tactic)
-	for job in content.get("jobs", {}).values():
-		_register_tooltip_resource(lookup, job)
-	for unit in definitions:
-		_register_tooltip_resource(lookup, unit)
-		if unit != null:
-			_register_tooltip_resource(lookup, unit.ancestry)
-			_register_loadout_tooltip_resources(lookup, unit.loadout)
-	return lookup
-
-
-func _register_loadout_tooltip_resources(lookup: Dictionary, loadout: UnitLoadoutDefinition) -> void:
-	if loadout == null:
-		return
-	_register_tooltip_resource(lookup, loadout)
-	_register_tooltip_resource(lookup, loadout.current_job)
-	_register_tooltip_resource(lookup, loadout.equipped_skill)
-	_register_tooltip_resource(lookup, loadout.equipped_passive)
-	_register_tooltip_resource(lookup, loadout.equipped_reaction)
-	_register_tooltip_resource(lookup, loadout.weapon)
-	_register_tooltip_resource(lookup, loadout.armor)
-	_register_tooltip_resource(lookup, loadout.helmet)
-	_register_tooltip_resource(lookup, loadout.trinket)
-	for tactic in loadout.tactics:
-		_register_tooltip_resource(lookup, tactic)
-
-
-func _register_tooltip_resource(lookup: Dictionary, resource) -> void:
-	if resource == null:
-		return
-	var display_value = resource.get("display_name")
-	var display_name := String(display_value) if display_value != null else ""
-	if display_name.is_empty():
-		return
-	lookup[display_name] = ResourceTooltipBuilderScript.text_for_resource(resource)
-	if resource is JobDefinition:
-		_register_tooltip_resource(lookup, resource.skill)
-		_register_tooltip_resource(lookup, resource.secondary_skill)
-		_register_tooltip_resource(lookup, resource.passive)
-		_register_tooltip_resource(lookup, resource.reaction)
-		_register_tooltip_resource(lookup, resource.default_tactic)
-	elif resource is SkillDefinition:
-		_register_tooltip_resource(lookup, resource.status)
-		for effect in resource.effects:
-			_register_tooltip_resource(lookup, effect)
-	elif resource is PassiveDefinition:
-		for effect in resource.effects:
-			_register_tooltip_resource(lookup, effect)
-	elif resource is ReactionDefinition:
-		_register_tooltip_resource(lookup, resource.status)
-		for status in resource.replacement_statuses:
-			_register_tooltip_resource(lookup, status)
-		for effect in resource.effects:
-			_register_tooltip_resource(lookup, effect)
-	elif resource is ItemDefinition:
-		for effect in resource.effects:
-			_register_tooltip_resource(lookup, effect)
-	elif resource is TacticDefinition:
-		_register_tooltip_resource(lookup, resource.status)
-
-
 func _resize_conditions_pane() -> void:
 	if combat_summary.get_line_count() == 0 or log_split.size.y <= 0:
 		return
@@ -1241,7 +1095,7 @@ func _on_replay_finished() -> void:
 		else:
 			_load_planning_party_from_run()
 		combat_summary.clear()
-		cached_static_lines = _build_run_static_lines([])
+		cached_static_lines = CombatPreviewTextBuilderScript.run_static_lines(campaign_manager, run_state, [])
 		_append_lines(combat_summary, cached_static_lines)
 		call_deferred("_resize_conditions_pane")
 	_update_run_controls()
